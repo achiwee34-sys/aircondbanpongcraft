@@ -217,11 +217,13 @@ async function submitTicket() { // PATCH v67
 
   // ถ้ารูปยังโหลดไม่เสร็จ → รอแล้ว retry อัตโนมัติ (ไม่ blocking ผู้ใช้)
   if (_photoLoading > 0) {
+    _isSubmitting = true; // FIX: ล็อกก่อน retry ป้องกัน submit ซ้ำระหว่างรอ
     const btn = document.getElementById('nt-submit-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ กำลังโหลดรูป...'; }
     const retryTimer = setInterval(() => {
       if (_photoLoading <= 0) {
         clearInterval(retryTimer);
+        _isSubmitting = false; // FIX: ปลดล็อกก่อน call submitTicket ใหม่
         if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" style="margin-right:6px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>ส่งงานแจ้งซ่อม`; }
         submitTicket();
       }

@@ -260,10 +260,7 @@ function applyMachineFilter() {
   const q = document.getElementById('mac-search')?.value || '';
   const kw = q.toLowerCase().trim();
   let list = db.machines;
-  // Zone filter
-  if (_macZoneFilter) {
-    list = list.filter(m => (m.zone||'process') === _macZoneFilter);
-  }
+  // Zone filter — FIX: ใช้ getMacZone() เพียงครั้งเดียว (เดิมมี filter ซ้ำ 2 บรรทัด)
   if (_macZoneFilter) { list = list.filter(m => getMacZone(m) === _macZoneFilter); }
   if (_macDeptFilter) { list = list.filter(m => (m.dept||m.location||'') === _macDeptFilter); }
   if (_macVendorFilter) {
