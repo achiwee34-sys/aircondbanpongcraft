@@ -2597,7 +2597,7 @@
 
 <!-- Machine Sheet -->
 <div class="sheet-overlay" id="machine-overlay" onclick="closeSheet('machine')"></div>
-<div class="sheet" id="machine-sheet" style="max-height:94vh;border-radius:24px 24px 0 0">
+<div class="sheet" id="machine-sheet" style="max-height:94vh;border-radius:24px 24px 0 0;display:none;flex-direction:column">
   <div class="sheet-handle"></div>
 
   <!-- ── Header ── -->
@@ -2632,7 +2632,7 @@
   <input type="hidden" id="m-lookup-hint"/>
 
   <!-- ── Body ── -->
-  <div class="sheet-body" style="overflow-y:auto;padding:14px 16px 0">
+  <div class="sheet-body" style="overflow-y:auto;padding:14px 16px 0;flex:1">
 
     <!-- STEP 1: แผนก (เฉพาะเพิ่มใหม่) -->
     <div id="m-add-dept-box" style="margin-bottom:14px">
@@ -2810,52 +2810,13 @@
           </div>
         </div>
         <div>
-          <label style="font-size:0.72rem;font-weight:700;color:var(--muted);display:block;margin-bottom:5px">🏢 Vendor / บริษัทผู้รับผิดชอบ</label>
-          <div class="fg" style="margin-bottom:8px">
-        <label style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:5px;display:block">🏭 Zone</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button type="button" id="ms-zone-process-btn" onclick="setMsZone('process')"
-            style="padding:10px;border:2px solid #0369a1;border-radius:12px;background:#eff6ff;color:#0369a1;font-size:0.82rem;font-weight:800;font-family:inherit;cursor:pointer">
-            ⚙️ Process
-          </button>
-          <button type="button" id="ms-zone-office-btn" onclick="setMsZone('office')"
-            style="padding:10px;border:2px solid #e2e8f0;border-radius:12px;background:white;color:#64748b;font-size:0.82rem;font-weight:800;font-family:inherit;cursor:pointer">
-            🏢 Office
-          </button>
-        </div>
-        <input type="hidden" id="ms-zone" value="process"/>
-      </div>
-      <!-- Range selector -->
-      <div class="fg" style="margin-bottom:8px">
-        <label style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px">
-          🎯 Range เครื่อง
-          <span style="font-size:0.6rem;font-weight:500;color:#94a3b8">(ว่างไว้ = Auto จาก keyword)</span>
-        </label>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
-          <button type="button" id="ms-range-btn-auto" onclick="setMsRange('')"
-            style="padding:9px 4px;border:2px solid #e9d5ff;border-radius:10px;background:#faf5ff;color:#7c3aed;font-size:0.72rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s">
-            🤖 Auto
-          </button>
-          <button type="button" id="ms-range-btn-A" onclick="setMsRange('A')"
-            style="padding:9px 4px;border:2px solid #fecdd3;border-radius:10px;background:#fff1f2;color:#be123c;font-size:0.72rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s">
-            🔴 Range A
-          </button>
-          <button type="button" id="ms-range-btn-B" onclick="setMsRange('B')"
-            style="padding:9px 4px;border:2px solid #bae6fd;border-radius:10px;background:#f0f9ff;color:#0369a1;font-size:0.72rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s">
-            🔵 Range B
-          </button>
-          <button type="button" id="ms-range-btn-C" onclick="setMsRange('C')"
-            style="padding:9px 4px;border:2px solid #d9f99d;border-radius:10px;background:#f7fee7;color:#4d7c0f;font-size:0.72rem;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s">
-            🟢 Range C
-          </button>
-        </div>
-        <div style="margin-top:6px;background:#f8fafc;border-radius:8px;padding:7px 10px;font-size:0.65rem;color:#64748b;line-height:1.5">
-          🔴 <b>A</b> = MCC / PLC / DCS (Critical) &nbsp;·&nbsp;
-          🔵 <b>B</b> = ห้องทั่วไป / สำนักงาน &nbsp;·&nbsp;
-          🟢 <b>C</b> = เครื่องเล็ก
-        </div>
-        <input type="hidden" id="ms-range" value=""/>
-      </div>
+          <!-- ── Vendor + Zone + Range รวมกล่องเดียว ── -->
+          <label style="font-size:0.72rem;font-weight:700;color:var(--muted);display:block;margin-bottom:8px">🏢 Vendor / Zone / Range</label>
+
+          <!-- Row 1: Vendor chips -->
+          <div style="margin-bottom:8px">
+            <div style="font-size:0.65rem;color:#94a3b8;font-weight:600;margin-bottom:4px">บริษัทผู้รับผิดชอบ</div>
+            <div class="fg" style="margin-bottom:0">
             <button type="button" onclick="setVendorChip('')"    id="ms-vc-"    class="ms-vc" style="padding:8px 6px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit;background:#f8fafc;color:#6b7280;transition:all 0.15s">ไม่ระบุ</button>
             <button type="button" onclick="setVendorChip('SKIC')" id="ms-vc-SKIC" class="ms-vc" style="padding:8px 6px;border:1.5px solid #bfdbfe;border-radius:9px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit;background:#eff6ff;color:#1d4ed8;transition:all 0.15s">SKIC</button>
             <button type="button" onclick="setVendorChip('TPC')"  id="ms-vc-TPC"  class="ms-vc" style="padding:8px 6px;border:1.5px solid #bbf7d0;border-radius:9px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit;background:#f0fdf4;color:#166534;transition:all 0.15s">TPC</button>
@@ -2871,8 +2832,43 @@
           </select>
           <input type="text" id="m-vendor-other" placeholder="ระบุชื่อบริษัท..."
             style="display:none;width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:0.88rem;font-family:inherit;outline:none;box-sizing:border-box"/>
+          </div>
+
+          <!-- Row 2: Zone + Range ข้างๆ กัน -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <!-- Zone -->
+            <div>
+              <div style="font-size:0.65rem;color:#94a3b8;font-weight:600;margin-bottom:4px">🏭 Zone</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <button type="button" id="ms-zone-process-btn" onclick="setMsZone('process')"
+                  style="padding:9px;border:2px solid #0369a1;border-radius:10px;background:#eff6ff;color:#0369a1;font-size:0.78rem;font-weight:800;font-family:inherit;cursor:pointer">
+                  ⚙️ Process
+                </button>
+                <button type="button" id="ms-zone-office-btn" onclick="setMsZone('office')"
+                  style="padding:9px;border:2px solid #e2e8f0;border-radius:10px;background:white;color:#64748b;font-size:0.78rem;font-weight:800;font-family:inherit;cursor:pointer">
+                  🏢 Office
+                </button>
+              </div>
+              <input type="hidden" id="ms-zone" value="process"/>
+            </div>
+
+            <!-- Range -->
+            <div>
+              <div style="font-size:0.65rem;color:#94a3b8;font-weight:600;margin-bottom:4px">🎯 Range <span style="font-size:0.58rem;font-weight:400">(ว่าง=Auto)</span></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+                <button type="button" id="ms-range-btn-auto" onclick="setMsRange('')"
+                  style="padding:8px 2px;border:2px solid #e9d5ff;border-radius:9px;background:#faf5ff;color:#7c3aed;font-size:0.7rem;font-weight:800;font-family:inherit;cursor:pointer">🤖 Auto</button>
+                <button type="button" id="ms-range-btn-A" onclick="setMsRange('A')"
+                  style="padding:8px 2px;border:2px solid #fecdd3;border-radius:9px;background:#fff1f2;color:#be123c;font-size:0.7rem;font-weight:800;font-family:inherit;cursor:pointer">🔴 A</button>
+                <button type="button" id="ms-range-btn-B" onclick="setMsRange('B')"
+                  style="padding:8px 2px;border:2px solid #bae6fd;border-radius:9px;background:#f0f9ff;color:#0369a1;font-size:0.7rem;font-weight:800;font-family:inherit;cursor:pointer">🔵 B</button>
+                <button type="button" id="ms-range-btn-C" onclick="setMsRange('C')"
+                  style="padding:8px 2px;border:2px solid #d9f99d;border-radius:9px;background:#f7fee7;color:#4d7c0f;font-size:0.7rem;font-weight:800;font-family:inherit;cursor:pointer">🟢 C</button>
+              </div>
+              <input type="hidden" id="ms-range" value=""/>
+            </div>
+          </div>
         </div>
-      </div>
     </div>
 
     <div style="height:8px"></div>
