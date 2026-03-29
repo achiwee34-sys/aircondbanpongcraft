@@ -145,18 +145,22 @@ function openSheet(name){
   const sh = document.getElementById(name+'-sheet');
   if (!ov || !sh) { console.warn('openSheet: element not found for', name); return; }
   ov.classList.add('open');
-  requestAnimationFrame(()=>{
-    sh.classList.add('open');
-    // ── keyboard fix: scroll focused input into view inside sheet ──
-    const onFocusIn = (e) => {
-      const el = e.target;
-      if (!el || !['INPUT','TEXTAREA','SELECT'].includes(el.tagName)) return;
-      setTimeout(() => {
-        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }, 320);
-    };
-    sh.addEventListener('focusin', onFocusIn);
-    sh._kbHandler = onFocusIn;
+  // PATCH: display:none ใน CSS ต้องใช้ double rAF ให้ browser paint ก่อน add .open
+  // มิฉะนั้น transition animation จะไม่ทำงาน
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sh.classList.add('open');
+      // ── keyboard fix: scroll focused input into view inside sheet ──
+      const onFocusIn = (e) => {
+        const el = e.target;
+        if (!el || !['INPUT','TEXTAREA','SELECT'].includes(el.tagName)) return;
+        setTimeout(() => {
+          el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }, 320);
+      };
+      sh.addEventListener('focusin', onFocusIn);
+      sh._kbHandler = onFocusIn;
+    });
   });
   if (navigator.vibrate) navigator.vibrate(30);
 }
