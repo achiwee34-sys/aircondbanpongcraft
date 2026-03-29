@@ -124,7 +124,12 @@ function openSheet(name){
       // ── PATCH: force reset visibility ป้องกัน sheet ค้างบน tablet ──
       s.style.visibility = 'hidden';
       s.style.pointerEvents = 'none';
-      setTimeout(() => { s.style.visibility = ''; s.style.pointerEvents = ''; }, 400);
+      setTimeout(() => {
+        if (!s.classList.contains('open')) {
+          s.style.visibility = '';
+          s.style.pointerEvents = '';
+        }
+      }, 400);
       if (s._kbHandler) { s.removeEventListener('focusin', s._kbHandler); delete s._kbHandler; }
     }
   });
@@ -132,7 +137,7 @@ function openSheet(name){
     if (o.id !== name+'-overlay') {
       o.classList.remove('open');
       o.style.display = 'none';
-      setTimeout(() => { o.style.display = ''; }, 400);
+      setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
     }
   });
 

@@ -2208,20 +2208,35 @@ function _resetIdleTimer() {
   document.addEventListener(ev, _resetIdleTimer, { passive: true })
 );
 
-// ── PATCH: ป้องกัน sheet ค้างเมื่อ browser restore จาก bfcache ──
-window.addEventListener('pageshow', (e) => {
-  if (e.persisted) {
-    document.querySelectorAll('.sheet.open').forEach(s => s.classList.remove('open'));
-    document.querySelectorAll('.sheet-overlay.open').forEach(o => {
-      o.classList.remove('open');
-      o.style.display = '';
+// ── PATCH: ป้องกัน sheet ค้างเมื่อ browser restore จาก bfcache / Android Chrome ──
+function _forceCloseAllSheets() {
+  document.querySelectorAll('.sheet').forEach(s => {
+    s.classList.remove('open');
+    s.style.visibility = 'hidden';
+    s.style.pointerEvents = 'none';
+    requestAnimationFrame(() => {
+      if (!s.classList.contains('open')) {
+        s.style.visibility = '';
+        s.style.pointerEvents = '';
+      }
     });
-    document.querySelectorAll('dialog[open]').forEach(d => {
-      try { d.close(); } catch(e2) {}
-      d.style.display = 'none';
+  });
+  document.querySelectorAll('.sheet-overlay').forEach(o => {
+    o.classList.remove('open');
+    o.style.display = 'none';
+    requestAnimationFrame(() => {
+      if (!o.classList.contains('open')) o.style.display = '';
     });
-  }
-});
+  });
+  document.querySelectorAll('dialog[open]').forEach(d => {
+    try { d.close(); } catch(e2) {}
+    d.style.display = 'none';
+  });
+}
+// bfcache restore + Android Chrome restore (ไม่ check e.persisted เพื่อให้ครอบคลุมทุกกรณี)
+window.addEventListener('pageshow', () => { _forceCloseAllSheets(); });
+// close ทันที DOMContentLoaded กัน sheet ค้างจาก session ก่อนหน้า
+document.addEventListener('DOMContentLoaded', () => { _forceCloseAllSheets(); });
 
 async function initApp() {
   // Guard
