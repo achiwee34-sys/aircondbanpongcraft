@@ -2090,12 +2090,21 @@ function _closeAllModals() {
     s.classList.remove('open');
     s.style.visibility = 'hidden';
     s.style.pointerEvents = 'none';
-    setTimeout(() => { s.style.visibility = ''; s.style.pointerEvents = ''; }, 450);
+    setTimeout(() => {
+      if (!s.classList.contains('open')) {
+        s.style.visibility = '';
+        s.style.pointerEvents = '';
+      }
+    }, 450);
   });
   document.querySelectorAll('.sheet-overlay').forEach(o => {
     o.classList.remove('open');
     o.style.display = 'none';
-    setTimeout(() => { o.style.display = ''; }, 450);
+    setTimeout(() => {
+      if (!o.classList.contains('open')) {
+        o.style.display = '';
+      }
+    }, 450);
   });
   // ปิด overlay divs
   ['_rp_ov','_gsearch_ov','_pdf_overlay'].forEach(id => {
@@ -2237,6 +2246,8 @@ async function initApp() {
 
   // ── Phase 2: แสดงหน้าหลักทันที ──
   requestAnimationFrame(() => {
+    // ── PATCH: close modals/sheets อีกรอบหลัง paint (ป้องกัน sheet ค้างหลัง login) ──
+    _closeAllModals();
     // Hide ทุก page ก่อน แล้วค่อย goPage (ป้องกัน page เก่าค้างจาก session ก่อน)
     document.querySelectorAll('.page.active').forEach(p => p.classList.remove('active'));
     _activePage = null;
