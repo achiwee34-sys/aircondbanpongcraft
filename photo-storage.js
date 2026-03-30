@@ -58,12 +58,18 @@ async function uploadPendingPhotosToStorage(ticketId) {
 
   const timestamp = Date.now();
 
+  // ── PATCH audit-H3: per-photo try-catch — skip รูปที่ fail แทน crash ──
   // before photos
   for (let i = 0; i < pendingPhotos.before.length; i++) {
     const p = pendingPhotos.before[i];
     if (p && p.startsWith('data:')) {
-      const path = `tickets/${ticketId}/before_${i}_${timestamp}.jpg`;
-      pendingPhotos.before[i] = await uploadPhotoToStorage(p, path);
+      try {
+        const path = `tickets/${ticketId}/before_${i}_${timestamp}.jpg`;
+        pendingPhotos.before[i] = await uploadPhotoToStorage(p, path);
+      } catch(e) {
+        console.warn(`[photo] skip before[${i}]:`, e.message);
+        // เก็บ base64 เดิมไว้ ไม่ให้ข้อมูลหาย
+      }
     }
   }
 
@@ -71,8 +77,13 @@ async function uploadPendingPhotosToStorage(ticketId) {
   for (let i = 0; i < pendingPhotos.after.length; i++) {
     const p = pendingPhotos.after[i];
     if (p && p.startsWith('data:')) {
-      const path = `tickets/${ticketId}/after_${i}_${timestamp}.jpg`;
-      pendingPhotos.after[i] = await uploadPhotoToStorage(p, path);
+      try {
+        const path = `tickets/${ticketId}/after_${i}_${timestamp}.jpg`;
+        pendingPhotos.after[i] = await uploadPhotoToStorage(p, path);
+      } catch(e) {
+        console.warn(`[photo] skip after[${i}]:`, e.message);
+        // เก็บ base64 เดิมไว้ ไม่ให้ข้อมูลหาย
+      }
     }
   }
 }

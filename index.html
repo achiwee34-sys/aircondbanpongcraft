@@ -560,7 +560,6 @@
             <div style="flex:1;overflow:hidden">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                 <div id="ei-serial" style="font-size:0.92rem;font-weight:800;color:#0f172a">—</div>
-                <div id="ei-vendor-badge-top" style="display:none;padding:2px 8px;border-radius:6px;font-size:0.65rem;font-weight:800;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;margin-left:auto">🏭 —</div>
               </div>
               <div id="ei-name-sub" style="font-size:0.7rem;color:var(--muted);margin-top:2px">ข้อมูลเครื่องแอร์</div>
             </div>
@@ -2207,8 +2206,8 @@
 <div class="sheet" id="detail-sheet">
   <div class="sheet-handle"></div>
   <div id="detail-title" style="display:none"></div>
-  <div class="sheet-body" id="detail-body" style="padding:0 16px 0"></div>
-  <div class="sheet-actions" id="detail-actions" style="padding:10px 16px 0"></div>
+  <div class="sheet-body" id="detail-body" style="padding:0 16px 0;flex:1;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch"></div>
+  <div class="sheet-actions" id="detail-actions" style="padding:10px 16px 0;flex-shrink:0"></div>
 </div>
 
 <!-- Assign Sheet -->

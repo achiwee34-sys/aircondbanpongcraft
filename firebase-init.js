@@ -139,7 +139,20 @@ async function fsSaveNow() {
 }
 
 // fire-and-forget save
-function fsSave() { fsSaveNow().catch(()=>{}); }
+// ── PATCH audit-H1: แจ้งผู้ใช้เมื่อ Firebase sync ล้มเหลวต่อเนื่อง ──
+let _fsSaveFailCount = 0;
+function fsSave() {
+  fsSaveNow().then(() => {
+    _fsSaveFailCount = 0; // reset เมื่อสำเร็จ
+  }).catch(e => {
+    _fsSaveFailCount++;
+    console.warn('[fsSave] fail #' + _fsSaveFailCount, e?.message || e);
+    if (_fsSaveFailCount >= 3 && typeof showToast === 'function') {
+      showToast('⚠️ Firebase sync ล้มเหลว — ข้อมูลอยู่ใน local เท่านั้น');
+      _fsSaveFailCount = 0; // reset หลังแจ้งแล้ว
+    }
+  });
+}
 
 // ── Force reload จาก Firestore (ปุ่ม 🔄) ──
 async function forceReloadFromFS() {

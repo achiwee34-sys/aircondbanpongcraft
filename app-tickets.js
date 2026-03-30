@@ -1177,6 +1177,10 @@ function tkCard(t) {
     </div>
   </div>
   </div>`;
+  // ── PATCH audit-L2: LRU eviction ป้องกัน cache โตไม่จำกัด ──
+  if (_tkCardCache.size >= 300) {
+    _tkCardCache.delete(_tkCardCache.keys().next().value);
+  }
   _tkCardCache.set(t.id, {hash: _hash, html: _html});
   return _html;
 }

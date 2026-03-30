@@ -219,10 +219,15 @@ async function submitTicket() { // PATCH v67
   if (_photoLoading > 0) {
     const btn = document.getElementById('nt-submit-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ กำลังโหลดรูป...'; }
+    // ── PATCH audit-H2: timeout 15s ป้องกัน infinite interval ──
+    const _photoDeadline = Date.now() + 15000;
     const retryTimer = setInterval(() => {
-      if (_photoLoading <= 0) {
+      const timedOut = Date.now() > _photoDeadline;
+      if (_photoLoading <= 0 || timedOut) {
         clearInterval(retryTimer);
+        _photoLoading = 0; // force reset
         if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" style="margin-right:6px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>ส่งงานแจ้งซ่อม`; }
+        if (timedOut) { showToast('⚠️ โหลดรูปช้า — ส่งงานโดยไม่รอรูปบางรูป'); }
         submitTicket();
       }
     }, 200);
@@ -2119,12 +2124,14 @@ function formatSummary(text) {
   }
   if (lines.length > 1) {
     return lines.map(function(l){
+      var safe = escapeHtml(l.replace(/^[-–\s]+/,'').trim());
       return '<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px">'
         + '<span style="color:#c8102e;font-weight:700;flex-shrink:0;margin-top:1px">•</span>'
-        + '<span style="flex:1">' + l.replace(/^[-–\s]+/,'').trim() + '</span></div>';
+        + '<span style="flex:1">' + safe + '</span></div>';
     }).join('');
   }
-  return '<div>' + text + '</div>';
+  // PATCH audit-XSS1: escape plain text
+  return '<div>' + escapeHtml(text) + '</div>';
 }
 
 
@@ -2483,6 +2490,9 @@ async function doComplete( /* PATCH v67 */) {
     return;
   }
 
+  // ── PATCH audit-C2: outer try-catch ป้องกัน crash เงียบ ──
+  try {
+
   const now = nowStr();
   const repairItems = tags.map(el=>{
     const qty=parseInt(el.dataset.qty||1);
@@ -2549,6 +2559,11 @@ async function doComplete( /* PATCH v67 */) {
   showToast('✅ บันทึกผลการซ่อมแล้ว — กรุณาเซ็นชื่อ');
   if (navigator.vibrate) navigator.vibrate([100,50,200]);
   try { setTimeout(() => openSignaturePad(tid, 'tech_done'), 500); } catch(e) {}
+
+  } catch(e) {
+    console.error('[doComplete] error:', e);
+    showToast('❌ เกิดข้อผิดพลาดในการบันทึก: ' + (e.message || 'กรุณาลองใหม่'));
+  }
 }
 
 function selectVerifyResult(val) {
@@ -2667,7 +2682,7 @@ function openVerifySheet(tid) {
     <!-- อะไหล่ที่ใช้ -->
     ${t.parts ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:${hasAfter?'10px':'0'}">
       <div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">อะไหล่ที่ใช้</div>
-      <div style="font-size:0.8rem;color:#334155;line-height:1.6">${t.parts}</div>
+      <div style="font-size:0.8rem;color:#334155;line-height:1.6">${escapeHtml(t.parts)}</div>
     </div>` : ''}
 
     <!-- รูปหลังซ่อม -->
@@ -2975,7 +2990,7 @@ function openDetail(tid) {
       </div>
       <div style="padding:10px 13px">
         <div style="color:#374151;font-size:0.82rem;line-height:1.65;margin-bottom:${t.parts||rc||pc?'8px':'0'}">${formatSummary(t.summary)}</div>
-        ${t.parts?`<div style="font-size:0.75rem;color:#166534;background:#f0fdf4;border-radius:6px;padding:6px 10px;display:flex;gap:6px;align-items:flex-start"><span>🔩</span><span>อะไหล่: ${t.parts}</span></div>`:''}
+        ${t.parts?`<div style="font-size:0.75rem;color:#166534;background:#f0fdf4;border-radius:6px;padding:6px 10px;display:flex;gap:6px;align-items:flex-start"><span>🔩</span><span>อะไหล่: ${escapeHtml(t.parts)}</span></div>`:''}
         ${(rc||pc)?`<div style="display:grid;grid-template-columns:${rc&&pc?'1fr 1fr':'1fr'};gap:8px;margin-top:8px">
           ${rc?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px">
             <div style="font-size:0.52rem;color:#1d4ed8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">ค่าแรงซ่อม</div>
@@ -3252,7 +3267,7 @@ function renderTracking() {
         <div style="flex:1;overflow:hidden">
           <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
           <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">❄️ ${t.machine} • 🔧 ${t.assignee||''}</div>
-          ${t.summary?`<div style="font-size:0.78rem;color:#2e7d32;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(t.summary||"").split("\n")[0].replace(/^[-–]\s*/,"")}</div>`:''}
+          ${t.summary?`<div style="font-size:0.78rem;color:#2e7d32;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml((t.summary||"").split("\n")[0].replace(/^[-–]\s*/,""))}</div>`:''}
         </div>
         <button class="btn btn-ok btn-xs" onclick="event.stopPropagation();doAdminClose('${t.id}')">🔒 ปิดงาน</button>
       </div>

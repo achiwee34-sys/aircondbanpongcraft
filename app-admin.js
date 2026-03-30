@@ -663,11 +663,7 @@ function _closeTopMenu() {
   if (m) m.style.display = 'none';
   document.removeEventListener('click', _menuOutsideTap);
 }
-function _menuOutsideTap(e) {
-  const m = document.getElementById('tb-quick-menu');
-  const btn = document.getElementById('tb-avatar-btn');
-  if (m && !m.contains(e.target) && !btn?.contains(e.target)) _closeTopMenu();
-}
+// [REMOVED audit-H4] _menuOutsideTap() — dead code, no call site
 function _tbMenu(page) {
   _closeTopMenu();
   goPage(page);
@@ -744,102 +740,14 @@ function resetCompleteExtras() {
 // ============================================================
 // PM AUTO-SCHEDULE — สร้าง Ticket PM อัตโนมัติ (Admin)
 // ============================================================
-function generatePMTickets(filterDept) {
-  if (CU.role !== 'admin') return;
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
-  let created = 0;
-  // filter by dept if specified
-  const machines = filterDept
-    ? db.machines.filter(m => (m.dept||m.location||'') === filterDept)
-    : db.machines;
-  machines.forEach(m => {
-    if (!m.interval || !m.serial) return;
-    // หา PM ticket ล่าสุดของเครื่องนี้
-    const pmTks = db.tickets.filter(t =>
-      t.machineId === m.id && t.problem && t.problem.includes('PM') &&
-      ['done','verified','closed'].includes(t.status)
-    ).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
-    const lastPM = pmTks[0];
-    let shouldCreate = false;
-    if (!lastPM) {
-      shouldCreate = true;
-    } else {
-      const lastDate = new Date(lastPM.createdAt||'');
-      if (!isNaN(lastDate)) {
-        const diffDays = (today - lastDate) / (1000*60*60*24);
-        const intervalDays = (m.interval||6) * 30;
-        shouldCreate = diffDays >= intervalDays;
-      }
-    }
-    if (shouldCreate) {
-      // ตรวจว่ามี PM pending อยู่แล้วไหม
-      const hasPending = db.tickets.some(t =>
-        t.machineId===m.id && t.problem?.includes('PM') &&
-        !['done','verified','closed'].includes(t.status)
-      );
-      if (!hasPending) {
-        const seq = (db._seq || 1);
-        db._seq = seq + 1;
-        const _n2=new Date();const _m2=String(_n2.getMonth()+1).padStart(2,'0');const _y2=_n2.getFullYear();
-        const tid = 'TK'+_m2+_y2+String(seq).padStart(3,'0');
-        const now = nowStr();
-        db.tickets.push({
-          id:tid, machineId:m.id, machine:m.name,
-          problem:'PM บำรุงรักษาประจำงวด '+m.interval+' เดือน',
-          detail:'PM ตามกำหนด interval '+m.interval+' เดือน — '+m.serial,
-          priority:'mid', status:'new',
-          reporterId:'u1', reporter:'ระบบอัตโนมัติ',
-          assigneeId:null, assignee:null,
-          createdAt:now, updatedAt:now,
-          cost:0, summary:'', parts:'', note:'',
-          contact:'', photosBefore:[], photosAfter:[],
-          history:[{act:'📅 สร้าง PM อัตโนมัติ',by:'ระบบ',at:now}]
-        });
-        created++;
-      }
-    }
-  });
-  const deptLabel = filterDept ? ' ('+filterDept+')' : '';
-  const resultEl = document.getElementById('pm-result');
-  if (created > 0) {
-    saveDB();
-    const msg = '📅 สร้าง PM '+created+' รายการ'+deptLabel;
-    showToast(msg);
-    if (resultEl) { resultEl.style.display='block'; resultEl.style.background='#f0fdf4'; resultEl.style.color='#15803d'; resultEl.style.border='1px solid #bbf7d0'; resultEl.textContent=msg; }
-    refreshPage();
-  } else {
-    const msg = '✅ ไม่มี PM ที่ถึงกำหนด'+deptLabel;
-    showToast(msg);
-    if (resultEl) { resultEl.style.display='block'; resultEl.style.background='#eff6ff'; resultEl.style.color='#1d4ed8'; resultEl.style.border='1px solid #bfdbfe'; resultEl.textContent=msg; }
-  }
-}
+// [REMOVED audit-H4] generatePMTickets() — dead code, no call site
 
 
 // ============================================================
 // PM PLAN SHEET — ล้างใหญ่ / ล้างย่อย แยกแผนก
 // ============================================================
 // ══ PM Plan — Full Page ══
-function openPMPlanPage() {
-  goPage('pmplan');
-  // set default date = today
-  const today = new Date().toISOString().split('T')[0];
-  const dateEl = document.getElementById('pmpage-start-date');
-  if (dateEl) dateEl.value = today;
-  // populate tech dropdown
-  const techSel = document.getElementById('pmpage-tech');
-  if (techSel) {
-    techSel.innerHTML = '<option value="">— ทุกช่าง —</option>';
-    (db.users||[]).filter(u => u.role==='tech').forEach(u => {
-      const o = document.createElement('option');
-      o.value = u.id; o.textContent = u.name;
-      techSel.appendChild(o);
-    });
-  }
-  setPMPageType('clean-major');
-  renderPMPageDeptList();
-  renderPMPageHistory();
-}
+// [REMOVED audit-H4] openPMPlanPage() — dead code, no call site
 
 function setPMPageType(t) {
   document.getElementById('pmpage-type').value = t;
@@ -1292,68 +1200,14 @@ let _sigCtx = null;
 let _sigDrawing = false;
 let _sigLastX = 0, _sigLastY = 0;
 
-function clearSignaturePad() {
-  if (_sigCtx && _sigCanvas) {
-    _sigCtx.clearRect(0, 0, _sigCanvas.width, _sigCanvas.height);
-    const ph = document.getElementById('sig-placeholder');
-    if(ph) ph.style.opacity='1';
-  }
-}
+// [REMOVED audit-H4] clearSignaturePad() — dead code, no call site
 
 function closeSignaturePad() {
   document.getElementById('sig-overlay')?.remove();
   _sigTid = ''; _sigType = ''; _sigCanvas = null; _sigCtx = null;
 }
 
-function confirmSignature() {
-  if (!_sigCanvas) return;
-  // ตรวจว่ามีการเซ็นจริง (pixel ไม่ว่าง)
-  const data = _sigCtx.getImageData(0,0,_sigCanvas.width,_sigCanvas.height).data;
-  const hasInk = data.some((v,i) => i%4===3 && v>0);
-  if (!hasInk) { showToast('⚠️ กรุณาเซ็นชื่อในกรอบก่อน'); return; }
-
-  // compress signature: วาด white background ก่อน export JPEG (ไม่งั้น transparent → ดำ)
-  const _sigExport = document.createElement('canvas');
-  _sigExport.width = _sigCanvas.width;
-  _sigExport.height = _sigCanvas.height;
-  const _sigExportCtx = _sigExport.getContext('2d');
-  _sigExportCtx.fillStyle = 'white';
-  _sigExportCtx.fillRect(0, 0, _sigExport.width, _sigExport.height);
-  _sigExportCtx.drawImage(_sigCanvas, 0, 0);
-  const sigDataUrl = _sigExport.toDataURL('image/jpeg', 0.4);
-  const t = db.tickets.find(x=>x.id===_sigTid);
-  if (!t) { closeSignaturePad(); return; }
-
-  if (!t.signatures) t.signatures = {};
-  const now = nowStr();
-
-  if (_sigType === 'tech_done') {
-    t.signatures.tech = { data: sigDataUrl, by: CU.name, at: now };
-    t.history.push({ act:'✍️ ช่างเซ็นชื่อยืนยัน', by: CU.name, at: now });
-  } else if (_sigType === 'reporter_verify') {
-    t.signatures.reporter = { data: sigDataUrl, by: CU.name, at: now };
-    t.history.push({ act:'✍️ ผู้แจ้งเซ็นชื่อตรวจรับ', by: CU.name, at: now });
-  } else if (_sigType === 'admin_close') {
-    t.signatures.admin = { data: sigDataUrl, by: CU.name, at: now };
-    t.history.push({ act:'✍️ Admin เซ็นชื่อปิดงาน', by: CU.name, at: now });
-  }
-
-  t.updatedAt = now;
-  saveDB(); syncTicket(t);
-
-  // ── backup signatures ไว้ใน localStorage แยก (ไม่ถูก strip) ──
-  try {
-    const sigCache = JSON.parse(localStorage.getItem('aircon_sigs') || '{}');
-    if (!sigCache[t.id]) sigCache[t.id] = {};
-    Object.assign(sigCache[t.id], t.signatures);
-    localStorage.setItem('aircon_sigs', JSON.stringify(sigCache));
-  } catch(e) {}
-
-  closeSignaturePad();
-  showToast('✅ บันทึกลายเซ็นแล้ว');
-  renderTickets();
-  if (navigator.vibrate) navigator.vibrate([50,30,50]);
-}
+// [REMOVED audit-H4] confirmSignature() — dead code, no call site
 
 // ============================================================
 // DEPT QR SHEET — QR Code รายแผนก แถวละ 10

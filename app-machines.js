@@ -86,14 +86,14 @@ function openMachineHistory(mid) {
             <span class="tag ${stc(t.status)}" style="font-size:0.65rem">${sTH(t.status)}</span>
           </div>
           <div style="font-weight:600;font-size:0.85rem;color:var(--text);margin-bottom:3px">${t.problem}</div>
-          ${t.detail?`<div style="font-size:0.75rem;color:var(--muted);margin-bottom:3px">${t.detail}</div>`:''}
+          ${t.detail?`<div style="font-size:0.75rem;color:var(--muted);margin-bottom:3px">${escapeHtml(t.detail)}</div>`:''}
           <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:0.7rem;color:var(--muted);margin-top:4px">
             <span>📅 ${t.createdAt||''}</span>
             ${t.assignee?`<span>🔧 ${t.assignee}</span>`:''}
             ${t.cost?`<span>💰 ฿${parseFloat(t.cost).toLocaleString()}</span>`:''}
           </div>
           ${t.summary?`<div style="margin-top:6px;font-size:0.75rem;background:#f9fafb;border-radius:6px;padding:6px;color:var(--text)">${formatSummary(t.summary)}</div>`:''}
-          ${t.parts?`<div style="font-size:0.7rem;color:var(--muted);margin-top:3px">🔩 อะไหล่: ${t.parts}</div>`:''}
+          ${t.parts?`<div style="font-size:0.7rem;color:var(--muted);margin-top:3px">🔩 อะไหล่: ${escapeHtml(t.parts)}</div>`:''}
         </div>`).join('')}`;
   }
   openSheet('mhist');
@@ -743,17 +743,7 @@ function renderMachineDashboardStats() {
     vendorMap[v].machines.push(m);
   });
   const vendorStats = Object.entries(vendorMap).sort((a,b)=>b[1].count-a[1].count);
-  const vendorStyle = v => {
-    const map = {
-      'SKIC': {bg:'#eff6ff',cl:'#1d4ed8',bd:'#bfdbfe',dot:'#3b82f6'},
-      'TPC':  {bg:'#f0fdf4',cl:'#166534',bd:'#86efac',dot:'#22c55e'},
-      'SNP':  {bg:'#fefce8',cl:'#92400e',bd:'#fde68a',dot:'#f59e0b'},
-      'SCG':  {bg:'#fff7ed',cl:'#c2410c',bd:'#fed7aa',dot:'#f97316'},
-      'SCL':  {bg:'#fdf4ff',cl:'#7c3aed',bd:'#e9d5ff',dot:'#a855f7'},
-      'ไม่ระบุ': {bg:'#f8fafc',cl:'#6b7280',bd:'#e5e7eb',dot:'#9ca3af'},
-    };
-    return map[v] || {bg:'#f8fafc',cl:'#374151',bd:'#e5e7eb',dot:'#6b7280'};
-  };
+  // [PATCH audit-L3] ใช้ global vendorStyle() จาก app-tickets.js (key: bg, color, border)
 
   // ── เครื่องแอร์เพิ่มใหม่ใน 2 เดือนล่าสุด ──
   const cutoff2m = new Date(); cutoff2m.setMonth(cutoff2m.getMonth() - 2); cutoff2m.setHours(0,0,0,0);
@@ -844,7 +834,7 @@ function renderMachineDashboardStats() {
     <!-- Vendor rows -->
     <div style="padding:8px 0">
       ${vendorStats.map(([v,stat], i) => {
-        const {bg,cl,bd,dot} = vendorStyle(v);
+        const {bg, color: cl, border: bd, color: dot} = vendorStyle(v); // [L3] mapped to global keys
         const pct = Math.round(stat.count/all.length*100);
         const bar = Math.round(stat.count/vendorStats[0][1].count*100);
         const depts = [...new Set(stat.machines.map(m=>m.dept||m.location||'').filter(Boolean))];
@@ -1801,7 +1791,7 @@ function openRepairHistory() {
           </div>
           <span style="background:${statusBg};color:${statusColor};font-size:0.58rem;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0">${sTH(t.status)}</span>
         </div>
-        ${t.summary ? `<div style="font-size:0.68rem;color:#475569;margin-left:27px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(t.summary||"").split("\n")[0].replace(/^[-–]\s*/,"")}</div>` : ''}
+        ${t.summary ? `<div style="font-size:0.68rem;color:#475569;margin-left:27px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml((t.summary||"").split("\n")[0].replace(/^[-–]\s*/,""))}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;margin-left:27px;margin-top:4px">
           <span style="font-size:0.6rem;color:#94a3b8">${date}</span>
           ${t.assignee ? `<span style="font-size:0.6rem;color:#94a3b8">· 👷 ${techName}</span>` : ''}
@@ -1960,25 +1950,13 @@ function onMachineChange(mid) {
   document.getElementById('ei-eq').textContent     = eq;
   document.getElementById('ei-loc').textContent    = fl !== '—' ? fl : ([m.location, m.dept].filter(Boolean).join(' › ') || '—');
   const ns=document.getElementById('ei-name-sub'); if(ns) ns.textContent=[m.name,m.dept].filter(Boolean).join(' · ');
-  // vendor badge บนขวา
-  const vTop = document.getElementById('ei-vendor-badge-top');
-  if (vTop) {
-    if (m.vendor) {
-      const vs = vendorStyle(m.vendor);
-      vTop.style.background = vs.bg;
-      vTop.style.color = vs.color;
-      vTop.style.borderColor = vs.border;
-      vTop.textContent = '🏭 ' + m.vendor;
-      vTop.style.display = 'block';
-    } else { vTop.style.display = 'none'; }
-  }
   // Install / PM / Location
   const instEl = document.getElementById('ei-install');
   const pmEl   = document.getElementById('ei-pm');
   const deptEl = document.getElementById('ei-dept');
   if (instEl) instEl.textContent = m.install || '—';
   if (pmEl)   pmEl.textContent   = m.interval ? m.interval + ' เดือน' : '—';
-  // Zone + Range badges
+  // Zone + Range + Vendor badges — ทั้งหมดอยู่แถวเดียวกัน
   const zoneRangeEl = document.getElementById('ei-zone-range');
   if (zoneRangeEl) {
     const mZone = m.zone || 'process';
@@ -1986,7 +1964,12 @@ function onMachineChange(mid) {
       ? `<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:6px;padding:2px 8px;font-size:0.65rem;font-weight:800">🏢 Office</span>`
       : `<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:6px;padding:2px 8px;font-size:0.65rem;font-weight:800">⚙️ Process</span>`;
     const range = getMachineRange(m);
-    zoneRangeEl.innerHTML = zoneBadge + ' ' + getRangeBadgeHtml(range, 'md');
+    const rangeBadge = getRangeBadgeHtml(range, 'md');
+    const vs = m.vendor ? vendorStyle(m.vendor) : null;
+    const vendorBadge = vs
+      ? `<span style="background:${vs.bg};color:${vs.color};border:1px solid ${vs.border};border-radius:6px;padding:2px 8px;font-size:0.65rem;font-weight:800">🏭 ${m.vendor}</span>`
+      : '';
+    zoneRangeEl.innerHTML = zoneBadge + ' ' + rangeBadge + (vendorBadge ? ' ' + vendorBadge : '');
   }
   // ei-dept removed
   card.style.display = 'block';
@@ -2869,7 +2852,7 @@ function openNewMachinesTable() {
           <div style="flex:1;min-width:0">
             <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||'—'}</div>
             <div style="display:flex;align-items:center;gap:4px;margin-top:2px;flex-wrap:nowrap;overflow:hidden">
-              ${m.vendor?`<span style="background:${vc.bg};color:${vc.cl};border:1px solid ${vc.bd};border-radius:4px;padding:0 5px;font-size:0.58rem;font-weight:800;flex-shrink:0">${m.vendor}</span>`:''}
+              ${m.vendor?`<span style="background:${vc.bg};color:${vc.color};border:1px solid ${vc.border};border-radius:4px;padding:0 5px;font-size:0.58rem;font-weight:800;flex-shrink:0">${m.vendor}</span>`:''}
               <span style="font-size:0.62rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.serial||m.id}</span>
             </div>
           </div>
@@ -3049,7 +3032,7 @@ function delMachine(id) {
   showAlert({
     icon: '🗑️', color: '#c8102e',
     title: 'ลบเครื่องแอร์?',
-    msg: `<strong>${m.name}</strong><br><span style="font-family:monospace;font-size:0.82rem;color:#64748b">${m.serial}</span><br><span style="font-size:0.78rem;color:#94a3b8">ไม่สามารถย้อนกลับได้</span>`,
+    msg: `<strong>${escapeHtml(m.name)}</strong><br><span style="font-family:monospace;font-size:0.82rem;color:#64748b">${m.serial}</span><br><span style="font-size:0.78rem;color:#94a3b8">ไม่สามารถย้อนกลับได้</span>`,
     btnOk: '🗑️ ลบ', btnCancel: 'ยกเลิก',
     onOk: () => {
       db.machines = db.machines.filter(x => x.id !== id);
