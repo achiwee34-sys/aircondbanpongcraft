@@ -217,13 +217,11 @@ async function submitTicket() { // PATCH v67
 
   // ถ้ารูปยังโหลดไม่เสร็จ → รอแล้ว retry อัตโนมัติ (ไม่ blocking ผู้ใช้)
   if (_photoLoading > 0) {
-    _isSubmitting = true; // FIX: ล็อกก่อน retry ป้องกัน submit ซ้ำระหว่างรอ
     const btn = document.getElementById('nt-submit-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ กำลังโหลดรูป...'; }
     const retryTimer = setInterval(() => {
       if (_photoLoading <= 0) {
         clearInterval(retryTimer);
-        _isSubmitting = false; // FIX: ปลดล็อกก่อน call submitTicket ใหม่
         if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" style="margin-right:6px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>ส่งงานแจ้งซ่อม`; }
         submitTicket();
       }
@@ -2589,32 +2587,39 @@ function selectVerifyResult(val) {
   if (radio) radio.checked = true;
 }
 function openVerifySheet(tid) {
-  const t = db.tickets.find(x=>x.id===tid); if(!t)return;
+  const t = db.tickets.find(x=>x.id===tid); if(!t){ showToast('⚠️ ไม่พบข้อมูลงาน'); return; }
   document.getElementById('v-tid').value = tid;
   document.getElementById('v-note').value = '';
 
+  // ── Resolve machine: fallback to macMap if t.machine empty ──
+  const _vm = getMacMap().get(t.machineId);
+  const machineName = (t.machine && t.machine.trim()) ? t.machine : (_vm?.name || '(ไม่ระบุเครื่อง)');
+
   // hero header
-  const serial = getSerial(t);
+  const serial = _vm?.serial || getSerial(t);
   const sb = document.getElementById('v-serial-badge');
   if (sb) { sb.textContent = serial; sb.style.display = serial ? 'block' : 'none'; }
   const heroTid = document.getElementById('v-hero-tid');
-  if (heroTid) heroTid.textContent = t.id + ' — ' + t.problem;
+  if (heroTid) heroTid.textContent = t.id + (t.problem ? ' — ' + t.problem : '');
   const heroMac = document.getElementById('v-hero-machine');
-  if (heroMac) heroMac.textContent = '❄️ ' + t.machine;
-  // tech avatar
-  const initials = (t.assignee||'?').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+  if (heroMac) heroMac.textContent = '❄️ ' + machineName;
+  // tech avatar — handle null/empty assignee gracefully
+  const assigneeName = t.assignee || '';
+  const initials = assigneeName
+    ? assigneeName.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase()
+    : '—';
   const ta = document.getElementById('v-tech-avatar');
-  if (ta) ta.textContent = initials;
+  if (ta) { ta.textContent = initials; ta.style.background = assigneeName ? '#c8102e' : '#94a3b8'; }
   const tn = document.getElementById('v-tech-name');
-  if (tn) tn.textContent = t.assignee || 'ยังไม่จ่ายงาน';
+  if (tn) tn.textContent = assigneeName || 'ยังไม่จ่ายงาน';
 
   selectVerifyResult('verified');
 
-  // result box — ผลงานช่าง
+  // result box — ผลงานช่าง (reuse _vm resolved above)
   const hasAfter = t.photosAfter?.length > 0;
-  const _vMachine = getMacMap().get(t.machineId);
+  const _vMachine = _vm;
   const _vDept = _vMachine?.dept || '—';
-  const _vSerial = _vMachine?.serial || '';
+  const _vSerial = serial;
   document.getElementById('v-result-box').innerHTML = `
     <!-- header label -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -2630,7 +2635,7 @@ function openVerifySheet(tid) {
       </tr>
       <tr style="border-bottom:1px solid #f1f5f9">
         <td style="padding:6px 0;color:#94a3b8;font-weight:600;vertical-align:top">เครื่องแอร์</td>
-        <td style="padding:6px 0;color:#0f172a;font-weight:700;line-height:1.4">${t.machine}${_vSerial?`<br><span style="font-size:0.65rem;color:#3b82f6;font-family:'JetBrains Mono',monospace">${_vSerial}</span>`:''}</td>
+        <td style="padding:6px 0;color:#0f172a;font-weight:700;line-height:1.4">${machineName}${_vSerial?`<br><span style="font-size:0.65rem;color:#3b82f6;font-family:'JetBrains Mono',monospace">${_vSerial}</span>`:''}</td>
       </tr>
       <tr style="border-bottom:1px solid #f1f5f9">
         <td style="padding:6px 0;color:#94a3b8;font-weight:600">แผนก</td>

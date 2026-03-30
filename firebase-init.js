@@ -198,8 +198,13 @@ function fsListen() {
       }
       const localArr = db[key];
       if (Array.isArray(d) && Array.isArray(localArr)) {
+        // deduplicate tickets by id before comparing
+        if (key === 'tickets' && d.length > 0) {
+          const seen = new Set();
+          d = d.filter(t => { if (!t.id || seen.has(t.id)) return false; seen.add(t.id); return true; });
+        }
         if (d.length !== localArr.length) { db[key] = d; return true; }
-        const sig = a => (a[0]?.updatedAt||a[0]?.id||'') + (a[a.length-1]?.updatedAt||a[a.length-1]?.id||'');
+        const sig = a => a.length + '|' + a.map(x => (x?.updatedAt||x?.id||'')).join(',');
         if (sig(d) !== sig(localArr)) { db[key] = d; return true; }
         return false;
       }

@@ -260,7 +260,10 @@ function applyMachineFilter() {
   const q = document.getElementById('mac-search')?.value || '';
   const kw = q.toLowerCase().trim();
   let list = db.machines;
-  // Zone filter — FIX: ใช้ getMacZone() เพียงครั้งเดียว (เดิมมี filter ซ้ำ 2 บรรทัด)
+  // Zone filter
+  if (_macZoneFilter) {
+    list = list.filter(m => (m.zone||'process') === _macZoneFilter);
+  }
   if (_macZoneFilter) { list = list.filter(m => getMacZone(m) === _macZoneFilter); }
   if (_macDeptFilter) { list = list.filter(m => (m.dept||m.location||'') === _macDeptFilter); }
   if (_macVendorFilter) {
@@ -2123,6 +2126,64 @@ function openMachineSheet(id) {
   }, 300);
 
   openSheet('machine');
+}
+
+function openAddDept() {
+  const existing = document.getElementById('_add_dept_modal');
+  if (existing) existing.remove();
+
+  const ov = document.createElement('div');
+  ov.id = '_add_dept_modal';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:19999;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:white;border-radius:24px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.3)';
+  box.innerHTML = `
+    <div style="font-size:1rem;font-weight:900;color:#0f172a;margin-bottom:6px">➕ เพิ่มแผนกใหม่</div>
+    <div style="font-size:0.78rem;color:#94a3b8;margin-bottom:16px">ชื่อแผนก / โซน จะปรากฏใน dropdown</div>
+    <input id="_new_dept_input" type="text" placeholder="เช่น PM#1 Stock, WH Production"
+      style="width:100%;padding:13px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:0.95rem;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px;transition:border-color 0.15s"
+      onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e5e7eb'"/>
+    <div id="_new_dept_err" style="display:none;color:#c8102e;font-size:0.75rem;font-weight:700;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px">
+      <button id="_add_dept_cancel" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+      <button id="_add_dept_ok" style="flex:2;padding:13px;background:linear-gradient(135deg,#c8102e,#e63950);color:white;border:none;border-radius:12px;font-size:0.9rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(200,16,46,0.35)">✓ เพิ่มแผนก</button>
+    </div>`;
+
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  const inp = document.getElementById('_new_dept_input');
+  const errEl = document.getElementById('_new_dept_err');
+  setTimeout(() => inp?.focus(), 80);
+
+  const doAdd = () => {
+    const val = inp.value.trim();
+    if (!val) { errEl.textContent = 'กรุณาระบุชื่อแผนก'; errEl.style.display = ''; inp.focus(); return; }
+    const existingDepts = [...new Set((db.machines||[]).map(m => m.dept||m.location||'').filter(Boolean))];
+    if (existingDepts.some(d => d.toLowerCase() === val.toLowerCase())) {
+      errEl.textContent = `"${val}" มีอยู่แล้ว`; errEl.style.display = ''; inp.focus(); return;
+    }
+    ov.remove();
+    const sel = document.getElementById('m-lookup-dept');
+    if (sel) {
+      const opt = document.createElement('option');
+      opt.value = val; opt.textContent = val;
+      sel.appendChild(opt);
+      sel.value = val;
+      const deptEl = document.getElementById('m-dept');
+      if (deptEl) deptEl.value = val;
+      const abbr = val.replace(/[^A-Za-z0-9]/g,'').substring(0,4).toUpperCase() || 'AIR';
+      const serialEl = document.getElementById('m-serial');
+      if (serialEl && !serialEl.value) { serialEl.value = abbr + '001'; }
+    }
+    showToast('✅ เพิ่มแผนก "' + val + '" แล้ว');
+  };
+
+  document.getElementById('_add_dept_ok').onclick = doAdd;
+  document.getElementById('_add_dept_cancel').onclick = () => ov.remove();
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); if (e.key === 'Escape') ov.remove(); });
 }
 
 function initLookupDept() {

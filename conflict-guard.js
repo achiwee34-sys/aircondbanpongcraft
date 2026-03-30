@@ -72,10 +72,7 @@ async function fsSaveWithLock(payload) {
  * Handle conflict: โหลดข้อมูลใหม่ แล้วแจ้ง user
  * เรียกเมื่อ fsSaveWithLock() return 'conflict'
  */
-let _conflictHandling = false; // FIX: ป้องกัน handleSaveConflict ถูกเรียกซ้ำซ้อน
 async function handleSaveConflict() {
-  if (_conflictHandling) return; // FIX: debounce — ถ้ากำลัง handle อยู่ให้ skip
-  _conflictHandling = true;
   console.warn('[ConflictGuard] Conflict detected — reloading from Firestore');
 
   if (typeof showToast === 'function') {
@@ -100,8 +97,6 @@ async function handleSaveConflict() {
     if (typeof showToast === 'function') {
       showToast('❌ โหลดข้อมูลไม่สำเร็จ กรุณากด 🔄 ด้วยตนเอง');
     }
-  } finally {
-    setTimeout(() => { _conflictHandling = false; }, 5000); // FIX: รอ 5 วิก่อน allow ครั้งถัดไป
   }
 }
 

@@ -165,7 +165,8 @@ function renderReport() {
 
   // Populate dept dropdown
   const deptSel = document.getElementById('rpt-dept-filter');
-  if (deptSel && deptSel.options.length <= 1) {
+  if (deptSel) {
+    deptSel.innerHTML = '<option value="">— ทุกแผนก —</option>';
     const depts = [...new Set((db.machines||[]).map(m => m.dept||m.location||'').filter(Boolean))].sort();
     depts.forEach(d => {
       const opt = document.createElement('option');
@@ -188,14 +189,15 @@ function renderReport() {
     const d = new Date(t.createdAt||t.updatedAt||'');
     return d.getFullYear()===rptYear && d.getMonth()===rptMonth;
   });
-  const allActive = T.filter(t => !['closed','verified','done'].includes(t.status));
-  const done   = monthTickets.filter(t => ['done','verified','closed'].includes(t.status));
-  const pending= allActive;
-  const inprog = T.filter(t => t.status==='inprogress');
-  const waitP  = T.filter(t => t.status==='waiting_part');
-  const highP  = allActive.filter(t => t.priority==='high');
+  const allActive   = T.filter(t => !['closed','verified','done'].includes(t.status));
+  const done        = monthTickets.filter(t => ['done','verified','closed'].includes(t.status));
+  const monthActive = monthTickets.filter(t => !['done','verified','closed'].includes(t.status));
+  const pending     = allActive;
+  const inprog      = T.filter(t => t.status==='inprogress');
+  const waitP       = T.filter(t => t.status==='waiting_part');
+  const highP       = allActive.filter(t => t.priority==='high');
 
-  renderRptKPI(monthTickets.length, done.length, pending.length);
+  renderRptKPI(monthTickets.length, done.length, monthActive.length);
   renderRptCostMonthly();
   renderRptCostByDept(T, _rptDeptFilter);
   renderRptGoal(done.length);

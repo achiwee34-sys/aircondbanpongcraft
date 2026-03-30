@@ -44,7 +44,15 @@ if (localStorage.getItem(VER_KEY) !== APP_VER) {
 
 let db = JSON.parse(localStorage.getItem(DB_KEY) || 'null') || initDB();
 
-// (demo tickets removed)
+// ── Deduplicate tickets on load (ป้องกัน Firebase sync ทำให้ซ้ำ) ──
+if (db && Array.isArray(db.tickets) && db.tickets.length > 0) {
+  const seen = new Set();
+  db.tickets = db.tickets.filter(t => {
+    if (!t.id || seen.has(t.id)) return false;
+    seen.add(t.id);
+    return true;
+  });
+}
 
 // ── Ensure default system users always exist (ป้องกัน executive/admin หาย) ──
 // SECURITY: ไม่ฝัง password hash ใน source code — ใช้ SETUP_REQUIRED sentinel แทน
