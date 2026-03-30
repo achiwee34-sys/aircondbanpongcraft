@@ -1176,7 +1176,10 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
   touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   pointer-events: auto; position: relative; z-index: 1;
 }
-.sheet.open { transform: translateX(-50%) translateY(0); }
+/* mobile: slide up from bottom */
+@media (max-width: 767px) {
+  .sheet.open { transform: translateX(-50%) translateY(0); }
+}
 .sheet-handle { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 14px auto 0; }
 .sheet-title { font-size: 1rem; font-weight: 700; color: var(--text); padding: 14px 20px 4px; }
 .sheet-body { padding: 10px 20px 0; }
