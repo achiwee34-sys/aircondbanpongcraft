@@ -854,12 +854,12 @@ async function viewQuotationFull(tid) {
     +'<div style="font-size:5pt;font-weight:800;color:#1a5276;line-height:1.5;margin-top:2px;font-family:Arial">NIL ENGINEERING 2005<br>LIMITED PARTNERSHIP</div></td>'
     +'<td style="padding:8px 12px;vertical-align:top">'
     +'<div style="font-size:12.5pt;font-weight:900">ห้างหุ้นส่วนจำกัด นิล เอ็นจิเนียริ่ง 2005</div>'
-    +'<div style="font-size:8pt;margin-top:3px;color:#222">เลขที่ 12/1 ม.3 ต.วังศาลา อ.ท่าม่วง จ.กาญจนบุรี 71130</div>'
+    +(cfg.quotationImg?'<div style="margin-top:6px"><img src="'+cfg.quotationImg+'" style="max-width:160px;max-height:60px;object-fit:contain;border-radius:3px"/></div>':'')
+    +'<div style="font-size:8pt;margin-top:4px;color:#222">เลขที่ 12/1 ม.3 ต.วังศาลา อ.ท่าม่วง จ.กาญจนบุรี 71130</div>'
     +'<div style="font-size:8pt;color:#222">Tel 090-4388533 &nbsp;&nbsp; Email nilengineering2005@hotmail.com</div>'
     +'<div style="font-size:7.5pt;margin-top:12px;color:#444">เลขประจำตัวผู้เสียภาษี (Tax ID) &nbsp;<strong>713548000570</strong> &nbsp;&nbsp; สำนักงานใหญ่</div></td>'
     +'<td style="width:140px;padding:8px 0 8px 8px;vertical-align:middle;text-align:center">'
     +'<div style="display:flex;flex-direction:column;align-items:center;gap:5px">'
-    +(cfg.quotationImg?'<img src="'+cfg.quotationImg+'" style="width:60px;height:40px;object-fit:contain;border:1px solid #ddd;border-radius:3px"/>':'')
     +'<div style="border:2px solid #333;padding:9px 10px;display:inline-block;min-width:88px">'
     +'<div style="font-size:10.5pt;font-weight:900">ใบเสนอราคา</div>'
     +'<div style="font-size:9pt;font-weight:700;color:#333">Quotation</div></div></div></td>'
@@ -1650,13 +1650,13 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     +'<td style="width:88px;padding:8px 8px 8px 0;text-align:center;vertical-align:middle">'+logoCell+'<div style="font-size:5pt;font-weight:800;color:#1a5276;line-height:1.5;margin-top:3px;font-family:Arial;white-space:pre-line">'+E(DS.logoSubLine||'')+'</div></td>'
     +'<td style="padding:9px 14px;vertical-align:top">'
     +'<div style="font-size:12pt;font-weight:900;margin-bottom:3px">'+E(DS.company)+'</div>'
+    +(DS.quotationImg?'<div style="margin-bottom:5px"><img src="'+DS.quotationImg+'" style="max-width:160px;max-height:60px;object-fit:contain;border-radius:3px"/></div>':'')
     +'<div style="font-size:7.5pt;color:#333;margin-bottom:2px">'+E(DS.address)+'</div>'
     +'<div style="font-size:7.5pt;color:#333;margin-bottom:4px">Tel '+E(DS.tel)+'&nbsp;&nbsp; Email '+E(DS.email)+'</div>'
     +'<div style="font-size:7pt;margin-top:12px;color:#555">เลขประจำตัวผู้เสียภาษี (Tax ID) &nbsp;<strong>'+E(DS.taxid)+'</strong>&nbsp;&nbsp; สำนักงานใหญ่</div>'
     +'</td>'
     +'<td style="width:110px;padding:8px 0 8px 8px;text-align:center;vertical-align:middle">'
     +'<div style="display:flex;flex-direction:column;align-items:center;gap:5px">'
-    +(DS.quotationImg?'<img src="'+DS.quotationImg+'" style="width:60px;height:40px;object-fit:contain;border:1px solid #ddd;border-radius:3px"/>':'')
     +'<div style="border:1.5px solid #555;border-radius:2px;padding:7px 5px;display:inline-block;min-width:76px">'
     +'<div style="font-size:10pt;font-weight:900">ใบเสนอราคา</div>'
     +'<div style="font-size:8pt;font-weight:700;color:#444">Quotation</div>'
