@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── appdata: อ่าน/เขียนได้เฉพาะ authenticated users ──
+    // หากยังไม่ได้ใช้ Firebase Auth ให้ใช้ allow read, write: if false;
+    // แล้วค่อยเปิดทีละ operation เมื่อเพิ่ม Auth แล้ว
+    match /appdata/{doc} {
+      // ปิดสนิท — ไม่มีใคร read/write โดยตรงจาก client ได้
+      // ให้ใช้ Cloud Functions หรือ Admin SDK เท่านั้น
+      allow read, write: if false;
+    }
+
+    // block ทุกอย่างที่ไม่ได้ระบุ explicitly
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
