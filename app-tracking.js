@@ -2711,8 +2711,9 @@ function doVerify() {
   }
   t.updatedAt=now; saveDB(); syncTicket(t); closeSheet('verify');
   if (result === 'verified') {
-    setTimeout(() => openSignaturePad(tid, 'reporter_verify'), 400);
+    refreshPage(); // refresh ก่อนเสมอ เพื่อให้ UI อัพเดทแม้ signature pad crash
     showToast('✅ ตรวจรับแล้ว — กรุณาเซ็นชื่อยืนยัน');
+    try { setTimeout(() => openSignaturePad(tid, 'reporter_verify'), 500); } catch(e) {}
   } else {
     refreshPage();
   }
@@ -2743,7 +2744,7 @@ function doCloseConfirm(withPdf) {
   closeSheet('closeconfirm');
   if(withPdf) { setTimeout(()=>generateRepairPDF(tid), 300); }
   else { showToast('🔒 ปิดงานเรียบร้อย — กรุณาเซ็นชื่อ'); }
-  setTimeout(() => { openSignaturePad(tid, 'admin_close'); refreshPage(); }, withPdf ? 600 : 400);
+  setTimeout(() => { try { openSignaturePad(tid, 'admin_close'); } catch(e) {} refreshPage(); }, withPdf ? 600 : 400);
 }
 
 // ══ WaitPart & PO display blocks for detail sheet ══

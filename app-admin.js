@@ -1200,14 +1200,142 @@ let _sigCtx = null;
 let _sigDrawing = false;
 let _sigLastX = 0, _sigLastY = 0;
 
-// [REMOVED audit-H4] clearSignaturePad() — dead code, no call site
+function openSignaturePad(tid, type) {
+  // type: 'tech_done' | 'reporter_verify' | 'admin_close'
+  _sigTid = tid; _sigType = type;
+
+  const labels = {
+    tech_done:       { title: '✍️ เซ็นชื่อช่างผู้ซ่อม',    sub: 'ยืนยันการซ่อมเสร็จสมบูรณ์' },
+    reporter_verify: { title: '✍️ เซ็นชื่อผู้ตรวจรับงาน', sub: 'ยืนยันการตรวจรับงาน' },
+    admin_close:     { title: '✍️ เซ็นชื่อผู้ดูแลระบบ',    sub: 'ยืนยันการปิดงาน' },
+  };
+  const lbl = labels[type] || { title: '✍️ เซ็นชื่อ', sub: '' };
+
+  // ลบ overlay เก่าก่อน
+  document.getElementById('sig-overlay')?.remove();
+
+  const ov = document.createElement('div');
+  ov.id = 'sig-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);display:flex;align-items:flex-end;justify-content:center;';
+  ov.innerHTML = `
+    <div style="background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:520px;padding:20px 20px 32px;box-shadow:0 -8px 40px rgba(0,0,0,0.18)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:#0f172a">${lbl.title}</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:1px">${lbl.sub}</div>
+        </div>
+        <button onclick="closeSignaturePad()" style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;border:none;font-size:1rem;cursor:pointer;color:#64748b">✕</button>
+      </div>
+      <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:8px;text-align:center">วาดลายเซ็นในกรอบด้านล่าง</div>
+      <canvas id="sig-canvas"
+        style="width:100%;height:180px;border:2px dashed #cbd5e1;border-radius:14px;background:#f8fafc;touch-action:none;display:block;cursor:crosshair">
+      </canvas>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button onclick="clearSignaturePad()"
+          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;font-size:0.85rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit">
+          🗑️ ล้าง
+        </button>
+        <button onclick="confirmSignature()"
+          style="flex:2;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:0.85rem;font-weight:800;cursor:pointer;font-family:inherit">
+          ✅ ยืนยันลายเซ็น
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+
+  // Setup canvas
+  const canvas = document.getElementById('sig-canvas');
+  // กำหนด pixel size จาก display size
+  const rect = canvas.getBoundingClientRect();
+  canvas.width  = rect.width  || 320;
+  canvas.height = rect.height || 180;
+  _sigCanvas = canvas;
+  _sigCtx = canvas.getContext('2d');
+  _sigCtx.strokeStyle = '#1e293b';
+  _sigCtx.lineWidth = 2.5;
+  _sigCtx.lineCap = 'round';
+  _sigCtx.lineJoin = 'round';
+
+  // Touch events
+  canvas.addEventListener('touchstart',  _sigTouchStart,  {passive:false});
+  canvas.addEventListener('touchmove',   _sigTouchMove,   {passive:false});
+  canvas.addEventListener('touchend',    _sigTouchEnd,    {passive:false});
+  // Mouse events
+  canvas.addEventListener('mousedown',   _sigMouseDown);
+  canvas.addEventListener('mousemove',   _sigMouseMove);
+  canvas.addEventListener('mouseup',     _sigMouseUp);
+  canvas.addEventListener('mouseleave',  _sigMouseUp);
+}
+
+function _sigPos(e) {
+  const r = _sigCanvas.getBoundingClientRect();
+  const scaleX = _sigCanvas.width  / r.width;
+  const scaleY = _sigCanvas.height / r.height;
+  const src = e.touches ? e.touches[0] : e;
+  return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
+}
+function _sigTouchStart(e)  { e.preventDefault(); const p=_sigPos(e); _sigDrawing=true; _sigCtx.beginPath(); _sigCtx.moveTo(p.x,p.y); _sigLastX=p.x; _sigLastY=p.y; }
+function _sigTouchMove(e)   { e.preventDefault(); if(!_sigDrawing) return; const p=_sigPos(e); _sigCtx.lineTo(p.x,p.y); _sigCtx.stroke(); _sigLastX=p.x; _sigLastY=p.y; }
+function _sigTouchEnd(e)    { e.preventDefault(); _sigDrawing=false; }
+function _sigMouseDown(e)   { const p=_sigPos(e); _sigDrawing=true; _sigCtx.beginPath(); _sigCtx.moveTo(p.x,p.y); _sigLastX=p.x; _sigLastY=p.y; }
+function _sigMouseMove(e)   { if(!_sigDrawing) return; const p=_sigPos(e); _sigCtx.lineTo(p.x,p.y); _sigCtx.stroke(); _sigLastX=p.x; _sigLastY=p.y; }
+function _sigMouseUp()      { _sigDrawing=false; }
+
+function clearSignaturePad() {
+  if (!_sigCanvas || !_sigCtx) return;
+  _sigCtx.clearRect(0, 0, _sigCanvas.width, _sigCanvas.height);
+}
 
 function closeSignaturePad() {
   document.getElementById('sig-overlay')?.remove();
   _sigTid = ''; _sigType = ''; _sigCanvas = null; _sigCtx = null;
 }
 
-// [REMOVED audit-H4] confirmSignature() — dead code, no call site
+async function confirmSignature() {
+  if (!_sigCanvas) return;
+  // ตรวจว่ามีการวาดหรือยัง (pixel ที่ไม่ใช่ transparent)
+  const px = _sigCtx.getImageData(0,0,_sigCanvas.width,_sigCanvas.height).data;
+  const hasStroke = px.some((v,i) => i%4===3 && v>10);
+  if (!hasStroke) { showToast('⚠️ กรุณาวาดลายเซ็นก่อน'); return; }
+
+  const dataUrl = _sigCanvas.toDataURL('image/png');
+  const tid     = _sigTid;
+  const type    = _sigType;
+
+  // map type → key ใน t.signatures
+  const keyMap = { tech_done:'tech', reporter_verify:'reporter', admin_close:'admin' };
+  const sigKey = keyMap[type] || type;
+
+  // บันทึกใน ticket object
+  const t = db.tickets.find(x=>x.id===tid);
+  if (t) {
+    if (!t.signatures) t.signatures = {};
+    t.signatures[sigKey] = { data: dataUrl, by: CU.name, at: nowStr() };
+    saveDB();
+  }
+
+  // บันทึกใน localStorage cache
+  try {
+    const cache = JSON.parse(localStorage.getItem(SIGS_KEY)||'{}');
+    if (!cache[tid]) cache[tid] = {};
+    cache[tid][sigKey] = { data: dataUrl, by: CU.name, at: nowStr() };
+    localStorage.setItem(SIGS_KEY, JSON.stringify(cache));
+  } catch(e) {}
+
+  // บันทึกขึ้น Firebase
+  if (_firebaseReady && FSdb) {
+    try {
+      const sigSnap = await FSdb.collection('appdata').doc('signatures').get();
+      const allSigs = sigSnap.exists ? (sigSnap.data()||{}) : {};
+      if (!allSigs[tid]) allSigs[tid] = {};
+      allSigs[tid][sigKey] = { data: dataUrl, by: CU.name, at: nowStr() };
+      await FSdb.collection('appdata').doc('signatures').set(allSigs);
+    } catch(e) { console.warn('sig firebase save error', e); }
+  }
+
+  closeSignaturePad();
+  showToast('✅ บันทึกลายเซ็นเรียบร้อย');
+}
 
 // ============================================================
 // DEPT QR SHEET — QR Code รายแผนก แถวละ 10
