@@ -18,6 +18,13 @@ function initFirebase() {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     FSdb = firebase.firestore();
     _firebaseReady = true;
+    // ── Anonymous Auth: sign in ทันทีเพื่อให้ write Firestore ได้ ──
+    // (Firestore Rules: read = open, write = require auth)
+    if (firebase.auth) {
+      firebase.auth().signInAnonymously().catch(e => {
+        console.warn('[Firebase] Anonymous sign-in failed:', e.message);
+      });
+    }
     // ── PATCH v67: init Firebase Storage ──
     if (typeof initStorage === 'function') initStorage();
   } catch(e) { console.warn('Firebase init error:', e); }

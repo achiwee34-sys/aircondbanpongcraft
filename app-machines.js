@@ -2003,8 +2003,9 @@ function openMachineSheet(id) {
     // หา prefix ที่ใช้บ่อยที่สุด (เช่น csv_, Pm1S, WH, etc.)
     // ใช้รูปแบบ NEW-XXXX โดยนับต่อจากเลขสูงสุดที่มี
     document.getElementById('m-serial').value = 'NEW-' + String(nextNum).padStart(4,'0');
+  } else {
+    document.getElementById('m-serial').value = m?.serial||'';
   }
-  document.getElementById('m-serial').value   = m?.serial||'';
   document.getElementById('m-dept').value     = m?.dept||'';
   document.getElementById('m-funcloc').value  = m?.funcLoc||'';
   document.getElementById('m-equipment').value= m?.equipment||'';
@@ -2018,8 +2019,6 @@ function openMachineSheet(id) {
   document.getElementById('m-ref').value      = m?.refrigerant||'';
   document.getElementById('m-interval').value = m?.interval||6;
   document.getElementById('m-install').value  = m?.install||'';
-  setMsZone(m?.zone||'process');
-  // zone
   setMsZone(m?.zone || 'process');
   // range
   setMsRange(m?.range || '');
