@@ -2860,6 +2860,8 @@ function deleteTicket(tid) {
     msg: 'ลบแล้วไม่สามารถกู้คืนได้ ข้อมูลงาน รูปภาพ และแชทจะหายทั้งหมด',
     btnOk: '🗑️ ลบถาวร', btnCancel: 'ยกเลิก',
     onOk: () => {
+      const _delTk = (db.tickets||[]).find(t=>t.id===tid);
+      if(window.bkAudit && _delTk) window.bkAudit('ลบ Ticket', tid, {id:_delTk.id,problem:_delTk.problem,machine:_delTk.machine}, null);
       db.tickets = (db.tickets||[]).filter(t => t.id !== tid);
       // ลบ chat ที่เกี่ยวข้อง
       if (db.chats && db.chats[tid]) delete db.chats[tid];

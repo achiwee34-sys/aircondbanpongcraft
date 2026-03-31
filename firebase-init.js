@@ -36,7 +36,7 @@ async function fsLoad() {
   const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
   const DEMO_IDS       = ['u2','u3','u4','u5'];
   try {
-    const snap = await FSdb.collection('appdata').doc('main').get();
+    const snap = await FSdb.collection('appdata').doc('main').get(); if(window.bkCountRead) window.bkCountRead(1);
     if (snap.exists) {
       const data = snap.data();
       // ── PATCH v67: sync _docVersion สำหรับ optimistic locking ──
@@ -66,7 +66,7 @@ async function fsLoad() {
       if (data._seq)                                            db._seq     = data._seq;
 
       try {
-        const sigSnap = await FSdb.collection('appdata').doc('signatures').get();
+        const sigSnap = await FSdb.collection('appdata').doc('signatures').get(); if(window.bkCountRead) window.bkCountRead(1);
         if (sigSnap.exists) {
           const allSigs = sigSnap.data();
           db.tickets.forEach(t => { if (allSigs[t.id]) t.signatures = allSigs[t.id]; });
@@ -97,7 +97,7 @@ async function saveChatsFast() {
   if (!_firebaseReady || !FSdb) return;
   _fsChatSaving = true;
   try {
-    await FSdb.collection('appdata').doc('main').update({
+    if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('main').update({
       chats: db.chats || {},
       updatedAt: new Date().toISOString()
     });
@@ -128,7 +128,7 @@ async function fsSaveNow() {
         allSigs[t.id] = t.signatures;
       }
     });
-    await FSdb.collection('appdata').doc('main').set({
+    if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('main').set({
       users:           db.users           || [],
       machines:        db.machines        || [],
       tickets:         ticketsNoSig,
@@ -139,7 +139,7 @@ async function fsSaveNow() {
       updatedAt:       new Date().toISOString()
     });
     if (Object.keys(allSigs).length > 0) {
-      await FSdb.collection('appdata').doc('signatures').set(allSigs);
+      if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('signatures').set(allSigs);
     }
   } catch(e) { console.warn('fsSaveNow error:', e); }
   finally { setTimeout(() => { _fsSaving = false; }, 500); }

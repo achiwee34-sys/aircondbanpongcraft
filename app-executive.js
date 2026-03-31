@@ -1115,8 +1115,9 @@ function closeKpiModal() {
     }
   }
 
-  // ── ตรวจสอบและ backup อัตโนมัติ ──
+  // ── ตรวจสอบและ backup อัตโนมัติ (เฉพาะ admin เท่านั้น) ──
   function checkAutoBackup() {
+    if (!CU || CU.role !== 'admin') return; // ไม่ใช่ admin ไม่ backup
     const last = parseInt(localStorage.getItem(BACKUP_KEY) || '0');
     const now  = Date.now();
     if (now - last >= BACKUP_INTERVAL) {
@@ -1128,11 +1129,16 @@ function closeKpiModal() {
   const _origOnLogin = window._onLoginSuccess;
   window._onLoginSuccess = function() {
     if (_origOnLogin) _origOnLogin();
-    setTimeout(checkAutoBackup, 3000);
+    if (CU && CU.role === 'admin') {
+      setTimeout(checkAutoBackup, 3000);
+    }
   };
 
-  // เปิดให้เรียกจากปุ่ม manual
-  window.manualBackup = function() { _doBackup(false); };
+  // เปิดให้เรียกจากปุ่ม manual (admin เท่านั้น)
+  window.manualBackup = function() {
+    if (!CU || CU.role !== 'admin') { showToast('⚠️ เฉพาะ Admin เท่านั้น'); return; }
+    _doBackup(false);
+  };
 
   // ตรวจทุก 1 ชม. กรณีแอปเปิดค้าง — เก็บ ref ไว้ clear ได้เมื่อ logout
   window._autoBackupInterval = setInterval(checkAutoBackup, 60 * 60 * 1000);

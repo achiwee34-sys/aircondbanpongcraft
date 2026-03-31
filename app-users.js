@@ -191,22 +191,15 @@ function renderUsers() {
         </div>
         <!-- Actions -->
         <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
-          <button data-uid="${u.id}" data-act="edit" style="padding:6px 10px;background:#f1f5f9;border:none;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit">✏️</button>
-          <button data-uid="${u.id}" data-act="del" style="padding:6px 10px;background:#fff0f2;border:none;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;color:#c8102e;font-family:inherit">🗑️</button>
+          <button onclick="openUserSheet('${u.id}')" style="padding:6px 10px;background:#f1f5f9;border:none;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation">✏️</button>
+          <button onclick="delUser('${u.id}')" style="padding:6px 10px;background:#fff0f2;border:none;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;color:#c8102e;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🗑️</button>
         </div>
       </div>
       ${statsHtml}
     </div>`;
   }).join('');
 
-  // Event delegation
-  el.querySelectorAll('[data-uid]').forEach(btn => {
-    btn.onclick = function() {
-      const uid = this.dataset.uid;
-      if(this.dataset.act==='edit') openUserSheet(uid);
-      else if(this.dataset.act==='del') delUser(uid);
-    };
-  });
+  // inline onclick used directly on buttons
 }
 function openUserSheet(id, defaultRole) {
   const u = id ? db.users.find(x=>x.id===id) : null;
@@ -285,6 +278,7 @@ async function saveUser() {  // PATCH: async เพื่อ await hashPassword
     const hashedPass = await hashPassword(pass);
     db.users.push({id:'u'+Date.now(),...d,password:hashedPass});
   }
+  if(window.bkAudit) window.bkAudit(document.getElementById('u-id').value ? 'แก้ไข User' : 'เพิ่ม User', d.username||d.name, null, {name:d.name,role:d.role});
   saveDB(); closeSheet('user'); switchUserTab(d.role==='tech'?'tech':d.role==='admin'?'admin':d.role==='executive'?'executive':'reporter');
   } catch(e) {
     console.error('[saveUser] error:', e);
@@ -297,6 +291,7 @@ function delUser(id) {
   if (!u) return;
   // ใช้ custom confirm sheet แทน browser confirm
   showConfirmDelete(u, () => {
+    if(window.bkAudit) window.bkAudit('ลบ User', u.username || u.name, {name:u.name,role:u.role}, null);
     db.users = db.users.filter(x => x.id !== id);
     // คืนสถานะงานที่ยังไม่เสร็จ
     const DONE_S = ['done','verified','closed'];

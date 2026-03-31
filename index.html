@@ -1137,79 +1137,6 @@
 
     </div>
 
-    <div class="page" id="pg-pmplan" data-page="pmplan" style="display:none;flex-direction:column;padding:0">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,#0369a1,#0c4a6e);flex-shrink:0;padding:calc(env(safe-area-inset-top,0px)+12px) 14px 0">
-        <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px">
-          <button onclick="goPage('calendar')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);color:white;font-size:1.1rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">‹</button>
-          <div style="flex:1">
-            <div style="color:white;font-size:0.95rem;font-weight:900;letter-spacing:-0.01em">🗓️ แผน PM เครื่องแอร์</div>
-            <div style="color:rgba(255,255,255,0.6);font-size:0.6rem;margin-top:1px">วางแผนล้างและบำรุงรักษาทั้งแผนก</div>
-          </div>
-          <button onclick="savePMPlanPage()" style="padding:8px 16px;background:white;color:#0369a1;border:none;border-radius:10px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(0,0,0,0.2)">บันทึก</button>
-        </div>
-      </div>
-
-      <!-- Scrollable body -->
-      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#f0f4f8;padding:14px 12px 32px">
-
-        <!-- ประเภทการล้าง -->
-        <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid #e8ecf0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <div style="font-size:0.75rem;font-weight:900;color:#0f172a;margin-bottom:10px">🔧 ประเภทการล้าง</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <button id="pmpage-major-btn" onclick="setPMPageType('clean-major')"
-              style="padding:12px 8px;border:2px solid #0369a1;background:linear-gradient(135deg,#0369a1,#0c4a6e);color:white;border-radius:12px;font-size:0.78rem;font-weight:800;cursor:pointer;font-family:inherit;transition:all 0.2s">
-              🔵 ล้างใหญ่
-            </button>
-            <button id="pmpage-minor-btn" onclick="setPMPageType('clean-minor')"
-              style="padding:12px 8px;border:2px solid #e2e8f0;background:white;color:#64748b;border-radius:12px;font-size:0.78rem;font-weight:800;cursor:pointer;font-family:inherit;transition:all 0.2s">
-              💦 ล้างย่อย
-            </button>
-          </div>
-          <input type="hidden" id="pmpage-type" value="clean-major">
-        </div>
-
-        <!-- วันที่และช่าง -->
-        <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid #e8ecf0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <div style="font-size:0.75rem;font-weight:900;color:#0f172a;margin-bottom:10px">📅 กำหนดการ</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label style="font-size:0.65rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px">วันที่</label>
-              <input type="date" id="pmpage-start-date"
-                style="width:100%;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.8rem;font-family:inherit;box-sizing:border-box;outline:none"
-                onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#e2e8f0'">
-            </div>
-            <div>
-              <label style="font-size:0.65rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px">ช่างที่รับผิดชอบ</label>
-              <select id="pmpage-tech"
-                style="width:100%;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.78rem;font-family:inherit;box-sizing:border-box;outline:none;background:white"
-                onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#e2e8f0'">
-                <option value="">— ทุกช่าง —</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- เลือกแผนก -->
-        <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid #e8ecf0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:0.75rem;font-weight:900;color:#0f172a">🏢 เลือกแผนก</div>
-            <div style="display:flex;gap:6px">
-              <button onclick="pmPageSelectAll(true)" style="padding:4px 10px;background:#eff6ff;color:#0369a1;border:1px solid #bfdbfe;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">เลือกทั้งหมด</button>
-              <button onclick="pmPageSelectAll(false)" style="padding:4px 10px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">ล้าง</button>
-            </div>
-          </div>
-          <div id="pmpage-dept-list" style="display:flex;flex-direction:column;gap:6px"></div>
-        </div>
-
-        <!-- ประวัติแผน PM -->
-        <div style="background:white;border-radius:16px;padding:14px;border:1px solid #e8ecf0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-          <div style="font-size:0.75rem;font-weight:900;color:#0f172a;margin-bottom:10px">📋 ประวัติแผน PM (3 เดือนล่าสุด)</div>
-          <div id="pmpage-history" style="display:flex;flex-direction:column;gap:6px"></div>
-        </div>
-
-      </div>
-    </div>
 
     <div class="page" id="pg-chatroom" data-page="chatroom" style="padding:0;overflow:hidden">
 
@@ -1452,63 +1379,81 @@
           </div>
 
           <!-- ── mac-dropdown ── -->
-          <div id="mac-dropdown" style="display:none;position:fixed;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,0.14);z-index:99999;min-width:220px;overflow:hidden">
+          <div id="mac-dropdown" style="display:none;position:fixed;background:white;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 8px 32px rgba(15,23,42,0.13);z-index:99999;min-width:230px;overflow:hidden;padding:6px 0">
 
             <!-- เพิ่มเครื่อง -->
             <button onclick="closeMacDropdown();openMachineSheet()"
-              style="width:100%;padding:11px 14px;border:none;background:white;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:700;color:#0f172a;font-family:inherit;text-align:left;border-bottom:1px solid #f1f5f9;transition:background 0.1s"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-              <span style="width:28px;height:28px;background:linear-gradient(135deg,#c8102e,#e63950);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">➕</span>
+              style="width:100%;padding:10px 14px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:11px;font-size:0.83rem;font-weight:700;color:#1e293b;font-family:inherit;text-align:left;transition:background 0.12s"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              <span style="width:30px;height:30px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(59,130,246,0.35)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </span>
               เพิ่มเครื่องแอร์
             </button>
 
             <!-- ตารางเครื่องแอร์ -->
             <button onclick="closeMacDropdown();openMacTableSheet()"
-              style="width:100%;padding:11px 14px;border:none;background:white;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:700;color:#0f172a;font-family:inherit;text-align:left;border-bottom:1px solid #f1f5f9;transition:background 0.1s"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-              <span style="width:28px;height:28px;background:linear-gradient(135deg,#0369a1,#0284c7);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">📋</span>
+              style="width:100%;padding:10px 14px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:11px;font-size:0.83rem;font-weight:700;color:#1e293b;font-family:inherit;text-align:left;transition:background 0.12s"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              <span style="width:30px;height:30px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(59,130,246,0.35)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+              </span>
               ตารางเครื่องแอร์
             </button>
 
             <!-- เครื่องแอร์ใหม่ -->
             <button onclick="closeMacDropdown();openNewMachinesTable()"
-              style="width:100%;padding:11px 14px;border:none;background:white;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:700;color:#0f172a;font-family:inherit;text-align:left;border-bottom:1px solid #f1f5f9;transition:background 0.1s"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-              <span style="width:28px;height:28px;background:linear-gradient(135deg,#16a34a,#15803d);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">✨</span>
+              style="width:100%;padding:10px 14px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:11px;font-size:0.83rem;font-weight:700;color:#1e293b;font-family:inherit;text-align:left;transition:background 0.12s"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              <span style="width:30px;height:30px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(59,130,246,0.35)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </span>
               เครื่องแอร์ใหม่ (2 เดือน)
-              <span id="mac-dd-new-badge" style="margin-left:auto;background:#dcfce7;color:#16a34a;border-radius:99px;padding:1px 8px;font-size:0.65rem;font-weight:800"></span>
+              <span id="mac-dd-new-badge" style="margin-left:auto;background:#dbeafe;color:#1d4ed8;border-radius:99px;padding:1px 8px;font-size:0.65rem;font-weight:800"></span>
             </button>
 
             <!-- รออนุมัติ -->
             <button onclick="closeMacDropdown();openMachineRequestsPage()"
-              style="width:100%;padding:11px 14px;border:none;background:white;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:700;color:#0f172a;font-family:inherit;text-align:left;border-bottom:1px solid #f1f5f9;transition:background 0.1s"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-              <span style="width:28px;height:28px;background:linear-gradient(135deg,#1d4ed8,#1e40af);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">📋</span>
+              style="width:100%;padding:10px 14px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:11px;font-size:0.83rem;font-weight:700;color:#1e293b;font-family:inherit;text-align:left;transition:background 0.12s"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              <span style="width:30px;height:30px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(59,130,246,0.35)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+              </span>
               คำขอเพิ่มเครื่อง
               <span id="mac-dd-req-badge" style="margin-left:auto;background:#dbeafe;color:#1d4ed8;border-radius:99px;padding:1px 8px;font-size:0.65rem;font-weight:800;display:none"></span>
             </button>
 
+            <div style="height:1px;background:#e2e8f0;margin:4px 14px"></div>
+
             <!-- Export -->
             <button onclick="closeMacDropdown();openMachineExportMenu(this)"
-              style="width:100%;padding:11px 14px;border:none;background:white;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:700;color:#0f172a;font-family:inherit;text-align:left;border-bottom:1px solid #f1f5f9;transition:background 0.1s"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-              <span style="width:28px;height:28px;background:linear-gradient(135deg,#0369a1,#0ea5e9);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">📊</span>
+              style="width:100%;padding:10px 14px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:11px;font-size:0.83rem;font-weight:700;color:#1e293b;font-family:inherit;text-align:left;transition:background 0.12s"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              <span style="width:30px;height:30px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(59,130,246,0.35)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </span>
               Export Excel
             </button>
 
+            <div style="height:1px;background:#e2e8f0;margin:4px 14px"></div>
+
             <!-- จัดการรายการงาน (admin only) -->
             <button onclick="closeMacDropdown();openRepairManager()" id="mac-dd-repair"
-              style="width:100%;padding:11px 14px;border:none;background:white;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:700;color:#0f172a;font-family:inherit;text-align:left;border-bottom:1px solid #f1f5f9;transition:background 0.1s"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-              <span style="width:28px;height:28px;background:linear-gradient(135deg,#065f46,#047857);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">🔧</span>
+              style="width:100%;padding:10px 14px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:11px;font-size:0.83rem;font-weight:700;color:#1e293b;font-family:inherit;text-align:left;transition:background 0.12s"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              <span style="width:30px;height:30px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(59,130,246,0.35)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </span>
               จัดการรายการงานและราคา
             </button>
 
             <!-- จัดการ Vendor (admin only) -->
             <button onclick="closeMacDropdown();openVendorManager()" id="mac-dd-vendor"
-              style="width:100%;padding:11px 14px;border:none;background:white;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:700;color:#0f172a;font-family:inherit;text-align:left;transition:background 0.1s"
-              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-              <span style="width:28px;height:28px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">🏢</span>
+              style="width:100%;padding:10px 14px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:11px;font-size:0.83rem;font-weight:700;color:#1e293b;font-family:inherit;text-align:left;transition:background 0.12s"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              <span style="width:30px;height:30px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(59,130,246,0.35)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </span>
               จัดการ Vendor / ลูกค้า
             </button>
 
@@ -1758,6 +1703,139 @@
           </div>
 
       </div><!-- end sp-admin-tools -->
+
+
+      <!-- ══════════════════════════════════════════════════════
+           BACKEND MONITOR (admin only)
+      ══════════════════════════════════════════════════════ -->
+      <div id="sp-backend-panel" style="display:none;margin-top:16px">
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:18px 18px 0 0;padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem">🖥️</div>
+            <div>
+              <div style="color:white;font-size:0.88rem;font-weight:900;letter-spacing:-0.01em">Backend Monitor</div>
+              <div id="bk-conn-badge" style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.5);margin-top:1px">กำลังตรวจสอบ...</div>
+            </div>
+          </div>
+          <button onclick="refreshBackendPanel()" style="padding:6px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit">🔄 รีเฟรช</button>
+        </div>
+
+        <div style="background:white;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 18px 18px;overflow:hidden">
+
+          <!-- Tab bar -->
+          <div style="display:flex;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+            <button onclick="switchBkTab('status')" id="bk-tab-status" style="flex:1;padding:10px 4px;border:none;background:transparent;font-size:0.68rem;font-weight:800;color:#1d4ed8;cursor:pointer;border-bottom:2px solid #1d4ed8;font-family:inherit">📡 สถานะ</button>
+            <button onclick="switchBkTab('stats')"  id="bk-tab-stats"  style="flex:1;padding:10px 4px;border:none;background:transparent;font-size:0.68rem;font-weight:700;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">📊 สถิติ</button>
+            <button onclick="switchBkTab('log')"    id="bk-tab-log"    style="flex:1;padding:10px 4px;border:none;background:transparent;font-size:0.68rem;font-weight:700;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">📋 Log</button>
+            <button onclick="switchBkTab('audit')"  id="bk-tab-audit"  style="flex:1;padding:10px 4px;border:none;background:transparent;font-size:0.68rem;font-weight:700;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">🔍 Audit</button>
+            <button onclick="switchBkTab('rules')"  id="bk-tab-rules"  style="flex:1;padding:10px 4px;border:none;background:transparent;font-size:0.68rem;font-weight:700;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">🔒 Rules</button>
+          </div>
+
+          <!-- ── TAB: STATUS ── -->
+          <div id="bk-pane-status" style="padding:14px">
+            <!-- Firebase connection -->
+            <div style="background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:10px">
+              <div style="font-size:0.7rem;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Firebase Connection</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                <div id="bk-dot-fs" style="width:10px;height:10px;border-radius:50%;background:#d1d5db;flex-shrink:0"></div>
+                <div style="flex:1;font-size:0.78rem;font-weight:700;color:var(--text)">Firestore</div>
+                <div id="bk-fs-ping" style="font-size:0.68rem;color:#94a3b8">—</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div id="bk-dot-auth" style="width:10px;height:10px;border-radius:50%;background:#d1d5db;flex-shrink:0"></div>
+                <div style="flex:1;font-size:0.78rem;font-weight:700;color:var(--text)">Auth</div>
+                <div id="bk-auth-user" style="font-size:0.68rem;color:#94a3b8">—</div>
+              </div>
+            </div>
+            <!-- Real-time listeners -->
+            <div style="background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:10px">
+              <div style="font-size:0.7rem;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Real-time Listeners</div>
+              <div id="bk-listeners" style="font-size:0.75rem;color:#64748b;line-height:1.8"></div>
+            </div>
+            <!-- Error log -->
+            <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:12px;padding:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:0.7rem;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:0.04em">Error Log</div>
+                <button onclick="clearBkErrors()" style="font-size:0.62rem;padding:2px 8px;background:#fff;border:1px solid #fecaca;border-radius:6px;color:#dc2626;cursor:pointer;font-family:inherit;font-weight:700">ล้าง</button>
+              </div>
+              <div id="bk-errors" style="font-size:0.7rem;color:#64748b;max-height:100px;overflow-y:auto;line-height:1.7">ไม่มี error</div>
+            </div>
+          </div>
+
+          <!-- ── TAB: STATS ── -->
+          <div id="bk-pane-stats" style="display:none;padding:14px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+              <div style="background:#eff6ff;border-radius:12px;padding:12px;text-align:center">
+                <div id="bk-stat-reads" style="font-size:1.4rem;font-weight:900;color:#1d4ed8">—</div>
+                <div style="font-size:0.62rem;font-weight:700;color:#60a5fa;margin-top:2px">Reads (session)</div>
+              </div>
+              <div style="background:#f0fdf4;border-radius:12px;padding:12px;text-align:center">
+                <div id="bk-stat-writes" style="font-size:1.4rem;font-weight:900;color:#16a34a">—</div>
+                <div style="font-size:0.62rem;font-weight:700;color:#4ade80;margin-top:2px">Writes (session)</div>
+              </div>
+              <div style="background:#faf5ff;border-radius:12px;padding:12px;text-align:center">
+                <div id="bk-stat-docs" style="font-size:1.4rem;font-weight:900;color:#7c3aed">—</div>
+                <div style="font-size:0.62rem;font-weight:700;color:#a78bfa;margin-top:2px">Documents</div>
+              </div>
+              <div style="background:#fff7ed;border-radius:12px;padding:12px;text-align:center">
+                <div id="bk-stat-size" style="font-size:1.4rem;font-weight:900;color:#ea580c">—</div>
+                <div style="font-size:0.62rem;font-weight:700;color:#fb923c;margin-top:2px">Data Size</div>
+              </div>
+            </div>
+            <div style="background:#f8fafc;border-radius:12px;padding:12px">
+              <div style="font-size:0.7rem;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Collections</div>
+              <div id="bk-collections" style="font-size:0.75rem;line-height:2"></div>
+            </div>
+          </div>
+
+          <!-- ── TAB: LOG ── -->
+          <div id="bk-pane-log" style="display:none;padding:14px">
+            <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+              <button onclick="filterBkLog('all')" id="bk-log-f-all" style="padding:5px 10px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit">ทั้งหมด</button>
+              <button onclick="filterBkLog('login')" id="bk-log-f-login" style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🔑 Login</button>
+              <button onclick="filterBkLog('logout')" id="bk-log-f-logout" style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🚪 Logout</button>
+              <button onclick="filterBkLog('error')" id="bk-log-f-error" style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">❌ Error</button>
+              <button onclick="exportBkLog('json')" style="margin-left:auto;padding:5px 10px;background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">⬇️ JSON</button>
+              <button onclick="exportBkLog('excel')" style="padding:5px 10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">⬇️ Excel</button>
+            </div>
+            <div id="bk-log-list" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+          </div>
+
+          <!-- ── TAB: AUDIT ── -->
+          <div id="bk-pane-audit" style="display:none;padding:14px">
+            <div style="display:flex;gap:6px;margin-bottom:10px">
+              <button onclick="exportBkLog('audit-json')" style="padding:5px 10px;background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">⬇️ JSON</button>
+              <button onclick="exportBkLog('audit-excel')" style="padding:5px 10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">⬇️ Excel</button>
+              <button onclick="clearBkAudit()" style="margin-left:auto;padding:5px 10px;background:#fff5f5;color:#dc2626;border:1px solid #fecaca;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🗑️ ล้าง</button>
+            </div>
+            <div id="bk-audit-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+          </div>
+
+          <!-- ── TAB: RULES ── -->
+          <div id="bk-pane-rules" style="display:none;padding:14px">
+            <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px;margin-bottom:10px;font-size:0.68rem;color:#9a3412;line-height:1.5">
+              ⚠️ แก้ไข Rules ที่นี่จะบันทึกใน localStorage เท่านั้น<br>ต้องนำไป deploy ใน Firebase Console ด้วยตัวเอง
+            </div>
+            <div style="font-size:0.7rem;font-weight:800;color:#475569;margin-bottom:6px">Firestore Security Rules (ปัจจุบัน)</div>
+            <textarea id="bk-rules-editor" style="width:100%;height:200px;font-family:monospace;font-size:0.68rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;resize:vertical;box-sizing:border-box;color:#1e293b;line-height:1.6;background:#f8fafc"></textarea>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button onclick="saveBkRules()" style="flex:1;padding:10px;background:#1d4ed8;color:white;border:none;border-radius:10px;font-size:0.75rem;font-weight:800;cursor:pointer;font-family:inherit">💾 บันทึก Rules</button>
+              <button onclick="copyBkRules()" style="padding:10px 14px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit">📋 Copy</button>
+            </div>
+            <!-- Force sync / cache -->
+            <div style="margin-top:12px;background:#f8fafc;border-radius:12px;padding:12px">
+              <div style="font-size:0.7rem;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Cache & Sync</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <button onclick="bkForceSync()" style="padding:9px;background:#f0fdf4;border:1px solid #86efac;border-radius:9px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;color:#15803d">⬆️ Force Sync</button>
+                <button onclick="bkClearCache()" style="padding:9px;background:#fff5f5;border:1px solid #fecaca;border-radius:9px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;color:#dc2626">🗑️ Clear Cache</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       <!-- ── LOGOUT ── -->
       <button onclick="doLogout()" style="width:100%;padding:15px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;border-radius:18px;font-size:0.95rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;box-shadow:0 6px 20px rgba(249,115,22,0.4)">
@@ -2979,6 +3057,7 @@
 <script src="app-users.js?v=1774960464"></script>
 <script src="app-reports.js?v=1774960464"></script>
 <script src="app-admin.js?v=1774960464"></script>
+<script src="app-backend.js?v=1774960464"></script>
 <script src="app-executive.js?v=1774960464"></script>
 <script src="app-backup.js?v=1774960464"></script>
 <style>
