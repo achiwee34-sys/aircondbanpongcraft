@@ -1888,7 +1888,7 @@ function openRepairManager() {
               </div>
             </div>
             <div style="padding:0 14px 12px;display:flex;flex-wrap:wrap;gap:5px">
-              ${(g.items||[]).slice(0,6).map(it=>`<span style="background:${c.light};border:1px solid ${c.border};border-radius:8px;padding:3px 10px;font-size:0.65rem;color:${c.accent};font-weight:700">${it.name}${it.price>0?` ฿${it.price.toLocaleString()}`:''}</span>`).join('')}
+              ${(g.items||[]).slice(0,6).map(it=>{ const priceStr = it.price>0 ? ' \u0e3f'+it.price.toLocaleString() : ''; return '<span style="background:'+c.light+';border:1px solid '+c.border+';border-radius:8px;padding:3px 10px;font-size:0.65rem;color:'+c.accent+';font-weight:700">'+it.name+priceStr+'</span>'; }).join('')}
               ${(g.items||[]).length>6?`<span style="background:#f1f5f9;border-radius:8px;padding:3px 8px;font-size:0.62rem;color:#64748b;font-weight:600">+${(g.items||[]).length-6} อีก</span>`:''}
             </div>
           </div>`;

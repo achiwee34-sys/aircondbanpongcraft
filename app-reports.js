@@ -1061,7 +1061,10 @@ function renderChatroomList() {
   const navBadge = document.getElementById('cr-nav-badge');
   if (navBadge) { navBadge.textContent = totalUnread||''; navBadge.style.display = totalUnread?'':'none'; }
   const subText = document.getElementById('cr-total-badge-text');
-  if (subText) subText.textContent = rows.length ? `${rows.length} การสนทนา${totalUnread?` · ${totalUnread} ยังไม่อ่าน`:''}` : 'ยังไม่มีแชท';
+  if (subText) {
+    const unreadPart = totalUnread ? ' \u00b7 ' + totalUnread + ' \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e2d\u0e48\u0e32\u0e19' : '';
+    subText.textContent = rows.length ? (rows.length + ' \u0e01\u0e32\u0e23\u0e2a\u0e19\u0e17\u0e19\u0e32' + unreadPart) : '\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e41\u0e0a\u0e17';
+  }
 
   if (!rows.length) {
     listEl.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:#94a3b8;text-align:center;padding:20px">

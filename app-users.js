@@ -67,7 +67,8 @@ function importMachines() {
     added++;
   });
   saveDB(); renderMachines(); populateMachineSelect();
-  alert(`✅ Import ${added} เครื่อง${skip?` (ข้าม ${skip} แถว)`:''}`) ;
+  const skipPart = skip ? ' (ข้าม ' + skip + ' แถว)' : '';
+  alert('✅ Import ' + added + ' เครื่อง' + skipPart);
   closeSheet('import'); resetExcel();
 }
 function resetExcel(){xlData=[];xlHeaders=[];document.getElementById('xl-map').style.display='none';document.getElementById('xl-import-btn').style.display='none';document.getElementById('xl-file').value='';}
