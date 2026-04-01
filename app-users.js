@@ -67,8 +67,7 @@ function importMachines() {
     added++;
   });
   saveDB(); renderMachines(); populateMachineSelect();
-  const skipPart = skip ? ' (ข้าม ' + skip + ' แถว)' : '';
-  alert('✅ Import ' + added + ' เครื่อง' + skipPart);
+  alert(`✅ Import ${added} เครื่อง${skip?` (ข้าม ${skip} แถว)`:''}`) ;
   closeSheet('import'); resetExcel();
 }
 function resetExcel(){xlData=[];xlHeaders=[];document.getElementById('xl-map').style.display='none';document.getElementById('xl-import-btn').style.display='none';document.getElementById('xl-file').value='';}
@@ -182,7 +181,7 @@ function renderUsers() {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
             <div style="font-size:0.92rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
-            <span style="background:${tc.bg};color:${tc.cl};border:1px solid ${tc.bd};border-radius:99px;padding:1px 7px;font-size:0.6rem;font-weight:800;flex-shrink:0">${{tech:'ช่าง',reporter:'ผู้แจ้ง',admin:'Admin',executive:'ผู้บริหาร'}[u.role]||u.role}</span>
+            <span style="background:${tc.bg};color:${tc.cl};border:1px solid ${tc.bd};border-radius:99px;padding:1px 7px;font-size:0.6rem;font-weight:800;flex-shrink:0">${{tech:'ช่าง',reporter:'ผู้แจ้ง',admin:'Admin'}[u.role]||u.role}</span>
           </div>
           <div style="font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span>@${u.username}</span>
@@ -851,21 +850,3 @@ function showAlert(opts) {
   ov.addEventListener('click', e => { if(e.target===ov){ ov.remove(); if(o.onCancel) o.onCancel(); } });
 }
 
-
-// ============================================================
-// MONTHLY REPORT
-// ============================================================
-let rptYear = new Date().getFullYear();
-
-// ── openTechPopup: แสดง popup งานของช่าง (จาก ticket list / tracking) ──
-function openTechPopup(techId) {
-  const tech = db.users.find(u => u.id === techId);
-  if (!tech) return;
-  if (typeof openAdminManageTechTickets === 'function') {
-    openAdminManageTechTickets(techId);
-  } else {
-    // fallback: แสดง toast ชื่อช่าง
-    const active = db.tickets.filter(t => t.assigneeId === techId && !['done','verified','closed'].includes(t.status));
-    showToast('🔧 ' + tech.name + ' · ' + active.length + ' งานค้าง');
-  }
-}

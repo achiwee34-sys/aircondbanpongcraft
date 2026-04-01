@@ -1173,12 +1173,7 @@ function tkCard(t) {
           : ['done','verified','closed'].includes(t.status)
           ? `<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 PDF</button>`
           : ''}
-      </div>`:`<div class="tk-actions" style="padding:6px 12px 10px">
-        <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="openDetail('${t.id}')">ดูรายละเอียด</button>
-        ${CU.role==='reporter' && ['done','verified','closed'].includes(t.status)
-          ? `<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 รายงาน</button>`
-          : ''}
-      </div>`}
+      </div>`:`<div class="tk-actions" style="padding:6px 12px 10px"><button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="openDetail('${t.id}')">ดูรายละเอียด</button></div>`}
     </div>
   </div>
   </div>`;

@@ -144,9 +144,6 @@ function openSheet(name){
   const ov = document.getElementById(name+'-overlay');
   const sh = document.getElementById(name+'-sheet');
   if (!ov || !sh) { console.warn('openSheet: element not found for', name); return; }
-  // Bug1 fix: reset ค่า visibility/pointer-events ที่อาจค้างจากการปิดครั้งก่อน
-  sh.style.visibility = '';
-  sh.style.pointerEvents = '';
   ov.classList.add('open');
   // PATCH: display:none ใน CSS ต้องใช้ double rAF ให้ browser paint ก่อน add .open
   // มิฉะนั้น transition animation จะไม่ทำงาน
@@ -293,49 +290,86 @@ async function syncMachine(m){const url=db.gsUrl;if(!url)return;_showSyncDot();t
 // ============================================================
 // LANGUAGE / i18n  TH ↔ EN
 // ============================================================
-// _lang, I18N, t() ย้ายไปอยู่ใน app-core.js แล้ว (โหลดก่อน)
-// ที่นี่ extend I18N.EN ด้วย admin-specific keys
-Object.assign(I18N.EN, {
-  'สวัสดี':'Hello','ยินดีต้อนรับ':'Welcome',
-  'งานวันนี้':'Today\'s Jobs','งานค้าง':'Pending','งานด่วน':'Urgent Jobs',
-  'งานทั้งหมด':'All Jobs','แจ้งซ่อมใหม่':'New Repair',
-  'ผู้ใช้งาน':'Users','สั่งซื้อของ':'Purchase',
-  'ทั้งหมด':'All','ค้นหา...':'Search...','ค้นหางาน...':'Search jobs...',
-  'ไม่พบข้อมูล':'No data found','ปัญหา':'Problem',
-  'ผู้แจ้ง':'Reporter','ช่างที่รับ':'Technician',
-  'วันที่แจ้ง':'Reported','อัปเดตล่าสุด':'Updated',
-  'รายละเอียด':'Detail','หมายเหตุ':'Note',
-  'ปิด':'Close','ยกเลิก':'Cancel','บันทึก':'Save',
-  'บันทึกผลการซ่อม':'Repair Record','รายการงานที่ดำเนินการ':'Work Done',
-  'เลือกรายการงาน':'Select Tasks','วัสดุที่ใช้':'Materials Used',
-  'น้ำยาแอร์':'Refrigerant','อะไหล่ที่เปลี่ยน':'Parts Replaced',
-  'ค่าวัด':'Measurements','สรุปผลการดำเนินการ':'Summary',
-  'รูปถ่ายหลังซ่อม':'After Photos','รูปถ่ายก่อนซ่อม':'Before Photos',
-  'ส่งผลการซ่อม':'Submit','ก่อนซ่อม':'Before','หลังซ่อม':'After',
-  'เครื่องทั้งหมด':'All Machines','แผนก':'Department',
-  'ยี่ห้อ':'Brand','รุ่น':'Model','ซีเรียล':'Serial',
-  'ขนาด':'Capacity','น้ำยา':'Refrigerant',
-  'รอบ PM':'PM Interval','เดือน':'months',
-  'ใบสั่งซื้อ':'Purchase Order','สั่งซื้อ':'Order',
-  'รอดำเนินการ':'Pending','อนุมัติแล้ว':'Approved',
-  'รับของแล้ว':'Received','รายการ':'Items','ราคา':'Price','รวม':'Total',
-  'วางแผน PM':'PM Plan','เพิ่ม':'Add','วันนี้':'Today','สัปดาห์นี้':'This Week',
-  'โปรไฟล์':'Profile','ชื่อ':'Name','ชื่อผู้ใช้':'Username',
-  'รหัสผ่าน':'Password','บันทึกการตั้งค่า':'Save Settings',
-  'ออกจากระบบ':'Logout','โหมดมืด':'Dark Mode',
-  'ภาษา':'Language','ซิงค์ข้อมูล':'Sync Data',
-  'โหลดข้อมูล':'Load Data','โซนอันตราย':'Danger Zone',
-  'เพิ่มผู้ใช้':'Add User','แก้ไข':'Edit','ลบ':'Delete',
-  'แอดมิน':'Admin','ช่างซ่อม':'Technician','ผู้แจ้งงาน':'Reporter',
-  'รายงานสรุป':'Summary Report','ปัญหาที่พบบ่อย':'Frequent Problems',
-  'ประสิทธิภาพ':'Performance',
-  'เครื่อง':'Units','ทั้งหมด (จาก)':'All from',
-  'ล้างใหญ่':'Major Clean','ล้างย่อย':'Minor Clean',
-  'กรอกข้อมูลให้ครบถ้วน':'Fill in all required fields',
-  '* จำเป็น':'* Required','ไม่บังคับ':'Optional',
-  'สูงสุด 3 รูป / ประเภท':'Max 3 photos / type',
-  'บีบอัดอัตโนมัติ':'Auto compressed',
-});
+let _lang = localStorage.getItem('aircon_lang') || 'TH';
+
+const I18N = {
+  TH: {},
+  EN: {
+    // ── Status ──
+    'ใหม่':'New','จ่ายแล้ว':'Assigned','รับแล้ว':'Accepted',
+    'กำลังซ่อม':'In Progress','รออะไหล่':'Waiting Part',
+    'เสร็จแล้ว':'Done','ตรวจรับ':'Verified','ปิดงาน':'Closed',
+    // ── Priority ──
+    'ด่วนมาก':'Urgent','ปานกลาง':'Normal','ไม่เร่งด่วน':'Low',
+    // ── Bottom nav ──
+    'หน้าแรก':'Home','รายการ':'Tickets','เครื่องแอร์':'Machines',
+    'ผู้ใช้':'Users','รายงาน':'Report','สั่งซื้อ':'Purchase',
+    'ตั้งค่า':'Settings','แจ้งซ่อม':'New Job','ปฏิทิน':'Calendar',
+    'ติดตาม':'Tracking','งานฉัน':'My Work',
+    // ── Home page ──
+    'สวัสดี':'Hello','ยินดีต้อนรับ':'Welcome',
+    'งานวันนี้':'Today\'s Jobs','งานค้าง':'Pending','งานด่วน':'Urgent Jobs',
+    'งานทั้งหมด':'All Jobs','แจ้งซ่อมใหม่':'New Repair',
+    'ผู้ใช้งาน':'Users','รายงาน':'Report','สั่งซื้อของ':'Purchase',
+    // ── Ticket list ──
+    'ทั้งหมด':'All','ค้นหา...':'Search...','ค้นหางาน...':'Search jobs...',
+    'ไม่พบข้อมูล':'No data found','ปัญหา':'Problem',
+    'ผู้แจ้ง':'Reporter','ช่างที่รับ':'Technician',
+    'วันที่แจ้ง':'Reported','อัปเดตล่าสุด':'Updated',
+    'รายละเอียด':'Detail','หมายเหตุ':'Note',
+    'ปิด':'Close','ยกเลิก':'Cancel','บันทึก':'Save',
+    // ── Complete sheet ──
+    'บันทึกผลการซ่อม':'Repair Record',
+    'รายการงานที่ดำเนินการ':'Work Done',
+    'เลือกรายการงาน':'Select Tasks',
+    'วัสดุที่ใช้':'Materials Used',
+    'น้ำยาแอร์':'Refrigerant',
+    'อะไหล่ที่เปลี่ยน':'Parts Replaced',
+    'ค่าวัด':'Measurements',
+    'สรุปผลการดำเนินการ':'Summary',
+    'รูปถ่ายหลังซ่อม':'After Photos',
+    'รูปถ่ายก่อนซ่อม':'Before Photos',
+    'ส่งผลการซ่อม':'Submit',
+    'ก่อนซ่อม':'Before','หลังซ่อม':'After',
+    // ── Machines ──
+    'เครื่องทั้งหมด':'All Machines','แผนก':'Department',
+    'ยี่ห้อ':'Brand','รุ่น':'Model','ซีเรียล':'Serial',
+    'ขนาด':'Capacity','น้ำยา':'Refrigerant',
+    'รอบ PM':'PM Interval','เดือน':'months',
+    // ── Purchase ──
+    'ใบสั่งซื้อ':'Purchase Order','สั่งซื้อ':'Order',
+    'รอดำเนินการ':'Pending','อนุมัติแล้ว':'Approved',
+    'รับของแล้ว':'Received','รายการ':'Items',
+    'ราคา':'Price','รวม':'Total',
+    // ── Calendar ──
+    'วางแผน PM':'PM Plan','เพิ่ม':'Add',
+    'วันนี้':'Today','สัปดาห์นี้':'This Week',
+    // ── Settings ──
+    'โปรไฟล์':'Profile','ชื่อ':'Name','ชื่อผู้ใช้':'Username',
+    'รหัสผ่าน':'Password','บันทึกการตั้งค่า':'Save Settings',
+    'ออกจากระบบ':'Logout','โหมดมืด':'Dark Mode',
+    'ภาษา':'Language','ซิงค์ข้อมูล':'Sync Data',
+    'โหลดข้อมูล':'Load Data','โซนอันตราย':'Danger Zone',
+    // ── Users ──
+    'เพิ่มผู้ใช้':'Add User','แก้ไข':'Edit','ลบ':'Delete',
+    'แอดมิน':'Admin','ช่างซ่อม':'Technician','ผู้แจ้งงาน':'Reporter',
+    // ── Report ──
+    'รายงานสรุป':'Summary Report','ปัญหาที่พบบ่อย':'Frequent Problems',
+    'ประสิทธิภาพ':'Performance',
+    // ── Misc ──
+    'เครื่อง':'Units','ทั้งหมด (จาก)':'All from',
+    'ล้างใหญ่':'Major Clean','ล้างย่อย':'Minor Clean',
+    'กรอกข้อมูลให้ครบถ้วน':'Fill in all required fields',
+    '* จำเป็น':'* Required','ไม่บังคับ':'Optional',
+    'สูงสุด 3 รูป / ประเภท':'Max 3 photos / type',
+    'บีบอัดอัตโนมัติ':'Auto compressed',
+  }
+};
+
+function t(key) {
+  if (_lang === 'TH') return key;
+  return (I18N.EN[key]) || key;
+}
 
 function toggleTopSearch() {
   const wrap = document.getElementById('tb-search-wrap');
@@ -622,20 +656,14 @@ function _openTopMenu() {
   const rl = document.getElementById('tb-qm-role');
   if (rl && CU) rl.textContent = (ri[CU.role] || CU.role) + ' — ' + (CU.name || '');
   // close on outside tap
-  setTimeout(() => document.addEventListener('click', _menuOutsideTap), 10);
+  setTimeout(() => document.addEventListener('click', _menuOutsideTap, {once:true}), 10);
 }
 function _closeTopMenu() {
   const m = document.getElementById('tb-quick-menu');
   if (m) m.style.display = 'none';
   document.removeEventListener('click', _menuOutsideTap);
 }
-function _menuOutsideTap(e) {
-  const m = document.getElementById('tb-quick-menu');
-  const btn = document.getElementById('tb-avatar-btn');
-  if (m && !m.contains(e.target) && btn && !btn.contains(e.target)) {
-    _closeTopMenu();
-  }
-}
+// [REMOVED audit-H4] _menuOutsideTap() — dead code, no call site
 function _tbMenu(page) {
   _closeTopMenu();
   goPage(page);
@@ -1215,33 +1243,28 @@ function openSignaturePad(tid, type) {
     </div>`;
   document.body.appendChild(ov);
 
-  // Setup canvas — ใช้ setTimeout เพื่อให้ browser render overlay ก่อน
+  // Setup canvas
   const canvas = document.getElementById('sig-canvas');
-  const _setupCanvas = () => {
-    const rect = canvas.getBoundingClientRect();
-    // ใช้ขนาดจริงจาก CSS (width:100% height:180px) 
-    const w = rect.width  > 10 ? rect.width  : (window.innerWidth - 80);
-    const h = rect.height > 10 ? rect.height : 180;
-    canvas.width  = w;
-    canvas.height = h;
-    _sigCanvas = canvas;
-    _sigCtx = canvas.getContext('2d');
-    _sigCtx.strokeStyle = '#1e293b';
-    _sigCtx.lineWidth = 2.5;
-    _sigCtx.lineCap = 'round';
-    _sigCtx.lineJoin = 'round';
-    // Touch events
-    canvas.addEventListener('touchstart',  _sigTouchStart,  {passive:false});
-    canvas.addEventListener('touchmove',   _sigTouchMove,   {passive:false});
-    canvas.addEventListener('touchend',    _sigTouchEnd,    {passive:false});
-    // Mouse events
-    canvas.addEventListener('mousedown',   _sigMouseDown);
-    canvas.addEventListener('mousemove',   _sigMouseMove);
-    canvas.addEventListener('mouseup',     _sigMouseUp);
-    canvas.addEventListener('mouseleave',  _sigMouseUp);
-  };
-  // setTimeout 100ms — รอให้ overlay render+paint เสร็จสมบูรณ์ก่อน
-  setTimeout(_setupCanvas, 100);
+  // กำหนด pixel size จาก display size
+  const rect = canvas.getBoundingClientRect();
+  canvas.width  = rect.width  || 320;
+  canvas.height = rect.height || 180;
+  _sigCanvas = canvas;
+  _sigCtx = canvas.getContext('2d');
+  _sigCtx.strokeStyle = '#1e293b';
+  _sigCtx.lineWidth = 2.5;
+  _sigCtx.lineCap = 'round';
+  _sigCtx.lineJoin = 'round';
+
+  // Touch events
+  canvas.addEventListener('touchstart',  _sigTouchStart,  {passive:false});
+  canvas.addEventListener('touchmove',   _sigTouchMove,   {passive:false});
+  canvas.addEventListener('touchend',    _sigTouchEnd,    {passive:false});
+  // Mouse events
+  canvas.addEventListener('mousedown',   _sigMouseDown);
+  canvas.addEventListener('mousemove',   _sigMouseMove);
+  canvas.addEventListener('mouseup',     _sigMouseUp);
+  canvas.addEventListener('mouseleave',  _sigMouseUp);
 }
 
 function _sigPos(e) {

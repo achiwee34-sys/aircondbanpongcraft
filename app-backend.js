@@ -408,8 +408,24 @@ function _fmtTime(iso) {
   };
 })();
 
-// ── Backend panel is shown via renderSettingsPage() in app-core.js ──
-// (patchGoPageForBackend removed — handled in renderSettingsPage)
+// ── Show backend panel when settings page opens ──────────────
+(function patchGoPageForBackend() {
+  const _origGoPage = window.goPage;
+  window.goPage = function(name) {
+    if (_origGoPage) _origGoPage(name);
+    if (name === 'settings') {
+      setTimeout(() => {
+        const panel = document.getElementById('sp-backend-panel');
+        if (panel && window.CU?.role === 'admin') {
+          panel.style.display = 'block';
+          refreshBackendPanel();
+        } else if (panel) {
+          panel.style.display = 'none';
+        }
+      }, 100);
+    }
+  };
+})();
 
 // ── Increment read/write counters (call from firebase-init) ──
 window.bkCountRead  = function(n) { window._bkReads  = (window._bkReads  || 0) + (n||1); };

@@ -1,5 +1,4 @@
 let rptMonth = new Date().getMonth();
-let rptYear  = new Date().getFullYear();
 const RPT_GOAL = 20; // เป้าหมายงานเสร็จต่อเดือน (แก้ได้)
 
 function reportPrevMonth() {
@@ -1061,10 +1060,7 @@ function renderChatroomList() {
   const navBadge = document.getElementById('cr-nav-badge');
   if (navBadge) { navBadge.textContent = totalUnread||''; navBadge.style.display = totalUnread?'':'none'; }
   const subText = document.getElementById('cr-total-badge-text');
-  if (subText) {
-    const unreadPart = totalUnread ? ' \u00b7 ' + totalUnread + ' \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e2d\u0e48\u0e32\u0e19' : '';
-    subText.textContent = rows.length ? (rows.length + ' \u0e01\u0e32\u0e23\u0e2a\u0e19\u0e17\u0e19\u0e32' + unreadPart) : '\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e41\u0e0a\u0e17';
-  }
+  if (subText) subText.textContent = rows.length ? `${rows.length} การสนทนา${totalUnread?` · ${totalUnread} ยังไม่อ่าน`:''}` : 'ยังไม่มีแชท';
 
   if (!rows.length) {
     listEl.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:#94a3b8;text-align:center;padding:20px">
@@ -2430,12 +2426,6 @@ function openTechReqForm(tid) {
         </div>
         <div id="tech-req-count" style="font-size:0.7rem;color:#64748b;font-weight:600">0 รายการ</div>
       </div>
-      <!-- column header — Bug5 fix -->
-      <div style="display:grid;grid-template-columns:1fr 80px 100px;gap:6px;padding:4px 14px 6px;font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">
-        <div>ชื่ออะไหล่ / ชิ้นส่วน</div>
-        <div style="text-align:center">จำนวน</div>
-        <div style="text-align:right">ราคา / ชิ้น (฿)</div>
-      </div>
       <!-- rows -->
       <div id="tech-req-rows"></div>
       <!-- add button -->
@@ -2449,15 +2439,12 @@ function openTechReqForm(tid) {
         <textarea id="tech-req-note" rows="2" placeholder="เช่น ความเร่งด่วน, spec พิเศษ, ผู้จัดหาที่แนะนำ..."
           style="width:100%;border:none;outline:none;font-size:0.82rem;font-family:inherit;resize:none;color:#374151;background:transparent;box-sizing:border-box">${saved?.note||''}</textarea>
       </div>
-      <div style="height:8px"></div>
-    </div>
-    <!-- sticky footer — Bug7 fix: ปุ่มบันทึกไม่หลุดจอ -->
-    <div style="flex-shrink:0;background:white;border-top:1px solid #f1f5f9;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;gap:8px;box-shadow:0 -4px 16px rgba(0,0,0,0.06)">
-      <button onclick="closeTechReqForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+      <!-- save button -->
       <button onclick="saveTechReq()"
-        style="flex:2;padding:13px;background:linear-gradient(135deg,#e65100,#c0392b);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(230,81,0,0.3);display:flex;align-items:center;justify-content:center;gap:6px">
-        💾 บันทึก &amp; ส่งให้ Admin
+        style="width:100%;padding:16px;background:linear-gradient(135deg,#e65100,#c0392b);color:white;border:none;border-radius:14px;font-size:0.95rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(230,81,0,0.35);letter-spacing:0.02em;margin-bottom:8px">
+        💾 บันทึก &amp; ส่งให้ Admin สั่งซื้อ
       </button>
+      <button onclick="closeTechReqForm()" style="width:100%;padding:11px;background:transparent;border:none;color:#9ca3af;font-size:0.8rem;cursor:pointer;font-family:inherit">ยกเลิก</button>
     </div>`;
 
   document.body.appendChild(ov);

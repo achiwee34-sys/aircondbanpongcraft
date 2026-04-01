@@ -737,19 +737,15 @@ body.dark-mode div[style*="background:#f0fdf4"][style*="border:1px solid #bbf7d0
   .sheet { max-width: 600px !important; }
   #complete-sheet > div { max-width: 600px !important; }
 
-  /* Detail sheet centered */
+  /* Detail sheet side-by-side */
   #detail-sheet {
     max-width: 640px !important;
     left: 50% !important;
     right: auto !important;
-    bottom: auto !important;
-    top: 50% !important;
-    max-height: 88vh !important;
-    border-radius: 24px !important;
-    transform: translateX(-50%) translateY(-50%) scale(0.94) !important;
+    transform: translateX(-50%) translateY(100%) !important;
   }
   #detail-sheet.open {
-    transform: translateX(-50%) translateY(-50%) scale(1) !important;
+    transform: translateX(-50%) translateY(0) !important;
   }
 }
 
@@ -923,13 +919,13 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
-  padding: 14px 14px calc(var(--nav-h, 56px) + var(--safe-bot, 0px) + 20px); display: none;
+  padding: 14px; display: none;
   box-sizing: border-box;
   max-width: 100%;
 }
 .page.active { display: block; }
 /* chatroom + executive page use flex layout */
-#pg-chatroom.active, #pg-executive.active, #pg-report.active, #pg-pmplan.active { display: flex !important; flex-direction: column; padding-bottom: 14px; }
+#pg-chatroom.active, #pg-executive.active, #pg-report.active { display: flex !important; flex-direction: column; }
 /* machines page — overflow-y visible for dropdown, clip x */
 #pg-machines { overflow-y: auto !important; overflow-x: hidden !important; }
 
@@ -1155,11 +1151,11 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 500; display: none; backdrop-filter: blur(4px); }
 .sheet-overlay.open { display: block; }
 /* PATCH: display:none ป้องกัน Android Chrome restore sheet ค้าง */
-.sheet { display: none; position: fixed; bottom: 0; left: 50%; width: 100%; max-width: 600px; background: white; border-radius: 24px 24px 0 0; z-index: 501; max-height: calc(92vh - env(safe-area-inset-top, 0px)); max-height: calc(92dvh - env(safe-area-inset-top, 0px)); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: calc(var(--safe-bot) + 20px); transform: translateX(-50%) translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -4px 30px rgba(0,0,0,0.12); }
+.sheet { display: none; position: fixed; bottom: 0; left: 50%; width: 100%; max-width: 600px; background: white; border-radius: 24px 24px 0 0; z-index: 501; max-height: 92vh; max-height: 92dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: calc(var(--safe-bot) + 20px); transform: translateX(-50%) translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -4px 30px rgba(0,0,0,0.12); }
 .sheet.open { display: flex; flex-direction: column; overflow-y: hidden; }
 /* tablet: sheet ลอยตรงกลางจอ ไม่ติดขอบล่าง */
 @media (min-width: 768px) {
-  .sheet { bottom: auto; top: 50%; max-width: 660px; max-height: calc(88vh - env(safe-area-inset-top, 0px)); border-radius: 24px; transform: translateX(-50%) translateY(-50%) scale(0.94); box-shadow: 0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06); }
+  .sheet { bottom: auto; top: 50%; max-width: 660px; max-height: 88vh; border-radius: 24px; transform: translateX(-50%) translateY(-50%) scale(0.94); box-shadow: 0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06); }
   .sheet.open { display: flex; flex-direction: column; overflow-y: hidden; transform: translateX(-50%) translateY(-50%) scale(1); }
   .sheet-overlay.open { display: flex; align-items: center; justify-content: center; }
   /* verify sheet — ปรับ height สำหรับ tablet */
@@ -1173,9 +1169,6 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 #pur-track-content { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 #po-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
-/* Bug1-fix: ensure user list buttons are always tappable */
-#pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 2; }
-/* Bug3-fix: detail card centres vertically on mobile — ไม่ต้อง display:none (ใช้ .sheet default แล้ว) */
 /* ── complete sheet (div overlay) ── */
 #complete-sheet { display:none; }
 #complete-sheet > div input, #complete-sheet > div select,
@@ -1190,9 +1183,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 .sheet-handle { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 14px auto 0; }
 .sheet-title { font-size: 1rem; font-weight: 700; color: var(--text); padding: 14px 20px 4px; }
 .sheet-body { padding: 10px 20px 0; }
-.sheet-actions { padding: 14px 20px calc(var(--safe-bot, 0px) + 14px); display: flex; flex-direction: column; gap: 8px; }
-#machine-sheet { max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 8px); max-height: calc(100vh - env(safe-area-inset-top, 0px) - 8px); }
-#machine-sheet .sheet-handle { margin-top: calc(env(safe-area-inset-top, 0px) + 10px); }
+.sheet-actions { padding: 14px 20px 0; display: flex; flex-direction: column; gap: 8px; }
 
 /* ======= LIGHTBOX ======= */
 .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 900; display: none; align-items: center; justify-content: center; }

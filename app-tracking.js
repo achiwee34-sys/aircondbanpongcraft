@@ -282,16 +282,11 @@ async function _doSubmitTicket(mid, prob) {
   const m = db.machines.find(x=>x.id===mid);
   const _now = new Date();
   const _mm = String(_now.getMonth()+1).padStart(2,'0');
-  const _yy = String(_now.getFullYear()).slice(-2); // 2 หลักท้าย เช่น 2025→25
-  // สร้าง TK format: TK{YY}{MM}-{NNNN} เช่น TK2604-0001
-  const _prefix = 'TK' + _yy + _mm; // เช่น TK2604
-  // หาเลขลำดับสูงสุดของเดือนนี้จาก tickets ที่มีอยู่
-  const _existSeq = (db.tickets||[])
-    .map(t => t.id || '')
-    .filter(id => id.startsWith(_prefix + '-'))
-    .map(id => parseInt(id.slice(_prefix.length + 1)) || 0);
-  const _nextSeq = (_existSeq.length > 0 ? Math.max(..._existSeq) : 0) + 1;
-  const tid = _prefix + '-' + String(_nextSeq).padStart(4,'0');
+  const _yy = _now.getFullYear();
+  // ใช้ timestamp+random แทน _seq เพื่อป้องกัน race condition multi-user
+  const _rand = Math.floor(Math.random() * 900) + 100; // 3 digits 100-999
+  const _ts   = String(Date.now()).slice(-4);           // 4 digits ท้าย timestamp
+  const tid = 'TK'+_mm+_yy+_ts+_rand;
   db._seq++; // ยังคง increment เพื่อ backward compat
   const now = nowStr();
   // ── PATCH v67: upload photos → Firebase Storage ก่อนสร้าง ticket ──
@@ -1888,7 +1883,7 @@ function openRepairManager() {
               </div>
             </div>
             <div style="padding:0 14px 12px;display:flex;flex-wrap:wrap;gap:5px">
-              ${(g.items||[]).slice(0,6).map(it=>{ const priceStr = it.price>0 ? ' \u0e3f'+it.price.toLocaleString() : ''; return '<span style="background:'+c.light+';border:1px solid '+c.border+';border-radius:8px;padding:3px 10px;font-size:0.65rem;color:'+c.accent+';font-weight:700">'+it.name+priceStr+'</span>'; }).join('')}
+              ${(g.items||[]).slice(0,6).map(it=>`<span style="background:${c.light};border:1px solid ${c.border};border-radius:8px;padding:3px 10px;font-size:0.65rem;color:${c.accent};font-weight:700">${it.name}${it.price>0?` ฿${it.price.toLocaleString()}`:''}</span>`).join('')}
               ${(g.items||[]).length>6?`<span style="background:#f1f5f9;border-radius:8px;padding:3px 8px;font-size:0.62rem;color:#64748b;font-weight:600">+${(g.items||[]).length-6} อีก</span>`:''}
             </div>
           </div>`;
@@ -2301,21 +2296,36 @@ function openCompleteSheet(tid) {
     const _csBtu = _csMac?.btu ? Number(_csMac.btu).toLocaleString() + ' BTU' : '';
     const _csDept = _csMac?.dept || t.dept || '';
     const _csVendor = _csMac?.vendor || t.vendor || '';
-    // compact single-row layout — ป้องกัน header ล้นจอ
     strip.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.82rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
-          <div style="font-size:0.65rem;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            ❄️ ${t.machine||'—'}${_csBtu?' · 🌡️ '+_csBtu:''}${_csDept?' · 🏢 '+_csDept:''}
-          </div>
+          <div style="font-size:0.6rem;color:#94a3b8;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">ปัญหา</div>
+          <div style="font-size:0.88rem;font-weight:900;color:#0f172a;line-height:1.3">${escapeHtml(t.problem)||'—'}</div>
         </div>
-        <div style="display:flex;gap:4px;flex-shrink:0">
+        <div style="display:flex;gap:4px;flex-shrink:0;padding-top:2px">
           <span class="tag ${stc(t.status)}" style="font-size:0.58rem;padding:2px 7px">${sTH(t.status)}</span>
           <span class="tag ${prC(t.priority)}" style="font-size:0.58rem;padding:2px 7px">${prTH(t.priority)}</span>
         </div>
-      </div>`;
-  } // end if (strip)
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:${_csDept||_csVendor?'6':'0'}px">
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:7px;padding:6px 8px">
+          <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;letter-spacing:.05em;margin-bottom:2px">❄️ เครื่อง</div>
+          <div style="font-size:0.7rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.machine||'—'}</div>
+        </div>
+        ${_csBtu?`<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:7px;padding:6px 8px">
+          <div style="font-size:0.52rem;color:#92400e;font-weight:700;letter-spacing:.05em;margin-bottom:2px">🌡️ BTU</div>
+          <div style="font-size:0.7rem;font-weight:900;color:#92400e">${_csBtu}</div>
+        </div>`:'<div></div>'}
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:7px;padding:6px 8px">
+          <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;letter-spacing:.05em;margin-bottom:2px">👤 ผู้แจ้ง</div>
+          <div style="font-size:0.7rem;color:#0f172a;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.reporter||'—'}</div>
+        </div>
+      </div>
+      ${_csDept||_csVendor?`<div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${_csDept?`<span style="background:#f1f5f9;color:#475569;border-radius:5px;padding:2px 8px;font-size:0.6rem;font-weight:700">🏢 ${_csDept}</span>`:''}
+        ${_csVendor?`<span style="background:#eff6ff;color:#1d4ed8;border-radius:5px;padding:2px 8px;font-size:0.6rem;font-weight:700">📋 ${_csVendor}</span>`:''}
+      </div>`:''}`;
+  }
 
   // ── แสดงอะไหล่ที่สั่งซื้อ (ถ้ามี) ──
   // แสดง/ซ่อน parts block
@@ -2504,14 +2514,8 @@ async function doComplete( /* PATCH v67 */) {
   const allParts = [refStr, partsList].filter(Boolean).join(' | ');
 
   const repairStr = repairItems.join('\n');
-  // ── Bug6 fix: กัน sum ซ้ำ repairItems ──
-  // syncSummaryFromForm() pre-fill c-sum ด้วย "- item1\n- item2..." เหมือน repairStr
-  // ถ้า user ไม่แก้ไข c-sum ก็จะซ้ำกัน → strip รายการที่ซ้ำออก เก็บเฉพาะ manual note
-  const repairSet = new Set(repairItems.map(s => s.trim().replace(/^[-\s]+/,'')));
-  const sumLines = sum.split('\n').map(l => l.trim().replace(/^[-\s•]+/,'').trim()).filter(Boolean);
-  const manualLines = sumLines.filter(l => !repairSet.has(l));
-  const manualNote = manualLines.join('\n');
-  t.summary = (repairStr ? repairStr + (manualNote ? '\n' + manualNote : '') : sum);
+  // เก็บ summary เป็น newline-delimited เพื่อ formatSummary แยกได้ถูกต้อง
+  t.summary = (repairStr ? repairStr + (sum ? '\n' + sum : '') : sum);
   t.parts   = allParts;
   // คำนวณ repairCost จาก price list
   const _rg = _getRepairGroups ? _getRepairGroups() : (db.repairGroups||[]);
@@ -3128,7 +3132,7 @@ function refreshPage() {
     const tc = document.getElementById('pur-track-content');
     if (tc && tc.style.display !== 'none') renderTrackingInline(tc);
   }
-  else if (active === 'report') { renderReport?.(); if(typeof switchReportTab==='function') switchReportTab('summary'); }
+  else if (active === 'report') renderReport?.();
   updateOpenBadge();
 }
 
