@@ -2296,36 +2296,20 @@ function openCompleteSheet(tid) {
     const _csBtu = _csMac?.btu ? Number(_csMac.btu).toLocaleString() + ' BTU' : '';
     const _csDept = _csMac?.dept || t.dept || '';
     const _csVendor = _csMac?.vendor || t.vendor || '';
+    // compact single-row layout — ป้องกัน header ล้นจอ
     strip.innerHTML = `
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.6rem;color:#94a3b8;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">ปัญหา</div>
-          <div style="font-size:0.88rem;font-weight:900;color:#0f172a;line-height:1.3">${escapeHtml(t.problem)||'—'}</div>
+          <div style="font-size:0.82rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
+          <div style="font-size:0.65rem;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            ❄️ ${t.machine||'—'}${_csBtu?' · 🌡️ '+_csBtu:''}${_csDept?' · 🏢 '+_csDept:''}
+          </div>
         </div>
-        <div style="display:flex;gap:4px;flex-shrink:0;padding-top:2px">
+        <div style="display:flex;gap:4px;flex-shrink:0">
           <span class="tag ${stc(t.status)}" style="font-size:0.58rem;padding:2px 7px">${sTH(t.status)}</span>
           <span class="tag ${prC(t.priority)}" style="font-size:0.58rem;padding:2px 7px">${prTH(t.priority)}</span>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:${_csDept||_csVendor?'6':'0'}px">
-        <div style="background:white;border:1px solid #e2e8f0;border-radius:7px;padding:6px 8px">
-          <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;letter-spacing:.05em;margin-bottom:2px">❄️ เครื่อง</div>
-          <div style="font-size:0.7rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.machine||'—'}</div>
-        </div>
-        ${_csBtu?`<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:7px;padding:6px 8px">
-          <div style="font-size:0.52rem;color:#92400e;font-weight:700;letter-spacing:.05em;margin-bottom:2px">🌡️ BTU</div>
-          <div style="font-size:0.7rem;font-weight:900;color:#92400e">${_csBtu}</div>
-        </div>`:'<div></div>'}
-        <div style="background:white;border:1px solid #e2e8f0;border-radius:7px;padding:6px 8px">
-          <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;letter-spacing:.05em;margin-bottom:2px">👤 ผู้แจ้ง</div>
-          <div style="font-size:0.7rem;color:#0f172a;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.reporter||'—'}</div>
-        </div>
-      </div>
-      ${_csDept||_csVendor?`<div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${_csDept?`<span style="background:#f1f5f9;color:#475569;border-radius:5px;padding:2px 8px;font-size:0.6rem;font-weight:700">🏢 ${_csDept}</span>`:''}
-        ${_csVendor?`<span style="background:#eff6ff;color:#1d4ed8;border-radius:5px;padding:2px 8px;font-size:0.6rem;font-weight:700">📋 ${_csVendor}</span>`:''}
-      </div>`:''}`;
-  }
+      </div>`;
 
   // ── แสดงอะไหล่ที่สั่งซื้อ (ถ้ามี) ──
   // แสดง/ซ่อน parts block

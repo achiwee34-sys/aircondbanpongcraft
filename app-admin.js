@@ -1252,12 +1252,15 @@ function openSignaturePad(tid, type) {
     </div>`;
   document.body.appendChild(ov);
 
-  // Setup canvas — ต้องรอ browser paint ก่อน (double rAF) เพื่อให้ getBoundingClientRect ได้ขนาดจริง
+  // Setup canvas — ใช้ setTimeout เพื่อให้ browser render overlay ก่อน
   const canvas = document.getElementById('sig-canvas');
   const _setupCanvas = () => {
     const rect = canvas.getBoundingClientRect();
-    canvas.width  = rect.width  || window.innerWidth - 40 || 320;
-    canvas.height = rect.height || 180;
+    // ใช้ขนาดจริงจาก CSS (width:100% height:180px) 
+    const w = rect.width  > 10 ? rect.width  : (window.innerWidth - 80);
+    const h = rect.height > 10 ? rect.height : 180;
+    canvas.width  = w;
+    canvas.height = h;
     _sigCanvas = canvas;
     _sigCtx = canvas.getContext('2d');
     _sigCtx.strokeStyle = '#1e293b';
@@ -1274,8 +1277,8 @@ function openSignaturePad(tid, type) {
     canvas.addEventListener('mouseup',     _sigMouseUp);
     canvas.addEventListener('mouseleave',  _sigMouseUp);
   };
-  // double rAF ให้ browser layout+paint เสร็จก่อน
-  requestAnimationFrame(() => requestAnimationFrame(_setupCanvas));
+  // setTimeout 100ms — รอให้ overlay render+paint เสร็จสมบูรณ์ก่อน
+  setTimeout(_setupCanvas, 100);
 }
 
 function _sigPos(e) {

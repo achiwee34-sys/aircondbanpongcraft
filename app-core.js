@@ -791,7 +791,21 @@ async function viewQuotationFull(tid) {
   };
   const items = parseItems()
     .filter(r => r.name && r.name.trim() !== '')
-    .map(r=>{ const{price,unit}=getPrice2(r.name,r.qty,machine&&machine.btu?Number(machine.btu):0); return{name:r.name,qty:r.qty,unit,price,total:r.qty*price}; });
+    .map(r=>{
+      // inline getPrice — เหมือน generateRepairPDF (getPrice2 ไม่มีจริง)
+      const _macBTU = machine&&machine.btu ? Number(machine.btu) : 0;
+      const _g = (db.repairGroups||[]);
+      let price=0, unit='JOB';
+      for(const grp of _g){ const it=grp.items?.find(i=>i.name===r.name); if(it){price=it.price||0;unit=it.unit||'JOB';break;} }
+      if(!price && REPAIR_PRICE[r.name]) { price=REPAIR_PRICE[r.name]; unit='JOB'; }
+      if(!price && _macBTU>0){
+        const base=r.name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
+        if(base&&base!==r.name){ const tier=getRepairKeyByBTU(base,_macBTU); if(tier&&tier.price>0){price=tier.price;unit='JOB';} }
+      }
+      const refMap={'R-22':200,'R-32':350,'R-407C':330,'R-407c':330,'R-410A':340,'R-410a':340,'R-134A':330,'R-134a':330,'R-141B':280};
+      if(!price){ for(const[ref,p]of Object.entries(refMap)){if(r.name.includes(ref)){price=p;unit='Kg.';break;}} }
+      return{name:r.name,qty:r.qty,unit,price,total:r.qty*price};
+    });
   const sub   = items.reduce((s,r)=>s+r.total,0);
   const vat   = Math.round(sub*0.07*100)/100;
   const grand = sub+vat;
