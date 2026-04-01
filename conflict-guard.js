@@ -43,6 +43,10 @@ async function fsSaveWithLock(payload) {
       if (snap.exists) {
         const remoteVersion = snap.data()._docVersion || 0;
 
+        // sync version ครั้งแรก (กรณี conflict-guard โหลดหลัง fsLoad)
+        if (_localDocVersion === 0 && remoteVersion > 0) {
+          _localDocVersion = remoteVersion;
+        }
         // ถ้า remote version ใหม่กว่า local → มีคนอื่น save ไปก่อน
         if (remoteVersion > _localDocVersion) {
           const err = new Error('CONFLICT');
@@ -165,6 +169,6 @@ async function fsSaveNowSafe() {
   } catch(e) {
     console.warn('[ConflictGuard] fsSaveNowSafe error:', e);
   } finally {
-    setTimeout(() => { _fsSaving = false; }, 500);
+    setTimeout(() => { _fsSaving = false; }, 2000);
   }
 }

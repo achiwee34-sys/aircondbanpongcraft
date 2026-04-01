@@ -142,7 +142,7 @@ async function fsSaveNow() {
       if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('signatures').set(allSigs);
     }
   } catch(e) { console.warn('fsSaveNow error:', e); }
-  finally { setTimeout(() => { _fsSaving = false; }, 500); }
+  finally { setTimeout(() => { _fsSaving = false; }, 2000); }
 }
 
 // fire-and-forget save
@@ -195,7 +195,7 @@ function fsListen() {
   _fsListener = FSdb.collection('appdata').doc('main').onSnapshot(snap => {
     if (!snap.exists || !CU) return;
     const data = snap.data();
-    if (_fsSaving && !_fsChatSaving) return;
+    if (_fsSaving) return; // ถ้ากำลัง save อยู่ ห้าม overwrite ด้วย snapshot
     const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
     const DEMO_IDS       = ['u2','u3','u4','u5'];
     const check = (key) => {
