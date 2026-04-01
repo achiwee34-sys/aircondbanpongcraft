@@ -2583,6 +2583,11 @@ function goPage(name) {
     o.classList.remove('open'); o.style.display = 'none';
     setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
   });
+  // ── ปิด overlay ที่ใช้ display style แทน class (complete-sheet, rh-overlay) ──
+  ['complete-sheet','rh-overlay','rh-popup'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
 
   // ── 1. Nav highlight ทันที ──
   document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
