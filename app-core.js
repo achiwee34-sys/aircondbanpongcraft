@@ -1787,12 +1787,15 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
         const page = doc.querySelector('.page');
         if(!page) return;
         const container = fr.parentElement;
-        const viewW = (container ? container.clientWidth : window.innerWidth) - 32;
+        const isMob = window.innerWidth < 768;
+        // Bug8 fix: mobile ใช้ padding น้อยลง ให้ document เต็มจอ
+        const pad = isMob ? 4 : 32;
+        const viewW = (container ? container.clientWidth : window.innerWidth) - pad;
         const pageW = 794; // A4 at 96dpi
         const scale = Math.min(1, viewW / pageW);
         page.style.transformOrigin = 'top center';
         page.style.transform = 'scale('+scale+')';
-        page.style.marginTop = '8px';
+        page.style.marginTop = '4px';
         page.style.marginBottom = (scale < 1 ? -(pageW*(1-scale)*0.5) : 8)+'px';
         doc.body.style.margin = '0';
         doc.body.style.background = '#c0c6cc';

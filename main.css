@@ -737,15 +737,19 @@ body.dark-mode div[style*="background:#f0fdf4"][style*="border:1px solid #bbf7d0
   .sheet { max-width: 600px !important; }
   #complete-sheet > div { max-width: 600px !important; }
 
-  /* Detail sheet side-by-side */
+  /* Detail sheet centered */
   #detail-sheet {
     max-width: 640px !important;
     left: 50% !important;
     right: auto !important;
-    transform: translateX(-50%) translateY(100%) !important;
+    bottom: auto !important;
+    top: 50% !important;
+    max-height: 88vh !important;
+    border-radius: 24px !important;
+    transform: translateX(-50%) translateY(-50%) scale(0.94) !important;
   }
   #detail-sheet.open {
-    transform: translateX(-50%) translateY(0) !important;
+    transform: translateX(-50%) translateY(-50%) scale(1) !important;
   }
 }
 
@@ -1169,6 +1173,10 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 #pur-track-content { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 #po-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
+/* Bug1-fix: ensure user list buttons are always tappable */
+#pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 2; }
+/* Bug3-fix: detail card centres vertically on mobile */
+#detail-sheet { display:none; }
 /* ── complete sheet (div overlay) ── */
 #complete-sheet { display:none; }
 #complete-sheet > div input, #complete-sheet > div select,

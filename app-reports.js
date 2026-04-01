@@ -2426,6 +2426,12 @@ function openTechReqForm(tid) {
         </div>
         <div id="tech-req-count" style="font-size:0.7rem;color:#64748b;font-weight:600">0 รายการ</div>
       </div>
+      <!-- column header — Bug5 fix -->
+      <div style="display:grid;grid-template-columns:1fr 80px 100px;gap:6px;padding:4px 14px 6px;font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">
+        <div>ชื่ออะไหล่ / ชิ้นส่วน</div>
+        <div style="text-align:center">จำนวน</div>
+        <div style="text-align:right">ราคา / ชิ้น (฿)</div>
+      </div>
       <!-- rows -->
       <div id="tech-req-rows"></div>
       <!-- add button -->
@@ -2439,12 +2445,15 @@ function openTechReqForm(tid) {
         <textarea id="tech-req-note" rows="2" placeholder="เช่น ความเร่งด่วน, spec พิเศษ, ผู้จัดหาที่แนะนำ..."
           style="width:100%;border:none;outline:none;font-size:0.82rem;font-family:inherit;resize:none;color:#374151;background:transparent;box-sizing:border-box">${saved?.note||''}</textarea>
       </div>
-      <!-- save button -->
+      <div style="height:8px"></div>
+    </div>
+    <!-- sticky footer — Bug7 fix: ปุ่มบันทึกไม่หลุดจอ -->
+    <div style="flex-shrink:0;background:white;border-top:1px solid #f1f5f9;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;gap:8px;box-shadow:0 -4px 16px rgba(0,0,0,0.06)">
+      <button onclick="closeTechReqForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
       <button onclick="saveTechReq()"
-        style="width:100%;padding:16px;background:linear-gradient(135deg,#e65100,#c0392b);color:white;border:none;border-radius:14px;font-size:0.95rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(230,81,0,0.35);letter-spacing:0.02em;margin-bottom:8px">
-        💾 บันทึก &amp; ส่งให้ Admin สั่งซื้อ
+        style="flex:2;padding:13px;background:linear-gradient(135deg,#e65100,#c0392b);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(230,81,0,0.3);display:flex;align-items:center;justify-content:center;gap:6px">
+        💾 บันทึก &amp; ส่งให้ Admin
       </button>
-      <button onclick="closeTechReqForm()" style="width:100%;padding:11px;background:transparent;border:none;color:#9ca3af;font-size:0.8rem;cursor:pointer;font-family:inherit">ยกเลิก</button>
     </div>`;
 
   document.body.appendChild(ov);

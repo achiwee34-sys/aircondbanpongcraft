@@ -2514,8 +2514,14 @@ async function doComplete( /* PATCH v67 */) {
   const allParts = [refStr, partsList].filter(Boolean).join(' | ');
 
   const repairStr = repairItems.join('\n');
-  // เก็บ summary เป็น newline-delimited เพื่อ formatSummary แยกได้ถูกต้อง
-  t.summary = (repairStr ? repairStr + (sum ? '\n' + sum : '') : sum);
+  // ── Bug6 fix: กัน sum ซ้ำ repairItems ──
+  // syncSummaryFromForm() pre-fill c-sum ด้วย "- item1\n- item2..." เหมือน repairStr
+  // ถ้า user ไม่แก้ไข c-sum ก็จะซ้ำกัน → strip รายการที่ซ้ำออก เก็บเฉพาะ manual note
+  const repairSet = new Set(repairItems.map(s => s.trim().replace(/^[-\s]+/,'')));
+  const sumLines = sum.split('\n').map(l => l.trim().replace(/^[-\s•]+/,'').trim()).filter(Boolean);
+  const manualLines = sumLines.filter(l => !repairSet.has(l));
+  const manualNote = manualLines.join('\n');
+  t.summary = (repairStr ? repairStr + (manualNote ? '\n' + manualNote : '') : sum);
   t.parts   = allParts;
   // คำนวณ repairCost จาก price list
   const _rg = _getRepairGroups ? _getRepairGroups() : (db.repairGroups||[]);

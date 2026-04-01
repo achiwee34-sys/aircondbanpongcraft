@@ -144,6 +144,9 @@ function openSheet(name){
   const ov = document.getElementById(name+'-overlay');
   const sh = document.getElementById(name+'-sheet');
   if (!ov || !sh) { console.warn('openSheet: element not found for', name); return; }
+  // Bug1 fix: reset ค่า visibility/pointer-events ที่อาจค้างจากการปิดครั้งก่อน
+  sh.style.visibility = '';
+  sh.style.pointerEvents = '';
   ov.classList.add('open');
   // PATCH: display:none ใน CSS ต้องใช้ double rAF ให้ browser paint ก่อน add .open
   // มิฉะนั้น transition animation จะไม่ทำงาน
@@ -1249,28 +1252,30 @@ function openSignaturePad(tid, type) {
     </div>`;
   document.body.appendChild(ov);
 
-  // Setup canvas
+  // Setup canvas — ต้องรอ browser paint ก่อน (double rAF) เพื่อให้ getBoundingClientRect ได้ขนาดจริง
   const canvas = document.getElementById('sig-canvas');
-  // กำหนด pixel size จาก display size
-  const rect = canvas.getBoundingClientRect();
-  canvas.width  = rect.width  || 320;
-  canvas.height = rect.height || 180;
-  _sigCanvas = canvas;
-  _sigCtx = canvas.getContext('2d');
-  _sigCtx.strokeStyle = '#1e293b';
-  _sigCtx.lineWidth = 2.5;
-  _sigCtx.lineCap = 'round';
-  _sigCtx.lineJoin = 'round';
-
-  // Touch events
-  canvas.addEventListener('touchstart',  _sigTouchStart,  {passive:false});
-  canvas.addEventListener('touchmove',   _sigTouchMove,   {passive:false});
-  canvas.addEventListener('touchend',    _sigTouchEnd,    {passive:false});
-  // Mouse events
-  canvas.addEventListener('mousedown',   _sigMouseDown);
-  canvas.addEventListener('mousemove',   _sigMouseMove);
-  canvas.addEventListener('mouseup',     _sigMouseUp);
-  canvas.addEventListener('mouseleave',  _sigMouseUp);
+  const _setupCanvas = () => {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = rect.width  || window.innerWidth - 40 || 320;
+    canvas.height = rect.height || 180;
+    _sigCanvas = canvas;
+    _sigCtx = canvas.getContext('2d');
+    _sigCtx.strokeStyle = '#1e293b';
+    _sigCtx.lineWidth = 2.5;
+    _sigCtx.lineCap = 'round';
+    _sigCtx.lineJoin = 'round';
+    // Touch events
+    canvas.addEventListener('touchstart',  _sigTouchStart,  {passive:false});
+    canvas.addEventListener('touchmove',   _sigTouchMove,   {passive:false});
+    canvas.addEventListener('touchend',    _sigTouchEnd,    {passive:false});
+    // Mouse events
+    canvas.addEventListener('mousedown',   _sigMouseDown);
+    canvas.addEventListener('mousemove',   _sigMouseMove);
+    canvas.addEventListener('mouseup',     _sigMouseUp);
+    canvas.addEventListener('mouseleave',  _sigMouseUp);
+  };
+  // double rAF ให้ browser layout+paint เสร็จก่อน
+  requestAnimationFrame(() => requestAnimationFrame(_setupCanvas));
 }
 
 function _sigPos(e) {
