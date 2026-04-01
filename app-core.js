@@ -554,6 +554,16 @@ function renderSettingsPage() {
   // Admin tools — show only for admin
   const adminTools = document.getElementById('sp-admin-tools');
   if (adminTools) adminTools.style.display = CU.role === 'admin' ? 'block' : 'none';
+
+  // Backend panel — show only for admin
+  const backendPanel = document.getElementById('sp-backend-panel');
+  if (backendPanel) {
+    if (CU.role === 'admin') {
+      if (typeof showBackendPanel === 'function') showBackendPanel();
+    } else {
+      backendPanel.style.display = 'none';
+    }
+  }
 }
 
 function spPreviewAvatar(input) {
@@ -2489,6 +2499,16 @@ function setupBottomNav() {
   if (dangerZone) dangerZone.style.display = 'none'; // ซ่อน standalone card
   const adminToolsGroup = document.getElementById('sp-admin-tools');
   if (adminToolsGroup) adminToolsGroup.style.display = isAdmin ? 'block' : 'none';
+
+  // Backend panel — show only for admin
+  const bkPanel = document.getElementById('sp-backend-panel');
+  if (bkPanel) {
+    if (isAdmin) {
+      if (typeof showBackendPanel === 'function') showBackendPanel();
+    } else {
+      bkPanel.style.display = 'none';
+    }
+  }
   // อัปเดต chat count badge
   if (isAdmin) {
     const chatBadge = document.getElementById('chat-count-badge');
