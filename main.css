@@ -923,13 +923,13 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
-  padding: 14px; display: none;
+  padding: 14px 14px calc(var(--nav-h, 56px) + var(--safe-bot, 0px) + 20px); display: none;
   box-sizing: border-box;
   max-width: 100%;
 }
 .page.active { display: block; }
 /* chatroom + executive page use flex layout */
-#pg-chatroom.active, #pg-executive.active, #pg-report.active { display: flex !important; flex-direction: column; }
+#pg-chatroom.active, #pg-executive.active, #pg-report.active, #pg-pmplan.active { display: flex !important; flex-direction: column; padding-bottom: 14px; }
 /* machines page — overflow-y visible for dropdown, clip x */
 #pg-machines { overflow-y: auto !important; overflow-x: hidden !important; }
 
@@ -1190,7 +1190,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 .sheet-handle { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 14px auto 0; }
 .sheet-title { font-size: 1rem; font-weight: 700; color: var(--text); padding: 14px 20px 4px; }
 .sheet-body { padding: 10px 20px 0; }
-.sheet-actions { padding: 14px 20px 0; display: flex; flex-direction: column; gap: 8px; }
+.sheet-actions { padding: 14px 20px calc(var(--safe-bot, 0px) + 14px); display: flex; flex-direction: column; gap: 8px; }
 
 /* ======= LIGHTBOX ======= */
 .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 900; display: none; align-items: center; justify-content: center; }

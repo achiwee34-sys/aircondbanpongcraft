@@ -855,3 +855,16 @@ function showAlert(opts) {
 // MONTHLY REPORT
 // ============================================================
 let rptYear = new Date().getFullYear();
+
+// ── openTechPopup: แสดง popup งานของช่าง (จาก ticket list / tracking) ──
+function openTechPopup(techId) {
+  const tech = db.users.find(u => u.id === techId);
+  if (!tech) return;
+  if (typeof openAdminManageTechTickets === 'function') {
+    openAdminManageTechTickets(techId);
+  } else {
+    // fallback: แสดง toast ชื่อช่าง
+    const active = db.tickets.filter(t => t.assigneeId === techId && !['done','verified','closed'].includes(t.status));
+    showToast('🔧 ' + tech.name + ' · ' + active.length + ' งานค้าง');
+  }
+}

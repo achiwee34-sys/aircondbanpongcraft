@@ -12,19 +12,34 @@ const firebaseConfig = {
   appId: "1:639214607106:web:4a01a7f333a924b188c01b"
 };
 
+// ── ติดตามสถานะ auth แยกจาก _firebaseReady ──
+let _firebaseAuthReady = false;
+
 function initFirebase() {
   try {
     if (typeof firebase === 'undefined') return;
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     FSdb = firebase.firestore();
-    _firebaseReady = true;
-    // ── Anonymous Auth: sign in ทันทีเพื่อให้ write Firestore ได้ ──
-    // (Firestore Rules: read = open, write = require auth)
+    _firebaseReady = true; // พร้อม read (rules: read = open)
+
+    // ── Anonymous Auth: รอ onAuthStateChanged ก่อนถือว่า write ได้ ──
     if (firebase.auth) {
-      firebase.auth().signInAnonymously().catch(e => {
-        console.warn('[Firebase] Anonymous sign-in failed:', e.message);
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          _firebaseAuthReady = true;
+          console.log('[Firebase] Auth ready, uid:', user.uid);
+        } else {
+          _firebaseAuthReady = false;
+          firebase.auth().signInAnonymously().catch(e => {
+            console.warn('[Firebase] Anonymous sign-in failed:', e.message);
+          });
+        }
       });
+    } else {
+      // ถ้าไม่มี auth module ให้ถือว่า ready เลย (fallback)
+      _firebaseAuthReady = true;
     }
+
     // ── PATCH v67: init Firebase Storage ──
     if (typeof initStorage === 'function') initStorage();
   } catch(e) { console.warn('Firebase init error:', e); }
@@ -95,6 +110,8 @@ async function fsLoad() {
 // บันทึกเฉพาะ chats — เร็วกว่า saveDB ทั้งก้อนมาก
 async function saveChatsFast() {
   if (!_firebaseReady || !FSdb) return;
+  const authed = await _waitForAuth();
+  if (!authed) { console.warn('[saveChatsFast] auth not ready'); return; }
   _fsChatSaving = true;
   try {
     if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('main').update({
@@ -108,6 +125,16 @@ async function saveChatsFast() {
   }
 }
 
+// ── รอ auth พร้อมก่อน write (max 5 วินาที) ──
+async function _waitForAuth(maxMs = 5000) {
+  if (_firebaseAuthReady) return true;
+  const start = Date.now();
+  while (!_firebaseAuthReady && Date.now() - start < maxMs) {
+    await new Promise(r => setTimeout(r, 100));
+  }
+  return _firebaseAuthReady;
+}
+
 // ── PATCH v67: fsSaveNow → delegate ไป fsSaveNowSafe (conflict-guard.js)
 async function fsSaveNow() {
   if (typeof fsSaveNowSafe === 'function') {
@@ -115,6 +142,9 @@ async function fsSaveNow() {
   }
   // ─── FALLBACK (ถ้า conflict-guard.js ยังไม่โหลด) ─────────
   if (!_firebaseReady || !FSdb) return;
+  // รอ anonymous auth ก่อน write (ป้องกัน permission-denied)
+  const authed = await _waitForAuth();
+  if (!authed) { console.warn('[fsSaveNow] auth not ready, skip write'); return; }
   _fsSaving = true;
   try {
     const ticketsNoSig = (db.tickets||[]).map(t => {
