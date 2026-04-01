@@ -656,14 +656,20 @@ function _openTopMenu() {
   const rl = document.getElementById('tb-qm-role');
   if (rl && CU) rl.textContent = (ri[CU.role] || CU.role) + ' — ' + (CU.name || '');
   // close on outside tap
-  setTimeout(() => document.addEventListener('click', _menuOutsideTap, {once:true}), 10);
+  setTimeout(() => document.addEventListener('click', _menuOutsideTap), 10);
 }
 function _closeTopMenu() {
   const m = document.getElementById('tb-quick-menu');
   if (m) m.style.display = 'none';
   document.removeEventListener('click', _menuOutsideTap);
 }
-// [REMOVED audit-H4] _menuOutsideTap() — dead code, no call site
+function _menuOutsideTap(e) {
+  const m = document.getElementById('tb-quick-menu');
+  const btn = document.getElementById('tb-avatar-btn');
+  if (m && !m.contains(e.target) && btn && !btn.contains(e.target)) {
+    _closeTopMenu();
+  }
+}
 function _tbMenu(page) {
   _closeTopMenu();
   goPage(page);

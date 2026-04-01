@@ -49,8 +49,15 @@ function _execGetData() {
   const machines = db.machines || [];
   const macMap = new Map(machines.map(m => [m.id, m]));
 
-  // helper: หาวันที่ที่ดีที่สุดของ ticket
-  const _tDate = t => t.createdAt || t.updatedAt || t.doneAt || t.closedAt || t.verifiedAt || '';
+  // helper: หาวันที่ที่ดีที่สุดของ ticket (รองรับ Firestore Timestamp และ string)
+  const _toDateStr = v => {
+    if (!v) return '';
+    if (typeof v === 'string') return v;
+    if (v && typeof v === 'object' && v.seconds) return new Date(v.seconds * 1000).toISOString();
+    if (v instanceof Date) return v.toISOString();
+    return String(v);
+  };
+  const _tDate = t => _toDateStr(t.createdAt) || _toDateStr(t.updatedAt) || _toDateStr(t.doneAt) || _toDateStr(t.closedAt) || _toDateStr(t.verifiedAt) || '';
 
   // งานเดือนที่เลือก
   const monthT = tickets.filter(t => {
