@@ -85,7 +85,129 @@ function markAllRead(){db.notifications.filter(n=>n.userId===CU?.id).forEach(n=>
 function clearNotifs(){db.notifications=db.notifications.filter(n=>n.userId!==CU?.id);saveDB();updateNBadge();renderNotifPanel();}
 
 // ============================================================
-// openSheet, closeSheet ย้ายไปอยู่ใน app-core.js แล้ว (โหลดก่อน)
+// SHEETS (Bottom Sheet Controller)
+// ============================================================
+function openSheet(name){
+  // chat-sheet เป็น fullscreen แบบพิเศษ
+  if (name === 'chat') {
+    const sh = document.getElementById('chat-sheet');
+    if (sh) {
+      sh.classList.add('visible');
+      // ── keyboard fix for chat-sheet ──
+      function _chatKbFix() {
+        if (!sh.classList.contains('visible')) return;
+        const vv = window.visualViewport;
+        if (!vv) return;
+        const vvh = vv.height;
+        const offsetTop = vv.offsetTop || 0;
+        const offsetLeft = vv.offsetLeft || 0;
+        // ใช้ transform แทน top/height เพื่อไม่ trigger layout reflow
+        sh.style.transform = `translateY(${offsetTop}px) translateX(${offsetLeft}px)`;
+        sh.style.height = vvh + 'px';
+        // scroll messages ไปล่างสุดเมื่อ keyboard ขึ้น
+        const msgs = document.getElementById('chat-messages');
+        if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
+      }
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', _chatKbFix);
+        window.visualViewport.addEventListener('scroll', _chatKbFix);
+        sh._chatKbFix = _chatKbFix;
+      }
+    }
+    if (navigator.vibrate) navigator.vibrate(30);
+    return;
+  }
+  // ปิด sheet + overlay อื่นๆ ทั้งหมดก่อนเปิดอันใหม่ (force-close ป้องกันซ้อน)
+  document.querySelectorAll('.sheet').forEach(s => {
+    if (s.id !== name+'-sheet') {
+      s.classList.remove('open');
+      // ── PATCH: force reset visibility ป้องกัน sheet ค้างบน tablet ──
+      s.style.visibility = 'hidden';
+      s.style.pointerEvents = 'none';
+      setTimeout(() => {
+        if (!s.classList.contains('open')) {
+          s.style.visibility = '';
+          s.style.pointerEvents = '';
+        }
+      }, 400);
+      if (s._kbHandler) { s.removeEventListener('focusin', s._kbHandler); delete s._kbHandler; }
+    }
+  });
+  document.querySelectorAll('.sheet-overlay').forEach(o => {
+    if (o.id !== name+'-overlay') {
+      o.classList.remove('open');
+      o.style.display = 'none';
+      setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
+    }
+  });
+
+  const ov = document.getElementById(name+'-overlay');
+  const sh = document.getElementById(name+'-sheet');
+  if (!ov || !sh) { console.warn('openSheet: element not found for', name); return; }
+  // Bug1 fix: reset ค่า visibility/pointer-events ที่อาจค้างจากการปิดครั้งก่อน
+  sh.style.visibility = '';
+  sh.style.pointerEvents = '';
+  ov.classList.add('open');
+  // PATCH: display:none ใน CSS ต้องใช้ double rAF ให้ browser paint ก่อน add .open
+  // มิฉะนั้น transition animation จะไม่ทำงาน
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sh.classList.add('open');
+      // ── keyboard fix: scroll focused input into view inside sheet ──
+      const onFocusIn = (e) => {
+        const el = e.target;
+        if (!el || !['INPUT','TEXTAREA','SELECT'].includes(el.tagName)) return;
+        setTimeout(() => {
+          el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }, 320);
+      };
+      sh.addEventListener('focusin', onFocusIn);
+      sh._kbHandler = onFocusIn;
+    });
+  });
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+function closeSheet(name){
+  // chat-sheet fullscreen
+  if (name === 'chat') {
+    const sh = document.getElementById('chat-sheet');
+    if (sh) {
+      sh.classList.remove('visible');
+      // cleanup keyboard fix listener
+      if (sh._chatKbFix && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', sh._chatKbFix);
+        window.visualViewport.removeEventListener('scroll', sh._chatKbFix);
+        delete sh._chatKbFix;
+      }
+      sh.style.height = '';
+      sh.style.top = '';
+      sh.style.transform = '';
+    }
+    return;
+  }
+  // ── PATCH: reset machine sheet เมื่อปิด เพื่อป้องกัน sheet ค้าง ──
+  if (name === 'machine') {
+    const mid = document.getElementById('m-id');
+    if (mid) mid.value = '';
+    const titleText = document.getElementById('ms-title-text');
+    if (titleText) titleText.textContent = 'เพิ่มเครื่องแอร์ใหม่';
+    const addDeptBox = document.getElementById('m-add-dept-box');
+    if (addDeptBox) addDeptBox.style.display = 'block';
+    const missingBanner = document.getElementById('ms-missing-banner');
+    if (missingBanner) missingBanner.style.display = 'none';
+  }
+  const sh = document.getElementById(name+'-sheet');
+  const ov = document.getElementById(name+'-overlay');
+  if (sh) {
+    sh.classList.remove('open');
+    // cleanup keyboard handler
+    if (sh._kbHandler) { sh.removeEventListener('focusin', sh._kbHandler); delete sh._kbHandler; }
+  }
+  if (ov) setTimeout(() => {
+    ov.classList.remove('open');
+    ov.style.display = ''; // reset force-hide
+  }, 350);
+}
 
 // ============================================================
 // GOOGLE SHEETS
@@ -997,7 +1119,12 @@ function savePMPlan() {
   showToast(`${typeIcon} เพิ่ม ${typeLabel} ${added} แผนกลงปฏิทินแล้ว`);
 }
 
-// nowStr ย้ายไปอยู่ใน app-core.js แล้ว
+function nowStr(){
+  // เก็บเป็น ISO format เพื่อให้ new Date() parse ได้
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+}
 
 // ============================================================
 // LINE NOTIFY
