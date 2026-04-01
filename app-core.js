@@ -2525,6 +2525,9 @@ let _activePage = 'home'; // sync กับ HTML ที่ pg-home มี class 
 function goPage(name) {
   if (_activePage === name) return; // กดหน้าเดิม ไม่ต้องทำอะไร
 
+  // ── 0. ปิด top menu ถ้าเปิดอยู่ ──
+  if (typeof _closeTopMenu === 'function') _closeTopMenu();
+
   // ── 1. Nav highlight ทันที ──
   document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
   document.querySelector(`.bn-item[data-page="${name}"]`)?.classList.add('active');
