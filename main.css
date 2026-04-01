@@ -1175,8 +1175,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
 /* Bug1-fix: ensure user list buttons are always tappable */
 #pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 2; }
-/* Bug3-fix: detail card centres vertically on mobile */
-#detail-sheet { display:none; }
+/* Bug3-fix: detail card centres vertically on mobile — ไม่ต้อง display:none (ใช้ .sheet default แล้ว) */
 /* ── complete sheet (div overlay) ── */
 #complete-sheet { display:none; }
 #complete-sheet > div input, #complete-sheet > div select,
