@@ -303,5 +303,9 @@ function fsListen() {
         }
       } catch(e) {}
     }, 200);
-  }, err => console.warn('fsListen error:', err));
+  }, err => {
+    // WebChannel transport errors เป็น Firebase internal retry - ไม่ใช่ bug
+    if (err?.code === 'unavailable' || String(err).includes('WebChannel')) return;
+    console.warn('fsListen error:', err?.code || err);
+  });
 }
