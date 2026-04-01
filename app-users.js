@@ -850,3 +850,89 @@ function showAlert(opts) {
   ov.addEventListener('click', e => { if(e.target===ov){ ov.remove(); if(o.onCancel) o.onCancel(); } });
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// openTechPopup — แสดง popup สรุปงานของช่าง (เรียกจาก tickets & tracking)
+// ══════════════════════════════════════════════════════════════
+function openTechPopup(techId) {
+  const tech = db.users.find(u => u.id === techId);
+  if (!tech) return;
+
+  document.querySelectorAll('#tech-popup-ov').forEach(e => e.remove());
+
+  const DONE_S = ['done','verified','closed'];
+  const active  = db.tickets.filter(t => t.assigneeId === techId && !DONE_S.includes(t.status));
+  const done    = db.tickets.filter(t => t.assigneeId === techId && DONE_S.includes(t.status));
+  const urgent  = active.filter(t => t.priority === 'high');
+  const waiting = active.filter(t => t.status === 'waiting_part');
+  const doneMonth = done.filter(t => (t.updatedAt||'').startsWith(new Date().toISOString().slice(0,7))).length;
+
+  const avatarBg = getAvatarColor ? getAvatarColor(tech.id) : '#c8102e';
+  const avatarHtml = tech.photo
+    ? `<img src="${tech.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.5)">`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:3px solid rgba(255,255,255,0.4)">🔧</div>`;
+
+  const statusLabel = {
+    new:'🆕 ใหม่', assigned:'🔧 มอบหมาย', in_progress:'⚙️ กำลังซ่อม',
+    waiting_part:'⏳ รออะไหล่', done:'✅ เสร็จ', verified:'✔️ ตรวจแล้ว', closed:'🔒 ปิด'
+  };
+
+  const ticketRows = active.map(t => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f8fafc">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.78rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.id} · ${t.problem||''}</div>
+        <div style="font-size:0.65rem;color:#94a3b8;margin-top:2px">${t.machine||''} ${t.location?'· '+t.location:''}</div>
+      </div>
+      <span style="font-size:0.62rem;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#475569;font-weight:700;flex-shrink:0">${statusLabel[t.status]||t.status}</span>
+    </div>`).join('') || `<div style="text-align:center;padding:24px;color:#94a3b8;font-size:0.8rem">✨ ไม่มีงานค้าง</div>`;
+
+  const barPct = Math.min(100, active.length * 14);
+  const barColor = active.length > 4 ? '#c8102e' : active.length > 2 ? '#f59e0b' : '#22c55e';
+
+  const ov = document.createElement('div');
+  ov.id = 'tech-popup-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:flex;align-items:flex-end;backdrop-filter:blur(3px)';
+  ov.innerHTML = `
+    <div style="background:white;border-radius:24px 24px 0 0;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:center;padding:10px 0 0"><div style="width:40px;height:4px;background:#e2e8f0;border-radius:99px"></div></div>
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#8b0000,#c8102e);padding:16px 16px 20px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:12px">
+          ${avatarHtml}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:1rem;font-weight:900;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tech.name}</div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.75);margin-top:2px">${tech.dept||'ช่างซ่อม'}${tech.tel?' · 📞 '+tech.tel:''}</div>
+          </div>
+          <button onclick="document.getElementById('tech-popup-ov').remove()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:white;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+        </div>
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px">
+          ${[
+            {val:active.length, label:'งานค้าง', color: barColor},
+            {val:urgent.length, label:'🔴 ด่วน',  color:'#fca5a5'},
+            {val:waiting.length,label:'⏳ อะไหล่',color:'#fcd34d'},
+            {val:doneMonth,     label:'✅ เดือนนี้',color:'#6ee7b7'},
+          ].map(s=>`
+            <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:8px 4px;text-align:center">
+              <div style="font-size:1.3rem;font-weight:900;color:${s.color};font-family:'JetBrains Mono',monospace">${s.val}</div>
+              <div style="font-size:0.55rem;color:rgba(255,255,255,0.75);font-weight:700;margin-top:2px">${s.label}</div>
+            </div>`).join('')}
+        </div>
+        <!-- Workload bar -->
+        <div style="background:rgba(255,255,255,0.2);border-radius:99px;height:5px;overflow:hidden;margin-top:12px">
+          <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:99px;transition:width 0.5s ease"></div>
+        </div>
+      </div>
+      <!-- Ticket list -->
+      <div style="padding:10px 16px 4px;font-size:0.7rem;font-weight:800;color:#64748b;letter-spacing:0.06em;flex-shrink:0">งานที่มอบหมาย (${active.length} รายการ)</div>
+      <div style="overflow-y:auto;flex:1">${ticketRows}</div>
+      <!-- Footer -->
+      <div style="padding:12px 16px;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-shrink:0">
+        ${CU && CU.role === 'admin' ? `<button onclick="document.getElementById('tech-popup-ov').remove();openAdminManageTechTickets('${techId}')" style="flex:1;padding:11px;background:#fff0f2;color:#c8102e;border:1.5px solid #fca5a5;border-radius:12px;font-size:0.82rem;font-weight:800;cursor:pointer;font-family:inherit">⚙️ จัดการงาน</button>` : ''}
+        <button onclick="document.getElementById('tech-popup-ov').remove()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">ปิด</button>
+      </div>
+    </div>`;
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  document.body.appendChild(ov);
+  if (navigator.vibrate) navigator.vibrate(20);
+}
