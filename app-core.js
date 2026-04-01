@@ -2543,7 +2543,12 @@ function goPage(name) {
   }
 
   // ── 4. FAB ──
-  const fabEl = document.getElementById('fab-new'); if(fabEl) fabEl.style.display = 'none';
+  const fabEl = document.getElementById('fab-new');
+  if (fabEl) {
+    const fabPages = ['home', 'tickets', 'mywork'];
+    const showFab = fabPages.includes(name) && CU?.role !== 'executive';
+    fabEl.style.display = showFab ? 'flex' : 'none';
+  }
   const calAddBtn = document.getElementById('cal-add-btn');
   if(calAddBtn) calAddBtn.style.display = name === 'calendar' ? 'flex' : 'none';
 
