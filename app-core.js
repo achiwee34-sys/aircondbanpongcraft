@@ -1,4 +1,28 @@
 // ============================================================
+// i18n — ต้องอยู่ก่อนสุดเพื่อให้ทุก script ใช้ได้
+// ============================================================
+let _lang = (typeof localStorage !== 'undefined' && localStorage.getItem('aircon_lang')) || 'TH';
+
+const I18N = {
+  TH: {},
+  EN: {
+    'ใหม่':'New','จ่ายแล้ว':'Assigned','รับแล้ว':'Accepted',
+    'กำลังซ่อม':'In Progress','รออะไหล่':'Waiting Part',
+    'เสร็จแล้ว':'Done','ตรวจรับ':'Verified','ปิดงาน':'Closed',
+    'ด่วนมาก':'Urgent','ปานกลาง':'Normal','ไม่เร่งด่วน':'Low',
+    'หน้าแรก':'Home','รายการ':'Tickets','เครื่องแอร์':'Machines',
+    'ผู้ใช้':'Users','รายงาน':'Report','สั่งซื้อ':'Purchase',
+    'ตั้งค่า':'Settings','แจ้งซ่อม':'New Job','ปฏิทิน':'Calendar',
+    'ติดตาม':'Tracking','งานฉัน':'My Work',
+  }
+};
+
+function t(key) {
+  if (_lang === 'TH') return key;
+  return (I18N.EN[key]) || key;
+}
+
+// ============================================================
 // DATABASE
 // ============================================================
 const DB_KEY = 'airtrack_pwa';
@@ -657,6 +681,25 @@ const PDF_THEMES = {
 };
 
 
+
+// ── getPrice2: global alias ป้องกัน "getPrice2 is not defined" ──
+// (โค้ดเก่าบางส่วนเรียก getPrice2 — ให้ใช้ logic เดียวกับ getPrice ใน generateRepairPDF)
+function getPrice2(name, macBTU) {
+  macBTU = macBTU || 0;
+  const g = (db.repairGroups||[]);
+  for(const grp of g){ const it=grp.items?.find(i=>i.name===name); if(it) return {price:it.price||0,unit:it.unit||'JOB'}; }
+  if(typeof REPAIR_PRICE !== 'undefined' && REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
+  if(macBTU > 0){
+    const base = name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
+    if(base && base !== name){
+      const tier = typeof getRepairKeyByBTU==='function' ? getRepairKeyByBTU(base, macBTU) : null;
+      if(tier && tier.price > 0) return {price:tier.price, unit:'JOB'};
+    }
+  }
+  const refMap={'R-22':200,'R-32':350,'R-407C':330,'R-407c':330,'R-410A':340,'R-410a':340,'R-134A':330,'R-134a':330,'R-141B':280};
+  for(const[ref,price] of Object.entries(refMap)){ if(name.includes(ref)) return{price,unit:'Kg.'}; }
+  return {price:0, unit:'JOB'};
+}
 
 // ── Route by role: admin → Designer with panel, others → full view ──
 function openQuotationByRole(tid) {

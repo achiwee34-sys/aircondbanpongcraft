@@ -293,86 +293,49 @@ async function syncMachine(m){const url=db.gsUrl;if(!url)return;_showSyncDot();t
 // ============================================================
 // LANGUAGE / i18n  TH ↔ EN
 // ============================================================
-let _lang = localStorage.getItem('aircon_lang') || 'TH';
-
-const I18N = {
-  TH: {},
-  EN: {
-    // ── Status ──
-    'ใหม่':'New','จ่ายแล้ว':'Assigned','รับแล้ว':'Accepted',
-    'กำลังซ่อม':'In Progress','รออะไหล่':'Waiting Part',
-    'เสร็จแล้ว':'Done','ตรวจรับ':'Verified','ปิดงาน':'Closed',
-    // ── Priority ──
-    'ด่วนมาก':'Urgent','ปานกลาง':'Normal','ไม่เร่งด่วน':'Low',
-    // ── Bottom nav ──
-    'หน้าแรก':'Home','รายการ':'Tickets','เครื่องแอร์':'Machines',
-    'ผู้ใช้':'Users','รายงาน':'Report','สั่งซื้อ':'Purchase',
-    'ตั้งค่า':'Settings','แจ้งซ่อม':'New Job','ปฏิทิน':'Calendar',
-    'ติดตาม':'Tracking','งานฉัน':'My Work',
-    // ── Home page ──
-    'สวัสดี':'Hello','ยินดีต้อนรับ':'Welcome',
-    'งานวันนี้':'Today\'s Jobs','งานค้าง':'Pending','งานด่วน':'Urgent Jobs',
-    'งานทั้งหมด':'All Jobs','แจ้งซ่อมใหม่':'New Repair',
-    'ผู้ใช้งาน':'Users','รายงาน':'Report','สั่งซื้อของ':'Purchase',
-    // ── Ticket list ──
-    'ทั้งหมด':'All','ค้นหา...':'Search...','ค้นหางาน...':'Search jobs...',
-    'ไม่พบข้อมูล':'No data found','ปัญหา':'Problem',
-    'ผู้แจ้ง':'Reporter','ช่างที่รับ':'Technician',
-    'วันที่แจ้ง':'Reported','อัปเดตล่าสุด':'Updated',
-    'รายละเอียด':'Detail','หมายเหตุ':'Note',
-    'ปิด':'Close','ยกเลิก':'Cancel','บันทึก':'Save',
-    // ── Complete sheet ──
-    'บันทึกผลการซ่อม':'Repair Record',
-    'รายการงานที่ดำเนินการ':'Work Done',
-    'เลือกรายการงาน':'Select Tasks',
-    'วัสดุที่ใช้':'Materials Used',
-    'น้ำยาแอร์':'Refrigerant',
-    'อะไหล่ที่เปลี่ยน':'Parts Replaced',
-    'ค่าวัด':'Measurements',
-    'สรุปผลการดำเนินการ':'Summary',
-    'รูปถ่ายหลังซ่อม':'After Photos',
-    'รูปถ่ายก่อนซ่อม':'Before Photos',
-    'ส่งผลการซ่อม':'Submit',
-    'ก่อนซ่อม':'Before','หลังซ่อม':'After',
-    // ── Machines ──
-    'เครื่องทั้งหมด':'All Machines','แผนก':'Department',
-    'ยี่ห้อ':'Brand','รุ่น':'Model','ซีเรียล':'Serial',
-    'ขนาด':'Capacity','น้ำยา':'Refrigerant',
-    'รอบ PM':'PM Interval','เดือน':'months',
-    // ── Purchase ──
-    'ใบสั่งซื้อ':'Purchase Order','สั่งซื้อ':'Order',
-    'รอดำเนินการ':'Pending','อนุมัติแล้ว':'Approved',
-    'รับของแล้ว':'Received','รายการ':'Items',
-    'ราคา':'Price','รวม':'Total',
-    // ── Calendar ──
-    'วางแผน PM':'PM Plan','เพิ่ม':'Add',
-    'วันนี้':'Today','สัปดาห์นี้':'This Week',
-    // ── Settings ──
-    'โปรไฟล์':'Profile','ชื่อ':'Name','ชื่อผู้ใช้':'Username',
-    'รหัสผ่าน':'Password','บันทึกการตั้งค่า':'Save Settings',
-    'ออกจากระบบ':'Logout','โหมดมืด':'Dark Mode',
-    'ภาษา':'Language','ซิงค์ข้อมูล':'Sync Data',
-    'โหลดข้อมูล':'Load Data','โซนอันตราย':'Danger Zone',
-    // ── Users ──
-    'เพิ่มผู้ใช้':'Add User','แก้ไข':'Edit','ลบ':'Delete',
-    'แอดมิน':'Admin','ช่างซ่อม':'Technician','ผู้แจ้งงาน':'Reporter',
-    // ── Report ──
-    'รายงานสรุป':'Summary Report','ปัญหาที่พบบ่อย':'Frequent Problems',
-    'ประสิทธิภาพ':'Performance',
-    // ── Misc ──
-    'เครื่อง':'Units','ทั้งหมด (จาก)':'All from',
-    'ล้างใหญ่':'Major Clean','ล้างย่อย':'Minor Clean',
-    'กรอกข้อมูลให้ครบถ้วน':'Fill in all required fields',
-    '* จำเป็น':'* Required','ไม่บังคับ':'Optional',
-    'สูงสุด 3 รูป / ประเภท':'Max 3 photos / type',
-    'บีบอัดอัตโนมัติ':'Auto compressed',
-  }
-};
-
-function t(key) {
-  if (_lang === 'TH') return key;
-  return (I18N.EN[key]) || key;
-}
+// _lang, I18N, t() ย้ายไปอยู่ใน app-core.js แล้ว (โหลดก่อน)
+// ที่นี่ extend I18N.EN ด้วย admin-specific keys
+Object.assign(I18N.EN, {
+  'สวัสดี':'Hello','ยินดีต้อนรับ':'Welcome',
+  'งานวันนี้':'Today\'s Jobs','งานค้าง':'Pending','งานด่วน':'Urgent Jobs',
+  'งานทั้งหมด':'All Jobs','แจ้งซ่อมใหม่':'New Repair',
+  'ผู้ใช้งาน':'Users','สั่งซื้อของ':'Purchase',
+  'ทั้งหมด':'All','ค้นหา...':'Search...','ค้นหางาน...':'Search jobs...',
+  'ไม่พบข้อมูล':'No data found','ปัญหา':'Problem',
+  'ผู้แจ้ง':'Reporter','ช่างที่รับ':'Technician',
+  'วันที่แจ้ง':'Reported','อัปเดตล่าสุด':'Updated',
+  'รายละเอียด':'Detail','หมายเหตุ':'Note',
+  'ปิด':'Close','ยกเลิก':'Cancel','บันทึก':'Save',
+  'บันทึกผลการซ่อม':'Repair Record','รายการงานที่ดำเนินการ':'Work Done',
+  'เลือกรายการงาน':'Select Tasks','วัสดุที่ใช้':'Materials Used',
+  'น้ำยาแอร์':'Refrigerant','อะไหล่ที่เปลี่ยน':'Parts Replaced',
+  'ค่าวัด':'Measurements','สรุปผลการดำเนินการ':'Summary',
+  'รูปถ่ายหลังซ่อม':'After Photos','รูปถ่ายก่อนซ่อม':'Before Photos',
+  'ส่งผลการซ่อม':'Submit','ก่อนซ่อม':'Before','หลังซ่อม':'After',
+  'เครื่องทั้งหมด':'All Machines','แผนก':'Department',
+  'ยี่ห้อ':'Brand','รุ่น':'Model','ซีเรียล':'Serial',
+  'ขนาด':'Capacity','น้ำยา':'Refrigerant',
+  'รอบ PM':'PM Interval','เดือน':'months',
+  'ใบสั่งซื้อ':'Purchase Order','สั่งซื้อ':'Order',
+  'รอดำเนินการ':'Pending','อนุมัติแล้ว':'Approved',
+  'รับของแล้ว':'Received','รายการ':'Items','ราคา':'Price','รวม':'Total',
+  'วางแผน PM':'PM Plan','เพิ่ม':'Add','วันนี้':'Today','สัปดาห์นี้':'This Week',
+  'โปรไฟล์':'Profile','ชื่อ':'Name','ชื่อผู้ใช้':'Username',
+  'รหัสผ่าน':'Password','บันทึกการตั้งค่า':'Save Settings',
+  'ออกจากระบบ':'Logout','โหมดมืด':'Dark Mode',
+  'ภาษา':'Language','ซิงค์ข้อมูล':'Sync Data',
+  'โหลดข้อมูล':'Load Data','โซนอันตราย':'Danger Zone',
+  'เพิ่มผู้ใช้':'Add User','แก้ไข':'Edit','ลบ':'Delete',
+  'แอดมิน':'Admin','ช่างซ่อม':'Technician','ผู้แจ้งงาน':'Reporter',
+  'รายงานสรุป':'Summary Report','ปัญหาที่พบบ่อย':'Frequent Problems',
+  'ประสิทธิภาพ':'Performance',
+  'เครื่อง':'Units','ทั้งหมด (จาก)':'All from',
+  'ล้างใหญ่':'Major Clean','ล้างย่อย':'Minor Clean',
+  'กรอกข้อมูลให้ครบถ้วน':'Fill in all required fields',
+  '* จำเป็น':'* Required','ไม่บังคับ':'Optional',
+  'สูงสุด 3 รูป / ประเภท':'Max 3 photos / type',
+  'บีบอัดอัตโนมัติ':'Auto compressed',
+});
 
 function toggleTopSearch() {
   const wrap = document.getElementById('tb-search-wrap');
