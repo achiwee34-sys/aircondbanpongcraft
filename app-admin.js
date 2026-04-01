@@ -663,7 +663,10 @@ function _closeTopMenu() {
   if (m) m.style.display = 'none';
   document.removeEventListener('click', _menuOutsideTap);
 }
-// [REMOVED audit-H4] _menuOutsideTap() — dead code, no call site
+function _menuOutsideTap(e) {
+  const m = document.getElementById('tb-quick-menu');
+  if (m && !m.contains(e.target)) _closeTopMenu();
+}
 function _tbMenu(page) {
   _closeTopMenu();
   goPage(page);
