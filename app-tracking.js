@@ -2315,6 +2315,7 @@ function openCompleteSheet(tid) {
           <span class="tag ${prC(t.priority)}" style="font-size:0.58rem;padding:2px 7px">${prTH(t.priority)}</span>
         </div>
       </div>`;
+  } // end if (strip)
 
   // ── แสดงอะไหล่ที่สั่งซื้อ (ถ้ามี) ──
   // แสดง/ซ่อน parts block
@@ -3127,7 +3128,7 @@ function refreshPage() {
     const tc = document.getElementById('pur-track-content');
     if (tc && tc.style.display !== 'none') renderTrackingInline(tc);
   }
-  else if (active === 'report') renderReport?.();
+  else if (active === 'report') { renderReport?.(); if(typeof switchReportTab==='function') switchReportTab('summary'); }
   updateOpenBadge();
 }
 
