@@ -21,8 +21,16 @@ function initFirebase() {
     // ── Anonymous Auth: sign in ทันทีเพื่อให้ write Firestore ได้ ──
     // (Firestore Rules: read = open, write = require auth)
     if (firebase.auth) {
+      // ── PATCH: onAuthStateChanged ป้องกัน write ก่อน auth พร้อม ──
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          console.log('[Firebase] Auth ready:', user.isAnonymous ? 'anonymous' : user.uid);
+          window.firebaseAuth = firebase.auth();
+        }
+      });
       firebase.auth().signInAnonymously().catch(e => {
-        console.warn('[Firebase] Anonymous sign-in failed:', e.message);
+        console.warn('[Firebase] Anonymous sign-in failed:', e.message, '— falling back to open rules');
+        // Rules ถูกเปิด allow write: if true แล้ว ไม่ต้อง auth ก็ save ได้
       });
     }
     // ── PATCH v67: init Firebase Storage ──
