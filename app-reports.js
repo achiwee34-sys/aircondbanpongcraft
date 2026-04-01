@@ -1,4 +1,5 @@
 let rptMonth = new Date().getMonth();
+let rptYear  = new Date().getFullYear();
 const RPT_GOAL = 20; // เป้าหมายงานเสร็จต่อเดือน (แก้ได้)
 
 function reportPrevMonth() {

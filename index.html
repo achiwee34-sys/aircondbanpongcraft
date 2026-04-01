@@ -1479,7 +1479,7 @@
         </button>
       </div>
       <!-- Summary stat row -->
-      <div id="users-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px"></div>
+      <div id="users-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px"></div>
       <div id="users-list"></div>
     </div>
 
@@ -2077,7 +2077,7 @@
 
 <!-- Machine History Sheet -->
 <div class="sheet-overlay" id="mhist-overlay" onclick="closeSheet('mhist')"></div>
-<div class="sheet" id="mhist-sheet" style="max-height:88vh">
+<div class="sheet" id="mhist-sheet" style="max-height:calc(88vh - env(safe-area-inset-top,0px))">
   <div class="sheet-handle"></div>
   <div class="sheet-title" id="mhist-title" style="display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/><circle cx="7" cy="17" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="21" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="17" r="1" fill="currentColor" stroke="none"/></svg> ประวัติการซ่อม</div>
   <div class="sheet-body" id="mhist-body" style="overflow-y:auto;max-height:60vh"></div>
@@ -2138,7 +2138,7 @@
 
 <!-- Calendar Event Sheet — redesigned -->
 <div class="sheet-overlay" id="calevent-overlay" onclick="closeSheet('calevent')"></div>
-<div class="sheet" id="calevent-sheet" style="max-height:96vh;border-radius:24px 24px 0 0;overflow:hidden">
+<div class="sheet" id="calevent-sheet" style="max-height:calc(96vh - env(safe-area-inset-top,0px));border-radius:24px 24px 0 0;overflow:hidden">
   <!-- drag handle -->
   <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;background:white">
     <div style="width:40px;height:4px;background:#e2e8f0;border-radius:99px"></div>
@@ -2295,7 +2295,7 @@
 
 <!-- Assign Sheet -->
 <div class="sheet-overlay" id="assign-overlay" onclick="closeSheet('assign')"></div>
-<div class="sheet" id="assign-sheet" style="max-height:93vh;flex-direction:column;overflow:hidden;border-radius:24px 24px 0 0">
+<div class="sheet" id="assign-sheet" style="max-height:calc(93vh - env(safe-area-inset-top,0px));flex-direction:column;overflow:hidden;border-radius:24px 24px 0 0">
   <div class="sheet-handle"></div>
 
   <!-- Header -->
@@ -2375,7 +2375,7 @@
 <!-- Complete Sheet -->
 <!-- ========== COMPLETE SHEET (native dialog) ========== -->
 <div id="complete-sheet" style="display:none;position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;overflow:hidden">
-<div style="background:#f8fafc;border-radius:24px 24px 0 0;width:100%;max-width:640px;max-height:94vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1);overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,0.18)">
+<div style="background:#f8fafc;border-radius:24px 24px 0 0;width:100%;max-width:640px;max-height:calc(94vh - env(safe-area-inset-top,0px));display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1);overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,0.18)">
   <!-- Handle -->
   <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;background:#f8fafc">
     <div style="width:40px;height:4px;background:#d1d5db;border-radius:99px"></div>
@@ -2567,7 +2567,7 @@
 
 <!-- Verify Sheet -->
 <div class="sheet-overlay" id="verify-overlay" onclick="closeSheet('verify')"></div>
-<div class="sheet" id="verify-sheet" style="max-height:96vh;border-radius:24px 24px 0 0;overflow:hidden;flex-direction:column;background:#f8fafc">
+<div class="sheet" id="verify-sheet" style="max-height:calc(96vh - env(safe-area-inset-top,0px));border-radius:24px 24px 0 0;overflow:hidden;flex-direction:column;background:#f8fafc">
   <div class="sheet-handle"></div>
 
   <!-- ── Header bar ── -->
@@ -2679,11 +2679,11 @@
 
 <!-- Machine Sheet -->
 <div class="sheet-overlay" id="machine-overlay" onclick="closeSheet('machine')"></div>
-<div class="sheet" id="machine-sheet" style="max-height:94vh;border-radius:24px 24px 0 0;flex-direction:column">
+<div class="sheet" id="machine-sheet" style="max-height:calc(min(94vh,94dvh) - env(safe-area-inset-top,0px));border-radius:24px 24px 0 0;flex-direction:column">
   <div class="sheet-handle"></div>
 
   <!-- ── Header ── -->
-  <div id="ms-title" style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-radius:24px 24px 0 0">
+  <div id="ms-title" style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0">
     <div id="ms-icon" style="width:42px;height:42px;background:rgba(255,255,255,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2" y="3" width="20" height="8" rx="2"/>
@@ -3054,9 +3054,9 @@
 <!-- SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="app-tracking.js?v=1775016696"></script>
 <script src="app-core.js?v=1775016696"></script>
 <script src="app-tickets.js?v=1775016696"></script>
-<script src="app-tracking.js?v=1775016696"></script>
 <script src="app-machines.js?v=1775016696"></script>
 <script src="app-users.js?v=1775016696"></script>
 <script src="app-reports.js?v=1775016696"></script>
