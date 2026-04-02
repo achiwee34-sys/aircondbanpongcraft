@@ -2573,6 +2573,17 @@ function goPage(name) {
   // ── 0. ปิด top menu ถ้าเปิดอยู่ ──
   if (typeof _closeTopMenu === 'function') _closeTopMenu();
 
+  // ── 0.5. ปิด sheet/overlay ที่ค้างอยู่ ป้องกัน overlay บัง UI หน้าใหม่ ──
+  document.querySelectorAll('.sheet.open').forEach(s => {
+    s.classList.remove('open');
+    s.style.visibility = 'hidden'; s.style.pointerEvents = 'none';
+    setTimeout(() => { if (!s.classList.contains('open')) { s.style.visibility=''; s.style.pointerEvents=''; } }, 400);
+  });
+  document.querySelectorAll('.sheet-overlay.open').forEach(o => {
+    o.classList.remove('open'); o.style.display = 'none';
+    setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
+  });
+
   // ── 1. Nav highlight ทันที ──
   document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
   document.querySelector(`.bn-item[data-page="${name}"]`)?.classList.add('active');
@@ -2831,6 +2842,31 @@ function renderNotifPanel(){
         </div>
       </div><div class="ni-sep"></div>`).join('');
 }
+function openNotifSheet() {
+  renderNotifPanel();
+  openSheet('notif');
+}
+function markAllRead() {
+  if (!db.notifications) return;
+  db.notifications.forEach(n => { if (n.userId === CU?.id) n.read = true; });
+  saveDB(); updateNBadge(); renderNotifPanel();
+}
+function clearNotifs() {
+  if (!db.notifications) return;
+  db.notifications = db.notifications.filter(n => n.userId !== CU?.id);
+  saveDB(); updateNBadge(); renderNotifPanel();
+}
+function clickNotif(id, tid) {
+  const n = (db.notifications||[]).find(x => x.id === id);
+  if (n) { n.read = true; saveDB(); updateNBadge(); }
+  closeSheet('notif');
+  if (tid) setTimeout(() => openDetail(tid), 300);
+}
+function dismissNotif(id) {
+  db.notifications = (db.notifications||[]).filter(n => n.id !== id);
+  saveDB(); updateNBadge(); renderNotifPanel();
+}
+
 function sendLineNotifyEvent(event, t) {
   const ln = db.lineNotify; if (!ln) return;
   const ser = (typeof getSerial==='function') ? (getSerial(t) ? ' ['+getSerial(t)+']' : '') : '';
