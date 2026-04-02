@@ -923,13 +923,13 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
-  padding: 14px; display: none;
+  padding: 14px 14px calc(var(--nav-h, 56px) + var(--safe-bot, 0px) + 20px); display: none;
   box-sizing: border-box;
   max-width: 100%;
 }
 .page.active { display: block; }
 /* chatroom + executive page use flex layout */
-#pg-chatroom.active, #pg-executive.active, #pg-report.active { display: flex !important; flex-direction: column; }
+#pg-chatroom.active, #pg-executive.active, #pg-report.active, #pg-pmplan.active { display: flex !important; flex-direction: column; padding-bottom: 14px; }
 /* machines page — overflow-y visible for dropdown, clip x */
 #pg-machines { overflow-y: auto !important; overflow-x: hidden !important; }
 
@@ -1155,7 +1155,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 500; display: none; backdrop-filter: blur(4px); }
 .sheet-overlay.open { display: block; }
 /* PATCH: display:none ป้องกัน Android Chrome restore sheet ค้าง */
-.sheet { display: none; position: fixed; bottom: 0; left: 50%; width: 100%; max-width: 600px; background: white; border-radius: 24px 24px 0 0; z-index: 501; max-height: 92vh; max-height: 92dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: calc(var(--safe-bot) + 20px); transform: translateX(-50%) translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -4px 30px rgba(0,0,0,0.12); }
+.sheet { display: none; position: fixed; bottom: 0; left: 50%; width: 100%; max-width: 600px; background: white; border-radius: 24px 24px 0 0; z-index: 501; max-height: calc(92vh - env(safe-area-inset-top, 0px)); max-height: calc(92dvh - env(safe-area-inset-top, 0px)); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: calc(var(--safe-bot) + 20px); transform: translateX(-50%) translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -4px 30px rgba(0,0,0,0.12); }
 .sheet.open { display: flex; flex-direction: column; overflow-y: hidden; }
 /* tablet: sheet ลอยตรงกลางจอ ไม่ติดขอบล่าง */
 @media (min-width: 768px) {
@@ -1174,7 +1174,9 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 #po-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
 /* Bug1-fix: ensure user list buttons are always tappable */
-#pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 2; }
+#pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto !important; position: relative; z-index: 10 !important; cursor: pointer; min-height: 36px; min-width: 36px; }
+#users-list { position: relative; z-index: 1; pointer-events: auto; }
+#users-list * { pointer-events: auto; }
 /* Bug3-fix: detail card centres vertically on mobile — ไม่ต้อง display:none (ใช้ .sheet default แล้ว) */
 /* ── complete sheet (div overlay) ── */
 #complete-sheet { display:none; }
@@ -1190,7 +1192,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 .sheet-handle { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 14px auto 0; }
 .sheet-title { font-size: 1rem; font-weight: 700; color: var(--text); padding: 14px 20px 4px; }
 .sheet-body { padding: 10px 20px 0; }
-.sheet-actions { padding: 14px 20px 0; display: flex; flex-direction: column; gap: 8px; }
+.sheet-actions { padding: 14px 20px calc(var(--safe-bot, 0px) + 14px); display: flex; flex-direction: column; gap: 8px; }
 
 /* ======= LIGHTBOX ======= */
 .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 900; display: none; align-items: center; justify-content: center; }
@@ -1515,3 +1517,10 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 /* ── pmplan-tab-btn ── */
 .pmplan-tab-btn { flex-shrink: 0; padding: 7px 14px; border: 1.5px solid #e2e8f0; background: white; font-family: inherit; font-size: 0.72rem; font-weight: 700; color: #64748b; border-radius: 10px; cursor: pointer; transition: all 0.18s; }
 .pmplan-tab-btn.active { background: #0369a1; color: white; border-color: #0369a1; }
+
+/* ── Safe area fixes ── */
+#machine-sheet { max-height: calc(min(94dvh, 94vh) - env(safe-area-inset-top, 0px)); }
+#machine-sheet > .sheet-handle { margin-top: calc(env(safe-area-inset-top, 0px) + 10px); }
+#pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto !important; position: relative; z-index: 10 !important; cursor: pointer; min-height: 36px; min-width: 36px; }
+#users-list { position: relative; z-index: 1; pointer-events: auto; }
+#users-list * { pointer-events: auto; }

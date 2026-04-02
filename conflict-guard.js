@@ -106,6 +106,10 @@ async function handleSaveConflict() {
  */
 async function fsSaveNowSafe() {
   if (!_firebaseReady || !FSdb) return;
+  if (typeof _waitForAuth === "function") {
+    const authed = await _waitForAuth();
+    if (!authed) { console.warn("[fsSaveNowSafe] auth not ready"); return; }
+  }
   _fsSaving = true;
 
   try {

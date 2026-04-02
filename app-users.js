@@ -84,6 +84,7 @@ function switchUserTab(tab) {
   });
   renderUsersSummary();
   renderUsers();
+  initUsersEvents();
 }
 function openUserSheetRole() {
   openUserSheet(null, currentUserTab);
@@ -131,7 +132,7 @@ function renderUsers() {
       </div>
       <div style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:4px">ยังไม่มี${tabLabel[currentUserTab]}</div>
       <div style="font-size:0.75rem;margin-bottom:16px">กดปุ่มด้านล่างเพื่อเพิ่ม</div>
-      <button class="btn btn-primary btn-sm" onclick="openUserSheetRole()">➕ เพิ่ม${tabLabel[currentUserTab]}</button>
+      <button class="btn btn-primary btn-sm" data-action="add-user" style="touch-action:manipulation;pointer-events:auto">➕ เพิ่ม${tabLabel[currentUserTab]}</button>
     </div>`;
     return;
   }
@@ -171,7 +172,7 @@ function renderUsers() {
         </div>`;
     }
 
-    return `<div style="background:white;border-radius:16px;margin-bottom:10px;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.05);overflow:hidden;transition:box-shadow 0.15s" onmousedown="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseup="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)'">
+    return `<div style="background:white;border-radius:16px;margin-bottom:10px;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.05);overflow:visible;transition:box-shadow 0.15s;position:relative">
       <div style="display:flex;align-items:center;gap:12px;padding:13px 14px">
         <!-- Avatar -->
         <div style="width:48px;height:48px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.12)">
@@ -190,9 +191,9 @@ function renderUsers() {
           </div>
         </div>
         <!-- Actions -->
-        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
-          <button onclick="openUserSheet('${u.id}')" style="padding:6px 10px;background:#f1f5f9;border:none;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation">✏️</button>
-          <button onclick="delUser('${u.id}')" style="padding:6px 10px;background:#fff0f2;border:none;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;color:#c8102e;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🗑️</button>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;position:relative;z-index:10;pointer-events:auto">
+          <button data-action="edit-user" data-uid="${u.id}" style="padding:8px 12px;background:#f1f5f9;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;pointer-events:auto;position:relative;z-index:10;min-width:36px;min-height:36px">✏️</button>
+          <button data-action="del-user" data-uid="${u.id}" style="padding:8px 12px;background:#fff0f2;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;color:#c8102e;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;pointer-events:auto;position:relative;z-index:10;min-width:36px;min-height:36px">🗑️</button>
         </div>
       </div>
       ${statsHtml}
@@ -201,6 +202,37 @@ function renderUsers() {
 
   // inline onclick used directly on buttons
 }
+// ── Event delegation สำหรับ pg-users ── ป้องกัน inline onclick ไม่ทำงาน ──
+function initUsersEvents() {
+  const pg = document.getElementById('pg-users');
+  if (!pg || pg._evInit) return;
+  pg._evInit = true;
+
+  pg.addEventListener('click', function(e) {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    e.stopPropagation();
+    const action = btn.dataset.action;
+    const uid    = btn.dataset.uid;
+    if (action === 'edit-user')  openUserSheet(uid || null);
+    if (action === 'del-user')   delUser(uid);
+    if (action === 'add-user')   openUserSheetRole();
+  }, true); // capture phase — ชนะ element อื่น
+
+  // touch fallback สำหรับ Android
+  pg.addEventListener('touchend', function(e) {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const action = btn.dataset.action;
+    const uid    = btn.dataset.uid;
+    if (action === 'edit-user')  openUserSheet(uid || null);
+    if (action === 'del-user')   delUser(uid);
+    if (action === 'add-user')   openUserSheetRole();
+  }, { capture: true, passive: false });
+}
+
 function openUserSheet(id, defaultRole) {
   const u = id ? db.users.find(x=>x.id===id) : null;
   const roleLabel = {admin:'แอดมิน',tech:'ช่างซ่อม',reporter:'ผู้แจ้งงาน'};
@@ -740,118 +772,23 @@ function showAdminCard(title, msg, tid='', icon='🔔') {
   }, 3000);
 }
 
-function showToast(msg, type) {
-  // type: 'success' | 'warn' | 'error' | 'info' (auto-detect from emoji)
-  if (!type) {
-    if (msg.startsWith('✅') || msg.startsWith('🎉')) type = 'success';
-    else if (msg.startsWith('⚠️') || msg.startsWith('🔶')) type = 'warn';
-    else if (msg.startsWith('❌') || msg.startsWith('🚫')) type = 'error';
-    else type = 'info';
-  }
-  const cfg = {
-    success: { bg:'#1e293b', icon:'✅', glow:'rgba(22,163,74,0.2)',  accent:'#22c55e' },
-    warn:    { bg:'#1e293b', icon:'⚠️', glow:'rgba(217,119,6,0.2)',  accent:'#f59e0b' },
-    error:   { bg:'#1e293b', icon:'❌', glow:'rgba(200,16,46,0.2)',  accent:'#ef4444' },
-    info:    { bg:'#1e293b', icon:'ℹ️', glow:'rgba(29,78,216,0.2)',  accent:'#60a5fa' },
-  };
-  const c = cfg[type] || cfg.info;
+// showToast, showAlert ย้ายไปอยู่ใน app-core.js แล้ว (โหลดก่อน)
 
-  let el = document.getElementById('app-toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'app-toast';
-    document.body.appendChild(el);
-  }
-  // Clear existing timeout
-  clearTimeout(el._to);
-
-  el.style.cssText = `
-    position:fixed;
-    bottom:calc(var(--nav-h,64px) + env(safe-area-inset-bottom,0px) + 12px);
-    right:16px;
-    transform:translateX(16px);
-    z-index:19999;
-    pointer-events:none;
-    transition:all 0.2s ease;
-    opacity:0;
-    max-width:min(300px,calc(100vw - 32px));
-    width:max-content;
-  `;
-  el.innerHTML = `
-    <div style="
-      background:#1e293b;
-      color:white;
-      padding:10px 14px;
-      border-radius:10px;
-      box-shadow:0 4px 20px rgba(0,0,0,0.3);
-      display:flex;align-items:center;gap:8px;
-      border-left:3px solid ${c.accent};
-      min-width:180px;
-    ">
-      <div style="font-size:0.95rem;flex-shrink:0;line-height:1">${c.icon}</div>
-      <div style="font-size:0.82rem;font-weight:600;line-height:1.4;font-family:inherit;color:rgba(255,255,255,0.95)">${msg.replace(/^[✅⚠️❌ℹ️🎉🚫🔶]\s*/,'')}</div>
-    </div>`;
-
-  // Animate in — slide from right
-  requestAnimationFrame(() => {
-    el.style.opacity = '1';
-    el.style.transform = 'translateX(0)';
-  });
-
-  el._to = setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(16px)';
-  }, 2500);
-}
-
-// ── showAlert — confirmation modal กลางจอ (ใช้แทน alert()) ──
-function showAlert(opts) {
-  // opts: { title, msg, icon, color, btnOk, btnCancel, onOk, onCancel }
-  const existing = document.getElementById('_alert_modal');
-  if (existing) existing.remove();
-  const o = {
-    icon: opts.icon || 'ℹ️',
-    title: opts.title || 'แจ้งเตือน',
-    msg: opts.msg || '',
-    color: opts.color || '#1d4ed8',
-    btnOk: opts.btnOk || 'ตกลง',
-    btnCancel: opts.btnCancel || null,
-    onOk: opts.onOk || null,
-    onCancel: opts.onCancel || null,
-  };
-  const ov = document.createElement('div');
-  ov.id = '_alert_modal';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:19998;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px';
-
-  const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:24px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.3);animation:popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)';
-  box.innerHTML = `
-    <div style="width:64px;height:64px;border-radius:20px;background:${o.color}18;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2.2rem;border:2px solid ${o.color}33">${o.icon}</div>
-    <div style="font-size:1.05rem;font-weight:900;color:#0f172a;margin-bottom:8px;line-height:1.3">${o.title}</div>
-    <div style="font-size:0.85rem;color:#64748b;line-height:1.75;margin-bottom:22px">${o.msg}</div>
-    <div style="display:flex;gap:8px">
-      ${o.btnCancel ? `<button id="_alert_cancel" style="flex:1;padding:14px;background:#f1f5f9;color:#64748b;border:none;border-radius:14px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">${o.btnCancel}</button>` : ''}
-      <button id="_alert_ok" style="flex:${o.btnCancel?2:1};padding:14px;background:linear-gradient(135deg,${o.color},${o.color}cc);color:white;border:none;border-radius:14px;font-size:0.9rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px ${o.color}44;-webkit-tap-highlight-color:transparent">
-        ${o.btnOk}
-      </button>
-    </div>`;
-
-  ov.appendChild(box);
-  document.body.appendChild(ov);
-
-  document.getElementById('_alert_ok').onclick = () => {
-    ov.remove(); if (o.onOk) o.onOk();
-  };
-  if (o.btnCancel) {
-    document.getElementById('_alert_cancel').onclick = () => {
-      ov.remove(); if (o.onCancel) o.onCancel();
-    };
-  }
-  ov.addEventListener('click', e => { if(e.target===ov){ ov.remove(); if(o.onCancel) o.onCancel(); } });
-}
 
 
 // ============================================================
 // MONTHLY REPORT
 // ============================================================
 let rptYear = new Date().getFullYear();
+
+// ── openTechPopup: เปิด popup งานของช่าง (จาก ticket/tracking card) ──
+function openTechPopup(techId) {
+  const tech = db.users.find(u => u.id === techId);
+  if (!tech) return;
+  if (typeof openAdminManageTechTickets === 'function') {
+    openAdminManageTechTickets(techId);
+  } else {
+    const active = (db.tickets||[]).filter(t => t.assigneeId===techId && !['done','verified','closed'].includes(t.status));
+    if (typeof showToast === 'function') showToast('🔧 ' + tech.name + ' · ' + active.length + ' งานค้าง');
+  }
+}
