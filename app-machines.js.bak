@@ -40,7 +40,7 @@
       getText().textContent = 'กำลังรีเฟรช...';
       getSpin().textContent = '↻';
       setTimeout(() => {
-        if (typeof refreshPage === 'function') refreshPage(); else location.reload();
+        refreshPage();
         setTimeout(() => { ind.className = ''; }, 500);
       }, 600);
     } else {

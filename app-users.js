@@ -132,7 +132,7 @@ function renderUsers() {
       </div>
       <div style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:4px">ยังไม่มี${tabLabel[currentUserTab]}</div>
       <div style="font-size:0.75rem;margin-bottom:16px">กดปุ่มด้านล่างเพื่อเพิ่ม</div>
-      <button class="btn btn-primary btn-sm" data-action="add-user" style="touch-action:manipulation;pointer-events:auto">➕ เพิ่ม${tabLabel[currentUserTab]}</button>
+      <button class="btn btn-primary btn-sm" onclick="openUserSheetRole()" style="touch-action:manipulation;pointer-events:auto">➕ เพิ่ม${tabLabel[currentUserTab]}</button>
     </div>`;
     return;
   }
@@ -192,8 +192,8 @@ function renderUsers() {
         </div>
         <!-- Actions -->
         <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;position:relative;z-index:10;pointer-events:auto">
-          <button data-action="edit-user" data-uid="${u.id}" style="padding:8px 12px;background:#f1f5f9;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;pointer-events:auto;position:relative;z-index:10;min-width:36px;min-height:36px">✏️</button>
-          <button data-action="del-user" data-uid="${u.id}" style="padding:8px 12px;background:#fff0f2;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;color:#c8102e;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;pointer-events:auto;position:relative;z-index:10;min-width:36px;min-height:36px">🗑️</button>
+          <button onclick="openUserSheet('${u.id}')" style="padding:8px 12px;background:#f1f5f9;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;pointer-events:auto;position:relative;z-index:10;min-width:36px;min-height:36px">✏️</button>
+          <button onclick="delUser('${u.id}')" style="padding:8px 12px;background:#fff0f2;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;color:#c8102e;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;pointer-events:auto;position:relative;z-index:10;min-width:36px;min-height:36px">🗑️</button>
         </div>
       </div>
       ${statsHtml}
@@ -205,7 +205,8 @@ function renderUsers() {
 // ── Event delegation สำหรับ pg-users ── ป้องกัน inline onclick ไม่ทำงาน ──
 function initUsersEvents() {
   const pg = document.getElementById('pg-users');
-  if (!pg || pg._evInit) return;
+  if (!pg) return;
+  if (pg._evInit) return; // listener already bound — ไม่ bind ซ้ำ
   pg._evInit = true;
 
   pg.addEventListener('click', function(e) {
