@@ -100,7 +100,9 @@ function _tCost(t) {
   return tc;
 }
 
-// _fmt ย้ายไปอยู่ใน app-core.js แล้ว
+function _fmt(n) {
+  return Number(n || 0).toLocaleString('th-TH', {minimumFractionDigits: 0});
+}
 
 function _renderExecTab(tab) {
   const d = _execGetData();
