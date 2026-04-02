@@ -2687,7 +2687,7 @@ function goPage(name) {
       else renderMyWork();
     }
     else if (name === 'purchase') { renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order'); }
-    else if (name === 'report') { renderReport(); switchReportTab('summary'); }
+    else if (name === 'report') { if (typeof renderReport === 'function') renderReport(); if (typeof switchReportTab === 'function') switchReportTab('summary'); }
     else if (name === 'chatroom') { if(typeof initChatroomLayout==='function') initChatroomLayout(); if(typeof renderChatroomList==='function') renderChatroomList(); }
     else if (name === 'calendar') {
       if(typeof renderCalendar==='function') renderCalendar();
