@@ -1,4 +1,28 @@
 // ============================================================
+// i18n — ต้องอยู่ก่อนสุดเพื่อให้ทุก script ใช้ได้
+// ============================================================
+let _lang = (typeof localStorage !== 'undefined' && localStorage.getItem('aircon_lang')) || 'TH';
+
+const I18N = {
+  TH: {},
+  EN: {
+    'ใหม่':'New','จ่ายแล้ว':'Assigned','รับแล้ว':'Accepted',
+    'กำลังซ่อม':'In Progress','รออะไหล่':'Waiting Part',
+    'เสร็จแล้ว':'Done','ตรวจรับ':'Verified','ปิดงาน':'Closed',
+    'ด่วนมาก':'Urgent','ปานกลาง':'Normal','ไม่เร่งด่วน':'Low',
+    'หน้าแรก':'Home','รายการ':'Tickets','เครื่องแอร์':'Machines',
+    'ผู้ใช้':'Users','รายงาน':'Report','สั่งซื้อ':'Purchase',
+    'ตั้งค่า':'Settings','แจ้งซ่อม':'New Job','ปฏิทิน':'Calendar',
+    'ติดตาม':'Tracking','งานฉัน':'My Work',
+  }
+};
+
+function t(key) {
+  if (_lang === 'TH') return key;
+  return (I18N.EN[key]) || key;
+}
+
+// ============================================================
 // DATABASE
 // ============================================================
 const DB_KEY = 'airtrack_pwa';
@@ -152,26 +176,10 @@ if (db.machines) {
   db.machines.forEach(m => { if (!m.addedAt) m.addedAt = _d.toISOString(); });
 })();
 
-// โหลด machines seed จาก machines.json (async, ไม่ block app start)
+// machines.json ถูกลบออกแล้ว — ข้อมูลเครื่องโหลดจาก Firebase (fsLoad) อย่างเดียว
+// ฟังก์ชันนี้เหลือไว้เพื่อ backward compat (ไม่ crash ถ้ายังมีที่เรียก)
 async function loadMachinesData() {
-  try {
-    const res = await fetch('./machines.json');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const seedMachines = await res.json();
-    const existingIds = new Set(db.machines.map(m => m.id));
-    const toAdd = seedMachines.filter(m => !existingIds.has(m.id));
-    if (toAdd.length > 0) {
-      // backfill addedAt สำหรับ seed machines
-      const _d = new Date(); _d.setDate(_d.getDate() - 30);
-      toAdd.forEach(m => { if (!m.addedAt) m.addedAt = _d.toISOString(); });
-      db.machines = [...db.machines, ...toAdd];
-      saveDB();
-      if (typeof invalidateMacCache === 'function') invalidateMacCache();
-    }
-  } catch(e) {
-    console.warn('[DB] Could not load machines.json — using cached data only:', e.message);
-    // Graceful fallback: ใช้ข้อมูลที่มีใน localStorage ต่อไปได้
-  }
+  // no-op: Firebase เป็น source of truth สำหรับ machines
 }
 
 function initDB() {
@@ -658,6 +666,25 @@ const PDF_THEMES = {
 
 
 
+// ── getPrice2: global alias ป้องกัน "getPrice2 is not defined" ──
+// (โค้ดเก่าบางส่วนเรียก getPrice2 — ให้ใช้ logic เดียวกับ getPrice ใน generateRepairPDF)
+function getPrice2(name, macBTU) {
+  macBTU = macBTU || 0;
+  const g = (db.repairGroups||[]);
+  for(const grp of g){ const it=grp.items?.find(i=>i.name===name); if(it) return {price:it.price||0,unit:it.unit||'JOB'}; }
+  if(typeof REPAIR_PRICE !== 'undefined' && REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
+  if(macBTU > 0){
+    const base = name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
+    if(base && base !== name){
+      const tier = typeof getRepairKeyByBTU==='function' ? getRepairKeyByBTU(base, macBTU) : null;
+      if(tier && tier.price > 0) return {price:tier.price, unit:'JOB'};
+    }
+  }
+  const refMap={'R-22':200,'R-32':350,'R-407C':330,'R-407c':330,'R-410A':340,'R-410a':340,'R-134A':330,'R-134a':330,'R-141B':280};
+  for(const[ref,price] of Object.entries(refMap)){ if(name.includes(ref)) return{price,unit:'Kg.'}; }
+  return {price:0, unit:'JOB'};
+}
+
 // ── Route by role: admin → Designer with panel, others → full view ──
 function openQuotationByRole(tid) {
   // admin: เปิด designer แก้ไขได้
@@ -707,7 +734,8 @@ function getRepairKeyByBTU(baseName, btu) {
         // rebuild key properly
         var suffixes = ['9K'+dashVariants[d]+'48K','48K'+dashVariants[d]+'150K','150K'+dashVariants[d]+'240K','240K'+dashVariants[d]+'400K'];
         k = baseName + ' ' + suffixes[i];
-        if(REPAIR_PRICE[k]) return {key:k, price:REPAIR_PRICE[k]};
+        const _rp = (typeof REPAIR_PRICE !== 'undefined') ? REPAIR_PRICE : {};
+        if(_rp[k]) return {key:k, price:_rp[k]};
         // check repairGroups
         for(var g=0;g<(db.repairGroups||[]).length;g++){
           var it = (db.repairGroups[g].items||[]).find(function(x){return x.name===k;});
@@ -797,7 +825,7 @@ async function viewQuotationFull(tid) {
       const _g = (db.repairGroups||[]);
       let price=0, unit='JOB';
       for(const grp of _g){ const it=grp.items?.find(i=>i.name===r.name); if(it){price=it.price||0;unit=it.unit||'JOB';break;} }
-      if(!price && REPAIR_PRICE[r.name]) { price=REPAIR_PRICE[r.name]; unit='JOB'; }
+      if(!price && (typeof REPAIR_PRICE !== 'undefined') && REPAIR_PRICE[r.name]) { price=REPAIR_PRICE[r.name]; unit='JOB'; }
       if(!price && _macBTU>0){
         const base=r.name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
         if(base&&base!==r.name){ const tier=getRepairKeyByBTU(base,_macBTU); if(tier&&tier.price>0){price=tier.price;unit='JOB';} }
@@ -1155,7 +1183,7 @@ async function generateRepairPDF(tid) {
   const getPrice = (name) => {
     const g = (db.repairGroups||[]);
     for(const grp of g){ const it=grp.items?.find(i=>i.name===name); if(it) return {price:it.price||0,unit:it.unit||'JOB'}; }
-    if(REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
+    if((typeof REPAIR_PRICE !== 'undefined') && REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
     // BTU-tier
     if(macBTU > 0){
       const base = name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
@@ -2663,3 +2691,97 @@ function goPage(name) {
 }
 
 // ============================================================
+// ============================================================
+// SHEETS + nowStr — ย้ายมาจาก app-admin.js เพื่อให้ทุก script ใช้ได้
+// ============================================================
+function nowStr(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+}
+
+function openSheet(name){
+  if (name === 'chat') {
+    const sh = document.getElementById('chat-sheet');
+    if (sh) {
+      sh.classList.add('visible');
+      function _chatKbFix() {
+        if (!sh.classList.contains('visible')) return;
+        const vv = window.visualViewport; if (!vv) return;
+        const vvh = vv.height, offsetTop = vv.offsetTop||0, offsetLeft = vv.offsetLeft||0;
+        sh.style.transform = `translateY(${offsetTop}px) translateX(${offsetLeft}px)`;
+        sh.style.height = vvh + 'px';
+        const msgs = document.getElementById('chat-messages');
+        if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
+      }
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', _chatKbFix);
+        window.visualViewport.addEventListener('scroll', _chatKbFix);
+        sh._chatKbFix = _chatKbFix;
+      }
+    }
+    if (navigator.vibrate) navigator.vibrate(30);
+    return;
+  }
+  document.querySelectorAll('.sheet').forEach(s => {
+    if (s.id !== name+'-sheet') {
+      s.classList.remove('open');
+      s.style.visibility = 'hidden'; s.style.pointerEvents = 'none';
+      setTimeout(() => { if (!s.classList.contains('open')) { s.style.visibility=''; s.style.pointerEvents=''; } }, 400);
+      if (s._kbHandler) { s.removeEventListener('focusin', s._kbHandler); delete s._kbHandler; }
+    }
+  });
+  document.querySelectorAll('.sheet-overlay').forEach(o => {
+    if (o.id !== name+'-overlay') {
+      o.classList.remove('open'); o.style.display = 'none';
+      setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
+    }
+  });
+  const ov = document.getElementById(name+'-overlay');
+  const sh = document.getElementById(name+'-sheet');
+  if (!ov || !sh) { console.warn('openSheet: not found:', name); return; }
+  sh.style.visibility = ''; sh.style.pointerEvents = '';
+  ov.classList.add('open');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sh.classList.add('open');
+      const onFocusIn = (e) => {
+        const el = e.target;
+        if (!el || !['INPUT','TEXTAREA','SELECT'].includes(el.tagName)) return;
+        setTimeout(() => { el.scrollIntoView({ block:'nearest', behavior:'smooth' }); }, 320);
+      };
+      sh.addEventListener('focusin', onFocusIn);
+      sh._kbHandler = onFocusIn;
+    });
+  });
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+function closeSheet(name){
+  if (name === 'chat') {
+    const sh = document.getElementById('chat-sheet');
+    if (sh) {
+      sh.classList.remove('visible');
+      if (sh._chatKbFix && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', sh._chatKbFix);
+        window.visualViewport.removeEventListener('scroll', sh._chatKbFix);
+        delete sh._chatKbFix;
+      }
+      sh.style.height = ''; sh.style.top = ''; sh.style.transform = '';
+    }
+    return;
+  }
+  if (name === 'machine') {
+    const mid = document.getElementById('m-id'); if (mid) mid.value = '';
+    const titleText = document.getElementById('ms-title-text'); if (titleText) titleText.textContent = 'เพิ่มเครื่องแอร์ใหม่';
+    const addDeptBox = document.getElementById('m-add-dept-box'); if (addDeptBox) addDeptBox.style.display = 'block';
+    const missingBanner = document.getElementById('ms-missing-banner'); if (missingBanner) missingBanner.style.display = 'none';
+  }
+  const sh = document.getElementById(name+'-sheet');
+  const ov = document.getElementById(name+'-overlay');
+  if (sh) {
+    sh.classList.remove('open');
+    if (sh._kbHandler) { sh.removeEventListener('focusin', sh._kbHandler); delete sh._kbHandler; }
+  }
+  if (ov) setTimeout(() => { ov.classList.remove('open'); ov.style.display = ''; }, 350);
+}

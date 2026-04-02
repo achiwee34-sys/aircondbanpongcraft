@@ -282,11 +282,16 @@ async function _doSubmitTicket(mid, prob) {
   const m = db.machines.find(x=>x.id===mid);
   const _now = new Date();
   const _mm = String(_now.getMonth()+1).padStart(2,'0');
-  const _yy = _now.getFullYear();
-  // ใช้ timestamp+random แทน _seq เพื่อป้องกัน race condition multi-user
-  const _rand = Math.floor(Math.random() * 900) + 100; // 3 digits 100-999
-  const _ts   = String(Date.now()).slice(-4);           // 4 digits ท้าย timestamp
-  const tid = 'TK'+_mm+_yy+_ts+_rand;
+  const _yy = String(_now.getFullYear()).slice(-2); // 2 หลักท้าย เช่น 2025→25
+  // สร้าง TK format: TK{YY}{MM}-{NNNN} เช่น TK2604-0001
+  const _prefix = 'TK' + _yy + _mm; // เช่น TK2604
+  // หาเลขลำดับสูงสุดของเดือนนี้จาก tickets ที่มีอยู่
+  const _existSeq = (db.tickets||[])
+    .map(t => t.id || '')
+    .filter(id => id.startsWith(_prefix + '-'))
+    .map(id => parseInt(id.slice(_prefix.length + 1)) || 0);
+  const _nextSeq = (_existSeq.length > 0 ? Math.max(..._existSeq) : 0) + 1;
+  const tid = _prefix + '-' + String(_nextSeq).padStart(4,'0');
   db._seq++; // ยังคง increment เพื่อ backward compat
   const now = nowStr();
   // ── PATCH v67: upload photos → Firebase Storage ก่อนสร้าง ticket ──
