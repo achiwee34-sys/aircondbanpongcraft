@@ -165,7 +165,7 @@ async function fsSaveNow() {
       if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('signatures').set(allSigs);
     }
   } catch(e) { console.warn('fsSaveNow error:', e); }
-  finally { setTimeout(() => { _fsSaving = false; }, 500); }
+  finally { setTimeout(() => { _fsSaving = false; }, 3000); }
 }
 
 // fire-and-forget save
@@ -219,6 +219,8 @@ function fsListen() {
     if (!snap.exists || !CU) return;
     const data = snap.data();
     if (_fsSaving && !_fsChatSaving) return;
+    // ── ถ้า local _seq ใหม่กว่า remote → ข้ามการ overwrite (local เพิ่งบันทึก) ──
+    if (data._seq && db._seq && db._seq > data._seq) return;
     const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
     const DEMO_IDS       = ['u2','u3','u4','u5'];
     const check = (key) => {

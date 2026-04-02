@@ -2673,9 +2673,9 @@ function goPage(name) {
     }
     else if (name === 'purchase') { renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order'); }
     else if (name === 'report') { renderReport(); switchReportTab('summary'); }
-    else if (name === 'chatroom') { initChatroomLayout(); renderChatroomList(); }
+    else if (name === 'chatroom') { if(typeof initChatroomLayout==='function') initChatroomLayout(); if(typeof renderChatroomList==='function') renderChatroomList(); }
     else if (name === 'calendar') {
-      renderCalendar();
+      if(typeof renderCalendar==='function') renderCalendar();
       const cab=document.getElementById('cal-add-btn'); if(cab) cab.style.display = CU.role==='admin' ? 'flex' : 'none';
       const clearBtn=document.getElementById('cal-clear-btn'); if(clearBtn) clearBtn.style.display = CU.role==='admin' ? 'flex' : 'none';
       const pmPlanBtn = document.querySelector('#pg-calendar button[onclick="goPagePMPlan()"]');
@@ -3250,7 +3250,7 @@ function applyLang() {
     const pg = document.getElementById('pg-'+p);
     if (pg?.classList.contains('active')) {
       if (p==='tickets' && CU) renderTickets();
-      else if (p==='calendar') renderCalendar();
+      else if (p==='calendar') renderCalendar?.();
       else if (p==='machines') renderMachines?.();
       else if (p==='users') renderUsers?.();
       else if (p==='purchase') renderPurchase?.();

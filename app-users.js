@@ -202,37 +202,8 @@ function renderUsers() {
 
   // inline onclick used directly on buttons
 }
-// ── Event delegation สำหรับ pg-users ── ป้องกัน inline onclick ไม่ทำงาน ──
-function initUsersEvents() {
-  const pg = document.getElementById('pg-users');
-  if (!pg) return;
-  if (pg._evInit) return; // listener already bound — ไม่ bind ซ้ำ
-  pg._evInit = true;
-
-  pg.addEventListener('click', function(e) {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    e.stopPropagation();
-    const action = btn.dataset.action;
-    const uid    = btn.dataset.uid;
-    if (action === 'edit-user')  openUserSheet(uid || null);
-    if (action === 'del-user')   delUser(uid);
-    if (action === 'add-user')   openUserSheetRole();
-  }, true); // capture phase — ชนะ element อื่น
-
-  // touch fallback สำหรับ Android
-  pg.addEventListener('touchend', function(e) {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const action = btn.dataset.action;
-    const uid    = btn.dataset.uid;
-    if (action === 'edit-user')  openUserSheet(uid || null);
-    if (action === 'del-user')   delUser(uid);
-    if (action === 'add-user')   openUserSheetRole();
-  }, { capture: true, passive: false });
-}
+// ── initUsersEvents: ทุกปุ่มใช้ inline onclick แล้ว ไม่ต้องการ delegation ──
+function initUsersEvents() { /* no-op — buttons use onclick directly */ }
 
 function openUserSheet(id, defaultRole) {
   const u = id ? db.users.find(x=>x.id===id) : null;
@@ -312,6 +283,7 @@ async function saveUser() {  // PATCH: async เพื่อ await hashPassword
     db.users.push({id:'u'+Date.now(),...d,password:hashedPass});
   }
   if(window.bkAudit) window.bkAudit(document.getElementById('u-id').value ? 'แก้ไข User' : 'เพิ่ม User', d.username||d.name, null, {name:d.name,role:d.role});
+  db._seq = (db._seq || 1) + 1;
   saveDB(); closeSheet('user'); switchUserTab(d.role==='tech'?'tech':d.role==='admin'?'admin':d.role==='executive'?'executive':'reporter');
   } catch(e) {
     console.error('[saveUser] error:', e);
@@ -342,6 +314,7 @@ function delUser(id) {
     }
     // ── ลบ Notification ของ user นี้ ──
     db.notifications = (db.notifications || []).filter(n => n.userId !== id);
+    db._seq = (db._seq || 1) + 1;
     localStorage.setItem(DB_KEY, JSON.stringify(db));
     fsSaveNow();
     switchUserTab(currentUserTab || 'tech');
