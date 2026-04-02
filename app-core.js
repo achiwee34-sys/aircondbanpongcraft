@@ -1,4 +1,28 @@
 // ============================================================
+// i18n — ต้องอยู่ก่อนสุดเพื่อให้ทุก script ใช้ได้
+// ============================================================
+let _lang = (typeof localStorage !== 'undefined' && localStorage.getItem('aircon_lang')) || 'TH';
+
+const I18N = {
+  TH: {},
+  EN: {
+    'ใหม่':'New','จ่ายแล้ว':'Assigned','รับแล้ว':'Accepted',
+    'กำลังซ่อม':'In Progress','รออะไหล่':'Waiting Part',
+    'เสร็จแล้ว':'Done','ตรวจรับ':'Verified','ปิดงาน':'Closed',
+    'ด่วนมาก':'Urgent','ปานกลาง':'Normal','ไม่เร่งด่วน':'Low',
+    'หน้าแรก':'Home','รายการ':'Tickets','เครื่องแอร์':'Machines',
+    'ผู้ใช้':'Users','รายงาน':'Report','สั่งซื้อ':'Purchase',
+    'ตั้งค่า':'Settings','แจ้งซ่อม':'New Job','ปฏิทิน':'Calendar',
+    'ติดตาม':'Tracking','งานฉัน':'My Work',
+  }
+};
+
+function t(key) {
+  if (_lang === 'TH') return key;
+  return (I18N.EN[key]) || key;
+}
+
+// ============================================================
 // DATABASE
 // ============================================================
 const DB_KEY = 'airtrack_pwa';
@@ -152,26 +176,10 @@ if (db.machines) {
   db.machines.forEach(m => { if (!m.addedAt) m.addedAt = _d.toISOString(); });
 })();
 
-// โหลด machines seed จาก machines.json (async, ไม่ block app start)
+// machines.json ถูกลบออกแล้ว — ข้อมูลเครื่องโหลดจาก Firebase (fsLoad) อย่างเดียว
+// ฟังก์ชันนี้เหลือไว้เพื่อ backward compat (ไม่ crash ถ้ายังมีที่เรียก)
 async function loadMachinesData() {
-  try {
-    const res = await fetch('./machines.json');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const seedMachines = await res.json();
-    const existingIds = new Set(db.machines.map(m => m.id));
-    const toAdd = seedMachines.filter(m => !existingIds.has(m.id));
-    if (toAdd.length > 0) {
-      // backfill addedAt สำหรับ seed machines
-      const _d = new Date(); _d.setDate(_d.getDate() - 30);
-      toAdd.forEach(m => { if (!m.addedAt) m.addedAt = _d.toISOString(); });
-      db.machines = [...db.machines, ...toAdd];
-      saveDB();
-      if (typeof invalidateMacCache === 'function') invalidateMacCache();
-    }
-  } catch(e) {
-    console.warn('[DB] Could not load machines.json — using cached data only:', e.message);
-    // Graceful fallback: ใช้ข้อมูลที่มีใน localStorage ต่อไปได้
-  }
+  // no-op: Firebase เป็น source of truth สำหรับ machines
 }
 
 function initDB() {
@@ -554,6 +562,16 @@ function renderSettingsPage() {
   // Admin tools — show only for admin
   const adminTools = document.getElementById('sp-admin-tools');
   if (adminTools) adminTools.style.display = CU.role === 'admin' ? 'block' : 'none';
+
+  // Backend panel — show only for admin
+  const backendPanel = document.getElementById('sp-backend-panel');
+  if (backendPanel) {
+    if (CU.role === 'admin') {
+      if (typeof showBackendPanel === 'function') showBackendPanel();
+    } else {
+      backendPanel.style.display = 'none';
+    }
+  }
 }
 
 function spPreviewAvatar(input) {
@@ -648,6 +666,25 @@ const PDF_THEMES = {
 
 
 
+// ── getPrice2: global alias ป้องกัน "getPrice2 is not defined" ──
+// (โค้ดเก่าบางส่วนเรียก getPrice2 — ให้ใช้ logic เดียวกับ getPrice ใน generateRepairPDF)
+function getPrice2(name, macBTU) {
+  macBTU = macBTU || 0;
+  const g = (db.repairGroups||[]);
+  for(const grp of g){ const it=grp.items?.find(i=>i.name===name); if(it) return {price:it.price||0,unit:it.unit||'JOB'}; }
+  if(typeof REPAIR_PRICE !== 'undefined' && REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
+  if(macBTU > 0){
+    const base = name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
+    if(base && base !== name){
+      const tier = typeof getRepairKeyByBTU==='function' ? getRepairKeyByBTU(base, macBTU) : null;
+      if(tier && tier.price > 0) return {price:tier.price, unit:'JOB'};
+    }
+  }
+  const refMap={'R-22':200,'R-32':350,'R-407C':330,'R-407c':330,'R-410A':340,'R-410a':340,'R-134A':330,'R-134a':330,'R-141B':280};
+  for(const[ref,price] of Object.entries(refMap)){ if(name.includes(ref)) return{price,unit:'Kg.'}; }
+  return {price:0, unit:'JOB'};
+}
+
 // ── Route by role: admin → Designer with panel, others → full view ──
 function openQuotationByRole(tid) {
   // admin: เปิด designer แก้ไขได้
@@ -697,7 +734,8 @@ function getRepairKeyByBTU(baseName, btu) {
         // rebuild key properly
         var suffixes = ['9K'+dashVariants[d]+'48K','48K'+dashVariants[d]+'150K','150K'+dashVariants[d]+'240K','240K'+dashVariants[d]+'400K'];
         k = baseName + ' ' + suffixes[i];
-        if(REPAIR_PRICE[k]) return {key:k, price:REPAIR_PRICE[k]};
+        const _rp = (typeof REPAIR_PRICE !== 'undefined') ? REPAIR_PRICE : {};
+        if(_rp[k]) return {key:k, price:_rp[k]};
         // check repairGroups
         for(var g=0;g<(db.repairGroups||[]).length;g++){
           var it = (db.repairGroups[g].items||[]).find(function(x){return x.name===k;});
@@ -781,7 +819,21 @@ async function viewQuotationFull(tid) {
   };
   const items = parseItems()
     .filter(r => r.name && r.name.trim() !== '')
-    .map(r=>{ const{price,unit}=getPrice2(r.name,r.qty,machine&&machine.btu?Number(machine.btu):0); return{name:r.name,qty:r.qty,unit,price,total:r.qty*price}; });
+    .map(r=>{
+      // inline getPrice — เหมือน generateRepairPDF (getPrice2 ไม่มีจริง)
+      const _macBTU = machine&&machine.btu ? Number(machine.btu) : 0;
+      const _g = (db.repairGroups||[]);
+      let price=0, unit='JOB';
+      for(const grp of _g){ const it=grp.items?.find(i=>i.name===r.name); if(it){price=it.price||0;unit=it.unit||'JOB';break;} }
+      if(!price && (typeof REPAIR_PRICE !== 'undefined') && REPAIR_PRICE[r.name]) { price=REPAIR_PRICE[r.name]; unit='JOB'; }
+      if(!price && _macBTU>0){
+        const base=r.name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
+        if(base&&base!==r.name){ const tier=getRepairKeyByBTU(base,_macBTU); if(tier&&tier.price>0){price=tier.price;unit='JOB';} }
+      }
+      const refMap={'R-22':200,'R-32':350,'R-407C':330,'R-407c':330,'R-410A':340,'R-410a':340,'R-134A':330,'R-134a':330,'R-141B':280};
+      if(!price){ for(const[ref,p]of Object.entries(refMap)){if(r.name.includes(ref)){price=p;unit='Kg.';break;}} }
+      return{name:r.name,qty:r.qty,unit,price,total:r.qty*price};
+    });
   const sub   = items.reduce((s,r)=>s+r.total,0);
   const vat   = Math.round(sub*0.07*100)/100;
   const grand = sub+vat;
@@ -1131,7 +1183,7 @@ async function generateRepairPDF(tid) {
   const getPrice = (name) => {
     const g = (db.repairGroups||[]);
     for(const grp of g){ const it=grp.items?.find(i=>i.name===name); if(it) return {price:it.price||0,unit:it.unit||'JOB'}; }
-    if(REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
+    if((typeof REPAIR_PRICE !== 'undefined') && REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
     // BTU-tier
     if(macBTU > 0){
       const base = name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
@@ -1777,12 +1829,15 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
         const page = doc.querySelector('.page');
         if(!page) return;
         const container = fr.parentElement;
-        const viewW = (container ? container.clientWidth : window.innerWidth) - 32;
+        const isMob = window.innerWidth < 768;
+        // Bug8 fix: mobile ใช้ padding น้อยลง ให้ document เต็มจอ
+        const pad = isMob ? 4 : 32;
+        const viewW = (container ? container.clientWidth : window.innerWidth) - pad;
         const pageW = 794; // A4 at 96dpi
         const scale = Math.min(1, viewW / pageW);
         page.style.transformOrigin = 'top center';
         page.style.transform = 'scale('+scale+')';
-        page.style.marginTop = '8px';
+        page.style.marginTop = '4px';
         page.style.marginBottom = (scale < 1 ? -(pageW*(1-scale)*0.5) : 8)+'px';
         doc.body.style.margin = '0';
         doc.body.style.background = '#c0c6cc';
@@ -2489,6 +2544,16 @@ function setupBottomNav() {
   if (dangerZone) dangerZone.style.display = 'none'; // ซ่อน standalone card
   const adminToolsGroup = document.getElementById('sp-admin-tools');
   if (adminToolsGroup) adminToolsGroup.style.display = isAdmin ? 'block' : 'none';
+
+  // Backend panel — show only for admin
+  const bkPanel = document.getElementById('sp-backend-panel');
+  if (bkPanel) {
+    if (isAdmin) {
+      if (typeof showBackendPanel === 'function') showBackendPanel();
+    } else {
+      bkPanel.style.display = 'none';
+    }
+  }
   // อัปเดต chat count badge
   if (isAdmin) {
     const chatBadge = document.getElementById('chat-count-badge');
@@ -2504,6 +2569,9 @@ function setupBottomNav() {
 let _activePage = 'home'; // sync กับ HTML ที่ pg-home มี class active ตอนแรก
 function goPage(name) {
   if (_activePage === name) return; // กดหน้าเดิม ไม่ต้องทำอะไร
+
+  // ── 0. ปิด top menu ถ้าเปิดอยู่ ──
+  if (typeof _closeTopMenu === 'function') _closeTopMenu();
 
   // ── 1. Nav highlight ทันที ──
   document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
@@ -2543,12 +2611,7 @@ function goPage(name) {
   }
 
   // ── 4. FAB ──
-  const fabEl = document.getElementById('fab-new');
-  if (fabEl) {
-    const fabPages = ['home', 'tickets', 'mywork'];
-    const showFab = fabPages.includes(name) && CU?.role !== 'executive';
-    fabEl.style.display = showFab ? 'flex' : 'none';
-  }
+  const fabEl = document.getElementById('fab-new'); if(fabEl) fabEl.style.display = 'none';
   const calAddBtn = document.getElementById('cal-add-btn');
   if(calAddBtn) calAddBtn.style.display = name === 'calendar' ? 'flex' : 'none';
 
@@ -2599,7 +2662,7 @@ function goPage(name) {
     }
     else if (name === 'purchase') { renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order'); }
     else if (name === 'report') { renderReport(); switchReportTab('summary'); }
-    else if (name === 'chatroom') { if(typeof initChatroomLayout==='function') initChatroomLayout(); if(typeof renderChatroomList==='function') renderChatroomList(); }
+    else if (name === 'chatroom') { initChatroomLayout(); renderChatroomList(); }
     else if (name === 'calendar') {
       renderCalendar();
       const cab=document.getElementById('cal-add-btn'); if(cab) cab.style.display = CU.role==='admin' ? 'flex' : 'none';
@@ -2628,3 +2691,791 @@ function goPage(name) {
 }
 
 // ============================================================
+// ============================================================
+// SHEETS + nowStr — ย้ายมาจาก app-admin.js เพื่อให้ทุก script ใช้ได้
+// ============================================================
+function nowStr(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+}
+
+function openSheet(name){
+  if (name === 'chat') {
+    const sh = document.getElementById('chat-sheet');
+    if (sh) {
+      sh.classList.add('visible');
+      function _chatKbFix() {
+        if (!sh.classList.contains('visible')) return;
+        const vv = window.visualViewport; if (!vv) return;
+        const vvh = vv.height, offsetTop = vv.offsetTop||0, offsetLeft = vv.offsetLeft||0;
+        sh.style.transform = `translateY(${offsetTop}px) translateX(${offsetLeft}px)`;
+        sh.style.height = vvh + 'px';
+        const msgs = document.getElementById('chat-messages');
+        if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
+      }
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', _chatKbFix);
+        window.visualViewport.addEventListener('scroll', _chatKbFix);
+        sh._chatKbFix = _chatKbFix;
+      }
+    }
+    if (navigator.vibrate) navigator.vibrate(30);
+    return;
+  }
+  document.querySelectorAll('.sheet').forEach(s => {
+    if (s.id !== name+'-sheet') {
+      s.classList.remove('open');
+      s.style.visibility = 'hidden'; s.style.pointerEvents = 'none';
+      setTimeout(() => { if (!s.classList.contains('open')) { s.style.visibility=''; s.style.pointerEvents=''; } }, 400);
+      if (s._kbHandler) { s.removeEventListener('focusin', s._kbHandler); delete s._kbHandler; }
+    }
+  });
+  document.querySelectorAll('.sheet-overlay').forEach(o => {
+    if (o.id !== name+'-overlay') {
+      o.classList.remove('open'); o.style.display = 'none';
+      setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
+    }
+  });
+  const ov = document.getElementById(name+'-overlay');
+  const sh = document.getElementById(name+'-sheet');
+  if (!ov || !sh) { console.warn('openSheet: not found:', name); return; }
+  sh.style.visibility = ''; sh.style.pointerEvents = '';
+  ov.classList.add('open');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sh.classList.add('open');
+      const onFocusIn = (e) => {
+        const el = e.target;
+        if (!el || !['INPUT','TEXTAREA','SELECT'].includes(el.tagName)) return;
+        setTimeout(() => { el.scrollIntoView({ block:'nearest', behavior:'smooth' }); }, 320);
+      };
+      sh.addEventListener('focusin', onFocusIn);
+      sh._kbHandler = onFocusIn;
+    });
+  });
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+function closeSheet(name){
+  if (name === 'chat') {
+    const sh = document.getElementById('chat-sheet');
+    if (sh) {
+      sh.classList.remove('visible');
+      if (sh._chatKbFix && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', sh._chatKbFix);
+        window.visualViewport.removeEventListener('scroll', sh._chatKbFix);
+        delete sh._chatKbFix;
+      }
+      sh.style.height = ''; sh.style.top = ''; sh.style.transform = '';
+    }
+    return;
+  }
+  if (name === 'machine') {
+    const mid = document.getElementById('m-id'); if (mid) mid.value = '';
+    const titleText = document.getElementById('ms-title-text'); if (titleText) titleText.textContent = 'เพิ่มเครื่องแอร์ใหม่';
+    const addDeptBox = document.getElementById('m-add-dept-box'); if (addDeptBox) addDeptBox.style.display = 'block';
+    const missingBanner = document.getElementById('ms-missing-banner'); if (missingBanner) missingBanner.style.display = 'none';
+  }
+  const sh = document.getElementById(name+'-sheet');
+  const ov = document.getElementById(name+'-overlay');
+  if (sh) {
+    sh.classList.remove('open');
+    if (sh._kbHandler) { sh.removeEventListener('focusin', sh._kbHandler); delete sh._kbHandler; }
+  }
+  if (ov) setTimeout(() => { ov.classList.remove('open'); ov.style.display = ''; }, 350);
+}
+
+// ============================================================
+// NOTIFY + LINE — ย้ายมาจาก app-admin.js
+// ============================================================
+function notifyUser(uid,title,msg,tid='',_skipSync=false){
+  if(!uid)return;
+  if(!db.notifications)db.notifications=[];
+  db.notifications.unshift({id:'n'+Date.now()+Math.random(),userId:uid,title,msg,tid,time:nowStr(),read:false});
+  if(db.notifications.length>150)db.notifications=db.notifications.slice(0,150);
+  if(CU && uid===CU.id){
+    updateNBadge();
+    const bell=document.getElementById('ntf-btn');
+    if(bell){bell.style.transform='scale(1.3)';setTimeout(()=>bell.style.transform='',300);}
+  }
+  if(!_skipSync && typeof fsSave==='function') fsSave();
+}
+function notifyRole(role,title,msg,tid=''){
+  db.users.filter(u=>u.role===role).forEach(u=>notifyUser(u.id,title,msg,tid,true));
+  if(typeof fsSave==='function') fsSave();
+}
+function updateNBadge(){
+  const cnt=db.notifications.filter(n=>n.userId===CU?.id&&!n.read).length;
+  document.getElementById('ndot')?.classList.toggle('on',cnt>0);
+}
+function renderNotifPanel(){
+  const mine=db.notifications.filter(n=>n.userId===CU?.id).slice(0,10);
+  const nb=document.getElementById('notif-body'); if(!nb)return;
+  nb.innerHTML=mine.length===0
+    ?'<div class="empty" style="padding:24px"><div class="ei">🔔</div><p>ไม่มีการแจ้งเตือน</p></div>'
+    :mine.map(n=>`<div class="notif-item ${n.read?'':'unread'}" id="ni-${n.id}" onclick="clickNotif('${n.id}','${n.tid||''}')" style="cursor:pointer;position:relative">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="font-size:1.3rem;flex-shrink:0;margin-top:1px">${n.title.match(/^[^\s]+/)?.[0]||'🔔'}</div>
+          <div style="flex:1;overflow:hidden">
+            <div class="ni-title" style="font-size:0.84rem;font-weight:700">${n.title.replace(/^[^\s]+\s*/,'')}</div>
+            <div class="ni-msg" style="font-size:0.78rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.msg}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+              <div class="ni-time" style="font-size:0.68rem;color:#9ca3af">${n.time}</div>
+              ${n.tid&&!n.read?`<span style="font-size:0.65rem;background:#fff0f2;color:var(--accent);border-radius:99px;padding:2px 8px;font-weight:700">${n.tid.replace(/^tk_/,'')} →</span>`:''}
+            </div>
+          </div>
+          ${!n.read?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px"></div>':''}
+          <button onclick="event.stopPropagation();dismissNotif('${n.id}')"
+            style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;color:#94a3b8;font-size:0.85rem;font-weight:800;display:flex;align-items:center;justify-content:center">×</button>
+        </div>
+      </div><div class="ni-sep"></div>`).join('');
+}
+function sendLineNotifyEvent(event, t) {
+  const ln = db.lineNotify; if (!ln) return;
+  const ser = (typeof getSerial==='function') ? (getSerial(t) ? ' ['+getSerial(t)+']' : '') : '';
+  const base = '\n🏭 SCG AIRCON BP\n';
+  const lineNotifyFn = (typeof lineNotify==='function') ? lineNotify : ()=>{};
+  if (event==='new' && ln.evNew) {
+    const msg = base+'🆕 งานใหม่เข้า!\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n❄️ '+t.machine+'\n📢 ผู้แจ้ง: '+t.reporter+'\n🔥 ด่วน: '+(typeof prTH==='function'?prTH(t.priority):t.priority)+'\n🕐 '+nowStr();
+    if(ln.tokenAdmin) lineNotifyFn(ln.tokenAdmin,msg);
+    if(ln.tokenTech)  lineNotifyFn(ln.tokenTech,msg);
+  } else if (event==='accept' && ln.evAccept) {
+    const msg = base+'🔧 ช่างรับงานและเริ่มซ่อมแล้ว\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n👷 ช่าง: '+(t.assignee||'—')+'\n🕐 '+nowStr();
+    if(ln.tokenAdmin) lineNotifyFn(ln.tokenAdmin,msg);
+  } else if (event==='start' && ln.evAccept) {
+    const msg = base+'⚙️ เริ่มซ่อมแล้ว\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n👷 ช่าง: '+(t.assignee||'—')+'\n🕐 '+nowStr();
+    if(ln.tokenAdmin) lineNotifyFn(ln.tokenAdmin,msg);
+  } else if (event==='done' && ln.evDone) {
+    const msg = base+'✅ ซ่อมเสร็จแล้ว!\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n❄️ '+t.machine+'\n👷 ช่าง: '+(t.assignee||'—')+'\n📝 '+(t.summary||'')+'\n🕐 '+nowStr();
+    if(ln.tokenAdmin) lineNotifyFn(ln.tokenAdmin,msg);
+    if(ln.tokenTech)  lineNotifyFn(ln.tokenTech,msg);
+  }
+}
+
+// ============================================================
+// showToast + showAlert — ย้ายมาจาก app-users.js
+// ============================================================
+
+function showToast(msg, type) {
+  // type: 'success' | 'warn' | 'error' | 'info' (auto-detect from emoji)
+  if (!type) {
+    if (msg.startsWith('✅') || msg.startsWith('🎉')) type = 'success';
+    else if (msg.startsWith('⚠️') || msg.startsWith('🔶')) type = 'warn';
+    else if (msg.startsWith('❌') || msg.startsWith('🚫')) type = 'error';
+    else type = 'info';
+  }
+  const cfg = {
+    success: { bg:'#1e293b', icon:'✅', glow:'rgba(22,163,74,0.2)',  accent:'#22c55e' },
+    warn:    { bg:'#1e293b', icon:'⚠️', glow:'rgba(217,119,6,0.2)',  accent:'#f59e0b' },
+    error:   { bg:'#1e293b', icon:'❌', glow:'rgba(200,16,46,0.2)',  accent:'#ef4444' },
+    info:    { bg:'#1e293b', icon:'ℹ️', glow:'rgba(29,78,216,0.2)',  accent:'#60a5fa' },
+  };
+  const c = cfg[type] || cfg.info;
+
+  let el = document.getElementById('app-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'app-toast';
+    document.body.appendChild(el);
+  }
+  // Clear existing timeout
+  clearTimeout(el._to);
+
+  el.style.cssText = `
+    position:fixed;
+    bottom:calc(var(--nav-h,64px) + env(safe-area-inset-bottom,0px) + 12px);
+    right:16px;
+    transform:translateX(16px);
+    z-index:19999;
+    pointer-events:none;
+    transition:all 0.2s ease;
+    opacity:0;
+    max-width:min(300px,calc(100vw - 32px));
+    width:max-content;
+  `;
+  el.innerHTML = `
+    <div style="
+      background:#1e293b;
+      color:white;
+      padding:10px 14px;
+      border-radius:10px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.3);
+      display:flex;align-items:center;gap:8px;
+      border-left:3px solid ${c.accent};
+      min-width:180px;
+    ">
+      <div style="font-size:0.95rem;flex-shrink:0;line-height:1">${c.icon}</div>
+      <div style="font-size:0.82rem;font-weight:600;line-height:1.4;font-family:inherit;color:rgba(255,255,255,0.95)">${msg.replace(/^[✅⚠️❌ℹ️🎉🚫🔶]\s*/,'')}</div>
+    </div>`;
+
+  // Animate in — slide from right
+  requestAnimationFrame(() => {
+    el.style.opacity = '1';
+    el.style.transform = 'translateX(0)';
+  });
+
+  el._to = setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(16px)';
+  }, 2500);
+}
+
+// ── showAlert — confirmation modal กลางจอ (ใช้แทน alert()) ──
+function showAlert(opts) {
+  // opts: { title, msg, icon, color, btnOk, btnCancel, onOk, onCancel }
+  const existing = document.getElementById('_alert_modal');
+  if (existing) existing.remove();
+  const o = {
+    icon: opts.icon || 'ℹ️',
+    title: opts.title || 'แจ้งเตือน',
+    msg: opts.msg || '',
+    color: opts.color || '#1d4ed8',
+    btnOk: opts.btnOk || 'ตกลง',
+    btnCancel: opts.btnCancel || null,
+    onOk: opts.onOk || null,
+    onCancel: opts.onCancel || null,
+  };
+  const ov = document.createElement('div');
+  ov.id = '_alert_modal';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:19998;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:white;border-radius:24px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.3);animation:popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)';
+  box.innerHTML = `
+    <div style="width:64px;height:64px;border-radius:20px;background:${o.color}18;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2.2rem;border:2px solid ${o.color}33">${o.icon}</div>
+    <div style="font-size:1.05rem;font-weight:900;color:#0f172a;margin-bottom:8px;line-height:1.3">${o.title}</div>
+    <div style="font-size:0.85rem;color:#64748b;line-height:1.75;margin-bottom:22px">${o.msg}</div>
+    <div style="display:flex;gap:8px">
+      ${o.btnCancel ? `<button id="_alert_cancel" style="flex:1;padding:14px;background:#f1f5f9;color:#64748b;border:none;border-radius:14px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">${o.btnCancel}</button>` : ''}
+      <button id="_alert_ok" style="flex:${o.btnCancel?2:1};padding:14px;background:linear-gradient(135deg,${o.color},${o.color}cc);color:white;border:none;border-radius:14px;font-size:0.9rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px ${o.color}44;-webkit-tap-highlight-color:transparent">
+        ${o.btnOk}
+      </button>
+    </div>`;
+
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  document.getElementById('_alert_ok').onclick = () => {
+    ov.remove(); if (o.onOk) o.onOk();
+  };
+  if (o.btnCancel) {
+    document.getElementById('_alert_cancel').onclick = () => {
+      ov.remove(); if (o.onCancel) o.onCancel();
+    };
+  }
+  ov.addEventListener('click', e => { if(e.target===ov){ ov.remove(); if(o.onCancel) o.onCancel(); } });
+}
+// ============================================================
+// SYNC FUNCTIONS — ย้ายมาจาก app-admin.js
+// ============================================================
+let _syncCount = 0;
+function _showSyncDot(){_syncCount++;const d=document.getElementById("sync-dot");if(d)d.style.display="inline";}
+function _hideSyncDot(){_syncCount=Math.max(0,_syncCount-1);if(_syncCount===0){const d=document.getElementById("sync-dot");if(d)d.style.display="none";}}
+async function syncUser(u){const url=db.gsUrl;if(!url)return;_showSyncDot();try{await fetch(url,{method:"POST",mode:"no-cors",body:JSON.stringify({action:"user",d:u}),headers:{"Content-Type":"application/json"}});}catch(e){}finally{_hideSyncDot();}}
+async function syncTicket(t){const url=db.gsUrl;if(!url)return;_showSyncDot();try{const {signatures:_s,...tNoSig}=t;await fetch(url,{method:"POST",mode:"no-cors",body:JSON.stringify({action:"ticket",d:tNoSig}),headers:{"Content-Type":"application/json"}});}catch(e){}finally{_hideSyncDot();}}
+async function syncMachine(m){const url=db.gsUrl;if(!url)return;_showSyncDot();try{await fetch(url,{method:"POST",mode:"no-cors",body:JSON.stringify({action:"machine",d:m}),headers:{"Content-Type":"application/json"}});}catch(e){}finally{_hideSyncDot();}}
+
+// ============================================================
+// ADMIN UI FUNCTIONS — ย้ายมาจาก app-admin.js
+// ============================================================
+
+function initSidebarState() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  // landscape มือถือ — ไม่ต้องใช้ sidebar เลย ใช้ bottom nav แทน
+  if (window.innerHeight < 600 && window.innerWidth > window.innerHeight) return;
+  if (localStorage.getItem('aircon_sidebar_collapsed') === '1') {
+    app.classList.add('sidebar-collapsed');
+    const icon = document.getElementById('sidebar-toggle-icon');
+    if (icon) icon.innerHTML = '<polyline points="9 18 15 12 9 6"/>';
+  }
+}
+
+function _closeTopMenu() {
+  const m = document.getElementById('tb-quick-menu');
+  if (m) m.style.display = 'none';
+  document.removeEventListener('click', _menuOutsideTap);
+}
+
+function initLang() {
+  _lang = localStorage.getItem('aircon_lang') || 'TH';
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = _lang === 'EN' ? '🇹🇭 TH' : '🇬🇧 EN';
+  if (_lang === 'EN') applyLang();
+}
+
+function initDarkMode() {
+  const saved = localStorage.getItem('aircon_dark');
+  if (saved === '1') {
+    document.body.classList.add('dark-mode');
+    _updateDarkBtn(true);
+  }
+}
+
+function resetCompleteExtras() {
+  document.querySelectorAll('.cl-item').forEach(c=>c.checked=false);
+  ['m-temp-before','m-temp-after','m-amp-before','m-amp-after',
+   'm-psi-lo-before','m-psi-lo-after','m-psi-hi-before','m-psi-hi-after'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const cb=document.getElementById('checklist-body'); if(cb){cb.style.display='none';}
+  const mb=document.getElementById('measure-body'); if(mb){mb.style.display='none';}
+  const ci=document.getElementById('checklist-toggle-icon'); if(ci) ci.textContent='▼';
+  const mi=document.getElementById('measure-toggle-icon'); if(mi) mi.textContent='▼';
+  // ซ่อนและ reset ตารางอะไหล่
+  const partsBlock = document.getElementById('c-parts-block');
+  if (partsBlock) {
+    partsBlock.style.display = 'none';
+    const pl = document.getElementById('c-parts-list');
+    if (pl) pl.innerHTML = `<div style="display:flex;gap:7px;align-items:center">
+      <input type="text" placeholder="ชื่ออะไหล่..." class="c-part-name" style="flex:3;font-size:0.85rem;padding:9px 10px;border:1.5px solid #fde68a;border-radius:9px;font-family:inherit"/>
+      <input type="number" placeholder="จำนวน" class="c-part-qty" style="width:80px;font-size:0.85rem;padding:9px 8px;border:1.5px solid #fde68a;border-radius:9px;font-family:inherit;text-align:center"/>
+    </div>`;
+  }
+  // ล้าง repair tags
+  const rt = document.getElementById('c-repair-tags');
+  if (rt) rt.innerHTML = '';
+  const rc = document.getElementById('c-repair-count');
+  if (rc) rc.textContent = '0 รายการ';
+}
+
+function goPagePMPlan() {
+  // เติม tech dropdown + dept list + default date
+  const today = new Date().toISOString().split('T')[0];
+  const dateEl = document.getElementById('pmplan-start-date');
+  if (dateEl) dateEl.value = today;
+  const techSel = document.getElementById('pmplan-tech');
+  if (techSel) {
+    techSel.innerHTML = '<option value="">— เลือกช่าง —</option>';
+    (db.users||[]).filter(u => u.role==='tech').forEach(u => {
+      const o = document.createElement('option');
+      o.value = u.id; o.textContent = u.name;
+      techSel.appendChild(o);
+    });
+  }
+  renderPMPlanDeptList();
+  setPMPlanType('clean-major');
+  switchPMPlanTab('create');
+  goPage('pmplan');
+}
+
+function openSignaturePad(tid, type) {
+  // type: 'tech_done' | 'reporter_verify' | 'admin_close'
+  _sigTid = tid; _sigType = type;
+
+  const labels = {
+    tech_done:       { title: '✍️ เซ็นชื่อช่างผู้ซ่อม',    sub: 'ยืนยันการซ่อมเสร็จสมบูรณ์' },
+    reporter_verify: { title: '✍️ เซ็นชื่อผู้ตรวจรับงาน', sub: 'ยืนยันการตรวจรับงาน' },
+    admin_close:     { title: '✍️ เซ็นชื่อผู้ดูแลระบบ',    sub: 'ยืนยันการปิดงาน' },
+  };
+  const lbl = labels[type] || { title: '✍️ เซ็นชื่อ', sub: '' };
+
+  // ลบ overlay เก่าก่อน
+  document.getElementById('sig-overlay')?.remove();
+
+  const ov = document.createElement('div');
+  ov.id = 'sig-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);display:flex;align-items:flex-end;justify-content:center;';
+  ov.innerHTML = `
+    <div style="background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:520px;padding:20px 20px 32px;box-shadow:0 -8px 40px rgba(0,0,0,0.18)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:#0f172a">${lbl.title}</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:1px">${lbl.sub}</div>
+        </div>
+        <button onclick="closeSignaturePad()" style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;border:none;font-size:1rem;cursor:pointer;color:#64748b">✕</button>
+      </div>
+      <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:8px;text-align:center">วาดลายเซ็นในกรอบด้านล่าง</div>
+      <canvas id="sig-canvas"
+        style="width:100%;height:180px;border:2px dashed #cbd5e1;border-radius:14px;background:#f8fafc;touch-action:none;display:block;cursor:crosshair">
+      </canvas>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button onclick="clearSignaturePad()"
+          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;font-size:0.85rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit">
+          🗑️ ล้าง
+        </button>
+        <button onclick="confirmSignature()"
+          style="flex:2;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:0.85rem;font-weight:800;cursor:pointer;font-family:inherit">
+          ✅ ยืนยันลายเซ็น
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+
+  // Setup canvas — ใช้ setTimeout เพื่อให้ browser render overlay ก่อน
+  const canvas = document.getElementById('sig-canvas');
+  const _setupCanvas = () => {
+    const rect = canvas.getBoundingClientRect();
+    // ใช้ขนาดจริงจาก CSS (width:100% height:180px) 
+    const w = rect.width  > 10 ? rect.width  : (window.innerWidth - 80);
+    const h = rect.height > 10 ? rect.height : 180;
+    canvas.width  = w;
+    canvas.height = h;
+    _sigCanvas = canvas;
+    _sigCtx = canvas.getContext('2d');
+    _sigCtx.strokeStyle = '#1e293b';
+    _sigCtx.lineWidth = 2.5;
+    _sigCtx.lineCap = 'round';
+    _sigCtx.lineJoin = 'round';
+    // Touch events
+    canvas.addEventListener('touchstart',  _sigTouchStart,  {passive:false});
+    canvas.addEventListener('touchmove',   _sigTouchMove,   {passive:false});
+    canvas.addEventListener('touchend',    _sigTouchEnd,    {passive:false});
+    // Mouse events
+    canvas.addEventListener('mousedown',   _sigMouseDown);
+    canvas.addEventListener('mousemove',   _sigMouseMove);
+    canvas.addEventListener('mouseup',     _sigMouseUp);
+    canvas.addEventListener('mouseleave',  _sigMouseUp);
+  };
+  // setTimeout 100ms — รอให้ overlay render+paint เสร็จสมบูรณ์ก่อน
+  setTimeout(_setupCanvas, 100);
+}
+
+// --- additional admin UI ---
+
+function applyLang() {
+  const isEN = _lang === 'EN';
+
+  // ── data-i18n attributes ──
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-ph'));
+  });
+
+  // ── Bottom nav ──
+  const navTH = {
+    'home':'หน้าแรก','tickets':'รายการ','machines':'เครื่องแอร์',
+    'users':'ผู้ใช้','report':'รายงาน','purchase':'สั่งซื้อ',
+    'settings':'ตั้งค่า','new':'แจ้งซ่อม','calendar':'ปฏิทิน',
+    'tracking':'ติดตาม','mywork':'ติดตาม','chatroom':'แชท'
+  };
+  document.querySelectorAll('.bn-item[data-page]').forEach(item => {
+    const page = item.getAttribute('data-page');
+    const labelEl = item.querySelector('.bn-label');
+    if (!labelEl || !navTH[page]) return;
+    labelEl.textContent = t(navTH[page]);
+  });
+
+  // ── Tab bar (ptab) ──
+  const tabTH = {
+    '':'ทั้งหมด','new':'ใหม่','assigned':'จ่ายแล้ว','accepted':'รับแล้ว',
+    'inprogress':'กำลังซ่อม','waiting_part':'รออะไหล่','done':'เสร็จแล้ว','verified':'ตรวจรับ'
+  };
+  document.querySelectorAll('.ptab[data-val]').forEach(btn => {
+    const v = btn.getAttribute('data-val');
+    if (v in tabTH) {
+      const icon = btn.textContent.match(/^[^\w\u0E00-\u0E7F]+/)?.[0] || '';
+      btn.textContent = icon + t(tabTH[v]);
+    }
+  });
+
+  // ── Status scroll cards ──
+  const scTH = {'':'ทั้งหมด','new':'ใหม่','assigned':'จ่ายแล้ว',
+    'accepted':'รับแล้ว','inprogress':'กำลังซ่อม',
+    'waiting_part':'รออะไหล่','done':'เสร็จแล้ว','verified':'ตรวจรับ'};
+  const scIcon = {'':'','new':'📩','assigned':'👤','accepted':'🙋',
+    'inprogress':'⚙️','waiting_part':'⏳','done':'✅','verified':'🔵'};
+  document.querySelectorAll('.sc-card[data-s]').forEach(card => {
+    const s = card.getAttribute('data-s');
+    const lbl = card.querySelector('.sc-l');
+    if (!lbl || !(s in scTH)) return;
+    lbl.innerHTML = (scIcon[s] ? scIcon[s] + '<br>' : '') + t(scTH[s]);
+  });
+
+  // ── Page titles / section headers with data-i18n ──
+  // ── Calendar ──
+  const pmBtn = document.querySelector('#pg-calendar button[onclick="goPagePMPlan()"]');
+  if (pmBtn) { const sp = pmBtn.querySelector('span')||pmBtn; sp.textContent = '📅 ' + t('วางแผน PM'); }
+  const addBtn = document.getElementById('cal-add-btn');
+  if (addBtn) { const sp = addBtn.querySelector('span'); if(sp) sp.textContent = t('เพิ่ม'); }
+
+  // ── Search placeholders ──
+  ['mac-search','tk-search-input','user-search'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.placeholder = isEN ? 'Search...' : (id==='mac-search'?'ค้นหาเครื่อง...':id==='user-search'?'ค้นหาผู้ใช้...':'ค้นหางาน...');
+  });
+
+  // ── Lang button ──
+  const langBtn = document.getElementById('lang-btn');
+  // Lang shown in quick menu
+  const _langBtn = document.getElementById('lang-btn');
+  if (_langBtn) _langBtn.textContent = isEN ? '🇹🇭 TH' : '🇬🇧 EN';
+
+  // ── html lang attribute ──
+  document.documentElement.lang = isEN ? 'en' : 'th';
+
+  // re-render active page
+  const pages = ['tickets','calendar','machines','users','purchase','report'];
+  pages.forEach(p => {
+    const pg = document.getElementById('pg-'+p);
+    if (pg?.classList.contains('active')) {
+      if (p==='tickets' && CU) renderTickets();
+      else if (p==='calendar') renderCalendar();
+      else if (p==='machines') renderMachines?.();
+      else if (p==='users') renderUsers?.();
+      else if (p==='purchase') renderPurchase?.();
+    }
+  });
+}
+
+function _updateDarkBtn(isDark) {
+  const btn = document.getElementById('dark-toggle-btn');
+  if (!btn) return;
+  btn.textContent = isDark ? '☀️' : '🌙';
+  btn.style.background = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
+  // settings toggle (ถ้ามี)
+  const knob = document.getElementById('dark-knob');
+  if (knob) knob.style.left = isDark ? '27px' : '3px';
+  const settBtn = document.getElementById('dark-settings-btn');
+  if (settBtn) settBtn.style.background = isDark ? '#c8102e' : '#e2e8f0';
+}
+
+function switchPMPlanTab(tab) {
+  ['create','schedule','history'].forEach(t => {
+    const btn = document.querySelector(`.pmplan-tab-btn[data-tab="${t}"]`);
+    const panel = document.getElementById('pmplan-panel-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+  });
+  if (tab === 'schedule') renderPMPlanSchedule();
+  if (tab === 'history')  renderPMPlanHistory();
+}
+
+function renderPMPlanDeptList() {
+  const list = document.getElementById('pmplan-dept-list');
+  if (!list) return;
+  // นับจำนวนแอร์แต่ละแผนก
+  const deptCount = {};
+  db.machines.forEach(m => {
+    const d = m.dept || m.location || 'ไม่ระบุแผนก';
+    deptCount[d] = (deptCount[d] || 0) + 1;
+  });
+  const depts = Object.entries(deptCount).sort((a,b) => b[1]-a[1]);
+  list.innerHTML = depts.map(([dept, count]) => `
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:12px;border:1.5px solid #e5e7eb;cursor:pointer;transition:all 0.15s;"
+      onmouseover="this.style.borderColor='#38bdf8'" onmouseout="if(!this.querySelector('input').checked)this.style.borderColor='#e5e7eb'">
+      <input type="checkbox" class="pmplan-dept-cb" data-dept="${dept}"
+        style="width:17px;height:17px;accent-color:#0369a1;flex-shrink:0;"
+        onchange="pmplanUpdateCheck(this)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <div style="background:#0369a1;color:white;border-radius:99px;padding:2px 10px;font-size:0.72rem;font-weight:800;">${count}</div>
+        <div style="font-size:0.62rem;color:#94a3b8;font-weight:600">เครื่อง</div>
+      </div>
+    </label>`).join('');
+}
+
+function setPMPlanType(t) {
+  document.getElementById('pmplan-type').value = t;
+  const majorBtn = document.getElementById('pmplan-major-btn');
+  const minorBtn = document.getElementById('pmplan-minor-btn');
+  if (t === 'clean-major') {
+    majorBtn.style.background = 'linear-gradient(135deg,#0369a1,#0c4a6e)';
+    majorBtn.style.borderColor = '#0369a1';
+    majorBtn.style.color = 'white';
+    majorBtn.style.transform = 'scale(1.05) translateY(-2px)';
+    majorBtn.style.boxShadow = '0 8px 24px rgba(3,105,161,0.5)';
+    minorBtn.style.background = 'linear-gradient(135deg,#f8fafc,#f1f5f9)';
+    minorBtn.style.borderColor = '#e2e8f0';
+    minorBtn.style.color = '#64748b';
+    minorBtn.style.transform = 'scale(1) translateY(0)';
+    minorBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+  } else {
+    minorBtn.style.background = 'linear-gradient(135deg,#059669,#065f46)';
+    minorBtn.style.borderColor = '#059669';
+    minorBtn.style.color = 'white';
+    minorBtn.style.boxShadow = '0 8px 24px rgba(5,150,105,0.5)';
+    minorBtn.style.transform = 'scale(1.05) translateY(-2px)';
+    majorBtn.style.background = 'linear-gradient(135deg,#f8fafc,#f1f5f9)';
+    majorBtn.style.borderColor = '#e2e8f0';
+    majorBtn.style.color = '#64748b';
+    majorBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+    majorBtn.style.transform = 'scale(1) translateY(0)';
+  }
+}
+
+function clearSignaturePad() {
+  if (!_sigCanvas || !_sigCtx) return;
+  _sigCtx.clearRect(0, 0, _sigCanvas.width, _sigCanvas.height);
+}
+
+function closeSignaturePad() {
+  document.getElementById('sig-overlay')?.remove();
+  _sigTid = ''; _sigType = ''; _sigCanvas = null; _sigCtx = null;
+}
+
+async function confirmSignature() {
+  if (!_sigCanvas) return;
+  // ตรวจว่ามีการวาดหรือยัง (pixel ที่ไม่ใช่ transparent)
+  const px = _sigCtx.getImageData(0,0,_sigCanvas.width,_sigCanvas.height).data;
+  const hasStroke = px.some((v,i) => i%4===3 && v>10);
+  if (!hasStroke) { showToast('⚠️ กรุณาวาดลายเซ็นก่อน'); return; }
+
+  const dataUrl = _sigCanvas.toDataURL('image/png');
+  const tid     = _sigTid;
+  const type    = _sigType;
+
+  // map type → key ใน t.signatures
+  const keyMap = { tech_done:'tech', reporter_verify:'reporter', admin_close:'admin' };
+  const sigKey = keyMap[type] || type;
+
+  // บันทึกใน ticket object
+  const t = db.tickets.find(x=>x.id===tid);
+  if (t) {
+    if (!t.signatures) t.signatures = {};
+    t.signatures[sigKey] = { data: dataUrl, by: CU.name, at: nowStr() };
+    saveDB();
+  }
+
+  // บันทึกใน localStorage cache
+  try {
+    const cache = JSON.parse(localStorage.getItem(SIGS_KEY)||'{}');
+    if (!cache[tid]) cache[tid] = {};
+    cache[tid][sigKey] = { data: dataUrl, by: CU.name, at: nowStr() };
+    localStorage.setItem(SIGS_KEY, JSON.stringify(cache));
+  } catch(e) {}
+
+  // บันทึกขึ้น Firebase
+  if (_firebaseReady && FSdb) {
+    try {
+      const sigSnap = await FSdb.collection('appdata').doc('signatures').get();
+      const allSigs = sigSnap.exists ? (sigSnap.data()||{}) : {};
+      if (!allSigs[tid]) allSigs[tid] = {};
+      allSigs[tid][sigKey] = { data: dataUrl, by: CU.name, at: nowStr() };
+      await FSdb.collection('appdata').doc('signatures').set(allSigs);
+    } catch(e) { console.warn('sig firebase save error', e); }
+  }
+
+  closeSignaturePad();
+  showToast('✅ บันทึกลายเซ็นเรียบร้อย');
+}
+
+// _fmt (number formatter) ย้ายมาจาก app-executive.js
+function _fmt(n) {
+  return Number(n || 0).toLocaleString('th-TH', {minimumFractionDigits: 0});
+}
+
+// PM Plan render functions ย้ายมาจาก app-admin.js
+
+function renderPMPlanSchedule() {
+  const el = document.getElementById('pmplan-schedule-list');
+  if (!el) return;
+  const pmEvents = (db.calEvents||[])
+    .filter(e => e.type === 'clean-major' || e.type === 'clean-minor')
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  if (!pmEvents.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#94a3b8">
+      <div style="font-size:2.5rem;margin-bottom:10px">📋</div>
+      <div style="font-size:0.85rem;font-weight:700">ยังไม่มีแผน PM</div>
+      <div style="font-size:0.72rem;margin-top:4px">กดแท็บ "สร้างแผน" เพื่อเพิ่ม</div>
+    </div>`;
+    return;
+  }
+
+  // group by month
+  const byMonth = {};
+  pmEvents.forEach(e => {
+    const m = e.date.slice(0,7);
+    if (!byMonth[m]) byMonth[m] = [];
+    byMonth[m].push(e);
+  });
+
+  el.innerHTML = Object.entries(byMonth).map(([month, evs]) => {
+    const [y, m] = month.split('-');
+    const thMonth = new Date(y, m-1).toLocaleDateString('th-TH', { month:'long', year:'numeric' });
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:0.7rem;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:1px;background:#bfdbfe"></div>
+        ${thMonth}
+        <span style="background:#eff6ff;color:#0369a1;border-radius:99px;padding:1px 8px;font-size:0.62rem">${evs.length} รายการ</span>
+        <div style="flex:1;height:1px;background:#bfdbfe"></div>
+      </div>
+      ${evs.map(e => `
+        <div style="background:white;border-radius:12px;padding:11px 13px;margin-bottom:7px;border:1px solid #e8ecf0;display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;border-radius:10px;background:${e.type==='clean-major'?'#eff6ff':'#f0fdf4'};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${e.type==='clean-major'?'🔵':'💦'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.78rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
+            <div style="font-size:0.63rem;color:#64748b;margin-top:2px">
+              📅 ${new Date(e.date+'T00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})}
+              ${e.tech ? ' · 👷 '+e.tech : ''}
+            </div>
+          </div>
+          <button onclick="deletePMEvent('${e.id}')" style="width:28px;height:28px;border-radius:8px;background:#fff0f2;border:1px solid #fecdd3;color:#c8102e;font-size:0.75rem;cursor:pointer;flex-shrink:0">✕</button>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderPMPlanHistory() {
+  const el = document.getElementById('pmplan-history-list');
+  if (!el) return;
+  // นับ PM tickets ที่ปิดแล้ว
+  const pmDone = (db.tickets||[]).filter(t =>
+    t.status === 'done' &&
+    (t.problem||'').match(/ล้างแอร์|PM บำรุงรักษา|ตรวจเช็คระบบ/)
+  ).sort((a,b) => (b.closedAt||b.createdAt||'').localeCompare(a.closedAt||a.createdAt||''));
+
+  if (!pmDone.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#94a3b8">
+      <div style="font-size:2.5rem;margin-bottom:10px">📊</div>
+      <div style="font-size:0.85rem;font-weight:700">ยังไม่มีประวัติ PM</div>
+    </div>`;
+    return;
+  }
+
+  const total = pmDone.length;
+  const deptCounts = {};
+  pmDone.forEach(t => { const d = t.dept||'ไม่ระบุ'; deptCounts[d] = (deptCounts[d]||0)+1; });
+
+  el.innerHTML = `
+    <div style="background:linear-gradient(135deg,#0369a1,#0c4a6e);border-radius:16px;padding:16px;color:white;text-align:center;margin-bottom:12px">
+      <div style="font-size:0.6rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">PM ที่ทำแล้วทั้งหมด</div>
+      <div style="font-size:2.2rem;font-weight:900;line-height:1">${total}</div>
+      <div style="font-size:0.65rem;opacity:0.65;margin-top:4px">รายการ</div>
+    </div>
+    <div style="background:white;border-radius:14px;padding:12px 14px;margin-bottom:10px;border:1px solid #e8ecf0">
+      <div style="font-size:0.7rem;font-weight:800;color:#64748b;margin-bottom:10px">สรุปตามแผนก</div>
+      ${Object.entries(deptCounts).sort((a,b)=>b[1]-a[1]).map(([dept,cnt]) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+          <div style="font-size:0.75rem;font-weight:700;color:#0f172a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
+          <div style="background:#eff6ff;color:#0369a1;border-radius:99px;padding:2px 10px;font-size:0.68rem;font-weight:800;flex-shrink:0">${cnt} ครั้ง</div>
+        </div>
+        <div style="background:#f1f5f9;border-radius:99px;height:4px;margin-bottom:8px">
+          <div style="background:#0369a1;border-radius:99px;height:4px;width:${Math.round(cnt/total*100)}%"></div>
+        </div>`).join('')}
+    </div>
+    ${pmDone.slice(0,20).map(t => `
+      <div style="background:white;border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid #f1f5f9;display:flex;align-items:center;gap:9px">
+        <div style="width:32px;height:32px;border-radius:9px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">✅</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.75rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.machine||t.problem||t.id}</div>
+          <div style="font-size:0.62rem;color:#64748b;margin-top:1px">${t.dept||''} · ${t.closedAt?(new Date(t.closedAt).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})):''}</div>
+        </div>
+      </div>`).join('')}
+  `;
+}
+
+function pmplanUpdateCheck(cb) {
+  const label = cb.closest('label');
+  if (cb.checked) {
+    label.style.borderColor = '#0369a1';
+    label.style.background = '#eff6ff';
+  } else {
+    label.style.borderColor = '#e5e7eb';
+    label.style.background = '#f8fafc';
+  }
+}
+
+function deletePMEvent(id) {
+  db.calEvents = (db.calEvents||[]).filter(e => e.id !== id);
+  saveDB(); fsSave();
+  renderPMPlanSchedule();
+  showToast('🗑️ ลบแผน PM แล้ว');
+}

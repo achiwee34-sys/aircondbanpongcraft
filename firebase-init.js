@@ -21,16 +21,8 @@ function initFirebase() {
     // ── Anonymous Auth: sign in ทันทีเพื่อให้ write Firestore ได้ ──
     // (Firestore Rules: read = open, write = require auth)
     if (firebase.auth) {
-      // ── PATCH: onAuthStateChanged ป้องกัน write ก่อน auth พร้อม ──
-      firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-          console.log('[Firebase] Auth ready:', user.isAnonymous ? 'anonymous' : user.uid);
-          window.firebaseAuth = firebase.auth();
-        }
-      });
       firebase.auth().signInAnonymously().catch(e => {
-        console.warn('[Firebase] Anonymous sign-in failed:', e.message, '— falling back to open rules');
-        // Rules ถูกเปิด allow write: if true แล้ว ไม่ต้อง auth ก็ save ได้
+        console.warn('[Firebase] Anonymous sign-in failed:', e.message);
       });
     }
     // ── PATCH v67: init Firebase Storage ──
@@ -150,7 +142,7 @@ async function fsSaveNow() {
       if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('signatures').set(allSigs);
     }
   } catch(e) { console.warn('fsSaveNow error:', e); }
-  finally { setTimeout(() => { _fsSaving = false; }, 2000); }
+  finally { setTimeout(() => { _fsSaving = false; }, 500); }
 }
 
 // fire-and-forget save
@@ -203,7 +195,7 @@ function fsListen() {
   _fsListener = FSdb.collection('appdata').doc('main').onSnapshot(snap => {
     if (!snap.exists || !CU) return;
     const data = snap.data();
-    if (_fsSaving) return; // ถ้ากำลัง save อยู่ ห้าม overwrite ด้วย snapshot
+    if (_fsSaving && !_fsChatSaving) return;
     const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
     const DEMO_IDS       = ['u2','u3','u4','u5'];
     const check = (key) => {
@@ -311,9 +303,5 @@ function fsListen() {
         }
       } catch(e) {}
     }, 200);
-  }, err => {
-    // WebChannel transport errors เป็น Firebase internal retry - ไม่ใช่ bug
-    if (err?.code === 'unavailable' || String(err).includes('WebChannel')) return;
-    console.warn('fsListen error:', err?.code || err);
-  });
+  }, err => console.warn('fsListen error:', err));
 }
