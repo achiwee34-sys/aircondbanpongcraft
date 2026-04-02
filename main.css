@@ -756,7 +756,12 @@ body.dark-mode div[style*="background:#f0fdf4"][style*="border:1px solid #bbf7d0
 
 @media (min-width: 768px) {
   #main-col { order: 2; flex: 1 1 0; }
-  .bottom-nav { order: 1; }  /* sidebar on LEFT */
+  .bottom-nav {
+    order: 1;  /* sidebar on LEFT */
+    z-index: 100 !important;       /* ลดจาก 9999 — sidebar ไม่ต้องทับ content */
+    will-change: auto !important;  /* ปิด GPU hint ที่ทำให้ stacking context ล้น */
+    transform: none !important;    /* เอา translateZ(0) ออก */
+  }
 }
 
 /* ── Large desktop ≥1280px ── */
