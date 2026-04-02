@@ -1,5 +1,10 @@
 // HOME
 // ============================================================
+// safeOpenDetail: ป้องกัน "openDetail is not defined" ถ้า app-tracking.js ยังโหลดไม่ครบ
+function safeOpenDetail(tid) {
+  if (typeof openDetail === 'function') openDetail(tid);
+  else setTimeout(() => safeOpenDetail(tid), 100);
+}
 function updateChatBadge() {
   if (!db.chats || !CU) return;
   const myTickets = db.tickets.filter(t =>
@@ -209,7 +214,7 @@ function renderHome() {
       <button onclick="goPage('tickets')" style="font-size:0.7rem;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:700;font-family:inherit">ดูทั้งหมด →</button>
     </div>
     ${pending.length ? pending.map(t=>`
-    <div class="home-row" onclick="openDetail('${t.id}')">
+    <div class="home-row" onclick="safeOpenDetail('${t.id}')">
       <div class="home-row-bar" style="background:${sColor(t.status)}"></div>
       <div class="home-row-main">
         <div class="home-row-prob">${escapeHtml(t.problem)}</div>
@@ -249,7 +254,7 @@ function renderHome() {
       <button onclick="goPage('tickets')" style="font-size:0.7rem;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:700;font-family:inherit">ดูทั้งหมด →</button>
     </div>
     ${pending.length ? pending.map(t=>`
-    <div class="home-row" onclick="openDetail('${t.id}')">
+    <div class="home-row" onclick="safeOpenDetail('${t.id}')">
       <div class="home-row-bar" style="background:${sColor(t.status)}"></div>
       <div class="home-row-main">
         <div class="home-row-prob">${escapeHtml(t.problem)}</div>
@@ -526,7 +531,7 @@ function openGlobalSearch() {
     if(tickets.length) {
       html+='<div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:8px 4px 6px">📋 ใบงาน ('+tickets.length+')</div>';
       html+=tickets.map(t=>`
-        <div onclick="ov.remove();goPage('tickets');setTimeout(()=>openDetail('${t.id}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+        <div onclick="ov.remove();goPage('tickets');setTimeout(()=>safeOpenDetail('${t.id}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="width:36px;height:36px;border-radius:9px;background:${sColor(t.status)}20;border:1.5px solid ${sColor(t.status)}40;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:${sColor(t.status)};flex-shrink:0;font-family:'JetBrains Mono',monospace">${t.id.slice(-3)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)}</div>
@@ -1103,14 +1108,14 @@ function tkCard(t) {
       ${canComplete ? `<button onclick="openCompleteSheet('${t.id}')" style="padding:0 16px;background:#15803d;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">✅<span>บันทึกผล</span></button>` : ''}
       ${canVerify ? `<button onclick="openVerifySheet('${t.id}')" style="padding:0 16px;background:#166534;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">🔵<span>ตรวจรับ</span></button>` : ''}
       ${canAssign ? `<button onclick="openAssignSheet('${t.id}')" style="padding:0 16px;background:#5b21b6;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">👤<span>จ่ายงาน</span></button>` : ''}
-      <button onclick="openDetail('${t.id}')" style="padding:0 14px;background:#334155;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:52px">📋<span>ดู</span></button>
+      <button onclick="safeOpenDetail('${t.id}')" style="padding:0 14px;background:#334155;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:52px">📋<span>ดู</span></button>
       ${CU&&CU.role==='admin' ? `<button onclick="deleteTicket('${t.id}')" style="padding:0 14px;background:#dc2626;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:52px">🗑️<span>ลบ</span></button>` : ''}
     </div>
     <!-- Main card -->
     <div class="tk tk-swipeable" data-tid="${t.id}" style="border-left:3px solid ${accentColor};border-radius:10px;overflow:hidden;box-shadow:none;position:relative;z-index:1;transition:transform 0.25s ease;will-change:transform;touch-action:pan-y;background:white">
     <div class="tk-body" style="padding:0">
       ${banner}
-      <div style="padding:8px 10px 5px" onclick="openDetail('${t.id}')">
+      <div style="padding:8px 10px 5px" onclick="safeOpenDetail('${t.id}')">
         <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
           <span style="font-family:'JetBrains Mono',monospace;font-size:0.52rem;font-weight:700;color:#b0b8c4">${t.id}</span>
           <span style="width:1px;height:7px;background:#e2e8f0;flex-shrink:0"></span>
@@ -1118,7 +1123,7 @@ function tkCard(t) {
           <span class="tag ${prC(t.priority)}" style="font-size:0.55rem;padding:1px 6px;border-radius:4px">${prTH(t.priority)}</span>
           ${hasPics?`<span style="font-size:0.65rem;margin-left:auto">📷 ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)}</span>`:`<span style="flex:1"></span>`}
         </div>
-        <div style="font-size:0.82rem;font-weight:700;color:#0f172a;line-height:1.3;margin-bottom:4px;cursor:pointer" onclick="openDetail('${t.id}')">${escapeHtml(t.problem)}</div>
+        <div style="font-size:0.82rem;font-weight:700;color:#0f172a;line-height:1.3;margin-bottom:4px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">${escapeHtml(t.problem)}</div>
         <div style="font-size:0.6rem;color:#64748b;display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding-bottom:6px;border-bottom:1px solid #f1f5f9">
           ${serial?`<span style="font-family:'JetBrains Mono',monospace;background:#e0f2fe;color:#0369a1;padding:0 5px;border-radius:3px;font-weight:700;font-size:0.58rem">${serial}</span>`:''}
           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">${t.machine}${mac?.location ? ` · ${mac.location}` : ''}</span>
@@ -1139,18 +1144,18 @@ function tkCard(t) {
               <div style="position:absolute;top:2px;left:2px;background:rgba(22,163,74,0.75);color:white;border-radius:3px;padding:0 4px;font-size:0.5rem;font-weight:700">หลัง</div>
             </div>`)
           ].join('')}
-          ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0) > 4 ? `<div onclick="event.stopPropagation();openDetail('${t.id}')" style="width:52px;height:40px;background:#f1f5f9;border-radius:6px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.65rem;font-weight:700;color:#6b7280;flex-shrink:0">+${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)-4}</div>` : ''}
+          ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0) > 4 ? `<div onclick="event.stopPropagation();safeOpenDetail('${t.id}')" style="width:52px;height:40px;background:#f1f5f9;border-radius:6px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.65rem;font-weight:700;color:#6b7280;flex-shrink:0">+${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)-4}</div>` : ''}
         </div>` : ''}
       </div>
       ${CU.role==='executive' ? `
       <div class="tk-actions" style="padding:6px 12px 10px;gap:5px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="openDetail('${t.id}')">ดู</button>
+        <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="safeOpenDetail('${t.id}')">ดู</button>
         ${['done','verified','closed'].includes(t.status)
           ? `<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 รายงาน</button>`
           : ''}
       </div>` : (canAssign||canReassign||canAccept||canStart||canComplete||canVerify||canClose||canMarkPurchasing||canMarkArrived||canWaitPart||chatPartner||(CU.role==='tech'&&t.assigneeId===CU.id&&t.status==='waiting_part'))?`
       <div class="tk-actions" style="padding:6px 12px 10px;gap:5px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="openDetail('${t.id}')">ดู</button>
+        <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="safeOpenDetail('${t.id}')">ดู</button>
         ${chatPartner?`<button class="btn btn-xs" style="position:relative;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:0.63rem;border:none" onclick="openChat('${t.id}','${chatPartnerId}')">
           💬 ${t.status==='waiting_part'&&CU.role==='admin'?'ช่าง: ':t.status==='waiting_part'&&CU.role==='tech'?'Admin':''} ${chatPartner.name.split(' ')[0]}
           ${chatUnread>0?`<span style="position:absolute;top:-5px;right:-5px;background:#ef4444;color:white;font-size:0.55rem;font-weight:800;min-width:16px;height:16px;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 3px;box-shadow:0 1px 3px rgba(0,0,0,0.3)">${chatUnread}</span>`:''}
@@ -1174,7 +1179,7 @@ function tkCard(t) {
           ? `<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 PDF</button>`
           : ''}
       </div>`:`<div class="tk-actions" style="padding:6px 12px 10px">
-        <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="openDetail('${t.id}')">ดูรายละเอียด</button>
+        <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="safeOpenDetail('${t.id}')">ดูรายละเอียด</button>
         ${CU.role==='reporter' && ['done','verified','closed'].includes(t.status)
           ? `<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 รายงาน</button>`
           : ''}

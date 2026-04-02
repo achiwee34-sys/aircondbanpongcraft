@@ -2454,6 +2454,7 @@ function openCompleteSheet(tid) {
 
   _showCompleteDialog();
 }
+} // ── end openCompleteSheet ──
 async function doComplete( /* PATCH v67 */) {
   const tid = document.getElementById('c-tid').value;
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;
@@ -3187,7 +3188,7 @@ function renderTracking() {
       const poBadge = t.purchaseOrder?.po
         ? `<span style="background:#f5f3ff;color:#6d28d9;border:1px solid #c4b5fd;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:700">PO: ${t.purchaseOrder.po}</span>`
         : '';
-      return `<div style="background:white;border:1.5px solid ${hasPO?'rgba(230,81,0,0.25)':'rgba(200,16,46,0.3)'};border-radius:14px;padding:12px;margin-bottom:8px" onclick="openDetail('${t.id}')" style="cursor:pointer">
+      return `<div style="background:white;border:1.5px solid ${hasPO?'rgba(230,81,0,0.25)':'rgba(200,16,46,0.3)'};border-radius:14px;padding:12px;margin-bottom:8px" onclick="safeOpenDetail('${t.id}')" style="cursor:pointer">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -3236,7 +3237,7 @@ function renderTracking() {
     </div>
     ${stale.sort((a,b) => daysSince(b.updatedAt)-daysSince(a.updatedAt)).map(t => {
       const ds = daysSince(t.updatedAt);
-      return `<div style="background:white;border:1px solid rgba(200,16,46,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="openDetail('${t.id}')">
+      return `<div style="background:white;border:1px solid rgba(200,16,46,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
           <div style="flex:1;overflow:hidden">
             <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -3260,7 +3261,7 @@ function renderTracking() {
       <span>✅ ซ่อมเสร็จ รอตรวจรับ</span>
       <span style="background:#2e7d32;color:white;border-radius:99px;padding:1px 8px;font-size:0.72rem">${pendingVerify.length}</span>
     </div>
-    ${pendingVerify.map(t => `<div style="background:white;border:1px solid rgba(21,128,61,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="openDetail('${t.id}')">
+    ${pendingVerify.map(t => `<div style="background:white;border:1px solid rgba(21,128,61,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="flex:1;overflow:hidden">
           <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -3990,5 +3991,4 @@ function initPullToRefresh() {
       setTimeout(() => { if (typeof forceReloadFromFS === 'function') forceReloadFromFS(); }, 100);
     }
   }, { passive: true });
-}
 }

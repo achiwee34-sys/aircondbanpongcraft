@@ -2356,6 +2356,20 @@ window.addEventListener('pageshow', () => { _forceCloseAllSheets(); });
 // close ทันที DOMContentLoaded กัน sheet ค้างจาก session ก่อนหน้า
 document.addEventListener('DOMContentLoaded', () => { _forceCloseAllSheets(); });
 
+
+// ── Emergency overlay reset — เคลียร์ทุก overlay ที่ค้างอยู่ ──
+function resetAllOverlays() {
+  document.querySelectorAll('.sheet.open').forEach(s => {
+    s.classList.remove('open');
+    s.style.visibility = ''; s.style.pointerEvents = '';
+  });
+  document.querySelectorAll('.sheet-overlay.open, .sheet-overlay').forEach(o => {
+    o.classList.remove('open'); o.style.display = 'none';
+    setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 10);
+  });
+  const qm = document.getElementById('tb-quick-menu'); if (qm) qm.style.display = 'none';
+}
+
 async function initApp() {
   // Guard
   if (!CU || !CU.role) { doLogout(); return; }
@@ -2572,6 +2586,7 @@ function goPage(name) {
 
   // ── 0. ปิด top menu ถ้าเปิดอยู่ ──
   if (typeof _closeTopMenu === 'function') _closeTopMenu();
+  const _qm = document.getElementById('tb-quick-menu'); if (_qm) _qm.style.display = 'none';
 
   // ── 0.5. ปิด sheet/overlay ที่ค้างอยู่ ป้องกัน overlay บัง UI หน้าใหม่ ──
   document.querySelectorAll('.sheet.open').forEach(s => {
@@ -2794,7 +2809,7 @@ function closeSheet(name){
     sh.classList.remove('open');
     if (sh._kbHandler) { sh.removeEventListener('focusin', sh._kbHandler); delete sh._kbHandler; }
   }
-  if (ov) setTimeout(() => { ov.classList.remove('open'); ov.style.display = ''; }, 350);
+  if (ov) { ov.classList.remove('open'); ov.style.display = 'none'; setTimeout(() => { if (!ov.classList.contains('open')) ov.style.display = ''; }, 400); }
 }
 
 // ============================================================
@@ -2860,7 +2875,7 @@ function clickNotif(id, tid) {
   const n = (db.notifications||[]).find(x => x.id === id);
   if (n) { n.read = true; saveDB(); updateNBadge(); }
   closeSheet('notif');
-  if (tid) setTimeout(() => openDetail(tid), 300);
+  if (tid) setTimeout(() => { if (typeof openDetail === 'function') openDetail(tid); else if (typeof safeOpenDetail === 'function') safeOpenDetail(tid); }, 300);
 }
 function dismissNotif(id) {
   db.notifications = (db.notifications||[]).filter(n => n.id !== id);
