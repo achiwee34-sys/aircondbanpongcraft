@@ -3958,3 +3958,37 @@ function delCalEvent() {
 // ============================================================
 // PULL TO REFRESH
 // ============================================================
+// ============================================================
+// PULL TO REFRESH
+// ============================================================
+function initPullToRefresh() {
+  let startY = 0, pulling = false, threshold = 70;
+  const el = document.getElementById('app-main') || document.body;
+
+  el.addEventListener('touchstart', e => {
+    if (el.scrollTop === 0) { startY = e.touches[0].clientY; pulling = true; }
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 10 && el.scrollTop === 0) {
+      const pct = Math.min(dy / threshold, 1);
+      const ind = document.getElementById('ptr-indicator');
+      if (ind) { ind.style.opacity = pct; ind.style.transform = `translateY(${Math.min(dy * 0.4, 28)}px) rotate(${pct * 180}deg)`; }
+    }
+  }, { passive: true });
+
+  el.addEventListener('touchend', e => {
+    if (!pulling) return;
+    pulling = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    const ind = document.getElementById('ptr-indicator');
+    if (ind) { ind.style.opacity = 0; ind.style.transform = ''; }
+    if (dy > threshold && el.scrollTop === 0) {
+      showToast('🔄 กำลังโหลดข้อมูล...');
+      setTimeout(() => { if (typeof forceReloadFromFS === 'function') forceReloadFromFS(); }, 100);
+    }
+  }, { passive: true });
+}
+}
