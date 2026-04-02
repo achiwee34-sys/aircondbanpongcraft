@@ -10,7 +10,49 @@ function switchUserTab(tab) {
   renderUsersSummary();
   renderUsers();
 }
-function openUserSheetRole() { openUserSheet(null, currentUserTab); }
+function debugUserBtn() {
+  var log = [];
+  // 1. ตรวจ DOM elements
+  var ids = ['us-title','u-id','u-name','u-photo','u-uname','u-pass','u-role',
+             'u-dept','u-tel','u-contact','u-avatar-preview','u-pass-toggle',
+             'u-pass-current','u-pass-val','user-overlay','user-sheet'];
+  var missing = ids.filter(function(id){ return !document.getElementById(id); });
+  log.push('Missing IDs: ' + (missing.length ? missing.join(', ') : 'none ✅'));
+
+  // 2. ตรวจ overlay ค้าง
+  var stuckOv = [];
+  document.querySelectorAll('.cdel-overlay').forEach(function(el){ stuckOv.push('cdel-overlay'); });
+  var manOv = document.getElementById('admin-manage-tk-ov');
+  if (manOv) stuckOv.push('admin-manage-tk-ov');
+  log.push('Stuck overlays: ' + (stuckOv.length ? stuckOv.join(', ') : 'none ✅'));
+
+  // 3. ตรวจ element ที่ทับ center จอ
+  var cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  var topEl = document.elementFromPoint(cx, cy);
+  log.push('Element at center: ' + (topEl ? topEl.tagName + '#' + topEl.id + '.' + topEl.className.split(' ')[0] : 'none'));
+
+  // 4. ตรวจ user-sheet state
+  var sh = document.getElementById('user-sheet');
+  var ov = document.getElementById('user-overlay');
+  log.push('user-sheet open: ' + (sh ? sh.classList.contains('open') : 'N/A'));
+  log.push('user-overlay open: ' + (ov ? ov.classList.contains('open') : 'N/A'));
+
+  // 5. ลองเรียก openUserSheet จริง แล้วดู error
+  try {
+    openUserSheet(null, 'tech');
+    log.push('openUserSheet call: ✅ no error');
+    var shAfter = document.getElementById('user-sheet');
+    log.push('user-sheet open after call: ' + (shAfter ? shAfter.classList.contains('open') : 'N/A'));
+  } catch(e) {
+    log.push('openUserSheet ERROR: ' + e.message);
+  }
+
+  var result = log.join('\n');
+  console.log('[debugUserBtn]\n' + result);
+  alert('[debugUserBtn]\n' + result);
+  return result;
+}
+
 function initUsersEvents() {}
 
 function renderUsersSummary() {
@@ -33,6 +75,8 @@ function renderUsersSummary() {
 }
 
 function renderUsers() {
+  // cleanup dynamic overlays ที่อาจค้างอยู่
+  document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(function(el){el.remove();});
   var tabMeta = {
     tech:      { icon:'🔧', label:'ช่างซ่อม',   cl:'#166534', bg:'#f0fdf4', bd:'#86efac' },
     reporter:  { icon:'📢', label:'ผู้แจ้งงาน', cl:'#1d4ed8', bg:'#eff6ff', bd:'#bfdbfe' },

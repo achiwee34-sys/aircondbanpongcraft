@@ -2598,6 +2598,8 @@ function goPage(name) {
     o.classList.remove('open'); o.style.display = 'none';
     setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
   });
+  // cleanup dynamic overlays ที่ append เข้า body โดยตรง
+  document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(el => el.remove());
 
   // ── 1. Nav highlight ทันที ──
   document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
