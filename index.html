@@ -84,8 +84,8 @@
   </div>
 
   <div class="login-form">
-    <input class="login-input" type="text" id="lu" placeholder="Username" autocomplete="username" autocapitalize="none" oninput="clearLoginErr()"/>
-    <input class="login-input" type="password" id="lp" placeholder="Password" autocomplete="current-password" oninput="clearLoginErr()" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <input class="login-input" type="text" id="lu" placeholder="Username" autocomplete="username" autocapitalize="none" oninput="if(typeof clearLoginErr==='function')clearLoginErr()"/>
+    <input class="login-input" type="password" id="lp" placeholder="Password" autocomplete="current-password" oninput="if(typeof clearLoginErr==='function')clearLoginErr()" onkeydown="if(event.key==='Enter')doLogin()"/>
     <button class="login-submit" onclick="doLogin()">เข้าสู่ระบบ</button>
     <div class="login-err" id="lerr"></div>
     <div style="text-align:center;margin-top:4px">
