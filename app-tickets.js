@@ -937,169 +937,6 @@ function scrollToActiveCard(el) {
 let _tkCache = null, _tkCacheRole = null, _tkCacheId = null;
 // Per-ticket HTML cache — skip rebuild ถ้า ticket ไม่เปลี่ยน
 const _tkCardCache = new Map();
-
-// ── Multi-select state ──────────────────────────────────────
-let _multiSelectMode = false;
-let _selectedTickets = new Set();
-
-// ── Multi-select functions ──────────────────────────────────
-function toggleMultiSelect() {
-  if (_multiSelectMode) exitMultiSelect();
-  else enterMultiSelect();
-}
-function enterMultiSelect() {
-  _multiSelectMode = true;
-  _selectedTickets.clear();
-  const bar = document.getElementById('multi-select-bar');
-  const btn = document.getElementById('multi-select-toggle');
-  if (bar) { bar.style.display = 'flex'; }
-  if (btn) { btn.style.background = '#ffe4e8'; btn.style.color = '#c8102e'; btn.style.borderColor = '#fca5a5'; btn.textContent = '✕ ยกเลิก'; }
-  _updateMultiSelectUI();
-  renderTickets();
-}
-function exitMultiSelect() {
-  _multiSelectMode = false;
-  _selectedTickets.clear();
-  const bar = document.getElementById('multi-select-bar');
-  const btn = document.getElementById('multi-select-toggle');
-  if (bar) bar.style.display = 'none';
-  if (btn) { btn.style.background = '#f1f5f9'; btn.style.color = '#64748b'; btn.style.borderColor = '#e5e7eb'; btn.textContent = '☑️ เลือก'; }
-  renderTickets();
-}
-function toggleTicketSelect(tid, e) {
-  if (e) e.stopPropagation();
-  if (_selectedTickets.has(tid)) _selectedTickets.delete(tid);
-  else _selectedTickets.add(tid);
-  _updateMultiSelectUI();
-  // update this card visually without full re-render
-  const wrap = document.querySelector(`.tk-wrap[data-tid="${tid}"]`);
-  if (wrap) _applyCardSelectStyle(wrap, _selectedTickets.has(tid));
-}
-function _applyCardSelectStyle(wrap, selected) {
-  const card = wrap.querySelector('.tk');
-  if (!card) return;
-  card.style.outline = selected ? '2.5px solid #c8102e' : 'none';
-  card.style.outlineOffset = selected ? '-2px' : '0';
-  const cb = wrap.querySelector('.tk-checkbox');
-  if (cb) {
-    cb.style.background = selected ? '#c8102e' : 'white';
-    cb.style.borderColor = selected ? '#c8102e' : '#cbd5e1';
-    cb.innerHTML = selected ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="2 6 5 9 10 3"/></svg>' : '';
-  }
-}
-function _updateMultiSelectUI() {
-  const n = _selectedTickets.size;
-  const countEl = document.getElementById('multi-select-count');
-  if (countEl) countEl.textContent = `${n} งาน`;
-  const btn = document.getElementById('bulk-assign-btn');
-  if (btn) {
-    const active = n > 0;
-    btn.style.opacity = active ? '1' : '0.4';
-    btn.style.pointerEvents = active ? 'auto' : 'none';
-  }
-}
-function selectAllVisibleTickets() {
-  document.querySelectorAll('.tk-wrap[data-tid]').forEach(wrap => {
-    const tid = wrap.dataset.tid;
-    if (tid) _selectedTickets.add(tid);
-    _applyCardSelectStyle(wrap, true);
-  });
-  _updateMultiSelectUI();
-}
-function openBulkAssignSheet() {
-  if (_selectedTickets.size === 0) return;
-  // Label
-  const lbl = document.getElementById('bulk-assign-label');
-  if (lbl) lbl.textContent = `${_selectedTickets.size} งานที่เลือก`;
-  // Chips
-  const chips = document.getElementById('bulk-ticket-chips');
-  if (chips) {
-    chips.innerHTML = [..._selectedTickets].map(tid => {
-      const t = db.tickets.find(x => x.id === tid);
-      return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:white;border:1.5px solid #fca5a5;border-radius:8px;font-size:0.62rem;font-weight:700;color:#9b0b22">
-        <span style="font-family:'JetBrains Mono',monospace">${tid}</span>
-        ${t ? `<span style="color:#64748b;font-weight:500;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem||''}</span>` : ''}
-        <span onclick="event.stopPropagation();_selectedTickets.delete('${tid}');_updateMultiSelectUI();openBulkAssignSheet()" style="cursor:pointer;color:#c8102e;font-size:0.7rem;line-height:1">✕</span>
-      </span>`;
-    }).join('');
-  }
-  // Tech list
-  let bulkSelTechId = null;
-  const tl = document.getElementById('bulk-tech-list');
-  if (tl) {
-    tl.innerHTML = db.users.filter(u => u.role === 'tech').map(u => {
-      const cnt = db.tickets.filter(t => t.assigneeId === u.id && !['closed','verified','done'].includes(t.status)).length;
-      const wLevel = cnt === 0 ? 'free' : cnt <= 2 ? 'ok' : cnt <= 4 ? 'busy' : 'full';
-      const wCfg = {
-        free: { bar:'#22c55e', barW:'0%',    badge:'ว่าง',     badgeBg:'#dcfce7', badgeColor:'#166534', bdr:'#bbf7d0' },
-        ok:   { bar:'#22c55e', barW:`${cnt*20}%`, badge:`${cnt} งาน`, badgeBg:'#f0fdf4', badgeColor:'#15803d', bdr:'#bbf7d0' },
-        busy: { bar:'#f59e0b', barW:`${cnt*15}%`, badge:`${cnt} งาน`, badgeBg:'#fffbeb', badgeColor:'#92400e', bdr:'#fde68a' },
-        full: { bar:'#ef4444', barW:'100%',   badge:`${cnt} งาน`, badgeBg:'#fef2f2', badgeColor:'#b91c1c', bdr:'#fecaca' },
-      }[wLevel];
-      const avatar = u.photo
-        ? `<img src="${u.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;flex-shrink:0">`
-        : `<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#475569,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid transparent"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`;
-      return `<div id="btc-${u.id}" onclick="_bulkPickTech('${u.id}')"
-        style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:2px solid #e5e7eb;background:white;cursor:pointer;transition:all 0.18s;touch-action:manipulation;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
-        ${avatar}
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-            <div style="font-size:0.88rem;font-weight:800;color:#0f172a">${u.name}</div>
-            <span style="font-size:0.58rem;font-weight:800;padding:2px 7px;border-radius:99px;background:${wCfg.badgeBg};color:${wCfg.badgeColor};border:1px solid ${wCfg.bdr}">${wCfg.badge}</span>
-          </div>
-          <div style="font-size:0.7rem;color:#64748b;margin-bottom:6px">${u.dept||'ช่างเทคนิค'}</div>
-          <div style="background:#f1f5f9;border-radius:99px;height:4px;overflow:hidden"><div style="height:100%;width:${wCfg.barW};background:${wCfg.bar};border-radius:99px"></div></div>
-        </div>
-      </div>`;
-    }).join('');
-    // click handler stored in closure
-    window._bulkPickTech = function(id) {
-      bulkSelTechId = id;
-      document.querySelectorAll('#bulk-tech-list > div').forEach(card => {
-        const sel = card.id === 'btc-'+id;
-        card.style.borderColor = sel ? '#c8102e' : '#e5e7eb';
-        card.style.background = sel ? 'linear-gradient(135deg,#fff0f2,#ffe4e8)' : 'white';
-        card.style.boxShadow = sel ? '0 4px 16px rgba(200,16,46,0.2)' : '0 1px 4px rgba(0,0,0,0.04)';
-        const nameEl = card.querySelector('div[style*="font-weight:800"]');
-        if (nameEl) nameEl.style.color = sel ? '#9b0b22' : '#0f172a';
-        const img = card.querySelector('img');
-        if (img) img.style.borderColor = sel ? '#c8102e' : '#e2e8f0';
-      });
-      // store for doBulkAssign
-      document.getElementById('bulk-assign-sheet')._selTechId = id;
-    };
-  }
-  document.getElementById('bulk-note').value = '';
-  openSheet('bulk-assign');
-}
-function doBulkAssign() {
-  const sheet = document.getElementById('bulk-assign-sheet');
-  const techId = sheet?._selTechId;
-  if (!techId) { showToast('⚠️ กรุณาเลือกช่างก่อน'); const tl = document.getElementById('bulk-tech-list'); if(tl){tl.style.animation='shake 0.3s ease';setTimeout(()=>tl.style.animation='',350);} return; }
-  if (_selectedTickets.size === 0) { showToast('⚠️ ไม่มีงานที่เลือก'); return; }
-  const tech = db.users.find(u => u.id === techId);
-  if (!tech) { showToast('⚠️ ไม่พบข้อมูลช่าง'); return; }
-  const note = document.getElementById('bulk-note')?.value.trim() || '';
-  const now = nowStr();
-  let count = 0;
-  _selectedTickets.forEach(tid => {
-    const t = db.tickets.find(x => x.id === tid);
-    if (!t || ['closed','verified','done'].includes(t.status)) return;
-    t.assigneeId = techId; t.assignee = tech.name; t.status = 'assigned'; t.updatedAt = now;
-    if (note) t.note = note;
-    t.history.push({act:'📋 จ่ายงาน (Bulk)', by:CU.name, at:now, detail:note});
-    notifyUser(techId,'📋 มีงานมอบหมาย ['+tid+']','งาน "'+t.problem+'" ที่ '+t.machine,tid);
-    syncTicket(t);
-    count++;
-  });
-  saveDB();
-  closeSheet('bulk-assign');
-  exitMultiSelect();
-  refreshPage();
-  showToast(`✅ จ่าย ${count} งานให้ ${tech.name} แล้ว`);
-  if (navigator.vibrate) navigator.vibrate([100,30,100]);
-}
-// ───────────────────────────────────────────────────────────
 function _tkHash(t) { return (t.updatedAt||t.createdAt||'')+t.status+(t.assigneeId||'')+t.priority+((t.photosBefore?.length||0)+(t.photosAfter?.length||0)); }
 function getMyTickets() {
   if (_tkCache && _tkCacheRole === CU?.role && _tkCacheId === CU?.id) return _tkCache;
@@ -1273,41 +1110,14 @@ function tkCard(t) {
        </div>`
     : '';
 
-  // ── skip cache in multi-select mode so checkbox state renders correctly ──
-  if (_multiSelectMode) {
-    const isSelected = _selectedTickets.has(t.id);
-    const canSelectThis = !['closed','verified','done'].includes(t.status);
-    const _baseHtml = _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, canAssign, canReassign, canAccept, canStart, canComplete, canVerify, canClose, canMarkPurchasing, canMarkArrived, canWaitPart, chatPartner, chatPartnerId, chatUnread, accentColor, banner, prBadge, adminTechBadge, hasPics, prNumber, hasPO_data);
-    if (canSelectThis) {
-      return _baseHtml.replace(
-        `<div class="tk-wrap" data-tid="${t.id}"`,
-        `<div class="tk-wrap" data-tid="${t.id}" onclick="toggleTicketSelect('${t.id}',event)"`
-      ).replace(
-        `<!-- Main card -->`,
-        `<!-- Checkbox -->
-    <div class="tk-checkbox" style="position:absolute;top:10px;left:10px;z-index:10;width:22px;height:22px;border-radius:6px;border:2px solid ${isSelected?'#c8102e':'#cbd5e1'};background:${isSelected?'#c8102e':'white'};display:flex;align-items:center;justify-content:center;transition:all 0.15s;box-shadow:0 1px 4px rgba(0,0,0,0.12)">${isSelected?'<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="2 6 5 9 10 3"/></svg>':''}</div>
-    <!-- Main card -->`
-      ).replace(
-        `border-radius:10px;overflow:hidden;box-shadow:none;position:relative;z-index:1`,
-        `border-radius:10px;overflow:hidden;box-shadow:none;position:relative;z-index:1;outline:${isSelected?'2.5px solid #c8102e':'none'};outline-offset:-2px;padding-left:${isSelected?'0':'0'}`
-      );
-    }
-    return _baseHtml;
-  }
-
-  const _html = _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, canAssign, canReassign, canAccept, canStart, canComplete, canVerify, canClose, canMarkPurchasing, canMarkArrived, canWaitPart, chatPartner, chatPartnerId, chatUnread, accentColor, banner, prBadge, adminTechBadge, hasPics, prNumber, hasPO_data);
-  _tkCardCache.set(t.id, { hash: _hash, html: _html });
-  return _html;
-}
-
-function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, canAssign, canReassign, canAccept, canStart, canComplete, canVerify, canClose, canMarkPurchasing, canMarkArrived, canWaitPart, chatPartner, chatPartnerId, chatUnread, accentColor, banner, prBadge, adminTechBadge, hasPics, prNumber, hasPO_data) {
   const _html = `<div class="tk-wrap" data-tid="${t.id}" style="position:relative;margin-bottom:8px;border-radius:10px">
+    <!-- Swipe actions — hidden behind card initially -->
     <div class="tk-swipe-actions" style="position:absolute;right:0;top:0;bottom:0;display:flex;align-items:stretch;border-radius:0 10px 10px 0;overflow:hidden;z-index:0;max-width:0;transition:max-width 0.25s ease">
       ${canAccept ? `<button onclick="doAccept('${t.id}')" style="padding:0 16px;background:#1565c0;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">✋<span>รับงาน</span></button>` : ''}
       ${canStart ? `<button onclick="doStart('${t.id}')" style="padding:0 16px;background:#e65100;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">⚙️<span>เริ่มซ่อม</span></button>` : ''}
       ${canComplete ? `<button onclick="openCompleteSheet('${t.id}')" style="padding:0 16px;background:#15803d;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">✅<span>บันทึกผล</span></button>` : ''}
       ${canVerify ? `<button onclick="openVerifySheet('${t.id}')" style="padding:0 16px;background:#166534;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">🔵<span>ตรวจรับ</span></button>` : ''}
-      ${canAssign ? `<button onclick="openAssignSheet('${t.id}')" style="padding:0 16px;background:#c8102e;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">👤<span>จ่ายงาน</span></button>` : ''}
+      ${canAssign ? `<button onclick="openAssignSheet('${t.id}')" style="padding:0 16px;background:#5b21b6;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:64px">👤<span>จ่ายงาน</span></button>` : ''}
       <button onclick="safeOpenDetail('${t.id}')" style="padding:0 14px;background:#334155;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:52px">📋<span>ดู</span></button>
       ${CU&&CU.role==='admin' ? `<button onclick="deleteTicket('${t.id}')" style="padding:0 14px;background:#dc2626;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:52px">🗑️<span>ลบ</span></button>` : ''}
     </div>
@@ -1373,8 +1183,10 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
           : ''}
         ${canVerify?`<button class="btn btn-xs" style="background:#2e7d32;color:white;font-size:0.63rem" onclick="openVerifySheet('${t.id}')">ตรวจรับ</button>`:''}
         ${canClose?`<button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="doClose('${t.id}')">ปิดงาน</button>`:''}
-        ${['done','verified','closed'].includes(t.status) && CU.role !== 'tech'
+        ${['done','verified','closed'].includes(t.status) || (CU.role==='tech' && t.assigneeId===CU.id && ['waiting_part','inprogress','accepted'].includes(t.status))
           ?`<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 รายงาน</button>`
+          : ['done','verified','closed'].includes(t.status)
+          ? `<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 PDF</button>`
           : ''}
       </div>`:`<div class="tk-actions" style="padding:6px 12px 10px">
         <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="safeOpenDetail('${t.id}')">ดูรายละเอียด</button>
@@ -1389,5 +1201,6 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
   if (_tkCardCache.size >= 300) {
     _tkCardCache.delete(_tkCardCache.keys().next().value);
   }
+  _tkCardCache.set(t.id, {hash: _hash, html: _html});
   return _html;
 }

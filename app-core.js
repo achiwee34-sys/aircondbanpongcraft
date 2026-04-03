@@ -293,7 +293,7 @@ const _LOGIN_MAX_ATTEMPTS = 5;
 const _LOGIN_LOCKOUT_MS   = 5 * 60 * 1000; // 5 นาที
 let _loginAttempts = 0;
 let _loginLockedUntil = 0;
-const TK_PER_PAGE = 10;
+const TK_PER_PAGE = 15;
 
 // (demo login removed)
 
@@ -1238,14 +1238,10 @@ async function generateRepairPDF(tid) {
   const poRows = (t.purchaseOrder?.rows||[]).filter(r=>r.name);
   // push เฉพาะ PO rows ที่ไม่ซ้ำกับ repairRows
   const repairNames = new Set(repairRows.map(r=>r.name.trim().toLowerCase()));
-  // ตรวจ refrigerant types ที่มีใน repairRows แล้ว ป้องกัน PO ซ้ำ
-  const REFS = ['R-22','R-32','R-407C','R-407c','R-410A','R-410a','R-134A','R-134a','R-141B'];
-  const usedRefs = new Set(REFS.filter(ref => repairRows.some(r=>r.name.includes(ref))));
   poRows.forEach(r => {
-    const nm = (r.name||'').trim().toLowerCase();
-    if (repairNames.has(nm)) return; // ชื่อซ้ำตรงๆ
-    if (REFS.some(ref => r.name.includes(ref) && usedRefs.has(ref))) return; // refrigerant ซ้ำ
-    quotRows.push({ name:r.name, qty:r.qty||1, unit:'EA', unitPrice:r.price||0, total:(r.qty||1)*(r.price||0) });
+    if (!repairNames.has((r.name||'').trim().toLowerCase())) {
+      quotRows.push({ name:r.name, qty:r.qty||1, unit:'EA', unitPrice:r.price||0, total:(r.qty||1)*(r.price||0) });
+    }
   });
 
   const subTotal    = quotRows.reduce((s,r)=>s+r.total,0);
@@ -2722,13 +2718,7 @@ function goPage(name) {
   requestAnimationFrame(() => {
     if (name === 'home') renderHome();
     else if (name === 'executive') renderExecutiveDashboard();
-    else if (name === 'tickets') {
-      // แสดงปุ่ม multi-select เฉพาะ admin
-      const msBtn = document.getElementById('multi-select-toggle');
-      if (msBtn) msBtn.style.display = CU?.role === 'admin' ? 'block' : 'none';
-      // reset multi-select ถ้าออกจาก tickets แล้วกลับมา
-      if (_multiSelectMode) exitMultiSelect(); else renderTickets();
-    }
+    else if (name === 'tickets') renderTickets();
     else if (name === 'mywork') renderMyWork();
     else if (name === 'tracking') {
       if (CU?.role === 'admin') renderTracking();
@@ -2761,7 +2751,7 @@ function goPage(name) {
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 1800);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 4000);
       }
-      setTimeout(()=>{ const priField=document.getElementById('nt-priority-field'); if(priField) priField.style.display='none'; },50);
+      setTimeout(()=>{ setPriority('mid'); const priField=document.getElementById('nt-priority-field'); if(priField) priField.style.display=CU.role==='reporter'?'none':''; },50);
     }
     else if (name === 'chat') { renderChatPage(); }
     else if (name === 'settings') { renderSettingsPage(); renderTopbarAvatar(); }

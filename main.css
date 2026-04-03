@@ -10,7 +10,7 @@
   --ok: #1a8a4a;
   --warn: #e65100;
   --yellow: #f59e0b;
-  --purple: #c8102e;
+  --purple: #7c3aed;
   --text: #1a1a2e;
   --muted: #6b7280;
   --border: rgba(200,16,46,0.15);
@@ -1044,7 +1044,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 .btn-warn { background: var(--warn); color: white; }
 .btn-yellow { background: var(--yellow); color: #1a1200; }
 .btn-ghost { background: #f3f4f6; color: var(--text); border: 1px solid #e5e7eb; }
-.btn-purple { background: rgba(200,16,46,0.1); color: var(--purple); border: 1px solid rgba(200,16,46,0.25); }
+.btn-purple { background: rgba(124,58,237,0.1); color: var(--purple); border: 1px solid rgba(124,58,237,0.25); }
 .btn-sm { padding: 7px 12px; font-size: 0.78rem; border-radius: 10px; }
 .btn-xs { padding: 5px 9px; font-size: 0.72rem; border-radius: 8px; }
 
