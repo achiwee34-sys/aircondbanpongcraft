@@ -703,15 +703,21 @@ function renderRptPending(pending, inprog, waitP, highP) {
   el.innerHTML = `
     <!-- mini stats row -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px">
-      <div style="background:linear-gradient(135deg,#fff0f2,#fecaca);border-radius:13px;padding:10px 8px;text-align:center;border:1px solid #fca5a5">
+      <div onclick="goPage('tickets');setTimeout(()=>setTicketFilter&&setTicketFilter('high'),200)"
+        style="background:linear-gradient(135deg,#fff0f2,#fecaca);border-radius:13px;padding:10px 8px;text-align:center;border:1px solid #fca5a5;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform 0.12s,box-shadow 0.12s;active:transform:scale(0.96)"
+        ontouchstart="this.style.transform='scale(0.94)'" ontouchend="this.style.transform=''">
         <div style="font-size:1.4rem;font-weight:900;color:#c8102e;line-height:1">${highP.length}</div>
         <div style="font-size:0.6rem;color:#b91c1c;margin-top:3px;font-weight:700">🔴 ด่วนมาก</div>
       </div>
-      <div style="background:linear-gradient(135deg,#fff7ed,#fed7aa);border-radius:13px;padding:10px 8px;text-align:center;border:1px solid #fdba74">
+      <div onclick="goPage('tickets');setTimeout(()=>setTicketFilter&&setTicketFilter('waiting_part'),200)"
+        style="background:linear-gradient(135deg,#fff7ed,#fed7aa);border-radius:13px;padding:10px 8px;text-align:center;border:1px solid #fdba74;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform 0.12s"
+        ontouchstart="this.style.transform='scale(0.94)'" ontouchend="this.style.transform=''">
         <div style="font-size:1.4rem;font-weight:900;color:#ea580c;line-height:1">${waitP.length}</div>
         <div style="font-size:0.6rem;color:#c2410c;margin-top:3px;font-weight:700">⏳ รออะไหล่</div>
       </div>
-      <div style="background:linear-gradient(135deg,#eff6ff,#bfdbfe);border-radius:13px;padding:10px 8px;text-align:center;border:1px solid #93c5fd">
+      <div onclick="goPage('tickets');setTimeout(()=>setTicketFilter&&setTicketFilter('inprogress'),200)"
+        style="background:linear-gradient(135deg,#eff6ff,#bfdbfe);border-radius:13px;padding:10px 8px;text-align:center;border:1px solid #93c5fd;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform 0.12s"
+        ontouchstart="this.style.transform='scale(0.94)'" ontouchend="this.style.transform=''">
         <div style="font-size:1.4rem;font-weight:900;color:#1d4ed8;line-height:1">${inprog.length}</div>
         <div style="font-size:0.6rem;color:#1e40af;margin-top:3px;font-weight:700">⚙️ กำลังซ่อม</div>
       </div>
@@ -2460,6 +2466,24 @@ function openTechReqForm(tid) {
   document.body.appendChild(ov);
   document.body.appendChild(sh);
   renderTechReqRows();
+
+  // ── Keyboard fix: ปรับความสูง sheet เมื่อ keyboard ขึ้น/ลง ──
+  if (window.visualViewport) {
+    const _kbFix = () => {
+      if (!document.body.contains(sh)) {
+        window.visualViewport.removeEventListener('resize', _kbFix);
+        window.visualViewport.removeEventListener('scroll', _kbFix);
+        return;
+      }
+      const vvh = window.visualViewport.height;
+      const vvOffset = window.visualViewport.offsetTop;
+      sh.style.maxHeight = (vvh * 0.95) + 'px';
+      sh.style.bottom = '0px';
+      sh.style.transform = `translateY(${-vvOffset}px)`;
+    };
+    window.visualViewport.addEventListener('resize', _kbFix);
+    window.visualViewport.addEventListener('scroll', _kbFix);
+  }
 }
 function closeTechReqForm() {
   document.querySelectorAll('.tech-req-overlay,.tech-req-sheet').forEach(e=>e.remove());

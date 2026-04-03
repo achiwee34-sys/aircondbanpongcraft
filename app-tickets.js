@@ -299,6 +299,16 @@ function setFilter(type, val) {
   renderTickets();
 }
 
+// ── setTicketFilter: เรียกจากหน้าอื่น (report cards) ──
+function setTicketFilter(val) {
+  // val เป็น status key ('high'=priority, 'waiting_part'=status, 'inprogress'=status)
+  tkPage = 1; fMachineId = '';
+  if (val === 'high') { fPriority = 'high'; fStatus = ''; }
+  else { fStatus = val; fPriority = ''; }
+  updateStatusScroller();
+  renderTickets();
+}
+
 // ── Skeleton loaders ──
 function skeletonTickets(n=5) {
   return Array.from({length:n}, () => `

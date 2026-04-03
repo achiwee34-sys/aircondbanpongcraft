@@ -110,7 +110,7 @@ function buildUserCard(u, tm) {
 
   var roleTag = {tech:'ช่าง',reporter:'ผู้แจ้ง',admin:'Admin',executive:'ผู้บริหาร'}[u.role]||u.role;
 
-  // workload section
+  // ── workload + machine cards (tech only) ──
   var workHtml = '';
   if (u.role === 'tech') {
     var active = db.tickets.filter(function(t){
@@ -125,39 +125,82 @@ function buildUserCard(u, tm) {
     var pct     = Math.min(100, active.length*14);
     var barClr  = active.length>4?'#c8102e':active.length>2?'#f59e0b':'#22c55e';
     var manBtn  = (CU&&CU.role==='admin')
-      ? '<button onclick="openAdminManageTechTickets(\'' + u.id + '\')" style="margin-left:auto;font-size:0.65rem;padding:4px 10px;border-radius:7px;border:1.5px solid #c8102e;background:white;color:#c8102e;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">⚙️ จัดการงาน</button>'
+      ? '<button onclick="openAdminManageTechTickets(\'' + u.id + '\')" style="margin-left:auto;font-size:0.62rem;padding:4px 10px;border-radius:7px;border:1.5px solid #c8102e;background:white;color:#c8102e;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">⚙️ จัดการงาน</button>'
       : '';
-    workHtml = '<div style="border-top:1px solid #f1f5f9;padding:10px 14px;background:#fafafa">'
+
+    // ── machine cards: แสดงเครื่องที่มีงานค้างอยู่กับช่างคนนี้ ──
+    var macMap = typeof getMacMap==='function' ? getMacMap() : new Map();
+    var machineCards = '';
+    var uniqueMachines = [];
+    var seenMac = {};
+    active.forEach(function(t){
+      if (t.machineId && !seenMac[t.machineId]) {
+        seenMac[t.machineId] = true;
+        var mac = macMap.get(t.machineId);
+        uniqueMachines.push({ t: t, mac: mac });
+      }
+    });
+    if (uniqueMachines.length > 0) {
+      machineCards = '<div style="border-top:1px solid #f1f5f9;padding:8px 14px 10px;background:#fafafa">'
+        + '<div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px">เครื่องที่รับผิดชอบ</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+        + uniqueMachines.slice(0, 6).map(function(item) {
+            var mac = item.mac; var t = item.t;
+            var btu = mac&&mac.btu ? Number(mac.btu).toLocaleString()+' BTU' : '';
+            var macName = mac ? mac.name : (t.machine||'—');
+            var stColor = {new:'#6b7280',assigned:'#7c3aed',accepted:'#0891b2',inprogress:'#e65100',waiting_part:'#b45309',done:'#059669'}[t.status]||'#6b7280';
+            var stIcon  = {new:'🆕',assigned:'📋',accepted:'✋',inprogress:'⚙️',waiting_part:'⏳',done:'✅'}[t.status]||'❄️';
+            return '<div onclick="openDetail(\'' + t.id + '\')" style="background:white;border:1.5px solid #e2e8f0;border-radius:10px;padding:7px 10px;cursor:pointer;touch-action:manipulation;min-width:0;flex:1;min-width:130px;max-width:calc(50% - 3px);box-sizing:border-box;-webkit-tap-highlight-color:transparent"'
+              + ' ontouchstart="this.style.background=\'#f8fafc\'" ontouchend="this.style.background=\'white\'">'
+              + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">'
+              + '<span style="font-size:0.75rem">❄️</span>'
+              + '<div style="font-size:0.7rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">' + _esc(macName.length>18?macName.slice(0,18)+'…':macName) + '</div>'
+              + '</div>'
+              + (btu ? '<div style="font-size:0.58rem;color:#64748b;margin-bottom:3px">' + btu + '</div>' : '')
+              + '<div style="display:flex;align-items:center;gap:4px">'
+              + '<span style="font-size:0.65rem">' + stIcon + '</span>'
+              + '<span style="font-size:0.6rem;font-weight:700;color:' + stColor + '">' + t.id + '</span>'
+              + '</div>'
+              + '</div>';
+          }).join('')
+        + (uniqueMachines.length > 6 ? '<div style="font-size:0.65rem;color:#94a3b8;padding:6px;display:flex;align-items:center">+' + (uniqueMachines.length-6) + ' เครื่อง</div>' : '')
+        + '</div></div>';
+    }
+
+    workHtml = '<div style="border-top:1px solid #f1f5f9;padding:10px 14px 10px;background:#fafafa">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
-      + '<span style="font-size:0.68rem;color:#94a3b8;flex:1">ภาระงาน</span>'
+      + '<span style="font-size:0.65rem;color:#94a3b8;flex:1">ภาระงาน</span>'
       + '<span style="font-size:0.7rem;font-weight:900;color:'+barClr+'">'+active.length+' งานค้าง</span>'
-      + '<span style="font-size:0.68rem;color:#22c55e;font-weight:700">✅ '+doneMonth+' เดือนนี้</span>'
+      + '<span style="font-size:0.65rem;color:#22c55e;font-weight:700">✅ '+doneMonth+' เดือนนี้</span>'
       + manBtn + '</div>'
       + '<div style="background:#e5e7eb;border-radius:99px;height:5px;overflow:hidden;margin-bottom:6px">'
-      + '<div style="height:100%;width:'+pct+'%;background:'+barClr+';border-radius:99px"></div></div>'
+      + '<div style="height:100%;width:'+pct+'%;background:'+barClr+';border-radius:99px;transition:width 0.5s"></div></div>'
       + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
-      + (urgent>0  ? '<span style="font-size:0.65rem;background:#fff0f2;color:#c8102e;border:1px solid #fecaca;border-radius:6px;padding:2px 7px;font-weight:700">🔴 '+urgent+' ด่วน</span>':'')
-      + (waiting>0 ? '<span style="font-size:0.65rem;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:2px 7px;font-weight:700">⏳ '+waiting+' รออะไหล่</span>':'')
-      + (active.length===0 ? '<span style="font-size:0.68rem;color:#94a3b8">✨ ไม่มีงานค้าง</span>':'')
-      + '</div></div>';
+      + (urgent>0  ? '<span style="font-size:0.62rem;background:#fff0f2;color:#c8102e;border:1px solid #fecaca;border-radius:6px;padding:2px 7px;font-weight:700">🔴 '+urgent+' ด่วน</span>':'')
+      + (waiting>0 ? '<span style="font-size:0.62rem;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:2px 7px;font-weight:700">⏳ '+waiting+' รออะไหล่</span>':'')
+      + (active.length===0 ? '<span style="font-size:0.65rem;color:#94a3b8">✨ ไม่มีงานค้าง</span>':'')
+      + '</div></div>'
+      + machineCards;
   }
 
-  return '<div style="background:white;border-radius:16px;margin-bottom:10px;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.05)">'
+  var canDelete = (CU && CU.role === 'admin' && u.id !== CU.id);
+
+  return '<div style="background:white;border-radius:16px;margin-bottom:10px;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.05);overflow:hidden">'
     + '<div style="display:flex;align-items:center;gap:12px;padding:13px 14px">'
     + '<div style="width:48px;height:48px;border-radius:50%;background:'+avatarBg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.12)">'+avatarHtml+'</div>'
     + '<div style="flex:1;min-width:0">'
-    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">'
-    + '<div style="font-size:0.92rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_esc(u.name)+'</div>'
+    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap">'
+    + '<div style="font-size:0.92rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">'+_esc(u.name)+'</div>'
     + '<span style="background:'+tm.bg+';color:'+tm.cl+';border:1px solid '+tm.bd+';border-radius:99px;padding:1px 7px;font-size:0.6rem;font-weight:800;flex-shrink:0">'+roleTag+'</span>'
     + '</div>'
-    + '<div style="font-size:0.72rem;color:#94a3b8;display:flex;gap:6px;flex-wrap:wrap">'
+    + '<div style="font-size:0.7rem;color:#94a3b8;display:flex;gap:5px;flex-wrap:wrap">'
     + '<span>@'+_esc(u.username)+'</span>'
     + (u.dept?'<span>· '+_esc(u.dept)+'</span>':'')
     + (u.tel ?'<span>· 📞 '+_esc(u.tel)+'</span>':'')
     + '</div></div>'
-    + '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">'
-    + '<button onclick="openUserSheet(\''+u.id+'\')" style="width:40px;height:40px;background:#f1f5f9;border:none;border-radius:10px;font-size:1rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center">✏️</button>'
-    + '<button onclick="delUser(\''+u.id+'\')" style="width:40px;height:40px;background:#fff0f2;border:none;border-radius:10px;font-size:1rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center">🗑️</button>'
+    + '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">'
+    + '<button onclick="openUserSheet(\''+u.id+'\')" title="แก้ไข" style="width:36px;height:36px;background:#f1f5f9;border:none;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">✏️</button>'
+    + (canDelete ? '<button onclick="delUser(\''+u.id+'\')" title="ลบ" style="width:36px;height:36px;background:#fff0f2;border:1px solid #fecaca;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">🗑️</button>' : '<div style="width:36px;height:36px"></div>')
     + '</div></div>'
     + workHtml + '</div>';
 }

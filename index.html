@@ -2527,7 +2527,7 @@
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
             <span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:6px;padding:2px 9px;font-size:0.7rem;font-weight:800">✅ หลังซ่อม</span>
           </div>
-          <div class="photo-upload" onclick="document.getElementById('c-pics').click()" style="border-radius:12px;padding:10px">
+          <div class="photo-upload" onclick="openPhotoAfterSheet()" style="border-radius:12px;padding:10px">
             <input type="file" id="c-pics" accept="image/*" multiple onchange="previewPics(this,'c-grid','after')"/>
             <input type="file" id="c-pics-cam" accept="image/*" capture="environment" onchange="previewPics(this,'c-grid','after')" style="display:none"/>
             <div style="font-size:1.2rem">📷</div>

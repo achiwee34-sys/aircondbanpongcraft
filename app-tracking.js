@@ -145,6 +145,50 @@ function removePic(i, gridId, type) {
 }
 function openLightbox(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').classList.add('open'); }
 
+// ── Photo action sheet — เลือก "ถ่ายรูป" หรือ "เลือกจากแกลเลอรี" ──
+function openPhotoAfterSheet() {
+  // ถ้าไม่ใช่ iOS / mobile ให้เปิด gallery เลย
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (!isIOS && !isMobile) { document.getElementById('c-pics').click(); return; }
+
+  // ลบ sheet เก่าถ้ามี
+  document.getElementById('_photo-action-sheet')?.remove();
+  document.getElementById('_photo-action-overlay')?.remove();
+
+  const ov = document.createElement('div');
+  ov.id = '_photo-action-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:99998;animation:fadeIn 0.15s ease';
+  ov.onclick = () => { ov.remove(); sheet.remove(); };
+
+  const sheet = document.createElement('div');
+  sheet.id = '_photo-action-sheet';
+  sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:white;border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);font-family:inherit;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
+  sheet.innerHTML = `
+    <div style="width:40px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 16px"></div>
+    <div style="font-size:0.85rem;font-weight:800;color:#374151;margin-bottom:14px;text-align:center">เลือกรูปหลังซ่อม</div>
+    <button id="_ps-cam" style="width:100%;padding:16px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;font-size:0.92rem;font-weight:700;color:#15803d;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;touch-action:manipulation">
+      <span style="font-size:1.4rem">📷</span> ถ่ายรูป
+    </button>
+    <button id="_ps-gal" style="width:100%;padding:16px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:14px;font-size:0.92rem;font-weight:700;color:#0369a1;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;touch-action:manipulation">
+      <span style="font-size:1.4rem">🖼️</span> เลือกจากคลังรูป
+    </button>
+    <button id="_ps-cancel" style="width:100%;padding:14px;background:white;border:1.5px solid #e2e8f0;border-radius:14px;font-size:0.88rem;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit;touch-action:manipulation">ยกเลิก</button>`;
+
+  document.body.appendChild(ov);
+  document.body.appendChild(sheet);
+
+  sheet.querySelector('#_ps-cam').onclick = () => {
+    ov.remove(); sheet.remove();
+    document.getElementById('c-pics-cam').click();
+  };
+  sheet.querySelector('#_ps-gal').onclick = () => {
+    ov.remove(); sheet.remove();
+    document.getElementById('c-pics').click();
+  };
+  sheet.querySelector('#_ps-cancel').onclick = () => { ov.remove(); sheet.remove(); };
+}
+
 function setPriority(val) {
   document.getElementById('nt-pri').value = val;
   const styles = {
@@ -2191,10 +2235,17 @@ function addPartRow() {
 function syncSummaryFromForm() {
   const sumEl = document.getElementById('c-sum');
   if (!sumEl) return;
+  // BTU fix: ดึง BTU จริงของเครื่องเพื่อแปลงชื่อรายการ
+  const _sfTid = document.getElementById('c-tid')?.value || '';
+  const _sfTicket = _sfTid ? db.tickets?.find(x=>x.id===_sfTid) : null;
+  const _sfMac = _sfTicket ? getMacMap().get(_sfTicket.machineId) : null;
+  const _sfBtu = _sfMac?.btu ? Number(_sfMac.btu) : 0;
   const parts = [];
   document.querySelectorAll('#c-repair-tags .rtag').forEach(tag => {
     const qty = parseInt(tag.dataset.qty)||1;
-    parts.push(qty>1 ? `${tag.dataset.val} ×${qty}` : tag.dataset.val);
+    const rawName = tag.dataset.val;
+    const displayName = (typeof formatItemName === 'function') ? formatItemName(rawName, _sfBtu) : rawName;
+    parts.push(qty>1 ? `${displayName} ×${qty}` : displayName);
   });
   document.querySelectorAll('#c-refrig-list .c-refrig-row').forEach(row => {
     const type = row.querySelector('.c-ref-type')?.value;
@@ -2484,9 +2535,14 @@ async function doComplete( /* PATCH v67 */) {
   try {
 
   const now = nowStr();
+  // ── BTU fix: แสดง BTU จริงของเครื่องใน summary แทน K-range ──
+  const _cMac = getMacMap ? getMacMap().get(t.machineId) : null;
+  const _cBtu = _cMac?.btu ? Number(_cMac.btu) : 0;
   const repairItems = tags.map(el=>{
     const qty=parseInt(el.dataset.qty||1);
-    return qty>1 ? el.dataset.val+' ×'+qty : el.dataset.val;
+    const rawName = el.dataset.val;
+    const displayName = (typeof formatItemName === 'function') ? formatItemName(rawName, _cBtu) : rawName;
+    return qty>1 ? displayName+' ×'+qty : displayName;
   }).filter(Boolean);
 
   // อะไหล่

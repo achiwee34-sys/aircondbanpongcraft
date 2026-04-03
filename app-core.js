@@ -674,10 +674,20 @@ function getPrice2(name, macBTU) {
   for(const grp of g){ const it=grp.items?.find(i=>i.name===name); if(it) return {price:it.price||0,unit:it.unit||'JOB'}; }
   if(typeof REPAIR_PRICE !== 'undefined' && REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
   if(macBTU > 0){
+    // ลอง strip "ขนาด X,XXX BTU" และ K-range notation
+    const baseNoSuffix = name.replace(/\s*ขนาด\s*[\d,]+\s*BTU\s*/gi,'').trim();
     const base = name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
-    if(base && base !== name){
-      const tier = typeof getRepairKeyByBTU==='function' ? getRepairKeyByBTU(base, macBTU) : null;
+    const baseToUse = (baseNoSuffix && baseNoSuffix !== name) ? baseNoSuffix : base;
+    if(baseToUse && baseToUse !== name){
+      const tier = typeof getRepairKeyByBTU==='function' ? getRepairKeyByBTU(baseToUse, macBTU) : null;
       if(tier && tier.price > 0) return {price:tier.price, unit:'JOB'};
+    }
+    // fallback: หาจาก repairGroups ที่ชื่อ startsWith base
+    if(baseToUse){
+      for(const grp of g){
+        const it=grp.items?.find(i=>i.name.startsWith(baseToUse));
+        if(it&&it.price>0) return{price:it.price,unit:it.unit||'JOB'};
+      }
     }
   }
   const refMap={'R-22':200,'R-32':350,'R-407C':330,'R-407c':330,'R-410A':340,'R-410a':340,'R-134A':330,'R-134a':330,'R-141B':280};
@@ -819,6 +829,16 @@ async function viewQuotationFull(tid) {
   };
   const items = parseItems()
     .filter(r => r.name && r.name.trim() !== '')
+    // ── normalize: ตัด trailing punctuation และ whitespace ──
+    .map(r => ({ ...r, name: r.name.trim().replace(/[.。．。]+$/, '').trim() }))
+    // ── dedup: รวม qty ถ้าชื่อเดียวกัน (case-insensitive, ignore trailing dot) ──
+    .reduce((acc, r) => {
+      const key = r.name.toLowerCase().replace(/\s+/g,' ');
+      const ex = acc.find(x => x.name.toLowerCase().replace(/\s+/g,' ') === key);
+      if (ex) { ex.qty += r.qty; }
+      else { acc.push({...r}); }
+      return acc;
+    }, [])
     .map(r=>{
       // inline getPrice — เหมือน generateRepairPDF (getPrice2 ไม่มีจริง)
       const _macBTU = machine&&machine.btu ? Number(machine.btu) : 0;
@@ -827,8 +847,21 @@ async function viewQuotationFull(tid) {
       for(const grp of _g){ const it=grp.items?.find(i=>i.name===r.name); if(it){price=it.price||0;unit=it.unit||'JOB';break;} }
       if(!price && (typeof REPAIR_PRICE !== 'undefined') && REPAIR_PRICE[r.name]) { price=REPAIR_PRICE[r.name]; unit='JOB'; }
       if(!price && _macBTU>0){
+        // ลอง strip "ขนาด X,XXX BTU" suffix ออก แล้วหาจาก tier
+        const baseNoSuffix = r.name.replace(/\s*ขนาด\s*[\d,]+\s*BTU\s*/gi,'').trim();
         const base=r.name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
-        if(base&&base!==r.name){ const tier=getRepairKeyByBTU(base,_macBTU); if(tier&&tier.price>0){price=tier.price;unit='JOB';} }
+        const baseToUse = (baseNoSuffix && baseNoSuffix !== r.name) ? baseNoSuffix : base;
+        if(baseToUse && baseToUse!==r.name){
+          const tier=getRepairKeyByBTU(baseToUse,_macBTU);
+          if(tier&&tier.price>0){price=tier.price;unit='JOB';}
+        }
+        // ลองค้นจาก repairGroups ด้วยชื่อ base
+        if(!price && baseToUse){
+          for(const grp of _g){
+            const it=grp.items?.find(i=>i.name.startsWith(baseToUse));
+            if(it&&it.price>0){price=it.price;unit=it.unit||'JOB';break;}
+          }
+        }
       }
       const refMap={'R-22':200,'R-32':350,'R-407C':330,'R-407c':330,'R-410A':340,'R-410a':340,'R-134A':330,'R-134a':330,'R-141B':280};
       if(!price){ for(const[ref,p]of Object.entries(refMap)){if(r.name.includes(ref)){price=p;unit='Kg.';break;}} }
