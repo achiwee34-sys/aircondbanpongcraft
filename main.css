@@ -914,8 +914,8 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 .rb-tech  { background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; }
 .rb-reporter { background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; }
 .tb-right { display: flex; align-items: center; gap: 8px; }
-@media (max-width: 640px) { .tb-logo-text { display: none !important; } #tb-page-title { display: block !important; } }
-@media (min-width: 641px) { #tb-page-title { display: none !important; } .tb-logo-text { display: inline !important; } }
+@media (max-width: 767px) { .tb-logo-text { display: none !important; } #tb-page-title { display: block !important; } }
+@media (min-width: 768px) { #tb-page-title { display: none !important; } .tb-logo-text { display: inline !important; } }
 .tb-btn { background: #f1f5f9; border: none; color: #0f172a; font-size: 1.4rem; cursor: pointer; padding: 6px; border-radius: 10px; position: relative; transition: background 0.12s; }
 .tb-btn:active { background: #e2e8f0; }
 .notif-dot { position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; border-radius: 50%; background: #c8102e; border: 2px solid white; display: none; }

@@ -3312,6 +3312,45 @@ document.addEventListener('visibilitychange', () => {
     setTimeout(resetAllOverlays, 200);
   }
 });
+
+// ── Session Auto-Restore ──
+// ถ้ามี session ที่ยังไม่หมดอายุ → ข้ามหน้า login แสดง app ทันที
+(function autoRestoreSession() {
+  try {
+    var raw = localStorage.getItem('aircon_session');
+    if (!raw) return;
+    var s = JSON.parse(raw);
+    if (!s || !s.uid || !s.exp || Date.now() > s.exp) {
+      localStorage.removeItem('aircon_session');
+      return;
+    }
+    // หา user จาก DB
+    var dbRaw = localStorage.getItem('airtrack_pwa');
+    if (!dbRaw) return;
+    var dbObj = JSON.parse(dbRaw);
+    if (!dbObj || !Array.isArray(dbObj.users)) return;
+    var user = dbObj.users.find(function(u){ return u.id === s.uid; });
+    if (!user || !user.role) return;
+
+    // restore CU และแสดง app ทันที
+    window._autoRestoreUser = user;
+    document.addEventListener('DOMContentLoaded', function() {
+      // รอให้ JS ทุกไฟล์โหลดเสร็จก่อน
+      setTimeout(function() {
+        if (typeof CU !== 'undefined' && typeof initApp === 'function' && !CU) {
+          CU = window._autoRestoreUser;
+          var ls = document.getElementById('login-screen');
+          var app = document.getElementById('app');
+          if (ls) ls.style.display = 'none';
+          if (app) app.classList.add('visible');
+          initApp();
+        }
+      }, 50);
+    });
+  } catch(e) {
+    console.warn('[autoRestore] error:', e);
+  }
+})();
 </script>
 </body>
 </html>
