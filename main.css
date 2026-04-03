@@ -1530,10 +1530,16 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 /* #pg-users button / #users-list rules consolidated above — ดู Bug1-fix section */
 
 /* ── Redesigned sheets: scrollable body ── */
+#user-sheet.open,
+#mqr-sheet.open,
+#deptqr-sheet.open {
+  flex-direction: column;
+}
 #user-sheet .sheet-body,
 #mqr-sheet .sheet-body,
 #deptqr-sheet .sheet-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -1541,4 +1547,5 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 #mqr-sheet .sheet-actions,
 #deptqr-sheet .sheet-actions {
   flex-shrink: 0;
+  min-height: fit-content;
 }
