@@ -353,7 +353,6 @@ async function _doSubmitTicket(mid, prob) {
   ['nt-prob','nt-detail','nt-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('nt-mac').value='';
   document.getElementById('nt-dept').value='';
-  if (typeof resetDeptPicker === 'function') resetDeptPicker();
   document.getElementById('nt-room-wrap').style.display='none';
   document.getElementById('nt-equip-card').style.display='none';
   document.getElementById('nt-grid').innerHTML='';
