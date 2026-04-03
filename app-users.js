@@ -209,7 +209,7 @@ function openUserSheet(id, defaultRole) {
   // Guard: ถ้า db ยังไม่มีเลย (ไม่ใช่แค่ Firebase ช้า)
   if (!window.db) { showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่'); return; }
   if (!db.users) db.users = [];
-  // Cleanup: ลบ overlay ที่ค้างอยู่ก่อนเปิด sheet
+  // Force remove cdel-overlay และ overlay อื่นๆ ที่ค้างอยู่ก่อน
   document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(function(el){el.remove();});
   document.querySelectorAll('.sheet-overlay').forEach(function(o){
     if (o.id !== 'user-overlay') { o.classList.remove('open'); o.style.display = ''; }
@@ -217,7 +217,11 @@ function openUserSheet(id, defaultRole) {
   document.querySelectorAll('.sheet').forEach(function(s){
     if (s.id !== 'user-sheet') { s.classList.remove('open'); s.style.visibility=''; s.style.pointerEvents=''; }
   });
+  // รอ 1 frame ให้ browser render การลบ overlay ก่อน แล้วค่อยเปิด sheet
+  requestAnimationFrame(function() { _doOpenUserSheet(id, defaultRole); });
+}
 
+function _doOpenUserSheet(id, defaultRole) {
   var u    = id ? db.users.find(function(x){return x.id===id;}) : null;
   var role = (u&&u.role)||defaultRole||currentUserTab||'reporter';
   var roleLabel = {admin:'แอดมิน',tech:'ช่างซ่อม',reporter:'ผู้แจ้งงาน',executive:'ผู้บริหาร'};
@@ -340,19 +344,21 @@ function showConfirmDelete(u, onConfirm) {
   var ov = document.createElement('div');
   ov.className = 'cdel-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
-  ov.innerHTML = '<div style="background:white;border-radius:20px;padding:24px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'
-    + '<div style="font-size:2rem;margin-bottom:12px">🗑️</div>'
+  var box = document.createElement('div');
+  box.style.cssText = 'background:white;border-radius:20px;padding:24px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)';
+  box.innerHTML = '<div style="font-size:2rem;margin-bottom:12px">🗑️</div>'
     + '<div style="font-size:1rem;font-weight:800;margin-bottom:8px">ลบผู้ใช้?</div>'
     + '<div style="font-size:0.85rem;color:#64748b;margin-bottom:6px"><b>'+_esc(u.name)+'</b><br>@'+_esc(u.username)+'</div>'
     + '<div style="font-size:0.75rem;color:#ef4444;background:#fff0f0;border-radius:10px;padding:8px;margin-bottom:20px">⚠️ ไม่สามารถย้อนกลับได้</div>'
     + '<div style="display:flex;gap:10px">'
-    + '<button id="cdel-cancel" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #e5e7eb;background:white;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>'
-    + '<button id="cdel-confirm" style="flex:1;padding:12px;border-radius:12px;border:none;background:#c8102e;color:white;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ลบเลย</button>'
-    + '</div></div>';
+    + '<button class="cdel-cancel-btn" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #e5e7eb;background:white;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>'
+    + '<button class="cdel-confirm-btn" style="flex:1;padding:12px;border-radius:12px;border:none;background:#c8102e;color:white;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ลบเลย</button>'
+    + '</div>';
+  ov.appendChild(box);
   document.body.appendChild(ov);
-  ov.querySelector('#cdel-cancel').onclick  = function(){ov.remove();};
-  ov.querySelector('#cdel-confirm').onclick = function(){ov.remove(); setTimeout(onConfirm, 50);};
-  ov.onclick = function(e){if(e.target===ov)ov.remove();};
+  box.querySelector('.cdel-cancel-btn').addEventListener('click', function(e){ e.stopPropagation(); ov.remove(); });
+  box.querySelector('.cdel-confirm-btn').addEventListener('click', function(e){ e.stopPropagation(); ov.remove(); setTimeout(onConfirm, 50); });
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
 }
 
 // ── Admin manage tech tickets ──

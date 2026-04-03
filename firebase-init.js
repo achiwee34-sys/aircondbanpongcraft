@@ -52,6 +52,9 @@ function initFirebase() {
 // โหลดข้อมูลจาก Firestore → เขียนทับ db local
 async function fsLoad() {
   if (!_firebaseReady || !FSdb) return false;
+  // รอ Anonymous Auth ก่อน — ถ้า auth ยังไม่พร้อม Firestore จะ reject ด้วย permission-denied
+  const authed = await _waitForAuth(8000);
+  if (!authed) { console.warn('[fsLoad] Auth timeout — skip load'); return false; }
   const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
   const DEMO_IDS       = ['u2','u3','u4','u5'];
   try {
@@ -209,8 +212,11 @@ async function forceReloadFromFS() {
 }
 
 // realtime listener
-function fsListen() {
+async function fsListen() {
   if (!_firebaseReady || !FSdb) return;
+  // รอ auth ก่อน attach listener — ป้องกัน permission-denied
+  const authed = await _waitForAuth(8000);
+  if (!authed) { console.warn('[fsListen] Auth timeout — skip listener'); return; }
   if (_fsListener) _fsListener();
 
   let _refreshTimer = null;
