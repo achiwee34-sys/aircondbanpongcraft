@@ -2001,8 +2001,8 @@ function renderPurchaseAdmin() {
     const btnDetail = `<button onclick="openDetail('${t.id}')" style="padding:6px 10px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">ดูงาน</button>`;
 
     return `
-    <div style="background:white;border-radius:14px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #f1f5f9;position:relative">
-      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${stripe};border-radius:3px 0 0 3px"></div>
+    <div style="background:white;border-radius:14px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1.5px solid ${stripe}33;position:relative">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${stripe};border-radius:3px 0 0 3px"></div>
 
       <!-- Header (compact) -->
       <div style="padding:9px 10px 7px 14px">
