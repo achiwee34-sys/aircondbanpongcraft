@@ -2722,13 +2722,7 @@ function goPage(name) {
   requestAnimationFrame(() => {
     if (name === 'home') renderHome();
     else if (name === 'executive') renderExecutiveDashboard();
-    else if (name === 'tickets') {
-      // แสดงปุ่ม multi-select เฉพาะ admin
-      const msBtn = document.getElementById('multi-select-toggle');
-      if (msBtn) msBtn.style.display = CU?.role === 'admin' ? 'block' : 'none';
-      // reset multi-select ถ้าออกจาก tickets แล้วกลับมา
-      if (_multiSelectMode) exitMultiSelect(); else renderTickets();
-    }
+    else if (name === 'tickets') renderTickets();
     else if (name === 'mywork') renderMyWork();
     else if (name === 'tracking') {
       if (CU?.role === 'admin') renderTracking();

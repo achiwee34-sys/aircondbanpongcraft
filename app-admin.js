@@ -238,8 +238,6 @@ window.addEventListener('resize', () => {
   let baseH = 0;
 
   function setVH(h) {
-    // ป้องกันค่าผิดปกติ — ถ้า h น้อยกว่า 400px ให้ใช้ screen.height แทน
-    if (h < 400) h = window.screen.height || window.outerHeight || 768;
     root.style.setProperty('--vh', (h * 0.01) + 'px');
   }
 
@@ -247,11 +245,6 @@ window.addEventListener('resize', () => {
   function init() {
     baseH = window.innerHeight;
     setVH(baseH);
-    // วัดซ้ำหลัง paint เสร็จ — ป้องกัน browser ยังไม่ layout เต็ม
-    requestAnimationFrame(() => {
-      const h2 = window.innerHeight;
-      if (h2 !== baseH && h2 >= 400) { baseH = h2; setVH(baseH); }
-    });
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

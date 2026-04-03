@@ -353,7 +353,6 @@ async function _doSubmitTicket(mid, prob) {
   ['nt-prob','nt-detail','nt-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('nt-mac').value='';
   document.getElementById('nt-dept').value='';
-  if (typeof resetDeptPicker === 'function') resetDeptPicker();
   document.getElementById('nt-room-wrap').style.display='none';
   document.getElementById('nt-equip-card').style.display='none';
   document.getElementById('nt-grid').innerHTML='';
@@ -447,21 +446,21 @@ function openAssignSheet(tid) {
 
     // avatar
     const avatar = u.photo
-      ? `<img src="${u.photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid ${isSelected?'#c8102e':'#e2e8f0'};flex-shrink:0">`
-      : `<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,${isSelected?'#9b0b22,#c8102e':'#475569,#334155'});display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2.5px solid ${isSelected?'#c8102e':'transparent'}">
+      ? `<img src="${u.photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid ${isSelected?'#6366f1':'#e2e8f0'};flex-shrink:0">`
+      : `<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,${isSelected?'#4f46e5,#6366f1':'#475569,#334155'});display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2.5px solid ${isSelected?'#6366f1':'transparent'}">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>`;
 
     return `<div class="tech-item${isSelected?' sel':''}" id="tc-${u.id}" onclick="pickTech('${u.id}')"
-      style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;border:2px solid ${isSelected?'#c8102e':'#e5e7eb'};background:${isSelected?'linear-gradient(135deg,#fff0f2,#ffe4e8)':'white'};cursor:pointer;transition:all 0.18s;touch-action:manipulation;box-shadow:${isSelected?'0 4px 16px rgba(200,16,46,0.2)':'0 1px 4px rgba(0,0,0,0.04)'}">
+      style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;border:2px solid ${isSelected?'#6366f1':'#e5e7eb'};background:${isSelected?'linear-gradient(135deg,#eef2ff,#e0e7ff)':'white'};cursor:pointer;transition:all 0.18s;touch-action:manipulation;box-shadow:${isSelected?'0 4px 16px rgba(99,102,241,0.2)':'0 1px 4px rgba(0,0,0,0.04)'}">
       ${avatar}
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
-          <div style="font-size:0.92rem;font-weight:800;color:${isSelected?'#9b0b22':'#0f172a'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
+          <div style="font-size:0.92rem;font-weight:800;color:${isSelected?'#3730a3':'#0f172a'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
           <span style="flex-shrink:0;font-size:0.6rem;font-weight:800;padding:2px 8px;border-radius:99px;background:${wCfg.badgeBg};color:${wCfg.badgeColor};border:1px solid ${wCfg.bdr}">${wCfg.badge}</span>
-          ${isSelected?`<span style="flex-shrink:0;font-size:0.6rem;font-weight:800;padding:2px 8px;border-radius:99px;background:#ffe4e8;color:#9b0b22;border:1px solid #fca5a5">✓ เลือกแล้ว</span>`:''}
+          ${isSelected?`<span style="flex-shrink:0;font-size:0.6rem;font-weight:800;padding:2px 8px;border-radius:99px;background:#e0e7ff;color:#4338ca;border:1px solid #c7d2fe">✓ เลือกแล้ว</span>`:''}
         </div>
-        <div style="font-size:0.72rem;color:${isSelected?'#c8102e':'#64748b'};margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        <div style="font-size:0.72rem;color:${isSelected?'#6366f1':'#64748b'};margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
           ${u.dept||'ช่างเทคนิค'}
         </div>
         <!-- Workload bar -->
@@ -482,17 +481,17 @@ function pickTech(id) {
   document.querySelectorAll('.tech-item').forEach(card => {
     const selected = card.id === 'tc-'+id;
     card.classList.toggle('sel', selected);
-    card.style.borderColor = selected ? '#c8102e' : '#e5e7eb';
-    card.style.background  = selected ? 'linear-gradient(135deg,#fff0f2,#ffe4e8)' : 'white';
-    card.style.boxShadow   = selected ? '0 4px 16px rgba(200,16,46,0.2)' : '0 1px 4px rgba(0,0,0,0.04)';
+    card.style.borderColor = selected ? '#6366f1' : '#e5e7eb';
+    card.style.background  = selected ? 'linear-gradient(135deg,#eef2ff,#e0e7ff)' : 'white';
+    card.style.boxShadow   = selected ? '0 4px 16px rgba(99,102,241,0.2)' : '0 1px 4px rgba(0,0,0,0.04)';
     // update avatar border
     const img = card.querySelector('img');
-    if (img) img.style.borderColor = selected ? '#c8102e' : '#e2e8f0';
+    if (img) img.style.borderColor = selected ? '#6366f1' : '#e2e8f0';
     const avatarDiv = card.querySelector('div[style*="border-radius:50%"]');
-    if (avatarDiv && !img) avatarDiv.style.border = selected ? '2.5px solid #c8102e' : '2.5px solid transparent';
+    if (avatarDiv && !img) avatarDiv.style.border = selected ? '2.5px solid #6366f1' : '2.5px solid transparent';
     // update name color
     const nameEl = card.querySelector('div[style*="font-weight:800"]');
-    if (nameEl) nameEl.style.color = selected ? '#9b0b22' : '#0f172a';
+    if (nameEl) nameEl.style.color = selected ? '#3730a3' : '#0f172a';
   });
 }
 function doAssign() {
