@@ -192,17 +192,18 @@ function openPhotoAfterSheet() {
 function setPriority(val) {
   document.getElementById('nt-pri').value = val;
   const styles = {
-    high: { border:'#ef4444', bg:'#fff5f5', shadow:'rgba(239,68,68,0.2)' },
+    high: { border:'#ef4444', bg:'#fff0f0', shadow:'rgba(239,68,68,0.2)' },
+    mid:  { border:'#f59e0b', bg:'#fffbeb', shadow:'rgba(245,158,11,0.2)' },
     low:  { border:'#22c55e', bg:'#f0fdf4', shadow:'rgba(34,197,94,0.2)' },
   };
-  ['high','low'].forEach(p => {
-    const btn = document.getElementById('cs-pri-'+p) || document.getElementById('pri-'+p);
+  ['high','mid','low'].forEach(p => {
+    const btn = document.getElementById('pri-'+p);
     if (!btn) return;
     const s = styles[p];
     const active = p === val;
     btn.style.borderColor = active ? s.border : '#e2e8f0';
     btn.style.background  = active ? s.bg : '#f8fafc';
-    btn.style.transform   = active ? 'scale(1.04)' : 'scale(1)';
+    btn.style.transform   = active ? 'scale(1.06)' : 'scale(1)';
     btn.style.boxShadow   = active ? `0 4px 14px ${s.shadow}` : 'none';
     btn.style.opacity     = active ? '1' : '0.65';
   });

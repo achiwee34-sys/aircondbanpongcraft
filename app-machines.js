@@ -154,53 +154,17 @@ function openMachineHistory(mid) {
 // ── AIR ID Search ──────────────────────────────────────────────
 function openAirIdSearch() {
   document.getElementById('airsearch-input').value = '';
+  document.getElementById('airsearch-results').innerHTML =
+    '<div style="text-align:center;padding:40px 16px;color:#94a3b8"><div style="font-size:2rem;margin-bottom:8px">🔍</div><div style="font-size:0.85rem;font-weight:700">พิมพ์ AIR ID, Serial หรือชื่อเครื่อง</div><div style="font-size:0.72rem;margin-top:4px">เพื่อดูประวัติและค่าใช้จ่ายทั้งหมด</div></div>';
   openSheet('airsearch');
-  setTimeout(() => {
-    renderAirSearchResults();
-    const inp = document.getElementById('airsearch-input');
-    if(inp) inp.focus();
-  }, 350);
+  setTimeout(() => { const inp = document.getElementById('airsearch-input'); if(inp) inp.focus(); }, 350);
 }
 
 function renderAirSearchResults() {
   const q = (document.getElementById('airsearch-input').value||'').trim().toLowerCase();
   const el = document.getElementById('airsearch-results');
   if (!q) {
-    // แสดงงานซ่อมล่าสุด 10 รายการ
-    const recentTix = (db.tickets||[])
-      .slice()
-      .sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))
-      .slice(0,10);
-    if (!recentTix.length) {
-      el.innerHTML = '<div style="text-align:center;padding:32px 16px;color:#94a3b8"><div style="font-size:0.8rem">ยังไม่มีงานซ่อม</div></div>';
-      return;
-    }
-    const statusLabel = {new:'ใหม่',assigned:'จ่ายงาน',working:'กำลังซ่อม',done:'เสร็จแล้ว',verified:'ยืนยัน',closed:'ปิดงาน'};
-    const statusColor = {new:'#f59e0b',assigned:'#3b82f6',working:'#8b5cf6',done:'#10b981',verified:'#0891b2',closed:'#94a3b8'};
-    el.innerHTML = `
-      <div style="font-size:0.68rem;font-weight:800;color:#94a3b8;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;padding:0 2px">งานซ่อมล่าสุด</div>
-      ${recentTix.map(t => {
-        const m = (db.machines||[]).find(x=>x.id===t.machineId||x.name===t.machine);
-        const st = t.status||'new';
-        const stColor = statusColor[st]||'#94a3b8';
-        const stLabel = statusLabel[st]||st;
-        return `
-        <div onclick="closeSheet('airsearch');setTimeout(()=>safeOpenDetail('${t.id}'),220)"
-          style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent"
-          onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
-            <div style="flex:1;min-width:0">
-              <div style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#c8102e">${t.id}</div>
-              <div style="font-size:0.82rem;font-weight:800;color:#0f172a;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml((t.problem||'').slice(0,40))}${(t.problem||'').length>40?'…':''}</div>
-              ${m?`<div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${escapeHtml(m.name||'')}${m.dept?' · '+escapeHtml(m.dept):''}</div>`:''}
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
-              <span style="font-size:0.62rem;background:${stColor}18;color:${stColor};border:1px solid ${stColor}40;border-radius:6px;padding:2px 7px;font-weight:800">${stLabel}</span>
-              <span style="font-size:0.6rem;color:#94a3b8">${(t.createdAt||'').slice(0,10)}</span>
-            </div>
-          </div>
-        </div>`;
-      }).join('')}`;
+    el.innerHTML = '<div style="text-align:center;padding:32px 16px;color:#94a3b8"><div style="font-size:0.8rem">พิมพ์คำค้นหาเพื่อดูผลลัพธ์</div></div>';
     return;
   }
   const matched = (db.machines||[]).filter(m =>
