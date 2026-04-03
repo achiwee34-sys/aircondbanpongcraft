@@ -206,8 +206,9 @@ function buildUserCard(u, tm) {
 }
 
 function openUserSheet(id, defaultRole) {
-  // Guard: ถ้า db ยังไม่พร้อม
-  if (!window.db || !db.users) { showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่'); return; }
+  // Guard: ถ้า db ยังไม่มีเลย (ไม่ใช่แค่ Firebase ช้า)
+  if (!window.db) { showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่'); return; }
+  if (!db.users) db.users = [];
   // Cleanup: ลบ overlay ที่ค้างอยู่ก่อนเปิด sheet
   document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(function(el){el.remove();});
   document.querySelectorAll('.sheet-overlay').forEach(function(o){

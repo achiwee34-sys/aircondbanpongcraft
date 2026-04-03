@@ -2733,7 +2733,14 @@ function goPage(name) {
       if(pmPlanBtn) pmPlanBtn.style.display = CU.role==='admin' ? 'flex' : 'none';
       if(fabEl) fabEl.style.display = 'none';
     }
-    else if (name === 'users') { renderUsersSummary(); switchUserTab(currentUserTab||'tech'); if(typeof initUsersEvents==='function') initUsersEvents(); }
+    else if (name === 'users') {
+      renderUsersSummary(); switchUserTab(currentUserTab||'tech'); if(typeof initUsersEvents==='function') initUsersEvents();
+      // ถ้า Firebase ยังไม่ sync — retry หลังจากโหลดเสร็จ
+      if (typeof _firebaseReady !== 'undefined' && !_firebaseReady) {
+        setTimeout(function() { if(typeof renderUsersSummary==='function'){renderUsersSummary(); renderUsers();} }, 1500);
+        setTimeout(function() { if(typeof renderUsersSummary==='function'){renderUsersSummary(); renderUsers();} }, 4000);
+      }
+    }
     else if (name === 'new') {
       populateMachineSelect();
       // ── PATCH: ถ้า machines ยังว่าง ให้ retry หลังจาก Firebase โหลดเสร็จ ──

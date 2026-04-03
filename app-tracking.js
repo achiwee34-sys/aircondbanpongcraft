@@ -3177,6 +3177,10 @@ function refreshPage() {
   else if (active === 'tickets')  renderTickets();
   else if (active === 'mywork')   renderMyWork();
   else if (active === 'tracking') renderTracking();
+  else if (active === 'users') {
+    if (typeof renderUsersSummary === 'function') renderUsersSummary();
+    if (typeof renderUsers === 'function') renderUsers();
+  }
   else if (active === 'purchase') {
     // refresh ทั้ง list และ tracking inline
     if (CU?.role === 'admin') renderPurchaseAdmin();
