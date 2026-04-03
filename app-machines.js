@@ -61,43 +61,164 @@ function openMachineHistory(mid) {
   if (tickets.length === 0) {
     document.getElementById('mhist-body').innerHTML = '<div class="empty"><div class="ei">📭</div><p>ยังไม่มีประวัติการซ่อม</p></div>';
   } else {
-    const stats = {total: tickets.length,
-      done: tickets.filter(t=>['done','verified','closed'].includes(t.status)).length,
-      cost: tickets.reduce((s,t)=>s+(parseFloat(t.cost)||0),0)};
+    const totalCost    = tickets.reduce((s,t)=>s+(parseFloat(t.cost)||0),0);
+    const totalRepair  = tickets.reduce((s,t)=>s+(parseFloat(t.repairCost)||0),0);
+    const totalParts   = tickets.reduce((s,t)=>s+(parseFloat(t.partsCost)||0),0);
+    const doneCnt      = tickets.filter(t=>['done','verified','closed'].includes(t.status)).length;
     document.getElementById('mhist-body').innerHTML = `
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <div style="flex:1;background:#fff0f2;border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:1.4rem;font-weight:800;color:var(--accent)">${stats.total}</div>
-          <div style="font-size:0.68rem;color:var(--muted)">ครั้งทั้งหมด</div>
-        </div>
-        <div style="flex:1;background:#f0fdf4;border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:1.4rem;font-weight:800;color:#166534">${stats.done}</div>
-          <div style="font-size:0.68rem;color:var(--muted)">เสร็จสิ้น</div>
-        </div>
-        <div style="flex:1;background:#fffbeb;border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:1rem;font-weight:800;color:#92400e">${stats.cost>0?'฿'+stats.cost.toLocaleString():'-'}</div>
-          <div style="font-size:0.68rem;color:var(--muted)">ค่าใช้จ่ายรวม</div>
+      <!-- Grand Total Banner -->
+      <div style="background:linear-gradient(135deg,#7f1d1d,#c8102e);border-radius:16px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.06)"></div>
+        <div style="position:absolute;left:-15px;bottom:-15px;width:70px;height:70px;border-radius:50%;background:rgba(0,0,0,0.15)"></div>
+        <div style="position:relative">
+          <div style="font-size:0.62rem;font-weight:800;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">💰 ค่าใช้จ่ายสะสมทั้งหมด (${tickets.length} ครั้ง)</div>
+          <div style="font-size:2rem;font-weight:900;color:white;letter-spacing:-0.02em;line-height:1.1">${totalCost>0?'฿'+totalCost.toLocaleString():'฿0'}</div>
+          <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+            <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;backdrop-filter:blur(4px)">
+              <div style="font-size:0.6rem;color:rgba(255,255,255,0.7);font-weight:600">🔧 ค่าซ่อม</div>
+              <div style="font-size:0.9rem;font-weight:900;color:white">${totalRepair>0?'฿'+totalRepair.toLocaleString():'-'}</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;backdrop-filter:blur(4px)">
+              <div style="font-size:0.6rem;color:rgba(255,255,255,0.7);font-weight:600">🛒 ราคาซื้อของ</div>
+              <div style="font-size:0.9rem;font-weight:900;color:white">${totalParts>0?'฿'+totalParts.toLocaleString():'-'}</div>
+            </div>
+          </div>
         </div>
       </div>
-      ${tickets.map(t => `
-        <div style="border:1px solid #f0f0f0;border-radius:10px;padding:10px;margin-bottom:8px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
-            <span style="font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--accent)">#${t.id}</span>
-            <span class="tag ${stc(t.status)}" style="font-size:0.65rem">${sTH(t.status)}</span>
+      <!-- Summary stats -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px">
+        <div style="background:#fff0f2;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--accent)">${tickets.length}</div>
+          <div style="font-size:0.65rem;color:var(--muted)">ครั้งทั้งหมด</div>
+        </div>
+        <div style="background:#f0fdf4;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:#166534">${doneCnt}</div>
+          <div style="font-size:0.65rem;color:var(--muted)">เสร็จสิ้น</div>
+        </div>
+      </div>
+      <!-- Ticket list -->
+      ${tickets.map(t => {
+        const rc = parseFloat(t.repairCost)||0;
+        const pc = parseFloat(t.partsCost)||0;
+        const tc = parseFloat(t.cost)||0;
+        const poRows = (t.purchaseOrder?.rows||[]).filter(r=>r.name);
+        const prNum  = t.purchaseOrder?.pr||'';
+        const poNum  = t.purchaseOrder?.po||'';
+        return `
+        <div style="border:1px solid #f0f0f0;border-radius:12px;margin-bottom:8px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+          <!-- Header -->
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fafafa;border-bottom:1px solid #f0f0f0">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#c8102e;background:#fff0f2;border:1px solid #fecaca;border-radius:6px;padding:2px 7px">${t.id}</span>
+              <span class="tag ${stc(t.status)}" style="font-size:0.62rem">${sTH(t.status)}</span>
+            </div>
+            <span style="font-size:0.65rem;color:#94a3b8">${(t.createdAt||'').slice(0,10)}</span>
           </div>
-          <div style="font-weight:600;font-size:0.85rem;color:var(--text);margin-bottom:3px">${t.problem}</div>
-          ${t.detail?`<div style="font-size:0.75rem;color:var(--muted);margin-bottom:3px">${escapeHtml(t.detail)}</div>`:''}
-          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:0.7rem;color:var(--muted);margin-top:4px">
-            <span>📅 ${t.createdAt||''}</span>
-            ${t.assignee?`<span>🔧 ${t.assignee}</span>`:''}
-            ${t.cost?`<span>💰 ฿${parseFloat(t.cost).toLocaleString()}</span>`:''}
+          <!-- Body -->
+          <div style="padding:8px 10px">
+            <div style="font-weight:700;font-size:0.83rem;color:#0f172a;margin-bottom:4px">${escapeHtml(t.problem||'')}</div>
+            ${t.assignee?`<div style="font-size:0.7rem;color:#64748b;margin-bottom:4px">🔧 ${escapeHtml(t.assignee)}</div>`:''}
+            ${t.detail?`<div style="font-size:0.72rem;color:#64748b;margin-bottom:4px">${escapeHtml(t.detail)}</div>`:''}
+            <!-- ค่าใช้จ่ายแยกรายการ -->
+            ${(rc>0||pc>0||tc>0)?`
+            <div style="background:#f8fafc;border-radius:8px;padding:8px;margin-top:6px;display:flex;flex-direction:column;gap:4px">
+              ${rc>0?`<div style="display:flex;justify-content:space-between;font-size:0.72rem"><span style="color:#475569">🔧 ค่าซ่อม</span><span style="font-weight:800;color:#1d4ed8">฿${rc.toLocaleString()}</span></div>`:''}
+              ${pc>0?`<div style="display:flex;justify-content:space-between;font-size:0.72rem"><span style="color:#475569">🛒 ราคาซื้อของ</span><span style="font-weight:800;color:#d97706">฿${pc.toLocaleString()}</span></div>`:''}
+              ${(rc>0&&pc>0)?`<div style="height:1px;background:#e2e8f0;margin:2px 0"></div>`:''}
+              ${tc>0?`<div style="display:flex;justify-content:space-between;font-size:0.75rem"><span style="font-weight:800;color:#0f172a">รวม</span><span style="font-weight:900;color:#c8102e">฿${tc.toLocaleString()}</span></div>`:''}
+            </div>`:''}
+            <!-- รายการอะไหล่ที่สั่ง -->
+            ${poRows.length>0?`
+            <div style="margin-top:7px">
+              <div style="font-size:0.62rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">
+                🛒 รายการสั่งซื้ออะไหล่${prNum?` · <span style="color:#92400e;background:#fef3c7;border-radius:4px;padding:1px 5px">PR: ${prNum}</span>`:''}${poNum?` · <span style="color:#1d4ed8;background:#dbeafe;border-radius:4px;padding:1px 5px">PO: ${poNum}</span>`:''}
+              </div>
+              <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:3px">
+                ${poRows.map(r=>`
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem">
+                    <span style="color:#0f172a;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px">${escapeHtml(r.name)}</span>
+                    <span style="color:#78350f;white-space:nowrap">${r.qty||1} × ฿${Number(r.price||0).toLocaleString()} = <b>฿${((r.qty||1)*(r.price||0)).toLocaleString()}</b></span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>`:''}
+            ${t.parts&&!poRows.length?`<div style="font-size:0.7rem;color:#64748b;margin-top:5px">🔩 อะไหล่: ${escapeHtml(t.parts)}</div>`:''}
+            ${t.summary?`<div style="margin-top:6px;font-size:0.73rem;background:#f0fdf4;border:1px solid #d1fae5;border-radius:7px;padding:7px;color:#14532d">${formatSummary(t.summary)}</div>`:''}
           </div>
-          ${t.summary?`<div style="margin-top:6px;font-size:0.75rem;background:#f9fafb;border-radius:6px;padding:6px;color:var(--text)">${formatSummary(t.summary)}</div>`:''}
-          ${t.parts?`<div style="font-size:0.7rem;color:var(--muted);margin-top:3px">🔩 อะไหล่: ${escapeHtml(t.parts)}</div>`:''}
-        </div>`).join('')}`;
+        </div>`;
+      }).join('')}`;
   }
   openSheet('mhist');
 }
+
+// ── AIR ID Search ──────────────────────────────────────────────
+function openAirIdSearch() {
+  document.getElementById('airsearch-input').value = '';
+  document.getElementById('airsearch-results').innerHTML =
+    '<div style="text-align:center;padding:40px 16px;color:#94a3b8"><div style="font-size:2rem;margin-bottom:8px">🔍</div><div style="font-size:0.85rem;font-weight:700">พิมพ์ AIR ID, Serial หรือชื่อเครื่อง</div><div style="font-size:0.72rem;margin-top:4px">เพื่อดูประวัติและค่าใช้จ่ายทั้งหมด</div></div>';
+  openSheet('airsearch');
+  setTimeout(() => { const inp = document.getElementById('airsearch-input'); if(inp) inp.focus(); }, 350);
+}
+
+function renderAirSearchResults() {
+  const q = (document.getElementById('airsearch-input').value||'').trim().toLowerCase();
+  const el = document.getElementById('airsearch-results');
+  if (!q) {
+    el.innerHTML = '<div style="text-align:center;padding:32px 16px;color:#94a3b8"><div style="font-size:0.8rem">พิมพ์คำค้นหาเพื่อดูผลลัพธ์</div></div>';
+    return;
+  }
+  const matched = (db.machines||[]).filter(m =>
+    (m.serial||'').toLowerCase().includes(q) ||
+    (m.id||'').toLowerCase().includes(q) ||
+    (m.name||'').toLowerCase().includes(q) ||
+    (m.dept||'').toLowerCase().includes(q)
+  );
+  if (!matched.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px 16px;color:#94a3b8"><div style="font-size:1.6rem;margin-bottom:6px">📭</div><div style="font-size:0.82rem;font-weight:700">ไม่พบเครื่องแอร์</div></div>';
+    return;
+  }
+  el.innerHTML = matched.slice(0,30).map(m => {
+    const tix    = (db.tickets||[]).filter(t => t.machineId===m.id || t.machine===m.name);
+    const tixCnt = tix.length;
+    const totalCost   = tix.reduce((s,t)=>s+(parseFloat(t.cost)||0),0);
+    const totalRepair = tix.reduce((s,t)=>s+(parseFloat(t.repairCost)||0),0);
+    const totalParts  = tix.reduce((s,t)=>s+(parseFloat(t.partsCost)||0),0);
+    const activeCnt   = tix.filter(t=>!['done','verified','closed'].includes(t.status)).length;
+    const lastTk      = tix.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))[0];
+    return `
+    <div onclick="closeSheet('airsearch');setTimeout(()=>openMachineHistory('${m.id}'),220)"
+      style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent"
+      onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+      <!-- Top row: serial + dept -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#0891b2">${m.serial||m.id}</div>
+          <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${escapeHtml(m.name)}</div>
+          <div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${m.dept?escapeHtml(m.dept):''}${m.brand?' · '+escapeHtml(m.brand):''}${m.btu?' · '+Number(m.btu).toLocaleString()+' BTU':''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+          <span style="font-size:0.65rem;background:#f1f5f9;color:#475569;border-radius:6px;padding:2px 7px;font-weight:700">${tixCnt} งาน</span>
+          ${activeCnt>0?`<span style="font-size:0.62rem;background:#fff0f2;color:#c8102e;border:1px solid #fecaca;border-radius:6px;padding:1px 6px;font-weight:800">${activeCnt} ค้าง</span>`:''}
+        </div>
+      </div>
+      <!-- Cost summary row -->
+      ${totalCost>0?`
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:5px">
+        ${totalRepair>0?`<span style="font-size:0.67rem;background:#eff6ff;color:#1d4ed8;border-radius:6px;padding:2px 7px;font-weight:800">🔧 ฿${totalRepair.toLocaleString()}</span>`:''}
+        ${totalParts>0?`<span style="font-size:0.67rem;background:#fffbeb;color:#92400e;border-radius:6px;padding:2px 7px;font-weight:800">🛒 ฿${totalParts.toLocaleString()}</span>`:''}
+        <span style="font-size:0.67rem;background:#fff0f2;color:#c8102e;border:1px solid #fecaca;border-radius:6px;padding:2px 7px;font-weight:800">รวม ฿${totalCost.toLocaleString()}</span>
+      </div>`:'<div style="font-size:0.67rem;color:#94a3b8;margin-bottom:5px">ยังไม่มีค่าใช้จ่าย</div>'}
+      <!-- Last ticket -->
+      ${lastTk?`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:5px;border-top:1px dashed #f1f5f9">
+        <span style="font-size:0.65rem;color:#64748b">งานล่าสุด: <b style="color:#c8102e">${lastTk.id}</b> · ${escapeHtml((lastTk.problem||'').slice(0,30))}${(lastTk.problem||'').length>30?'…':''}</span>
+        <span style="font-size:0.62rem;color:#94a3b8">${(lastTk.createdAt||'').slice(0,10)}</span>
+      </div>`:''}
+      <div style="text-align:right;margin-top:4px;font-size:0.62rem;color:#0891b2;font-weight:700">แตะเพื่อดูประวัติทั้งหมด →</div>
+    </div>`;
+  }).join('');
+}
+
 
 // ============================================================
 // MACHINES

@@ -292,6 +292,8 @@ async function saveUser() {
   if (!d.username)  { showFormError('u-uname', 'กรุณากรอก Username');     hasErr=true; }
   if (!id && !pass) { showFormError('u-pass',  'กรุณาตั้งรหัสผ่าน');     hasErr=true; }
   if (hasErr) return;
+  var dupName = db.users.find(function(u){ return u.name.trim().toLowerCase()===d.name.toLowerCase()&&u.id!==id; });
+  if (dupName) { showFormError('u-name','ชื่อ-นามสกุล "'+d.name+'" มีผู้ใช้งานอยู่แล้ว'); return; }
   var dup = db.users.find(function(u){ return u.username.toLowerCase()===d.username.toLowerCase()&&u.id!==id; });
   if (dup) { showFormError('u-uname','Username "'+d.username+'" มีผู้ใช้งานอยู่แล้ว'); return; }
   try {
