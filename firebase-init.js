@@ -175,6 +175,11 @@ async function fsSaveNow() {
 // ── PATCH audit-H1: แจ้งผู้ใช้เมื่อ Firebase sync ล้มเหลวต่อเนื่อง ──
 let _fsSaveFailCount = 0;
 function fsSave() {
+  // ── Offline Queue: ถ้าไม่มีอินเทอร์เน็ต ให้เก็บใน queue ──
+  if (!navigator.onLine) {
+    if (typeof offlineEnqueue === 'function') offlineEnqueue('fsSave', {ts: new Date().toISOString()});
+    return;
+  }
   fsSaveNow().then(() => {
     _fsSaveFailCount = 0; // reset เมื่อสำเร็จ
   }).catch(e => {

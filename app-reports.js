@@ -33,10 +33,28 @@ function renderHistory() {
   if(!listEl) return;
 
   const kw = (document.getElementById('history-search')?.value||'').toLowerCase().trim();
+  const dateFrom = document.getElementById('history-date-from')?.value || '';
+  const dateTo   = document.getElementById('history-date-to')?.value   || '';
   const doneStatuses = ['done','verified','closed'];
 
   // filter: only done/verified/closed, optionally by keyword
   let tickets = db.tickets.filter(t => doneStatuses.includes(t.status));
+
+  // Date range filter
+  if(dateFrom) {
+    const fromMs = new Date(dateFrom).getTime();
+    tickets = tickets.filter(t => {
+      const d = t.updatedAt || t.createdAt || '';
+      return d && new Date(d.replace(' ','T')).getTime() >= fromMs;
+    });
+  }
+  if(dateTo) {
+    const toMs = new Date(dateTo).getTime() + 86399999; // end of day
+    tickets = tickets.filter(t => {
+      const d = t.updatedAt || t.createdAt || '';
+      return d && new Date(d.replace(' ','T')).getTime() <= toMs;
+    });
+  }
 
   // Admin sees all; tech/reporter sees own
   if(CU.role === 'tech')     tickets = tickets.filter(t => t.assigneeId === CU.id);
@@ -2774,3 +2792,14 @@ function exportTechReqExcel() {
 }
 
 // ============================================================
+
+// ── History date filter helpers ─────────────────────────────
+function histDateFilter() { _histPage = 0; renderHistory(); }
+function histDateClear()  {
+  var df = document.getElementById('history-date-from');
+  var dt = document.getElementById('history-date-to');
+  if(df) df.value = '';
+  if(dt) dt.value = '';
+  _histPage = 0;
+  renderHistory();
+}

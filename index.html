@@ -25,9 +25,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="firebase-init.js?v=1775185157"></script>
-<script src="photo-storage.js?v=1775185157"></script>
-<script src="conflict-guard.js?v=1775185157"></script>
+<script src="firebase-init.js?v=1775271000"></script>
+<script src="photo-storage.js?v=1775271000"></script>
+<script src="conflict-guard.js?v=1775271000"></script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'><rect width='44' height='44' rx='10' fill='%230A0A0A'/><rect width='44' height='44' rx='10' fill='none' stroke='%23D0021B' stroke-width='2'/><line x1='0' y1='22' x2='44' y2='22' stroke='%23D0021B' stroke-width='0.8' opacity='0.4'/><line x1='22' y1='0' x2='22' y2='44' stroke='%23D0021B' stroke-width='0.8' opacity='0.4'/><rect x='4' y='4' width='8' height='8' fill='%23D0021B' rx='1'/><rect x='32' y='32' width='8' height='8' fill='%23D0021B' rx='1'/><text x='22' y='31' text-anchor='middle' font-size='23' font-weight='900' fill='white' font-family='Arial Black'>A</text></svg>"><rect width='32' height='32' rx='8' fill='%23c8102e'/><g stroke='white' stroke-width='2' stroke-linecap='round'><line x1='16' y1='5' x2='16' y2='27'/><line x1='5' y1='16' x2='27' y2='16'/><line x1='8.5' y1='8.5' x2='23.5' y2='23.5'/><line x1='23.5' y1='8.5' x2='8.5' y2='23.5'/><line x1='16' y1='5' x2='13' y2='8'/><line x1='16' y1='5' x2='19' y2='8'/><line x1='16' y1='27' x2='13' y2='24'/><line x1='16' y1='27' x2='19' y2='24'/><line x1='5' y1='16' x2='8' y2='13'/><line x1='5' y1='16' x2='8' y2='19'/><line x1='27' y1='16' x2='24' y2='13'/><line x1='27' y1='16' x2='24' y2='19'/></g><circle cx='16' cy='16' r='2.5' fill='white'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'>  <defs>    <clipPath id='lc'><rect width='192' height='192' rx='42'/></clipPath>    <radialGradient id='lg' cx='25%' cy='25%' r='75%'>      <stop offset='0%' stop-color='%231e0505'/>      <stop offset='60%' stop-color='%230d0d0d'/>      <stop offset='100%' stop-color='%23050505'/>    </radialGradient>  </defs>  <g clip-path='url(%23lc)'>    <rect width='192' height='192' fill='url(%23lg)'/>    <circle cx='22' cy='22' r='65' fill='%23D0021B' opacity='0.07'/>    <line x1='0' y1='96' x2='192' y2='96' stroke='%23D0021B' stroke-width='2' opacity='0.28'/>    <line x1='96' y1='0' x2='96' y2='192' stroke='%23D0021B' stroke-width='2' opacity='0.28'/>    <line x1='0' y1='48' x2='192' y2='48' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='0' y1='144' x2='192' y2='144' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='48' y1='0' x2='48' y2='192' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='144' y1='0' x2='144' y2='192' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <rect x='15' y='15' width='28' height='28' fill='%23D0021B' rx='4'/>    <rect x='148' y='148' width='28' height='28' fill='%23D0021B' rx='4' opacity='0.6'/>    <rect x='148' y='15' width='28' height='28' fill='%23D0021B' rx='4' opacity='0.22'/>    <rect x='7' y='7' width='179' height='179' rx='35' fill='none' stroke='white' stroke-width='1' opacity='0.07'/>    <rect x='0' y='0' width='192' height='4' fill='white' opacity='0.05'/>    <text x='96' y='131' text-anchor='middle' font-size='96' font-weight='900' fill='white' font-family='Arial Black,Arial Bold,Arial'>A</text>  </g></svg>">
 </head>
@@ -356,6 +356,8 @@
     </div>
     <div class="tb-right" style="gap:6px">
       <span id="sync-dot" style="display:none;font-size:0.6rem;color:#64748b;background:#f1f5f9;border-radius:99px;padding:2px 6px;animation:syncpulse 1s infinite">⬆</span>
+      <!-- Offline queue badge -->
+      <span id="offline-queue-badge" onclick="offlineSync()" title="แตะเพื่อ Sync" style="display:none;align-items:center;gap:3px;font-size:0.6rem;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:99px;padding:2px 8px;cursor:pointer;font-weight:700;white-space:nowrap">📴 0</span>
       <!-- hidden role for JS -->
       <span id="tb-role" style="display:none"></span>
 
@@ -1123,13 +1125,24 @@
 
       <!-- TAB: ประวัติ PDF -->
       <div id="rpt-panel-history" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div>
             <div style="font-size:0.95rem;font-weight:900;color:var(--text)">📋 ประวัติงานซ่อมเสร็จ</div>
             <div id="history-count" style="font-size:0.7rem;color:var(--muted);margin-top:1px"></div>
           </div>
           <input id="history-search" type="search" placeholder="🔍 ค้นหา..." oninput="_histPage=0;renderHistory()"
-            style="padding:7px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:0.78rem;width:140px;background:var(--surface);color:var(--text);outline:none">
+            style="padding:7px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:0.78rem;width:130px;background:var(--surface);color:var(--text);outline:none">
+        </div>
+        <!-- Date range filter -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+          <span style="font-size:0.72rem;color:var(--muted);font-weight:600">📅 ช่วงวันที่:</span>
+          <input type="date" id="history-date-from" onchange="histDateFilter()"
+            style="padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.72rem;background:var(--surface);color:var(--text);outline:none;flex:1;min-width:120px">
+          <span style="font-size:0.72rem;color:var(--muted)">ถึง</span>
+          <input type="date" id="history-date-to" onchange="histDateFilter()"
+            style="padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.72rem;background:var(--surface);color:var(--text);outline:none;flex:1;min-width:120px">
+          <button onclick="histDateClear()"
+            style="padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.7rem;font-weight:700;cursor:pointer;background:var(--surface);color:var(--muted);font-family:inherit;white-space:nowrap">✕ ล้าง</button>
         </div>
         <div id="history-list"></div>
         <div id="history-pager" style="padding:8px 0 4px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap"></div>
@@ -2026,14 +2039,48 @@
 
 <!-- Dept QR Sheet -->
 <div class="sheet-overlay" id="deptqr-overlay" onclick="closeSheet('deptqr')"></div>
-<div class="sheet" id="deptqr-sheet">
+<div class="sheet" id="deptqr-sheet" style="display:flex;flex-direction:column;max-height:92vh">
   <div class="sheet-handle"></div>
-  <div style="display:flex;align-items:center;padding:16px 20px 0">
-    <div style="flex:1;font-size:1rem;font-weight:800;color:var(--text)">🏢 QR Code ทั้งแผนก</div>
-    <button onclick="closeSheet('deptqr')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:#6b7280">✕</button>
+  <!-- Fixed Header -->
+  <div style="flex-shrink:0;padding:14px 16px 0">
+    <!-- Logo strip -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="width:36px;height:36px;border-radius:9px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.45);flex-shrink:0">
+        <svg width="36" height="36" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="42" height="42" fill="#0A0A0A"/>
+          <line x1="0" y1="21" x2="42" y2="21" stroke="#D0021B" stroke-width="0.8" opacity="0.4"/>
+          <line x1="21" y1="0" x2="21" y2="42" stroke="#D0021B" stroke-width="0.8" opacity="0.4"/>
+          <rect x="3" y="3" width="9" height="9" fill="#D0021B" rx="1.5"/>
+          <rect x="30" y="30" width="9" height="9" fill="#D0021B" rx="1.5" opacity="0.7"/>
+          <text x="21" y="29" text-anchor="middle" font-size="22" font-weight="900" fill="white" font-family="Arial Black,Arial Bold,Arial">A</text>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.82rem;font-weight:900;color:#0f172a;letter-spacing:0.03em">QR Code ทั้งแผนก</div>
+        <div style="font-size:0.62rem;color:#94a3b8;font-weight:600;letter-spacing:0.05em">AIRCONDITION · BP PROCESS</div>
+      </div>
+      <button onclick="window.print()" style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:linear-gradient(135deg,#0891b2,#0e7490);border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:800;color:white;flex-shrink:0;box-shadow:0 2px 8px rgba(8,145,178,0.35)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        พิมพ์
+      </button>
+      <button onclick="closeSheet('deptqr')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:#6b7280;margin-left:6px;flex-shrink:0">✕</button>
+    </div>
+    <!-- Search box -->
+    <div style="position:relative;margin-bottom:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="deptqr-search" type="text" placeholder="ค้นหาแผนก หรือ Serial..."
+        style="width:100%;box-sizing:border-box;padding:9px 10px 9px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.8rem;font-family:inherit;outline:none;transition:border 0.15s;background:#f8fafc"
+        oninput="_onDeptQRSearch()" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'"/>
+    </div>
+    <!-- Dept filter tabs -->
+    <div id="deptqr-tabs" style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:8px"></div>
+    <!-- Count label -->
+    <div id="deptqr-count" style="font-size:0.68rem;color:#94a3b8;font-weight:600;padding-bottom:6px"></div>
   </div>
-  <div class="sheet-body" id="deptqr-body" style="padding:14px 20px"></div>
-  <div class="sheet-actions">
+  <!-- Scrollable body -->
+  <div class="sheet-body" id="deptqr-body" style="flex:1;overflow-y:auto;padding:0 16px 8px"></div>
+  <!-- Fixed bottom -->
+  <div class="sheet-actions" style="flex-shrink:0">
     <button class="btn btn-ghost btn-full" onclick="closeSheet('deptqr')">ปิด</button>
   </div>
 </div>
@@ -2071,19 +2118,53 @@
 
 <!-- Machine QR Sheet -->
 <div class="sheet-overlay" id="mqr-overlay" onclick="closeSheet('mqr')"></div>
-<div class="sheet" id="mqr-sheet">
+<div class="sheet" id="mqr-sheet" style="display:flex;flex-direction:column">
   <div class="sheet-handle"></div>
-  <div class="sheet-title" id="mqr-title">⬛ QR Code เครื่องแอร์</div>
-  <div class="sheet-body" style="display:flex;flex-direction:column;align-items:center;gap:12px">
-    <div id="mqr-info" style="text-align:center;font-size:0.82rem;color:var(--muted)"></div>
-    <div id="mqr-canvas-wrap" style="background:white;padding:16px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.12)">
-      <canvas id="mqr-canvas" width="220" height="220"></canvas>
+  <!-- Logo strip header -->
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid #f1f5f9;flex-shrink:0">
+    <div style="width:34px;height:34px;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.45);flex-shrink:0">
+      <svg width="34" height="34" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="42" height="42" fill="#0A0A0A"/>
+        <line x1="0" y1="21" x2="42" y2="21" stroke="#D0021B" stroke-width="0.8" opacity="0.4"/>
+        <line x1="21" y1="0" x2="21" y2="42" stroke="#D0021B" stroke-width="0.8" opacity="0.4"/>
+        <rect x="3" y="3" width="9" height="9" fill="#D0021B" rx="1.5"/>
+        <rect x="30" y="30" width="9" height="9" fill="#D0021B" rx="1.5" opacity="0.7"/>
+        <text x="21" y="29" text-anchor="middle" font-size="22" font-weight="900" fill="white" font-family="Arial Black,Arial Bold,Arial">A</text>
+      </svg>
     </div>
-    <div style="font-size:0.72rem;color:var(--muted);text-align:center">สแกนเพื่อดึงข้อมูลเครื่องแอร์อัตโนมัติ</div>
-    <button class="btn btn-primary btn-full" onclick="downloadMachineQR()">⬇️ บันทึกรูป QR Code</button>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:0.78rem;font-weight:900;color:#0f172a;letter-spacing:0.02em" id="mqr-title">QR Code เครื่องแอร์</div>
+      <div style="font-size:0.58rem;color:#94a3b8;font-weight:600;letter-spacing:0.06em;text-transform:uppercase">AIRCONDITION · BP PROCESS</div>
+    </div>
+    <button onclick="closeSheet('mqr')" style="width:30px;height:30px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0">✕</button>
   </div>
-  <div class="sheet-actions">
-    <button class="btn btn-ghost btn-full" onclick="closeSheet('mqr')">ปิด</button>
+  <!-- Card body -->
+  <div class="sheet-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;padding:20px 16px 12px">
+    <!-- QR Card -->
+    <div style="background:white;border-radius:20px;box-shadow:0 6px 28px rgba(0,0,0,0.13);padding:20px 20px 16px;width:100%;max-width:280px;box-sizing:border-box;text-align:center;border:1px solid #f1f5f9">
+      <!-- Machine info top -->
+      <div id="mqr-info" style="font-size:0.8rem;color:#0f172a;font-weight:700;margin-bottom:14px;line-height:1.45"></div>
+      <!-- QR canvas -->
+      <div style="display:inline-block;background:#f8fafc;padding:12px;border-radius:14px;border:1.5px solid #e2e8f0;margin-bottom:12px">
+        <canvas id="mqr-canvas" width="200" height="200"></canvas>
+      </div>
+      <!-- Scan hint -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:5px;font-size:0.66rem;color:#94a3b8;font-weight:600">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="17" width="3" height="3"/><rect x="18" y="17" width="3" height="3"/><rect x="14" y="14" width="3" height="3"/></svg>
+        สแกนเพื่อดึงข้อมูลเครื่องแอร์อัตโนมัติ
+      </div>
+    </div>
+  </div>
+  <!-- Fixed action buttons -->
+  <div class="sheet-actions" style="gap:8px;flex-shrink:0">
+    <button class="btn btn-primary" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="downloadMachineQR()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      บันทึกรูป
+    </button>
+    <button class="btn btn-ghost" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="window.print()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      พิมพ์
+    </button>
   </div>
 </div>
 
@@ -3015,51 +3096,112 @@
 
 <!-- User Sheet -->
 <div class="sheet-overlay" id="user-overlay" onclick="closeSheet('user')"></div>
-<div class="sheet" id="user-sheet">
+<div class="sheet" id="user-sheet" style="display:flex;flex-direction:column">
   <div class="sheet-handle"></div>
-  <div class="sheet-title" id="us-title">👤 เพิ่มผู้ใช้</div>
-  <div class="sheet-body">
-    <input type="hidden" id="u-id"/>
-    <!-- Avatar upload -->
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+  <!-- Fixed Header -->
+  <div style="flex-shrink:0;padding:14px 16px 12px;border-bottom:1.5px solid #f1f5f9;background:white">
+    <div style="display:flex;align-items:center;gap:12px">
+      <!-- Avatar -->
       <div id="u-avatar-preview"
-        style="width:72px;height:72px;border-radius:50%;background:#f3f4f6;border:2px dashed #d1d5db;display:flex;align-items:center;justify-content:center;font-size:2.2rem;cursor:pointer;overflow:hidden;flex-shrink:0;position:relative"
+        style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border:2.5px solid #a5b4fc;display:flex;align-items:center;justify-content:center;font-size:1.6rem;cursor:pointer;overflow:hidden;flex-shrink:0;position:relative;box-shadow:0 2px 8px rgba(99,102,241,0.2)"
         onclick="triggerPhotoInput()">
-        <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;border:2px solid white">📷</div>
+        <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:#6366f1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;border:2px solid white">📷</div>
       </div>
       <input type="file" id="u-photo-input" accept="image/*" style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px" onchange="previewUserPhoto(this)"/>
       <input type="hidden" id="u-photo"/>
-      <div style="font-size:0.78rem;color:var(--muted)">แตะรูปเพื่อเปลี่ยนรูปโปรไฟล์<br><span style="font-size:0.68rem">(ไม่บังคับ)</span></div>
+      <input type="hidden" id="u-id"/>
+      <!-- Title -->
+      <div style="flex:1;min-width:0">
+        <div id="us-title" style="font-size:0.95rem;font-weight:900;color:#0f172a">👤 เพิ่มผู้ใช้</div>
+        <div style="font-size:0.65rem;color:#94a3b8;font-weight:600;margin-top:1px">แตะรูปเพื่อเปลี่ยนโปรไฟล์</div>
+      </div>
+      <!-- Close -->
+      <button onclick="closeSheet('user')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0">✕</button>
     </div>
+  </div>
+
+  <!-- Scrollable Body -->
+  <div class="sheet-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 8px">
+
+    <!-- Section 1: ข้อมูลพื้นฐาน -->
+    <div style="font-size:0.65rem;font-weight:800;color:#7c3aed;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+      <div style="flex:1;height:1px;background:linear-gradient(to right,#e9d5ff,transparent)"></div>
+      ข้อมูลพื้นฐาน
+      <div style="flex:1;height:1px;background:linear-gradient(to left,#e9d5ff,transparent)"></div>
+    </div>
+
     <div class="fg"><label>ชื่อ-นามสกุล *</label><input type="text" id="u-name"/></div>
     <div class="fr2">
       <div class="fg"><label>Username *</label><input type="text" id="u-uname" autocapitalize="none"/></div>
+      <div class="fg"><label>บทบาท</label>
+        <select id="u-role">
+          <option value="admin">👑 แอดมิน</option>
+          <option value="tech">🔧 ช่างซ่อม</option>
+          <option value="reporter">📢 ผู้แจ้งงาน</option>
+          <option value="executive">📊 ผู้บริหาร</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label>แผนก</label><input type="text" id="u-dept"/></div>
+      <div class="fg"><label>เบอร์โทร</label><input type="tel" id="u-tel" oninput="fmtPhone(this)" maxlength="12"/></div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label>LINE / ติดต่อ</label><input type="text" id="u-contact"/></div>
+      <div class="fg"><label>📧 อีเมล</label><input type="email" id="u-email" placeholder="name@example.com" autocapitalize="none"/></div>
+    </div>
+
+    <!-- Section 2: รหัสผ่าน (admin only) -->
+    <div id="u-pass-section" style="display:none;margin-top:16px">
+      <div style="font-size:0.65rem;font-weight:800;color:#0891b2;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:1px;background:linear-gradient(to right,#bae6fd,transparent)"></div>
+        รหัสผ่าน
+        <div style="flex:1;height:1px;background:linear-gradient(to left,#bae6fd,transparent)"></div>
+      </div>
+
       <div class="fg">
-        <label>Password</label>
+        <label>Password ใหม่</label>
         <div style="position:relative;display:flex;align-items:center">
-          <input type="password" id="u-pass" placeholder="(ว่าง=ไม่เปลี่ยน)" style="width:100%;padding-right:80px"/>
+          <input type="password" id="u-pass" placeholder="(ว่าง=ไม่เปลี่ยน)" style="width:100%;padding-right:80px" oninput="checkPassStrength(this.value)"/>
           <button type="button" id="u-pass-toggle"
             onclick="(function(){const i=document.getElementById('u-pass');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁 ดู':'🙈 ซ่อน'}).call(this)"
             style="position:absolute;right:6px;background:#f1f5f9;border:none;border-radius:7px;padding:5px 10px;font-size:0.7rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;white-space:nowrap">
             👁 ดู
           </button>
         </div>
+        <!-- Strength bar -->
+        <div id="u-pass-strength" style="display:none;margin-top:5px">
+          <div style="height:4px;border-radius:4px;background:#e2e8f0;overflow:hidden">
+            <div id="u-pass-strength-bar" style="height:100%;width:0%;transition:width 0.3s,background 0.3s;border-radius:4px"></div>
+          </div>
+          <div id="u-pass-strength-label" style="font-size:0.72rem;margin-top:3px;font-weight:600"></div>
+        </div>
+        <!-- Confirm -->
+        <div style="position:relative;display:flex;align-items:center;margin-top:6px">
+          <input type="password" id="u-pass-confirm" placeholder="ยืนยัน Password" style="width:100%;padding-right:80px" oninput="checkPassMatch()"/>
+          <button type="button"
+            onclick="(function(){const i=document.getElementById('u-pass-confirm');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁 ดู':'🙈 ซ่อน'}).call(this)"
+            style="position:absolute;right:6px;background:#f1f5f9;border:none;border-radius:7px;padding:5px 10px;font-size:0.7rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;white-space:nowrap">
+            👁 ดู
+          </button>
+        </div>
+        <div id="u-pass-match" style="font-size:0.72rem;margin-top:3px;font-weight:600;min-height:14px"></div>
         <div id="u-pass-current" style="display:none;margin-top:5px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:7px 10px;font-size:0.8rem;color:#92400e;align-items:center;gap:7px">
           <span>🔑</span>
           <span>รหัสปัจจุบัน: <b id="u-pass-val" style="font-family:'JetBrains Mono',monospace;letter-spacing:0.05em"></b></span>
         </div>
       </div>
     </div>
-    <div class="fg"><label>บทบาท</label><select id="u-role"><option value="admin">👑 แอดมิน</option><option value="tech">🔧 ช่างซ่อม</option><option value="reporter">📢 ผู้แจ้งงาน</option><option value="executive">📊 ผู้บริหาร</option></select></div>
-    <div class="fr2">
-      <div class="fg"><label>แผนก</label><input type="text" id="u-dept"/></div>
-      <div class="fg"><label>เบอร์โทร</label><input type="tel" id="u-tel" oninput="fmtPhone(this)" maxlength="12"/></div>
-    </div>
-    <div class="fg"><label>LINE / อีเมล</label><input type="text" id="u-contact"/></div>
+
   </div>
-  <div class="sheet-actions">
-    <button class="btn btn-primary btn-full" onclick="saveUser()">💾 บันทึก</button>
-    <button class="btn btn-ghost btn-full" onclick="closeSheet('user')">ยกเลิก</button>
+
+  <!-- Fixed bottom actions -->
+  <div class="sheet-actions" style="flex-shrink:0;gap:8px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
+    <button class="btn btn-primary" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="saveUser()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      บันทึก
+    </button>
+    <button class="btn btn-ghost" style="flex:1" onclick="closeSheet('user')">ยกเลิก</button>
   </div>
 </div>
 
@@ -3096,16 +3238,17 @@
 <!-- SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script src="app-tracking.js?v=1775185157"></script>
-<script src="app-core.js?v=1775185157"></script>
-<script src="app-tickets.js?v=1775185157"></script>
-<script src="app-machines.js?v=1775185157"></script>
-<script src="app-users.js?v=1775185157"></script>
-<script src="app-reports.js?v=1775185157"></script>
-<script src="app-admin.js?v=1775185157"></script>
-<script src="app-backend.js?v=1775185157"></script>
-<script src="app-executive.js?v=1775185157"></script>
-<script src="app-backup.js?v=1775185157"></script>
+<script src="app-tracking.js?v=1775271000"></script>
+<script src="func-loc-data.js?v=1775271000"></script>
+<script src="app-core.js?v=1775271000"></script>
+<script src="app-tickets.js?v=1775271000"></script>
+<script src="app-machines.js?v=1775271000"></script>
+<script src="app-users.js?v=1775271000"></script>
+<script src="app-reports.js?v=1775271000"></script>
+<script src="app-admin.js?v=1775271000"></script>
+<script src="app-backend.js?v=1775271000"></script>
+<script src="app-executive.js?v=1775271000"></script>
+<script src="app-backup.js?v=1775271000"></script>
 <style>
 /* ======= PM PLAN PAGE ======= */
 #pg-pmplan { padding:0 !important; overflow-y:hidden !important; flex-direction:column; }

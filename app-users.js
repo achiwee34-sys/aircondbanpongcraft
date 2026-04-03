@@ -13,8 +13,8 @@ function switchUserTab(tab) {
 function debugUserBtn() {
   var log = [];
   // 1. ตรวจ DOM elements
-  var ids = ['us-title','u-id','u-name','u-photo','u-uname','u-pass','u-role',
-             'u-dept','u-tel','u-contact','u-avatar-preview','u-pass-toggle',
+  var ids = ['us-title','u-id','u-name','u-photo','u-uname','u-pass','u-pass-confirm','u-role',
+             'u-dept','u-tel','u-email','u-contact','u-avatar-preview','u-pass-toggle',
              'u-pass-current','u-pass-val','user-overlay','user-sheet'];
   var missing = ids.filter(function(id){ return !document.getElementById(id); });
   log.push('Missing IDs: ' + (missing.length ? missing.join(', ') : 'none ✅'));
@@ -200,7 +200,7 @@ function buildUserCard(u, tm) {
     + '</div></div>'
     + '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">'
     + '<button onclick="openUserSheet(\''+u.id+'\')" title="แก้ไข" style="width:36px;height:36px;background:#f1f5f9;border:none;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">✏️</button>'
-    + (canDelete ? '<button onclick="delUser(\''+u.id+'\')" title="ลบ" style="width:36px;height:36px;background:#fff0f2;border:1px solid #fecaca;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">🗑️</button>' : '<div style="width:36px;height:36px"></div>')
+    + (canDelete ? ('<button onclick="adminResetPassword(\''+u.id+'\')" title="รีเซ็ต Password" style="width:36px;height:36px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">🔑</button><button onclick="delUser(\''+u.id+'\')" title="ลบ" style="width:36px;height:36px;background:#fff0f2;border:1px solid #fecaca;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">🗑️</button>') : '<div style="width:36px;height:36px"></div>')
     + '</div></div>'
     + workHtml + '</div>';
 }
@@ -233,10 +233,14 @@ function _doOpenUserSheet(id, defaultRole) {
   document.getElementById('u-uname').value   = (u&&u.username)||'';
   document.getElementById('u-pass').value    = '';
   document.getElementById('u-pass').type     = 'password';
+  var pc = document.getElementById('u-pass-confirm'); if(pc){pc.value='';pc.type='password';}
+  var ps = document.getElementById('u-pass-strength'); if(ps) ps.style.display='none';
+  var pm = document.getElementById('u-pass-match'); if(pm) pm.textContent='';
   document.getElementById('u-role').value    = role;
   document.getElementById('u-dept').value    = (u&&u.dept)||'';
   document.getElementById('u-tel').value     = (u&&u.tel)||'';
   document.getElementById('u-contact').value = (u&&u.contact)||'';
+  var ue = document.getElementById('u-email'); if(ue) ue.value = (u&&u.email)||'';
 
   var prevEl = document.getElementById('u-avatar-preview');
   if (prevEl) {
@@ -255,6 +259,13 @@ function _doOpenUserSheet(id, defaultRole) {
       pcb.style.display = 'flex';
     } else { pcb.style.display = 'none'; }
   }
+
+  // Show password section only for admin
+  var passSection = document.getElementById('u-pass-section');
+  if (passSection) {
+    passSection.style.display = (CU && CU.role === 'admin') ? 'block' : 'none';
+  }
+
   openSheet('user');
 }
 
@@ -284,6 +295,7 @@ async function saveUser() {
     dept:     document.getElementById('u-dept').value.trim(),
     tel:      document.getElementById('u-tel').value.trim(),
     contact:  document.getElementById('u-contact').value.trim(),
+    email:    (document.getElementById('u-email')||{value:''}).value.trim().toLowerCase(),
     photo:    photo,
   };
   document.querySelectorAll('#user-sheet .field-error').forEach(function(e){e.remove();});
@@ -291,6 +303,11 @@ async function saveUser() {
   if (!d.name)      { showFormError('u-name',  'กรุณากรอกชื่อ-นามสกุล'); hasErr=true; }
   if (!d.username)  { showFormError('u-uname', 'กรุณากรอก Username');     hasErr=true; }
   if (!id && !pass) { showFormError('u-pass',  'กรุณาตั้งรหัสผ่าน');     hasErr=true; }
+  if (pass && pass.length < 8)   { showFormError('u-pass', 'Password ต้องมีอย่างน้อย 8 ตัวอักษร'); hasErr=true; }
+  var passConfirm = (document.getElementById('u-pass-confirm')||{value:''}).value;
+  if (pass && passConfirm !== pass) { showFormError('u-pass-confirm', 'Password ไม่ตรงกัน'); hasErr=true; }
+  if (d.tel && !/^0[0-9]{8,9}$/.test(d.tel.replace(/-/g,''))) { showFormError('u-tel', 'เบอร์โทรไม่ถูกต้อง (ตัวอย่าง: 0812345678)'); hasErr=true; }
+  if (d.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) { showFormError('u-email', 'รูปแบบอีเมลไม่ถูกต้อง'); hasErr=true; }
   if (hasErr) return;
   var dupName = db.users.find(function(u){ return u.name.trim().toLowerCase()===d.name.toLowerCase()&&u.id!==id; });
   if (dupName) { showFormError('u-name','ชื่อ-นามสกุล "'+d.name+'" มีผู้ใช้งานอยู่แล้ว'); return; }
@@ -471,3 +488,62 @@ function readExcel(input){var file=input.files[0];if(!file)return;var reader=new
 function renderColMap(){var el=document.getElementById('xl-col-map');if(!el)return;var fields=[{key:'name',label:'ชื่อเครื่อง *'},{key:'serial',label:'Serial'},{key:'dept',label:'แผนก'},{key:'room',label:'ห้อง'},{key:'brand',label:'ยี่ห้อ'},{key:'btu',label:'BTU'},{key:'type',label:'ประเภท'},{key:'note',label:'หมายเหตุ'}];el.innerHTML=fields.map(function(f){return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="width:90px;font-size:0.75rem;font-weight:700">'+f.label+'</label><select id="xlmap-'+f.key+'" style="flex:1;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.75rem;font-family:inherit"><option value="">(ไม่นำเข้า)</option>'+xlHeaders.map(function(h){return '<option value="'+h+'"'+(h.toLowerCase().includes(f.key)?' selected':'')+'>'+h+'</option>';}).join('')+'</select></div>';}).join('');}
 function importMachines(){if(!xlData.length)return;var gc=function(k){var el=document.getElementById('xlmap-'+k);return el?el.value:'';};var added=0;xlData.forEach(function(row){var name=row[gc('name')];if(!name)return;var serial=row[gc('serial')]||'';if(serial&&db.machines.find(function(m){return m.serial===serial;}))return;db.machines.push({id:'M'+Date.now()+Math.random().toString(36).slice(2,5),name:String(name).trim(),serial:String(serial).trim(),dept:String(row[gc('dept')]||'').trim(),room:String(row[gc('room')]||'').trim(),brand:String(row[gc('brand')]||'').trim(),btu:String(row[gc('btu')]||'').trim(),type:String(row[gc('type')]||'').trim(),note:String(row[gc('note')]||'').trim(),status:'normal',createdAt:nowStr()});added++;});if(added>0){saveDB();if(typeof renderMachines==='function')renderMachines();}closeSheet('import');resetExcel();showToast(added>0?'✅ นำเข้า '+added+' เครื่องแล้ว':'⚠️ ไม่มีข้อมูลใหม่');}
 function resetExcel(){xlData=[];xlHeaders=[];document.getElementById('xl-map').style.display='none';document.getElementById('xl-import-btn').style.display='none';document.getElementById('xl-file').value='';}
+
+// ── Password Strength Checker ─────────────────────────────
+function checkPassStrength(val) {
+  var bar = document.getElementById('u-pass-strength-bar');
+  var lbl = document.getElementById('u-pass-strength-label');
+  var wrap = document.getElementById('u-pass-strength');
+  if (!bar || !lbl || !wrap) return;
+  if (!val) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  var score = 0;
+  if (val.length >= 8)  score++;
+  if (val.length >= 12) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  var levels = [
+    {pct:'20%', color:'#ef4444', text:'🔴 อ่อนมาก'},
+    {pct:'40%', color:'#f97316', text:'🟠 อ่อน'},
+    {pct:'60%', color:'#eab308', text:'🟡 ปานกลาง'},
+    {pct:'80%', color:'#22c55e', text:'🟢 แข็งแกร่ง'},
+    {pct:'100%',color:'#16a34a', text:'✅ แข็งแกร่งมาก'},
+  ];
+  var lvl = levels[Math.min(score-1,4)] || levels[0];
+  bar.style.width   = lvl.pct;
+  bar.style.background = lvl.color;
+  lbl.textContent   = lvl.text;
+  lbl.style.color   = lvl.color;
+  checkPassMatch();
+}
+
+function checkPassMatch() {
+  var p1 = (document.getElementById('u-pass')||{value:''}).value;
+  var p2 = (document.getElementById('u-pass-confirm')||{value:''}).value;
+  var el = document.getElementById('u-pass-match');
+  if (!el) return;
+  if (!p2) { el.textContent=''; return; }
+  if (p1 === p2) {
+    el.textContent = '✅ Password ตรงกัน';
+    el.style.color = '#16a34a';
+  } else {
+    el.textContent = '❌ Password ไม่ตรงกัน';
+    el.style.color = '#ef4444';
+  }
+}
+
+// ── Admin Reset Password (set __SETUP_REQUIRED__) ─────────
+function adminResetPassword(uid) {
+  if (!CU || CU.role !== 'admin') return;
+  var u = db.users.find(function(x){return x.id===uid;});
+  if (!u) return;
+  if (!confirm('รีเซ็ต Password ของ "'+u.name+'" ใช่หรือไม่?\nผู้ใช้จะต้องตั้ง Password ใหม่เมื่อ Login ครั้งถัดไป')) return;
+  u.password = '__SETUP_REQUIRED__';
+  db._seq = (db._seq||1)+1;
+  saveDB(); fsSave();
+  if (window.bkAudit) window.bkAudit('Reset Password', u.username, null, {status:'SETUP_REQUIRED'});
+  showToast('🔑 รีเซ็ต Password ของ "'+u.name+'" แล้ว — ผู้ใช้ต้องตั้งรหัสใหม่เมื่อ Login');
+  closeSheet('user');
+  renderUsers();
+}

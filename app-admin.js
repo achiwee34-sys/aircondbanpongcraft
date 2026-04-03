@@ -636,9 +636,15 @@ let _deptQRFilter = '';
 
 function openDeptQRSheet() {
   _deptQRFilter = '';
+  const si = document.getElementById('deptqr-search');
+  if (si) si.value = '';
   _buildDeptQRTabs();
   _renderDeptQRBody();
   openSheet('deptqr');
+}
+
+function _onDeptQRSearch() {
+  _renderDeptQRBody();
 }
 
 function _buildDeptQRTabs() {
@@ -671,10 +677,24 @@ function _setDeptQRFilter(val) {
 
 function _renderDeptQRBody() {
   const body = document.getElementById('deptqr-body'); if (!body) return;
+  const searchQ = (document.getElementById('deptqr-search')?.value || '').trim().toLowerCase();
 
-  const machines = _deptQRFilter
+  let machines = _deptQRFilter
     ? db.machines.filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === _deptQRFilter)
     : db.machines;
+
+  if (searchQ) {
+    machines = machines.filter(m =>
+      (m.serial||'').toLowerCase().includes(searchQ) ||
+      (m.name||'').toLowerCase().includes(searchQ) ||
+      (m.dept||m.location||'').toLowerCase().includes(searchQ) ||
+      (m.id||'').toLowerCase().includes(searchQ)
+    );
+  }
+
+  // Update count label
+  const countEl = document.getElementById('deptqr-count');
+  if (countEl) countEl.textContent = machines.length ? `พบ ${machines.length} เครื่อง` : '';
 
   if (!machines.length) {
     body.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#94a3b8"><div style="font-size:2.5rem;margin-bottom:10px">🔍</div><div style="font-weight:700">ไม่พบเครื่องแอร์</div></div>';
