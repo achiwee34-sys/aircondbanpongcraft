@@ -1528,3 +1528,17 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 #machine-sheet { max-height: calc(min(94dvh, 94vh) - env(safe-area-inset-top, 0px)); }
 #machine-sheet > .sheet-handle { margin-top: calc(env(safe-area-inset-top, 0px) + 10px); }
 /* #pg-users button / #users-list rules consolidated above — ดู Bug1-fix section */
+
+/* ── Redesigned sheets: scrollable body ── */
+#user-sheet .sheet-body,
+#mqr-sheet .sheet-body,
+#deptqr-sheet .sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#user-sheet .sheet-actions,
+#mqr-sheet .sheet-actions,
+#deptqr-sheet .sheet-actions {
+  flex-shrink: 0;
+}
