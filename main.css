@@ -1178,7 +1178,8 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 #pur-track-content { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 #po-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
-/* Bug1-fix: ensure user list buttons are always tappable */
+/* Bug1-fix: ensure user page header buttons (เพิ่ม) are always tappable — z-index สูงกว่า sheet-overlay (500) */
+#pg-users { position: relative; z-index: 2; }
 #pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto !important; position: relative; z-index: 10 !important; cursor: pointer; min-height: 36px; min-width: 36px; }
 #users-list { position: relative; z-index: 1; pointer-events: auto; }
 #users-list * { pointer-events: auto; }
@@ -1526,6 +1527,4 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 /* ── Safe area fixes ── */
 #machine-sheet { max-height: calc(min(94dvh, 94vh) - env(safe-area-inset-top, 0px)); }
 #machine-sheet > .sheet-handle { margin-top: calc(env(safe-area-inset-top, 0px) + 10px); }
-#pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto !important; position: relative; z-index: 10 !important; cursor: pointer; min-height: 36px; min-width: 36px; }
-#users-list { position: relative; z-index: 1; pointer-events: auto; }
-#users-list * { pointer-events: auto; }
+/* #pg-users button / #users-list rules consolidated above — ดู Bug1-fix section */

@@ -2396,10 +2396,13 @@ function resetAllOverlays() {
     s.classList.remove('open');
     s.style.visibility = ''; s.style.pointerEvents = '';
   });
-  document.querySelectorAll('.sheet-overlay.open, .sheet-overlay').forEach(o => {
-    o.classList.remove('open'); o.style.display = 'none';
-    setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 10);
+  // Fix: ไม่ใช้ setTimeout ที่ทำให้ overlay ค้างและทับปุ่ม
+  document.querySelectorAll('.sheet-overlay').forEach(o => {
+    o.classList.remove('open');
+    o.style.display = '';
   });
+  // ลบ dynamic overlays ที่ append เข้า body โดยตรง
+  document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(el => el.remove());
   const qm = document.getElementById('tb-quick-menu'); if (qm) qm.style.display = 'none';
 }
 
@@ -2624,12 +2627,10 @@ function goPage(name) {
   // ── 0.5. ปิด sheet/overlay ที่ค้างอยู่ ป้องกัน overlay บัง UI หน้าใหม่ ──
   document.querySelectorAll('.sheet.open').forEach(s => {
     s.classList.remove('open');
-    s.style.visibility = 'hidden'; s.style.pointerEvents = 'none';
-    setTimeout(() => { if (!s.classList.contains('open')) { s.style.visibility=''; s.style.pointerEvents=''; } }, 400);
+    s.style.visibility = ''; s.style.pointerEvents = '';
   });
-  document.querySelectorAll('.sheet-overlay.open').forEach(o => {
-    o.classList.remove('open'); o.style.display = 'none';
-    setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
+  document.querySelectorAll('.sheet-overlay').forEach(o => {
+    o.classList.remove('open'); o.style.display = '';
   });
   // cleanup dynamic overlays ที่ append เข้า body โดยตรง
   document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(el => el.remove());
@@ -2787,17 +2788,17 @@ function openSheet(name){
   document.querySelectorAll('.sheet').forEach(s => {
     if (s.id !== name+'-sheet') {
       s.classList.remove('open');
-      s.style.visibility = 'hidden'; s.style.pointerEvents = 'none';
-      setTimeout(() => { if (!s.classList.contains('open')) { s.style.visibility=''; s.style.pointerEvents=''; } }, 400);
+      s.style.visibility = ''; s.style.pointerEvents = '';
       if (s._kbHandler) { s.removeEventListener('focusin', s._kbHandler); delete s._kbHandler; }
     }
   });
   document.querySelectorAll('.sheet-overlay').forEach(o => {
     if (o.id !== name+'-overlay') {
-      o.classList.remove('open'); o.style.display = 'none';
-      setTimeout(() => { if (!o.classList.contains('open')) o.style.display = ''; }, 400);
+      o.classList.remove('open'); o.style.display = '';
     }
   });
+  // cleanup dynamic overlays
+  document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(el => el.remove());
   const ov = document.getElementById(name+'-overlay');
   const sh = document.getElementById(name+'-sheet');
   if (!ov || !sh) { console.warn('openSheet: not found:', name); return; }

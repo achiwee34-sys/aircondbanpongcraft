@@ -206,6 +206,17 @@ function buildUserCard(u, tm) {
 }
 
 function openUserSheet(id, defaultRole) {
+  // Guard: ถ้า db ยังไม่พร้อม
+  if (!window.db || !db.users) { showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่'); return; }
+  // Cleanup: ลบ overlay ที่ค้างอยู่ก่อนเปิด sheet
+  document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(function(el){el.remove();});
+  document.querySelectorAll('.sheet-overlay').forEach(function(o){
+    if (o.id !== 'user-overlay') { o.classList.remove('open'); o.style.display = ''; }
+  });
+  document.querySelectorAll('.sheet').forEach(function(s){
+    if (s.id !== 'user-sheet') { s.classList.remove('open'); s.style.visibility=''; s.style.pointerEvents=''; }
+  });
+
   var u    = id ? db.users.find(function(x){return x.id===id;}) : null;
   var role = (u&&u.role)||defaultRole||currentUserTab||'reporter';
   var roleLabel = {admin:'แอดมิน',tech:'ช่างซ่อม',reporter:'ผู้แจ้งงาน',executive:'ผู้บริหาร'};
