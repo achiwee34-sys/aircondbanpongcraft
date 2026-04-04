@@ -55,8 +55,12 @@ async function uploadPhotoToStorage(base64, path) {
     const url = await snapshot.ref.getDownloadURL();
     return url;
   } catch(e) {
-    console.warn('[Storage] upload failed, using base64 fallback:', e);
-    return base64; // fallback — ยังใช้งานได้ แค่ไม่ ideal
+    // PHOTO FIX (audit #4): warn ชัดเจนเมื่อ fallback base64 เกิดขึ้น
+    console.warn('[Storage] upload failed — falling back to base64 (localStorage may fill up):', e);
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Upload รูปภาพไม่สำเร็จ — บันทึกชั่วคราวใน device (กรุณาตรวจสอบ internet)');
+    }
+    return base64;
   }
 }
 
@@ -70,7 +74,6 @@ async function uploadPendingPhotosToStorage(ticketId) {
 
   const timestamp = Date.now();
 
-  // ── PATCH audit-H3: per-photo try-catch — skip รูปที่ fail แทน crash ──
   // before photos
   for (let i = 0; i < pendingPhotos.before.length; i++) {
     const p = pendingPhotos.before[i];

@@ -99,7 +99,8 @@ function renderUsers() {
   el.innerHTML = list.map(function(u){ return buildUserCard(u, tm); }).join('');
 }
 
-function _esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+// REFACTOR (audit #8): use global escapeHtml instead of local duplicate
+var _esc = typeof escapeHtml === 'function' ? escapeHtml : function(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; };
 
 function buildUserCard(u, tm) {
   var initials = typeof getAvatarInitials==='function' ? getAvatarInitials(u.name) : (u.name||'?').slice(0,2);

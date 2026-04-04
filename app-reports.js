@@ -2932,3 +2932,44 @@ function exportSummaryExcel() {
   XLSX.writeFile(wb, fname);
   showToast('📊 Export Excel สำเร็จ: ' + fname);
 }
+
+// ============================================================
+// ITEM 7: Full-Screen Preview for PDF / reports (ย้ายจาก index.html)
+// ============================================================
+function openFullScreenPreview(url, title) {
+  let ov = document.getElementById('fullscreen-preview-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'fullscreen-preview-overlay';
+    ov.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0f172a;flex-shrink:0">
+        <button onclick="closeFullScreenPreview()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+        <div id="fsp-title" style="flex:1;color:white;font-size:0.88rem;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+        <button onclick="document.getElementById('fullscreen-preview-iframe').contentWindow?.print()" style="padding:6px 12px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit">🖨️ พิมพ์</button>
+      </div>
+      <iframe id="fullscreen-preview-iframe"></iframe>`;
+    document.body.appendChild(ov);
+  }
+  ov.classList.add('open');
+  const iframe = document.getElementById('fullscreen-preview-iframe');
+  const titleEl = document.getElementById('fsp-title');
+  if (titleEl) titleEl.textContent = title || 'รายงาน';
+  if (url) iframe.src = url;
+}
+
+function closeFullScreenPreview() {
+  const ov = document.getElementById('fullscreen-preview-overlay');
+  if (ov) {
+    ov.classList.remove('open');
+    const iframe = document.getElementById('fullscreen-preview-iframe');
+    if (iframe) iframe.src = '';
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-fsp-url]');
+  if (btn) {
+    e.preventDefault();
+    openFullScreenPreview(btn.dataset.fspUrl, btn.dataset.fspTitle);
+  }
+});

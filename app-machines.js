@@ -57,7 +57,9 @@ function openMachineHistory(mid) {
   if (!m) return;
   const tickets = db.tickets.filter(t => t.machineId === mid || t.machine === m.name)
     .sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
-  document.getElementById('mhist-title').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/><circle cx="7" cy="17" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="21" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="17" r="1" fill="currentColor" stroke="none"/></svg> <span>${(m.serial||m.id)} — ${m.name}</span>`;
+  // XSS FIX (audit #6): escape m.serial and m.name before innerHTML
+  const _escMH = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  document.getElementById('mhist-title').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/><circle cx="7" cy="17" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="21" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="17" r="1" fill="currentColor" stroke="none"/></svg> <span>${_escMH(m.serial||m.id)} — ${_escMH(m.name)}</span>`;
   if (tickets.length === 0) {
     document.getElementById('mhist-body').innerHTML = '<div class="empty"><div class="ei">📭</div><p>ยังไม่มีประวัติการซ่อม</p></div>';
   } else {
@@ -1968,7 +1970,6 @@ function populateMachineSelect() {
   const deptSel = document.getElementById('nt-dept'); if(!deptSel) return;
   const depts = [...new Set(db.machines.map(m => m.dept||m.location||'ไม่ระบุแผนก').filter(Boolean))].sort();
 
-  // ── PATCH: ถ้า machines ยังว่าง (Firebase ยังไม่โหลด) → retry อัตโนมัติ ──
   if (depts.length === 0) {
     deptSel.innerHTML = '<option value="">⏳ กำลังโหลดข้อมูลแผนก...</option>';
     if (!populateMachineSelect._retryCount) populateMachineSelect._retryCount = 0;

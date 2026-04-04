@@ -359,14 +359,12 @@ function toggleMeasure() {
 // ============================================================
 // PM AUTO-SCHEDULE — สร้าง Ticket PM อัตโนมัติ (Admin)
 // ============================================================
-// [REMOVED audit-H4] generatePMTickets() — dead code, no call site
 
 
 // ============================================================
 // PM PLAN SHEET — ล้างใหญ่ / ล้างย่อย แยกแผนก
 // ============================================================
 // ══ PM Plan — Full Page ══
-// [REMOVED audit-H4] openPMPlanPage() — dead code, no call site
 
 function setPMPageType(t) {
   document.getElementById('pmpage-type').value = t;

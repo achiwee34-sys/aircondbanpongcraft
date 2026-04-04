@@ -2,31 +2,36 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── aircon_data: custom auth (ไม่ใช้ Firebase Auth) ──
-    // อนุญาต read/write ทั้งหมดเพราะระบบใช้ custom login + session ใน localStorage
+    // ── helper: ตรวจสอบ app secret หรือ Firebase Auth ──
+    // ระบบใช้ custom auth — ต้องผ่าน Firebase Auth anonymous หรือส่ง appSecret ใน request
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ── aircon_data: ต้อง authenticated เท่านั้น ──
     match /aircon_data/{docId} {
-      allow read, write: if true;
+      allow read, write: if isAuthenticated();
     }
 
-    // ── appdata: public read (สำหรับ config/version check) ──
+    // ── appdata: อ่านได้ถ้า authenticated, เขียนได้ถ้า authenticated ──
     match /appdata/{doc} {
-      allow read: if true;
-      allow write: if true;
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
 
-    // ── machines: อ่านได้ทุกคน, เขียนได้ (custom auth ควบคุมผ่าน app logic) ──
+    // ── machines: ต้อง authenticated ──
     match /machines/{docId} {
-      allow read, write: if true;
+      allow read, write: if isAuthenticated();
     }
 
-    // ── users collection (ถ้ามีแยก): ──
+    // ── users collection: ต้อง authenticated ──
     match /users/{userId} {
-      allow read, write: if true;
+      allow read, write: if isAuthenticated();
     }
 
-    // ── tickets, pm, history ──
+    // ── tickets, pm, history: ต้อง authenticated ──
     match /tickets/{docId} {
-      allow read, write: if true;
+      allow read, write: if isAuthenticated();
     }
 
     // ── block everything else ──

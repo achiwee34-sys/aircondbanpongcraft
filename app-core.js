@@ -31,7 +31,6 @@ const FUNC_LOC = window._FUNC_LOC_DATA || {};
 // ── FUNC_LOC โหลดจาก func-loc-data.js (แยกไฟล์เพื่อลดขนาด app-core.js) ──
  // bump this to force reset
 const VER_KEY = 'airtrack_ver';
-// ── PATCH audit-L1: named constants แทน hardcoded strings ──
 const SIGS_KEY    = 'aircon_sigs';
 const SESSION_KEY = 'aircon_session';
 const PDF_CFG_KEY_NAME = 'aircon_pdf_cfg';
@@ -71,7 +70,6 @@ if (localStorage.getItem(VER_KEY) !== APP_VER) {
   }
 }
 
-// ── PATCH audit-C3: try-catch ป้องกัน JSON corrupted crash ──
 let db;
 try {
   db = JSON.parse(localStorage.getItem(DB_KEY) || 'null') || initDB();
@@ -165,7 +163,6 @@ if (db.machines) {
   if (migrated > 0) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 }
 
-// ── PATCH: โหลด machines จาก machines.json แทน hardcode ──
 (function ensureDBDefaults() {
   if (!db.calEvents) db.calEvents = [];
   if (!db.chats)     db.chats     = {};
@@ -213,7 +210,6 @@ function saveDB() {
         const {signatures:_s,...rest}=t; return rest;
       })};
       const json = JSON.stringify(dbForLocal);
-      // ── PATCH: ตรวจ quota ก่อน save (limit ~5MB, warn ที่ 80%) ──
       if (json.length > 4_000_000) {
         console.warn('[DB] Storage nearing limit:', (json.length/1024/1024).toFixed(1)+'MB');
         if (typeof showToast === 'function')
@@ -221,7 +217,6 @@ function saveDB() {
       }
       localStorage.setItem(DB_KEY, json);
     } catch(e) {
-      // ── PATCH: จับ QuotaExceededError ──
       if (e && e.name === 'QuotaExceededError') {
         console.error('[DB] localStorage FULL!');
         if (typeof showToast === 'function')
@@ -235,7 +230,6 @@ function saveDB() {
 }
 // ============================================================
 // SECURITY — Password Hashing (SHA-256 via WebCrypto)
-// ── PATCH v1: แทน plain text ด้วย hashed password ──
 // ============================================================
 const HASH_PREFIX = 'sha256:';
 
@@ -262,10 +256,9 @@ async function verifyPassword(plain, stored) {
     // plain text เก่า: ตรง = true แล้ว migrate ต่อ
     return plain === stored;
   } catch(e) {
-    console.warn('[verifyPassword] WebCrypto error, fallback to plain compare:', e.message);
-    // fallback: plain compare (ป้องกัน login ล็อคถาวรถ้า WebCrypto ไม่ work)
-    const stripped = stored.startsWith(HASH_PREFIX) ? stored.slice(HASH_PREFIX.length) : stored;
-    return plain === stored || plain === stripped;
+    // SECURITY FIX (audit #2): ไม่ fallback plain compare — ถ้า WebCrypto ล้มเหลวให้ปฏิเสธ login
+    console.error('[verifyPassword] WebCrypto error — login rejected for security:', e.message);
+    return false;
   }
 }
 
@@ -333,7 +326,6 @@ async function doRegister() {  // PATCH: async เพื่อ await hashPasswor
   }
 
   try {
-    // ── PATCH: hash password ก่อน save ──
     const hashedPass = await hashPassword(pass);
     const newUser = {
       id: 'u' + Date.now(),
@@ -440,7 +432,6 @@ async function doLogin() {
       return;
     }
     clearLoginErr();
-    // ── PATCH: migrate password เก่า (plain text) → SHA-256 อัตโนมัติ ──
     await migratePasswordIfNeeded(candidate, p);
     _loginAttempts = 0; // reset หลัง login สำเร็จ
     CU = candidate;
@@ -449,7 +440,6 @@ async function doLogin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').classList.add('visible');
     initApp();
-    // ── PATCH: โหลด machines.json หลัง app start ──
     loadMachinesData().then(() => {
       if (typeof refreshMachineList === 'function') refreshMachineList();
     });
@@ -779,7 +769,6 @@ async function viewQuotationFull(tid) {
     } catch(e) {}
   }
 
-  // ── PATCH audit: outer try-catch ป้องกัน crash เงียบ (เหมือน generateRepairPDF) ──
   try {
 
   const tech     = db.users.find(u=>u.id===t.assigneeId);
@@ -787,7 +776,7 @@ async function viewQuotationFull(tid) {
   const machine  = getMacMap().get(t.machineId)||null;
   const cfg      = Object.assign({orgName:'SCG AIRCON',logo:''}, getPDFConfig(), db.pdfConfig||{});
 
-  var _esc = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+  var _esc = escapeHtml; // REFACTOR (audit #8): use global escapeHtml instead of local duplicate
   const _fmt  = n=>n>0?n.toLocaleString('en-US',{minimumFractionDigits:2}):'—';
   const _fmtD = s=>{if(!s)return'—';try{const[y,m,d]=s.split('-');return`${parseInt(d)}/${m}/${parseInt(y)+543}`;}catch(e){return s;}};
   const today = _fmtD(new Date().toISOString().slice(0,10));
@@ -1337,7 +1326,7 @@ async function generateRepairPDF(tid) {
   };
 
   // ── helpers for old html template ──
-  var _esc = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+  var _esc = escapeHtml; // REFACTOR (audit #8): use global escapeHtml instead of local duplicate
 
   // ── Build HTML (NIL Engineering Quotation style) ──
   const quotNo = t.id;
@@ -1701,7 +1690,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
   };
   var _fmtDate=(s)=>{if(!s)return'—';try{const[y,m,d]=s.split('-');return`${parseInt(d)}/${m}/${parseInt(y)+543}`;}catch(e){return s;}};
   var _fmt=(n)=>n>0?n.toLocaleString('en-US',{minimumFractionDigits:2}):'—';
-  var _esc = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+  var _esc = escapeHtml; // REFACTOR (audit #8): use global escapeHtml instead of local duplicate
 
   // ── build print HTML ──
    var buildHTML = function() {
@@ -2377,7 +2366,6 @@ function _resetIdleTimer() {
   document.addEventListener(ev, _resetIdleTimer, { passive: true })
 );
 
-// ── PATCH: ป้องกัน sheet ค้างเมื่อ browser restore จาก bfcache / Android Chrome ──
 function _forceCloseAllSheets() {
   document.querySelectorAll('.sheet').forEach(s => {
     s.classList.remove('open');
@@ -2451,14 +2439,12 @@ async function initApp() {
   initLang();
   renderTopbarAvatar();
   initSidebarState();
-  // ── PATCH: เริ่ม Firebase ทันทีใน Phase 1 ไม่รอ 300ms ──
   if (typeof initFirebase === 'function' && !_firebaseReady) {
     try { initFirebase(); } catch(e) { console.warn('Phase1 Firebase init:', e); }
   }
 
   // ── Phase 2: แสดงหน้าหลักทันที ──
   requestAnimationFrame(() => {
-    // ── PATCH: close modals/sheets อีกรอบหลัง paint (ป้องกัน sheet ค้างหลัง login) ──
     _closeAllModals();
     _forceCloseAllSheets();
     // Hide ทุก page ก่อน แล้วค่อย goPage (ป้องกัน page เก่าค้างจาก session ก่อน)
@@ -2466,7 +2452,6 @@ async function initApp() {
     _activePage = null;
     goPage(CU.role === 'executive' ? 'executive' : 'home');
     if (typeof checkAutoBackup === 'function') checkAutoBackup();
-    // ── PATCH: อีกรอบหลัง goPage render เสร็จ ป้องกัน sheet ถูก re-open ──
     setTimeout(() => _forceCloseAllSheets(), 300);
     setTimeout(() => _forceCloseAllSheets(), 800);
   });
@@ -2481,7 +2466,6 @@ async function initApp() {
     updateOpenBadge();
   }, 50);
 
-  // ── PATCH Phase 3.5: โหลด machines.json (async, ไม่ block) ──
   loadMachinesData().then(() => {
     // refresh machine list ถ้าอยู่หน้า machines อยู่
     if (typeof populateMachineSelect === 'function') populateMachineSelect();
@@ -2500,7 +2484,6 @@ async function initApp() {
           refreshPage();
           updateOpenBadge();
           updateNBadge();
-          // ── PATCH: refresh dropdown แผนก หลัง Firebase โหลดข้อมูลเสร็จ ──
           if (typeof populateMachineSelect === 'function') populateMachineSelect();
         }
         fsListen();
@@ -2784,7 +2767,6 @@ function goPage(name) {
     }
     else if (name === 'new') {
       populateMachineSelect();
-      // ── PATCH: ถ้า machines ยังว่าง ให้ retry หลังจาก Firebase โหลดเสร็จ ──
       if (!db.machines || db.machines.length === 0) {
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 600);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 1800);
@@ -3653,7 +3635,13 @@ async function offlineSync() {
       }
     } catch(e) {
       console.warn('[offlineSync] failed:', item.type, e);
-      _offlineQueue.push(item); // put back
+      // RETRY LIMIT FIX (audit #5): ไม่ retry ถ้าเกิน 5 ครั้ง ป้องกัน infinite loop
+      if ((item.retryCount || 0) < 5) {
+        item.retryCount = (item.retryCount || 0) + 1;
+        _offlineQueue.push(item); // put back
+      } else {
+        console.warn('[offlineSync] Drop item after 5 retries:', item.id || item.type);
+      }
       fail++;
     }
   }

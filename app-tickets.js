@@ -1422,9 +1422,113 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
     </div>
   </div>
   </div>`;
-  // ── PATCH audit-L2: LRU eviction ป้องกัน cache โตไม่จำกัด ──
   if (_tkCardCache.size >= 300) {
     _tkCardCache.delete(_tkCardCache.keys().next().value);
   }
   return _html;
 }
+
+// ============================================================
+// ITEM 10: Repair History Page (ย้ายจาก index.html)
+// ============================================================
+window.openRepairHistoryPage = function() {
+  const inp = document.getElementById('repairhist-input');
+  if (inp) inp.value = '';
+  openSheet('repairhist');
+  setTimeout(() => {
+    renderRepairHistResults();
+    const i = document.getElementById('repairhist-input');
+    if (i) i.focus();
+  }, 350);
+};
+
+window.renderRepairHistResults = function() {
+  const q = (document.getElementById('repairhist-input')?.value || '').trim().toLowerCase();
+  const el = document.getElementById('repairhist-results');
+  if (!el) return;
+
+  const statusColor = { done:'#f59e0b', verified:'#16a34a', closed:'#64748b',
+    inprogress:'#8b5cf6', accepted:'#3b82f6', assigned:'#0891b2', new:'#ef4444' };
+  const statusLabel = { done:'เสร็จแล้ว', verified:'ตรวจรับแล้ว', closed:'ปิดแล้ว',
+    inprogress:'กำลังซ่อม', accepted:'รับงาน', assigned:'จ่ายงาน', new:'ใหม่' };
+
+  let tickets = (window.db?.tickets || [])
+    .filter(t => ['done','verified','closed'].includes(t.status))
+    .sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+
+  if (!q) {
+    const total = tickets.length;
+    const totalCost = tickets.reduce((s,t)=>s+(parseFloat(t.cost)||0),0);
+    el.innerHTML = `
+      <div style="font-size:0.68rem;font-weight:800;color:#94a3b8;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;padding:0 2px;display:flex;align-items:center;justify-content:space-between">
+        <span>งานซ่อมเสร็จล่าสุด</span>
+        <span style="color:#16a34a;font-weight:900">${total} งาน · ฿${totalCost.toLocaleString()}</span>
+      </div>
+      ${tickets.slice(0,20).map(t => renderRepairHistRow(t, statusColor, statusLabel)).join('')}
+      ${total > 20 ? `<div style="text-align:center;padding:10px;color:#94a3b8;font-size:0.75rem">แสดง 20 จาก ${total} รายการ — ค้นหาเพื่อกรอง</div>` : ''}`;
+    return;
+  }
+
+  const filtered = tickets.filter(t =>
+    (t.id||'').toLowerCase().includes(q) ||
+    (t.machine||'').toLowerCase().includes(q) ||
+    (t.problem||'').toLowerCase().includes(q) ||
+    (t.assignee||'').toLowerCase().includes(q) ||
+    (t.summary||'').toLowerCase().includes(q)
+  );
+
+  if (!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px 16px;color:#94a3b8"><div style="font-size:1.6rem;margin-bottom:6px">📭</div><div style="font-size:0.82rem;font-weight:700">ไม่พบผลลัพธ์</div></div>';
+    return;
+  }
+
+  el.innerHTML = `
+    <div style="font-size:0.68rem;font-weight:800;color:#94a3b8;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;padding:0 2px">พบ ${filtered.length} รายการ</div>
+    ${filtered.slice(0,30).map(t => renderRepairHistRow(t, statusColor, statusLabel)).join('')}`;
+};
+
+function renderRepairHistRow(t, statusColor, statusLabel) {
+  const cost = parseFloat(t.cost) || 0;
+  const repairCost = parseFloat(t.repairCost) || 0;
+  const partsCost = parseFloat(t.partsCost) || 0;
+  const tech = t.assignee || '—';
+  const date = (t.updatedAt||t.createdAt||'').substring(0,10);
+  const sc = statusColor[t.status] || '#64748b';
+  const sl = statusLabel[t.status] || t.status;
+  const items = (t.repairItems||[]).map(i=>typeof i==='string'?i:(i.name||'')).filter(Boolean);
+  return `<div onclick="closeSheet('repairhist');setTimeout(()=>safeOpenDetail('${t.id}'),220)"
+    style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent"
+    onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px">
+          <span style="font-size:0.7rem;font-family:'JetBrains Mono',monospace;font-weight:900;color:#c8102e;background:#fff0f2;border-radius:4px;padding:1px 6px">${t.id}</span>
+          <span style="font-size:0.62rem;font-weight:800;padding:1px 7px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sl}</span>
+        </div>
+        <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${t.machine||'—'}</div>
+        <div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${t.problem||'—'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+        ${cost > 0 ? `<span style="font-size:0.7rem;font-weight:900;color:#16a34a">฿${cost.toLocaleString()}</span>` : ''}
+        <span style="font-size:0.6rem;color:#94a3b8">${date}</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:5px;border-top:1px dashed #f1f5f9">
+      <span style="font-size:0.65rem;color:#64748b;display:flex;align-items:center;gap:4px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="2.2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        ${tech}
+      </span>
+      ${repairCost > 0 ? `<span style="font-size:0.62rem;background:#eff6ff;color:#1d4ed8;border-radius:5px;padding:1px 6px;font-weight:700">🔧 ฿${repairCost.toLocaleString()}</span>` : ''}
+      ${partsCost > 0 ? `<span style="font-size:0.62rem;background:#fffbeb;color:#92400e;border-radius:5px;padding:1px 6px;font-weight:700">🛒 ฿${partsCost.toLocaleString()}</span>` : ''}
+      <button onclick="event.stopPropagation();if(typeof generateRepairPDF==='function')generateRepairPDF('${t.id}')" style="margin-left:auto;padding:4px 9px;background:#1a5276;color:white;border:none;border-radius:7px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px">PDF</button>
+    </div>
+    ${items.length > 0 ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${items.slice(0,4).map(i=>`<span style="font-size:0.6rem;background:#f1f5f9;color:#475569;border-radius:5px;padding:1px 6px">${i}</span>`).join('')}${items.length>4?`<span style="font-size:0.6rem;color:#94a3b8">+${items.length-4}</span>`:''}</div>` : ''}
+    ${t.summary ? `<div style="margin-top:6px;padding:6px 9px;background:#f8fafc;border-radius:8px;font-size:0.68rem;color:#374151;line-height:1.5;border-left:3px solid #c8102e">${(t.summary).substring(0,150)}${t.summary.length>150?'…':''}</div>` : ''}
+  </div>`;
+}
+
+window.filterRepairHistPage = function(q) {
+  const inp = document.getElementById('repairhist-input');
+  if (inp) inp.value = q;
+  renderRepairHistResults();
+};

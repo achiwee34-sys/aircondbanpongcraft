@@ -266,7 +266,6 @@ async function submitTicket() { // PATCH v67
   if (_photoLoading > 0) {
     const btn = document.getElementById('nt-submit-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ กำลังโหลดรูป...'; }
-    // ── PATCH audit-H2: timeout 15s ป้องกัน infinite interval ──
     const _photoDeadline = Date.now() + 15000;
     const retryTimer = setInterval(() => {
       const timedOut = Date.now() > _photoDeadline;
@@ -324,7 +323,6 @@ async function submitTicket() { // PATCH v67
   _isSubmitting = false;
 }
 
-// ── PATCH v67: async เพื่อ await photo upload ──
 async function _doSubmitTicket(mid, prob) {
   const m = db.machines.find(x=>x.id===mid);
   const _now = new Date();
@@ -341,7 +339,6 @@ async function _doSubmitTicket(mid, prob) {
   const tid = _prefix + '-' + String(_nextSeq).padStart(4,'0');
   db._seq++; // ยังคง increment เพื่อ backward compat
   const now = nowStr();
-  // ── PATCH v67: upload photos → Firebase Storage ก่อนสร้าง ticket ──
   try {
   if (typeof uploadPendingPhotosToStorage === 'function') {
     showToast('⏳ กำลัง upload รูปภาพ...');
@@ -2537,7 +2534,6 @@ async function doComplete( /* PATCH v67 */) {
     return;
   }
 
-  // ── PATCH audit-C2: outer try-catch ป้องกัน crash เงียบ ──
   try {
 
   const now = nowStr();
@@ -2590,7 +2586,6 @@ async function doComplete( /* PATCH v67 */) {
   const _poTotal = Number(t.purchaseOrder?.total || 0);
   t.partsCost = Math.max(_poTotal, Number(t.partsCost || 0));
   t.cost = Number(t.repairCost || 0) + Number(t.partsCost || 0) || Number(t.cost) || 0;
-  // ── PATCH v67: upload photos → Firebase Storage ก่อน assign ──
   if (typeof uploadPendingPhotosToStorage === 'function') {
     showToast('⏳ กำลัง upload รูปภาพ...');
     await uploadPendingPhotosToStorage(t.id);

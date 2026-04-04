@@ -61,7 +61,6 @@ async function fsLoad() {
     const snap = await FSdb.collection('appdata').doc('main').get(); if(window.bkCountRead) window.bkCountRead(1);
     if (snap.exists) {
       const data = snap.data();
-      // ── PATCH v67: sync _docVersion สำหรับ optimistic locking ──
       if (typeof syncDocVersion === 'function') syncDocVersion(data);
 
       // ── users: MERGE ไม่ทับ — local users ใหม่ที่ยังไม่ sync ต้องอยู่รอด ──
@@ -172,7 +171,6 @@ async function fsSaveNow() {
 }
 
 // fire-and-forget save
-// ── PATCH audit-H1: แจ้งผู้ใช้เมื่อ Firebase sync ล้มเหลวต่อเนื่อง ──
 let _fsSaveFailCount = 0;
 function fsSave() {
   // ── Offline Queue: ถ้าไม่มีอินเทอร์เน็ต ให้เก็บใน queue ──
@@ -326,7 +324,6 @@ async function fsListen() {
         refreshPage();
         updateOpenBadge();
         updateNBadge();
-        // ── PATCH: refresh dropdown แผนก เมื่อข้อมูล machines เปลี่ยนจาก Firebase ──
         if (typeof populateMachineSelect === 'function') {
           populateMachineSelect._retryCount = 0;
           clearTimeout(populateMachineSelect._retryTimer);
