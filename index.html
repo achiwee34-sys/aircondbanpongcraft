@@ -579,13 +579,34 @@
           </div>
         </div>
         <div class="fg" id="nt-room-wrap" style="display:none">
-          <label style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+          <label style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
             ห้อง / เครื่องแอร์ *
           </label>
-          <select id="nt-mac" onchange="onMachineChange(this.value)" style="border-radius:10px;border:1.5px solid #e2e8f0;padding:10px 14px;font-size:0.88rem;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222.5%22><polyline points=%226 9 12 15 18 9%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;background-size:14px;padding-right:36px;cursor:pointer;color:#374151;font-family:inherit;width:100%;outline:none;transition:border-color 0.15s">
+          <!-- Custom machine picker — เหมือน dept picker -->
+          <div id="nt-mac-display" onclick="toggleMacPicker()"
+            style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;transition:border-color 0.15s;user-select:none">
+            <div id="nt-mac-icon" style="width:32px;height:32px;border-radius:9px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
+            </div>
+            <span id="nt-mac-label" style="flex:1;font-size:0.88rem;color:#9ca3af;font-weight:500">— เลือกห้อง / เครื่องแอร์ —</span>
+            <svg id="nt-mac-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <!-- Hidden select สำหรับ onMachineChange -->
+          <select id="nt-mac" onchange="onMachineChange(this.value)" style="display:none">
             <option value="">— เลือกห้อง —</option>
           </select>
+          <!-- Picker panel -->
+          <div id="nt-mac-picker" style="display:none;margin-top:6px;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;background:white;box-shadow:0 8px 24px rgba(0,0,0,0.1)">
+            <div style="padding:8px 10px;border-bottom:1px solid #f1f5f9;position:relative">
+              <svg style="position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="nt-mac-search" type="text" placeholder="ค้นหาห้อง / เครื่องแอร์..."
+                oninput="filterMacPicker(this.value)"
+                style="width:100%;padding:7px 10px 7px 30px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:#f8fafc"
+                onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"/>
+            </div>
+            <div id="nt-mac-grid" style="display:flex;flex-direction:column;gap:0;max-height:260px;overflow-y:auto"></div>
+          </div>
         </div>
 
         <!-- History Popup Button — แสดงหลังเลือกห้อง -->
@@ -3336,35 +3357,6 @@ document.addEventListener('visibilitychange', () => {
 /* Item 8: Mobile keyboard fix */
 #app {
   height: 100dvh;
-}
-
-/* Item 4: Stamp upload sticky toolbar */
-#stamp-toolbar {
-  display: none;
-  position: fixed;
-  bottom: calc(var(--nav-h,64px) + env(safe-area-inset-bottom,0px) + 8px);
-  right: 14px;
-  z-index: 9800;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-}
-#stamp-toolbar.visible { display: flex; }
-.stamp-fab {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #1a5276, #2980b9);
-  color: white;
-  border: none;
-  border-radius: 99px;
-  font-size: 0.82rem;
-  font-weight: 800;
-  cursor: pointer;
-  font-family: inherit;
-  box-shadow: 0 4px 16px rgba(26,82,118,0.45);
-  white-space: nowrap;
 }
 
 /* Item 2: Card design improvements */

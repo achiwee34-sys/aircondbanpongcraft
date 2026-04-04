@@ -444,8 +444,6 @@ window.bkCountWrite = function(n) { window._bkWrites = (window._bkWrites || 0) +
 })();
 
 // ============================================================
-// ITEM 4: Stamp Upload Panel (sticky toolbar) (ย้ายจาก index.html)
-// ============================================================
 (function initStampToolbar() {
   const tb = document.createElement('div');
   tb.id = 'stamp-toolbar';

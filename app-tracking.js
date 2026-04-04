@@ -355,6 +355,7 @@ async function _doSubmitTicket(mid, prob) {
   document.getElementById('nt-mac').value='';
   document.getElementById('nt-dept').value='';
   if (typeof resetDeptPicker === 'function') resetDeptPicker();
+  if (typeof resetMacPicker === 'function') resetMacPicker();
   document.getElementById('nt-room-wrap').style.display='none';
   document.getElementById('nt-equip-card').style.display='none';
   document.getElementById('nt-grid').innerHTML='';

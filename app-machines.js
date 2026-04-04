@@ -1963,6 +1963,105 @@ function resetDeptPicker() {
   if (icon)    icon.style.background = '#f1f5f9';
   if (label)   { label.textContent = '— เลือกแผนก —'; label.style.color = '#9ca3af'; label.style.fontWeight = '500'; }
 }
+
+// ── Machine Picker (เหมือน dept picker) ──────────────────────
+let _macPickerOpen = false;
+let _macPickerMachines = [];
+
+function renderMacPickerGrid(machines) {
+  const grid = document.getElementById('nt-mac-grid');
+  if (!grid) return;
+  if (!machines.length) {
+    grid.innerHTML = `<div style="padding:20px;text-align:center;color:#94a3b8;font-size:0.8rem">ไม่พบเครื่องแอร์</div>`;
+    return;
+  }
+  const accentColor = '#0369a1';
+  grid.innerHTML = machines.map(m => {
+    const lbl = `[${m.serial||m.id}] ${m.name}`;
+    const sub = [m.btu ? Number(m.btu).toLocaleString()+' BTU' : '', m.refrigerant || ''].filter(Boolean).join(' · ');
+    return `<div class="mac-picker-item" data-mid="${m.id}"
+      onclick="selectMacPickerItem('${m.id.replace(/'/g,"\\'")}','${lbl.replace(/'/g,"\\'").replace(/`/g,'\\`')}')"
+      style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.12s;-webkit-tap-highlight-color:transparent"
+      onmousedown="this.style.background='#f0f9ff'" onmouseup="this.style.background=''"
+      ontouchstart="this.style.background='#f0f9ff'" ontouchend="this.style.background=''">
+      <div style="width:34px;height:34px;border-radius:10px;background:#0369a11a;border:1.5px solid #0369a133;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(lbl)}</div>
+        ${sub ? `<div style="font-size:0.62rem;color:#94a3b8;margin-top:1px">${escapeHtml(sub)}</div>` : ''}
+      </div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+}
+
+function filterMacPicker(q) {
+  const filtered = q
+    ? _macPickerMachines.filter(m =>
+        (m.name||'').toLowerCase().includes(q.toLowerCase()) ||
+        (m.serial||'').toLowerCase().includes(q.toLowerCase()) ||
+        (m.id||'').toLowerCase().includes(q.toLowerCase()))
+    : _macPickerMachines;
+  renderMacPickerGrid(filtered);
+}
+
+function toggleMacPicker() {
+  const picker  = document.getElementById('nt-mac-picker');
+  const chevron = document.getElementById('nt-mac-chevron');
+  const display = document.getElementById('nt-mac-display');
+  if (!picker) return;
+  _macPickerOpen = !_macPickerOpen;
+  picker.style.display = _macPickerOpen ? 'block' : 'none';
+  if (chevron) chevron.style.transform = _macPickerOpen ? 'rotate(180deg)' : '';
+  if (display) display.style.borderColor = _macPickerOpen ? '#0369a1' : '#e2e8f0';
+  if (_macPickerOpen) {
+    setTimeout(() => { const s = document.getElementById('nt-mac-search'); if(s) s.focus(); }, 100);
+  }
+}
+
+function selectMacPickerItem(mid, label) {
+  _macPickerOpen = false;
+  const picker  = document.getElementById('nt-mac-picker');
+  const chevron = document.getElementById('nt-mac-chevron');
+  const display = document.getElementById('nt-mac-display');
+  const icon    = document.getElementById('nt-mac-icon');
+  const lbl     = document.getElementById('nt-mac-label');
+  if (picker)  picker.style.display = 'none';
+  if (chevron) chevron.style.transform = '';
+  if (display) { display.style.borderColor = '#0369a1'; display.style.background = '#0369a10d'; }
+  if (icon) {
+    icon.style.background = '#0369a11a';
+    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>`;
+  }
+  if (lbl) { lbl.textContent = label; lbl.style.color = '#0f172a'; lbl.style.fontWeight = '700'; }
+  const sel = document.getElementById('nt-mac');
+  if (sel) sel.value = mid;
+  onMachineChange(mid);
+  const s = document.getElementById('nt-mac-search');
+  if (s) s.value = '';
+  renderMacPickerGrid(_macPickerMachines);
+}
+
+function resetMacPicker() {
+  _macPickerOpen = false;
+  _macPickerMachines = [];
+  const picker  = document.getElementById('nt-mac-picker');
+  const chevron = document.getElementById('nt-mac-chevron');
+  const display = document.getElementById('nt-mac-display');
+  const icon    = document.getElementById('nt-mac-icon');
+  const label   = document.getElementById('nt-mac-label');
+  if (picker)  picker.style.display = 'none';
+  if (chevron) chevron.style.transform = '';
+  if (display) { display.style.borderColor = '#e2e8f0'; display.style.background = 'white'; }
+  if (icon) {
+    icon.style.background = '#f1f5f9';
+    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>`;
+  }
+  if (label) { label.textContent = '— เลือกห้อง / เครื่องแอร์ —'; label.style.color = '#9ca3af'; label.style.fontWeight = '500'; }
+  const s = document.getElementById('nt-mac-search');
+  if (s) s.value = '';
+}
 // ───────────────────────────────────────────────────────────
 
 function populateMachineSelect() {
@@ -2175,20 +2274,30 @@ function onNtSearchSelect(mid) {
 
 function onDeptChange(dept, autoSelectMid) {
   const roomWrap = document.getElementById('nt-room-wrap');
-  const roomSel = document.getElementById('nt-mac');
   if (!dept) {
     roomWrap.style.display='none';
     document.getElementById('nt-equip-card').style.display='none';
+    resetMacPicker();
     return;
   }
   const rooms = db.machines.filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === dept);
-  roomSel.innerHTML = '<option value="">— เลือกห้อง —</option>' +
-    rooms.map(m => `<option value="${m.id}">[${m.serial||''}] ${m.name}${m.btu?' ('+Number(m.btu).toLocaleString()+' BTU)':''}</option>`).join('');
+  // อัปเดต hidden select (backward compat)
+  const roomSel = document.getElementById('nt-mac');
+  if (roomSel) {
+    roomSel.innerHTML = '<option value="">— เลือกห้อง —</option>' +
+      rooms.map(m => `<option value="${m.id}">[${m.serial||m.id}] ${m.name}</option>`).join('');
+  }
+  // อัปเดต custom picker
+  _macPickerMachines = rooms;
+  resetMacPicker();
   roomWrap.style.display = 'block';
   // auto-select machine if specified (จากการค้นหา)
   if (autoSelectMid) {
-    roomSel.value = autoSelectMid;
-    onMachineChange(autoSelectMid);
+    const m = rooms.find(x => x.id === autoSelectMid);
+    if (m) {
+      const lbl = `[${m.serial||m.id}] ${m.name}`;
+      selectMacPickerItem(autoSelectMid, lbl);
+    }
   } else {
     document.getElementById('nt-equip-card').style.display='none';
   }
@@ -3172,19 +3281,7 @@ function openNewMachinesTable() {
     // สร้าง page numbers แบบ ellipsis — แสดงแค่ window 5 หน้ารอบๆ current
     const pages = [];
     const addPage = (p) => pages.push(`<button onclick="window._nmGoPage(${p})"
-      style="min-width:32px;height:32px;border-radius:8px;border:1.5px solid ${p===currentPage?'#064e3b':'#e2e8f0'};background:${p===currentPage?'#064e3b':'white'};color:${p===currentPage?'white':'#374151'};font-size:0.78rem;font-weight:${p===currentPage?'900':'600'};cursor:pointer;font-family:inherit;padding:0 4px">${p}</button>
-          <button onclick="manualBackup()"
-            style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent"
-            onmousedown="this.style.background='var(--card2)'" onmouseup="this.style.background='transparent'">
-            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#059669,#047857);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:0.82rem;font-weight:700;color:var(--text)">💾 Backup ข้อมูล (JSON)</div>
-              <div style="font-size:0.65rem;color:var(--muted);margin-top:1px">บันทึกข้อมูลทั้งหมดเป็นไฟล์ JSON</div>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>`);
+      style="min-width:32px;height:32px;border-radius:8px;border:1.5px solid ${p===currentPage?'#064e3b':'#e2e8f0'};background:${p===currentPage?'#064e3b':'white'};color:${p===currentPage?'white':'#374151'};font-size:0.78rem;font-weight:${p===currentPage?'900':'600'};cursor:pointer;font-family:inherit;padding:0 4px">${p}</button>`);
     const addDot = () => pages.push(`<span style="color:#94a3b8;font-size:0.82rem;padding:0 2px">…</span>`);
 
     if (total <= 7) {
