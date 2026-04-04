@@ -2288,8 +2288,9 @@ function onDeptChange(dept, autoSelectMid) {
       rooms.map(m => `<option value="${m.id}">[${m.serial||m.id}] ${m.name}</option>`).join('');
   }
   // อัปเดต custom picker
-  _macPickerMachines = rooms;
   resetMacPicker();
+  _macPickerMachines = rooms;
+  renderMacPickerGrid(rooms);
   roomWrap.style.display = 'block';
   // auto-select machine if specified (จากการค้นหา)
   if (autoSelectMid) {
