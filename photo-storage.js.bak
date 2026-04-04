@@ -28,24 +28,14 @@ function initStorage() {
  * @param {string} path    - path ใน Storage เช่น "tickets/TK032026001/before_0.jpg"
  * @returns {Promise<string>} - download URL หรือ base64 เดิม (ถ้า upload ไม่ได้)
  */
-// helper: Promise.race กับ timeout
-function _withTimeout(promise, ms, label) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`[Storage] ${label} timeout after ${ms}ms`)), ms)
-    )
-  ]);
-}
-
 async function uploadPhotoToStorage(base64, path) {
   // ถ้าเป็น URL แล้ว (https://) ไม่ต้อง upload ซ้ำ
   if (!base64 || !base64.startsWith('data:')) return base64;
-  // ถ้า Storage ไม่พร้อม → null (ผู้เรียกจัดการต่อ)
-  if (!FSstorage) return null;
+  // ถ้า Storage ไม่พร้อม → fallback เป็น base64 เดิม (offline mode)
+  if (!FSstorage) return base64;
 
   try {
-    // แปลง base64 → Blob
+    // แปลง base64 → Blob (ไม่ใช้ fetch เพราะบาง browser ไม่รองรับ data: URL)
     let blob;
     try {
       const arr = base64.split(',');
@@ -56,19 +46,21 @@ async function uploadPhotoToStorage(base64, path) {
       for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
       blob = new Blob([u8arr], { type: mime });
     } catch(convErr) {
+      // fallback: ลอง fetch
       const res = await fetch(base64);
       blob = await res.blob();
     }
-
     const ref = FSstorage.ref(path);
-    // timeout 20 วินาทีต่อรูป — ถ้าช้ากว่านี้ถือว่าล้มเหลว
-    const snapshot = await _withTimeout(ref.put(blob, { contentType: 'image/jpeg' }), 20000, 'put');
-    const url      = await _withTimeout(snapshot.ref.getDownloadURL(), 10000, 'getDownloadURL');
+    const snapshot = await ref.put(blob, { contentType: 'image/jpeg' });
+    const url = await snapshot.ref.getDownloadURL();
     return url;
-
   } catch(e) {
-    console.warn('[Storage] upload failed:', e.message);
-    return null; // null = upload ไม่ได้ → ผู้เรียกตัดรูปออกแทนเก็บ base64
+    // PHOTO FIX (audit #4): warn ชัดเจนเมื่อ fallback base64 เกิดขึ้น
+    console.warn('[Storage] upload failed — falling back to base64 (localStorage may fill up):', e);
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Upload รูปภาพไม่สำเร็จ — บันทึกชั่วคราวใน device (กรุณาตรวจสอบ internet)');
+    }
+    return base64;
   }
 }
 
@@ -78,53 +70,36 @@ async function uploadPhotoToStorage(base64, path) {
  * @param {string} ticketId - ใช้เป็น path prefix ใน Storage
  */
 async function uploadPendingPhotosToStorage(ticketId) {
-  if (!FSstorage) {
-    // offline → ตัดรูปออกทั้งหมด เพื่อไม่ให้ base64 ยัดเข้า Firestore
-    pendingPhotos.before = [];
-    pendingPhotos.after  = [];
-    if (typeof showToast === 'function') showToast('⚠️ ไม่สามารถอัปโหลดรูปได้ (offline) — บันทึกงานโดยไม่มีรูป');
-    return;
-  }
+  if (!FSstorage) return; // offline → ใช้ base64 ไปก่อน
 
   const timestamp = Date.now();
-  let failCount = 0;
 
   // before photos
-  const newBefore = [];
   for (let i = 0; i < pendingPhotos.before.length; i++) {
     const p = pendingPhotos.before[i];
-    if (!p || !p.startsWith('data:')) { newBefore.push(p); continue; }
-    try {
-      const path = `tickets/${ticketId}/before_${i}_${timestamp}.jpg`;
-      const url = await uploadPhotoToStorage(p, path);
-      if (url) { newBefore.push(url); }
-      else { failCount++; } // null = upload ไม่ได้ → ตัดออก
-    } catch(e) {
-      console.warn(`[photo] skip before[${i}]:`, e.message);
-      failCount++;
+    if (p && p.startsWith('data:')) {
+      try {
+        const path = `tickets/${ticketId}/before_${i}_${timestamp}.jpg`;
+        pendingPhotos.before[i] = await uploadPhotoToStorage(p, path);
+      } catch(e) {
+        console.warn(`[photo] skip before[${i}]:`, e.message);
+        // เก็บ base64 เดิมไว้ ไม่ให้ข้อมูลหาย
+      }
     }
   }
-  pendingPhotos.before = newBefore;
 
   // after photos
-  const newAfter = [];
   for (let i = 0; i < pendingPhotos.after.length; i++) {
     const p = pendingPhotos.after[i];
-    if (!p || !p.startsWith('data:')) { newAfter.push(p); continue; }
-    try {
-      const path = `tickets/${ticketId}/after_${i}_${timestamp}.jpg`;
-      const url = await uploadPhotoToStorage(p, path);
-      if (url) { newAfter.push(url); }
-      else { failCount++; }
-    } catch(e) {
-      console.warn(`[photo] skip after[${i}]:`, e.message);
-      failCount++;
+    if (p && p.startsWith('data:')) {
+      try {
+        const path = `tickets/${ticketId}/after_${i}_${timestamp}.jpg`;
+        pendingPhotos.after[i] = await uploadPhotoToStorage(p, path);
+      } catch(e) {
+        console.warn(`[photo] skip after[${i}]:`, e.message);
+        // เก็บ base64 เดิมไว้ ไม่ให้ข้อมูลหาย
+      }
     }
-  }
-  pendingPhotos.after = newAfter;
-
-  if (failCount > 0 && typeof showToast === 'function') {
-    showToast(`⚠️ อัปโหลดรูปไม่สำเร็จ ${failCount} รูป — บันทึกงานต่อโดยไม่มีรูปนั้น`);
   }
 }
 

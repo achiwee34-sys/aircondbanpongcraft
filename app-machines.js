@@ -1961,12 +1961,13 @@ function selectDeptPickerItem(dept, col) {
   const display = document.getElementById('nt-dept-display');
   const icon    = document.getElementById('nt-dept-icon');
   const label   = document.getElementById('nt-dept-label');
-  if (display) display.style.borderColor = col;
-  if (display) display.style.background = col+'0d';
+  if (display) display.style.borderColor = '#c8102e';
+  if (display) display.style.background = '#c8102e0d';
   if (icon) {
-    icon.style.background = col+'1a';
-    icon.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>`;
+    icon.style.background = '#c8102e1a';
+    icon.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>`;
   }
+  if (display) { display.style.borderColor = '#c8102e'; display.style.background = '#c8102e0d'; }
   if (label) { label.textContent = dept; label.style.color = '#0f172a'; label.style.fontWeight = '700'; }
 
   // set hidden select + trigger onDeptChange
@@ -2076,10 +2077,10 @@ function selectMacPickerItem(mid, label) {
   if (overlay) overlay.style.display = 'none';
   if (chevron) chevron.style.transform = '';
   _unlockBodyScroll();
-  if (display) { display.style.borderColor = '#0369a1'; display.style.background = '#0369a10d'; }
+  if (display) { display.style.borderColor = '#c8102e'; display.style.background = '#c8102e0d'; }
   if (icon) {
-    icon.style.background = '#0369a11a';
-    icon.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="12" cy="12" r="3.5"/><path d="M12 8.5v1M12 14.5v1M8.5 12h1M14.5 12h1"/><line x1="2" y1="7" x2="22" y2="7"/><line x1="5" y1="5" x2="5" y2="5.01"/><line x1="8" y1="5" x2="8" y2="5.01"/></svg>`;
+    icon.style.background = '#c8102e1a';
+    icon.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="12" cy="12" r="3.5"/><path d="M12 8.5v1M12 14.5v1M8.5 12h1M14.5 12h1"/><line x1="2" y1="7" x2="22" y2="7"/><line x1="5" y1="5" x2="5" y2="5.01"/><line x1="8" y1="5" x2="8" y2="5.01"/></svg>`;
   }
   if (lbl) { lbl.textContent = label; lbl.style.color = '#0f172a'; lbl.style.fontWeight = '700'; }
   const sel = document.getElementById('nt-mac');

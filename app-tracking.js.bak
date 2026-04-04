@@ -4,8 +4,8 @@
 let pendingPhotos = {before:[], after:[]};
 let _photoLoading = 0;
 const MAX_PHOTOS_PER_TYPE = 3;   // สูงสุด 3 รูปต่อประเภท
-const PHOTO_MAX_PX = 800;        // resize ให้ไม่เกิน 800px (ลดจาก 1024 เพื่อ upload เร็วขึ้น)
-const PHOTO_QUALITY = 0.65;      // JPEG quality (ลดจาก 0.72)
+const PHOTO_MAX_PX = 1024;       // resize ให้ไม่เกิน 1024px
+const PHOTO_QUALITY = 0.72;      // JPEG quality
 
 // ── Phone number auto-format: 091-234-5678 ──
 function fmtPhone(el) {
@@ -342,23 +342,7 @@ async function _doSubmitTicket(mid, prob) {
   try {
   if (typeof uploadPendingPhotosToStorage === 'function') {
     showToast('⏳ กำลัง upload รูปภาพ...');
-    // overall timeout 45 วินาที — ถ้าเกินจะตัดรูปออกแล้ว submit ต่อ
-    try {
-      await Promise.race([
-        uploadPendingPhotosToStorage(tid),
-        new Promise(resolve => setTimeout(() => {
-          pendingPhotos.before = pendingPhotos.before.filter(p => p && !p.startsWith('data:'));
-          pendingPhotos.after  = pendingPhotos.after.filter(p => p && !p.startsWith('data:'));
-          showToast('⚠️ upload รูปช้า — บันทึกงานต่อโดยไม่มีรูปที่ค้าง');
-          resolve();
-        }, 45000))
-      ]);
-    } catch(uploadErr) {
-      console.warn('[submit] upload error, continuing without photos:', uploadErr.message);
-      pendingPhotos.before = pendingPhotos.before.filter(p => p && !p.startsWith('data:'));
-      pendingPhotos.after  = pendingPhotos.after.filter(p => p && !p.startsWith('data:'));
-      showToast('⚠️ upload รูปไม่สำเร็จ — บันทึกงานต่อโดยไม่มีรูป');
-    }
+    await uploadPendingPhotosToStorage(tid);
   }
   const t = {id:tid,machineId:mid,machine:m.name,problem:prob,detail:document.getElementById('nt-detail').value.trim(),priority:document.getElementById('nt-pri').value,status:'new',reporterId:CU.id,reporter:CU.name,assigneeId:null,assignee:null,createdAt:now,updatedAt:now,cost:0,summary:'',parts:'',note:document.getElementById('nt-note').value.trim(),contact:document.getElementById('nt-tel').value.trim(),photosBefore:[...pendingPhotos.before],photosAfter:[],history:[{act:'📢 แจ้งงาน',by:CU.name,at:now}]};
   db.tickets.push(t);
