@@ -34,6 +34,11 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    // ── ticket_photos: เก็บรูปแยก document ──
+    match /ticket_photos/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
     // ── block everything else ──
     match /{document=**} {
       allow read, write: if false;

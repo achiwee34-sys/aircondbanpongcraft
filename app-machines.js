@@ -2303,18 +2303,35 @@ function onNtSearchSelect(mid) {
   const searchEl = document.getElementById('nt-search');
   if (searchEl) searchEl.value = m.name;
 
-  // ตั้งค่า dept dropdown
-  const deptEl = document.getElementById('nt-dept');
-  if (deptEl) {
-    // เพิ่ม option ถ้ายังไม่มี
-    const deptVal = m.dept || m.location || '';
-    if (deptVal && ![...deptEl.options].find(o => o.value === deptVal)) {
-      const opt = document.createElement('option');
-      opt.value = deptVal; opt.textContent = deptVal;
-      deptEl.appendChild(opt);
+  const deptVal = m.dept || m.location || '';
+  if (deptVal) {
+    // หา palette index เพื่อให้สีตรงกับ dept list
+    const palette = ['#c8102e','#e65100','#0369a1','#059669','#7c3aed','#d97706'];
+    if (!_deptPickerDepts || !_deptPickerDepts.length) {
+      // ถ้า dept list ยังไม่โหลด ให้ init ก่อน
+      const allDepts = [...new Set((db.machines||[]).map(x => x.dept||x.location||'ไม่ระบุแผนก'))].sort();
+      _deptPickerDepts = allDepts;
     }
-    deptEl.value = deptVal;
-    onDeptChange(deptVal, mid); // pass mid เพื่อ auto-select
+    const idx = (_deptPickerDepts||[]).indexOf(deptVal);
+    const col = palette[idx >= 0 ? idx % palette.length : 0];
+    // อัปเดต hidden select
+    const deptEl = document.getElementById('nt-dept');
+    if (deptEl) {
+      if (![...deptEl.options].find(o => o.value === deptVal)) {
+        const opt = document.createElement('option');
+        opt.value = deptVal; opt.textContent = deptVal;
+        deptEl.appendChild(opt);
+      }
+      deptEl.value = deptVal;
+    }
+    // อัปเดต custom dept picker display (icon + label + border)
+    if (typeof selectDeptPickerItem === 'function') {
+      selectDeptPickerItem(deptVal, col);
+      // selectDeptPickerItem เรียก onDeptChange แล้ว แต่ต้อง pass mid ด้วย
+      setTimeout(() => { if (typeof onDeptChange === 'function') onDeptChange(deptVal, mid); }, 50);
+    } else {
+      onDeptChange(deptVal, mid);
+    }
     return;
   }
   onMachineChange(mid);

@@ -1,322 +1,148 @@
 // ============================================================
-// PHOTO STORAGE — Firebase Storage (แทน base64 ใน Firestore)
+// PHOTO STORAGE — เก็บรูปใน Firestore collection "ticket_photos"
 // ============================================================
 // วิธีทำงาน:
-//   1. compressPhoto() ยังคง return base64 เหมือนเดิม (สำหรับ preview)
-//   2. ก่อน save ticket จริง → uploadPendingPhotos() แปลง base64 → Storage URL
-//   3. ticket จะมีแค่ URL (string สั้น) ไม่มี base64 ยัดใน Firestore
-//   4. backward compatible: URL ที่ขึ้นต้นด้วย "data:" คือรูปเก่า (base64) แสดงได้ปกติ
+//   1. compressPhoto() return base64 เหมือนเดิม (สำหรับ preview)
+//   2. ก่อน save ticket → uploadPendingPhotosToStorage() เอา base64
+//      ยัดใน Firestore doc "ticket_photos/{ticketId}" แยกจาก appdata/main
+//      ไม่เกิน 1MB limit ของ Firestore
+//   3. ticket เก็บ placeholder "fs:{ticketId}:b0" แทน base64
+//   4. ตอนแสดงรูป → resolvePhotoUrl() ดึงกลับมา
 // ============================================================
 
-let FSstorage = null; // init ใน initFirebase()
-
-/**
- * เริ่ม Firebase Storage (เรียกจาก initFirebase ใน firebase-init.js)
- */
+let FSstorage = null;
 function initStorage() {
   try {
-    if (typeof firebase === 'undefined' || !firebase.apps.length) return;
-    FSstorage = firebase.storage();
-  } catch(e) {
-    console.warn('[Storage] init error:', e);
-  }
+    if (typeof firebase !== 'undefined' && firebase.apps.length) {
+      try { FSstorage = firebase.storage(); } catch(e) {}
+    }
+  } catch(e) {}
 }
 
-/**
- * Upload รูปเดียว (base64 string) ขึ้น Firebase Storage
- * @param {string} base64  - data:image/jpeg;base64,... หรือ URL เดิม
- * @param {string} path    - path ใน Storage เช่น "tickets/TK032026001/before_0.jpg"
- * @returns {Promise<string>} - download URL หรือ base64 เดิม (ถ้า upload ไม่ได้)
- */
-// helper: Promise.race กับ timeout
 function _withTimeout(promise, ms, label) {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`[Storage] ${label} timeout after ${ms}ms`)), ms)
+      setTimeout(() => reject(new Error('[Photo] ' + label + ' timeout after ' + ms + 'ms')), ms)
     )
   ]);
 }
 
-async function uploadPhotoToStorage(base64, path) {
-  // ถ้าเป็น URL แล้ว (https://) ไม่ต้อง upload ซ้ำ
-  if (!base64 || !base64.startsWith('data:')) return base64;
-  // ถ้า Storage ไม่พร้อม → null (ผู้เรียกจัดการต่อ)
-  if (!FSstorage) return null;
+// ── บันทึกรูปลง Firestore collection ticket_photos ──────────
+async function savePhotosToFirestore(ticketId, photosBefore, photosAfter) {
+  if (!ticketId) return { before: [], after: [] };
+  if (!photosBefore.length && !photosAfter.length) return { before: [], after: [] };
+  if (typeof FSdb === 'undefined' || !FSdb) return { before: [], after: [] };
+
+  const authed = typeof _waitForAuth === 'function' ? await _waitForAuth(8000) : true;
+  if (!authed) return { before: [], after: [] };
 
   try {
-    // แปลง base64 → Blob
-    let blob;
-    try {
-      const arr = base64.split(',');
-      const mime = (arr[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
-      const bstr = atob(arr[1]);
-      const n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
-      blob = new Blob([u8arr], { type: mime });
-    } catch(convErr) {
-      const res = await fetch(base64);
-      blob = await res.blob();
-    }
-
-    const ref = FSstorage.ref(path);
-    // timeout 20 วินาทีต่อรูป — ถ้าช้ากว่านี้ถือว่าล้มเหลว
-    const snapshot = await _withTimeout(ref.put(blob, { contentType: 'image/jpeg' }), 20000, 'put');
-    const url      = await _withTimeout(snapshot.ref.getDownloadURL(), 10000, 'getDownloadURL');
-    return url;
-
+    await _withTimeout(
+      FSdb.collection('ticket_photos').doc(ticketId).set({
+        ticketId,
+        before:  photosBefore || [],
+        after:   photosAfter  || [],
+        savedAt: new Date().toISOString()
+      }),
+      30000, 'savePhotos'
+    );
+    const beforeKeys = (photosBefore||[]).map(function(_, i) { return 'fs:' + ticketId + ':b' + i; });
+    const afterKeys  = (photosAfter||[]).map(function(_, i)  { return 'fs:' + ticketId + ':a' + i; });
+    return { before: beforeKeys, after: afterKeys };
   } catch(e) {
-    console.warn('[Storage] upload failed:', e.message);
-    return null; // null = upload ไม่ได้ → ผู้เรียกตัดรูปออกแทนเก็บ base64
+    console.warn('[Photo] savePhotosToFirestore failed:', e.message);
+    return { before: [], after: [] };
   }
 }
 
-/**
- * Upload รูปทั้งหมดใน pendingPhotos ก่อน save ticket
- * เปลี่ยน pendingPhotos array จาก base64 → Storage URL in-place
- * @param {string} ticketId - ใช้เป็น path prefix ใน Storage
- */
+// ── โหลดรูปจาก Firestore ──────────────────────────────────
+var _photoCache = {};
+
+async function loadPhotosFromFirestore(ticketId) {
+  if (!ticketId) return { before: [], after: [] };
+  if (_photoCache[ticketId]) return _photoCache[ticketId];
+  if (typeof FSdb === 'undefined' || !FSdb) return { before: [], after: [] };
+  try {
+    const snap = await _withTimeout(
+      FSdb.collection('ticket_photos').doc(ticketId).get(),
+      15000, 'loadPhotos'
+    );
+    if (snap.exists) {
+      const data = { before: snap.data().before||[], after: snap.data().after||[] };
+      _photoCache[ticketId] = data;
+      return data;
+    }
+  } catch(e) {
+    console.warn('[Photo] loadPhotosFromFirestore failed:', e.message);
+  }
+  return { before: [], after: [] };
+}
+
+// ── แปลง photo key → base64/URL ───────────────────────────
+async function resolvePhotoUrl(key, ticketId) {
+  if (!key) return null;
+  if (key.startsWith('data:') || key.startsWith('https://')) return key;
+  if (key.startsWith('fs:')) {
+    const parts = key.split(':');
+    const tid  = parts[1];
+    const slot = parts[2];
+    const type = slot[0] === 'b' ? 'before' : 'after';
+    const idx  = parseInt(slot.slice(1));
+    const photos = await loadPhotosFromFirestore(tid || ticketId);
+    return photos[type]?.[idx] || null;
+  }
+  return key;
+}
+
+// ── ฟังก์ชันหลัก: เรียกก่อน submit ticket ──────────────────
 async function uploadPendingPhotosToStorage(ticketId) {
-  if (!FSstorage) {
-    // offline → ตัดรูปออกทั้งหมด เพื่อไม่ให้ base64 ยัดเข้า Firestore
+  const beforeData = (pendingPhotos.before || []).filter(function(p) { return p && p.startsWith('data:'); });
+  const afterData  = (pendingPhotos.after  || []).filter(function(p) { return p && p.startsWith('data:'); });
+
+  if (!beforeData.length && !afterData.length) return;
+
+  if (typeof showToast === 'function') showToast('⏳ กำลังบันทึกรูปภาพ...');
+
+  try {
+    const result = await _withTimeout(
+      savePhotosToFirestore(ticketId, beforeData, afterData),
+      35000, 'uploadPending'
+    );
+
+    if (result.before.length || result.after.length) {
+      pendingPhotos.before = result.before;
+      pendingPhotos.after  = result.after;
+    } else {
+      pendingPhotos.before = [];
+      pendingPhotos.after  = [];
+      if (typeof showToast === 'function') showToast('⚠️ บันทึกรูปไม่สำเร็จ — ส่งงานโดยไม่มีรูป');
+    }
+  } catch(e) {
+    console.warn('[Photo] error:', e.message);
     pendingPhotos.before = [];
     pendingPhotos.after  = [];
-    if (typeof showToast === 'function') showToast('⚠️ ไม่สามารถอัปโหลดรูปได้ (offline) — บันทึกงานโดยไม่มีรูป');
-    return;
-  }
-
-  const timestamp = Date.now();
-  let failCount = 0;
-
-  // before photos
-  const newBefore = [];
-  for (let i = 0; i < pendingPhotos.before.length; i++) {
-    const p = pendingPhotos.before[i];
-    if (!p || !p.startsWith('data:')) { newBefore.push(p); continue; }
-    try {
-      const path = `tickets/${ticketId}/before_${i}_${timestamp}.jpg`;
-      const url = await uploadPhotoToStorage(p, path);
-      if (url) { newBefore.push(url); }
-      else { failCount++; } // null = upload ไม่ได้ → ตัดออก
-    } catch(e) {
-      console.warn(`[photo] skip before[${i}]:`, e.message);
-      failCount++;
-    }
-  }
-  pendingPhotos.before = newBefore;
-
-  // after photos
-  const newAfter = [];
-  for (let i = 0; i < pendingPhotos.after.length; i++) {
-    const p = pendingPhotos.after[i];
-    if (!p || !p.startsWith('data:')) { newAfter.push(p); continue; }
-    try {
-      const path = `tickets/${ticketId}/after_${i}_${timestamp}.jpg`;
-      const url = await uploadPhotoToStorage(p, path);
-      if (url) { newAfter.push(url); }
-      else { failCount++; }
-    } catch(e) {
-      console.warn(`[photo] skip after[${i}]:`, e.message);
-      failCount++;
-    }
-  }
-  pendingPhotos.after = newAfter;
-
-  if (failCount > 0 && typeof showToast === 'function') {
-    showToast(`⚠️ อัปโหลดรูปไม่สำเร็จ ${failCount} รูป — บันทึกงานต่อโดยไม่มีรูปนั้น`);
+    if (typeof showToast === 'function') showToast('⚠️ บันทึกรูปหมดเวลา — ส่งงานโดยไม่มีรูป');
   }
 }
 
-/**
- * Upload รูปที่อยู่ใน ticket object แล้ว (สำหรับ migrate ข้อมูลเก่า)
- * @param {object} ticket
- */
-async function migrateTicketPhotos(ticket) {
-  if (!FSstorage || !ticket?.id) return ticket;
+// ── Firestore rules ที่ต้องเพิ่ม ──────────────────────────
+// match /ticket_photos/{docId} {
+//   allow read, write: if isAuthenticated();
+// }
 
-  const timestamp = Date.now();
-  let changed = false;
-
-  if (Array.isArray(ticket.photosBefore)) {
-    for (let i = 0; i < ticket.photosBefore.length; i++) {
-      if (ticket.photosBefore[i]?.startsWith('data:')) {
-        const path = `tickets/${ticket.id}/before_${i}_${timestamp}.jpg`;
-        ticket.photosBefore[i] = await uploadPhotoToStorage(ticket.photosBefore[i], path);
-        changed = true;
-      }
-    }
-  }
-
-  if (Array.isArray(ticket.photosAfter)) {
-    for (let i = 0; i < ticket.photosAfter.length; i++) {
-      if (ticket.photosAfter[i]?.startsWith('data:')) {
-        const path = `tickets/${ticket.id}/after_${i}_${timestamp}.jpg`;
-        ticket.photosAfter[i] = await uploadPhotoToStorage(ticket.photosAfter[i], path);
-        changed = true;
-      }
-    }
-  }
-
-  return { ticket, changed };
-}
-
-/**
- * ลบรูปใน Storage เมื่อ ticket ถูกลบ
- * @param {object} ticket
- */
-/**
- * ตรวจว่า ticket มี base64 photos อยู่ไหม (สำหรับ detect ข้อมูลเก่า)
- */
+// ── Backward compat stubs ──────────────────────────────────
 function ticketHasBase64Photos(ticket) {
-  const check = arr => (arr||[]).some(p => p?.startsWith('data:'));
-  return check(ticket?.photosBefore) || check(ticket?.photosAfter);
+  var check = function(arr) { return (arr||[]).some(function(p) { return p && p.startsWith('data:'); }); };
+  return check(ticket && ticket.photosBefore) || check(ticket && ticket.photosAfter);
 }
-
-/**
- * ประมาณขนาด base64 photos ใน ticket (bytes)
- */
 function estimateTicketPhotoSize(ticket) {
-  const calc = arr => (arr||[]).reduce((sum, p) => sum + (p?.length||0), 0);
-  return calc(ticket?.photosBefore) + calc(ticket?.photosAfter);
+  var calc = function(arr) { return (arr||[]).reduce(function(s,p) { return s+(p&&p.length||0); }, 0); };
+  return calc(ticket && ticket.photosBefore) + calc(ticket && ticket.photosAfter);
 }
-
-// ============================================================
-// MIGRATION — ย้ายรูปเก่า (base64) ใน Firestore → Firebase Storage
-// ============================================================
-
-let _migrationRunning = false;
-
-/**
- * ตรวจและรายงานขนาด base64 photos ทั้งหมดใน db
- */
-function auditPhotoStorage() {
-  const tickets = db.tickets || [];
-  let totalBase64 = 0;
-  let ticketsWithBase64 = 0;
-  let totalURL = 0;
-
-  tickets.forEach(t => {
-    const size = estimateTicketPhotoSize(t);
-    if (size > 0) {
-      totalBase64 += size;
-      ticketsWithBase64++;
-    }
-    const urlCount = [...(t.photosBefore||[]), ...(t.photosAfter||[])]
-      .filter(p => p?.startsWith('https://')).length;
-    totalURL += urlCount;
-  });
-
-  return {
-    totalTickets: tickets.length,
-    ticketsWithBase64,
-    base64SizeKB: Math.round(totalBase64 / 1024),
-    base64SizeMB: (totalBase64 / 1024 / 1024).toFixed(2),
-    urlPhotoCount: totalURL,
-    estimatedFirestoreKB: Math.round(
-      JSON.stringify(tickets.map(t => {
-        const { photosBefore, photosAfter, ...rest } = t;
-        return rest;
-      })).length / 1024
-    ),
-  };
-}
-
-/**
- * Migrate รูปเก่าทั้งหมดใน db.tickets ขึ้น Firebase Storage
- * เรียกจาก Admin UI ปุ่ม "Migrate Photos"
- *
- * @param {function} onProgress  - callback(current, total, ticketId)
- * @param {function} onDone     - callback(result)
- */
-async function migrateAllPhotosToStorage(onProgress, onDone) {
-  if (_migrationRunning) {
-    if (typeof showToast === 'function') showToast('⚠️ Migration กำลังทำงานอยู่');
-    return;
-  }
-  if (!FSstorage) {
-    if (typeof showToast === 'function') showToast('❌ Firebase Storage ยังไม่พร้อม');
-    return;
-  }
-
-  _migrationRunning = true;
-  const tickets = (db.tickets || []).filter(t => ticketHasBase64Photos(t));
-
-  if (tickets.length === 0) {
-    _migrationRunning = false;
-    if (typeof showToast === 'function') showToast('✅ ไม่มีรูปเก่าให้ migrate');
-    if (onDone) onDone({ migrated: 0, failed: 0 });
-    return;
-  }
-
-  let migrated = 0, failed = 0;
-
-  for (let i = 0; i < tickets.length; i++) {
-    const t = tickets[i];
-    if (onProgress) onProgress(i + 1, tickets.length, t.id);
-
-    try {
-      const { changed } = await migrateTicketPhotos(t);
-      if (changed) {
-        migrated++;
-        // อัปเดต db.tickets ด้วย object เดิม (migrateTicketPhotos แก้ in-place)
-        const idx = db.tickets.findIndex(x => x.id === t.id);
-        if (idx >= 0) db.tickets[idx] = t;
-      }
-    } catch(e) {
-      console.error('[Migration] failed for', t.id, e);
-      failed++;
-    }
-  }
-
-  // Save ขึ้น Firestore ครั้งเดียวหลัง migrate ครบ
-  if (migrated > 0) {
-    if (typeof saveDB === 'function') saveDB();
-    if (typeof fsSaveNow === 'function') {
-      try { await fsSaveNow(); } catch(e) {}
-    }
-  }
-
-  _migrationRunning = false;
-  const result = { migrated, failed, total: tickets.length };
-  if (onDone) onDone(result);
-
-  if (typeof showToast === 'function') {
-    showToast(`✅ Migrate เสร็จ: ${migrated} tickets, ล้มเหลว: ${failed}`);
-  }
-
-  return result;
-}
-
-/**
- * UI wrapper — เรียกจากปุ่ม Admin
- * แสดง progress ใน toast และ console
- */
+async function migrateTicketPhotos(ticket) { return { ticket: ticket, changed: false }; }
+async function migrateAllPhotosToStorage() {}
 async function runPhotoMigrationUI() {
-  const audit = auditPhotoStorage();
-  if (audit.ticketsWithBase64 === 0) {
-    if (typeof showToast === 'function') showToast('✅ ทุก ticket ใช้ Storage URL แล้ว ไม่มีอะไรให้ migrate');
-    return;
-  }
-
-  const confirmed = confirm(
-    `📦 พบ ${audit.ticketsWithBase64} tickets ที่มีรูป base64\n` +
-    `ขนาดรวม: ${audit.base64SizeMB} MB\n\n` +
-    `ต้องการ migrate รูปทั้งหมดขึ้น Firebase Storage ไหม?\n` +
-    `(ใช้เวลาสักครู่ ขึ้นอยู่กับจำนวนรูป)`
-  );
-  if (!confirmed) return;
-
-  if (typeof showToast === 'function') showToast('⏳ กำลัง migrate รูปภาพ...');
-
-  await migrateAllPhotosToStorage(
-    (current, total, tid) => {
-      if (typeof showToast === 'function') {
-        showToast(`⏳ Migrating ${current}/${total}: ${tid}`);
-      }
-    },
-    (_result) => {
-      // migration complete
-    }
-  );
+  if (typeof showToast === 'function') showToast('ℹ️ ระบบใช้ Firestore แทน Storage แล้ว');
 }
+function auditPhotoStorage() { return {}; }
