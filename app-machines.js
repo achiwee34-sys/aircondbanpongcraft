@@ -1888,7 +1888,7 @@ function renderDeptPickerGrid(depts) {
       onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background=''"
       ontouchstart="this.style.background='#f8fafc'" ontouchend="this.style.background=''">
       <div style="width:34px;height:34px;border-radius:10px;background:${col}1a;border:1.5px solid ${col}33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d}</div>
@@ -2016,8 +2016,8 @@ function renderMacPickerGrid(machines) {
       style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.12s;-webkit-tap-highlight-color:transparent"
       onmousedown="this.style.background='#f0f9ff'" onmouseup="this.style.background=''"
       ontouchstart="this.style.background='#f0f9ff'" ontouchend="this.style.background=''">
-      <div style="width:34px;height:34px;border-radius:10px;background:#0369a11a;border:1.5px solid #0369a133;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
+      <div style="width:34px;height:34px;border-radius:10px;background:#c8102e1a;border:1.5px solid #c8102e33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(lbl)}</div>
