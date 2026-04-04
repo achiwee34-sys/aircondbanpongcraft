@@ -1932,14 +1932,7 @@ function toggleDeptPicker() {
   if (display) display.style.borderColor = _deptPickerOpen ? '#c8102e' : '#e2e8f0';
   // lock/unlock body scroll
   if (_deptPickerOpen) { _lockBodyScroll(); } else { _unlockBodyScroll(); }
-  if (_deptPickerOpen) {
-    // lock scroll position ก่อน focus เพื่อกัน page กระโดด
-    setTimeout(() => {
-      const s = document.getElementById('nt-dept-search');
-      if (s) { s.focus({ preventScroll: true }); }
-    }, 150);
   }
-}
 function closeDeptPickerSheet() {
   _deptPickerOpen = false;
   const picker = document.getElementById('nt-dept-picker');
@@ -1962,6 +1955,7 @@ function selectDeptPickerItem(dept, col) {
   if (picker) picker.style.display = 'none';
   if (overlay) overlay.style.display = 'none';
   if (chevron) chevron.style.transform = '';
+  _unlockBodyScroll();
 
   // อัปเดต display
   const display = document.getElementById('nt-dept-display');
@@ -2056,13 +2050,7 @@ function toggleMacPicker() {
   if (display) display.style.borderColor = _macPickerOpen ? '#0369a1' : '#e2e8f0';
   document.body.style.overflow = _macPickerOpen ? 'hidden' : '';
   if (_macPickerOpen) { _lockBodyScroll(); } else { _unlockBodyScroll(); }
-  if (_macPickerOpen) {
-    setTimeout(() => {
-      const s = document.getElementById('nt-mac-search');
-      if (s) { s.focus({ preventScroll: true }); }
-    }, 150);
   }
-}
 function closeMacPickerSheet() {
   _macPickerOpen = false;
   const picker  = document.getElementById('nt-mac-picker');
@@ -2079,12 +2067,15 @@ function closeMacPickerSheet() {
 function selectMacPickerItem(mid, label) {
   _macPickerOpen = false;
   const picker  = document.getElementById('nt-mac-picker');
+  const overlay = document.getElementById('nt-mac-bs-overlay');
   const chevron = document.getElementById('nt-mac-chevron');
   const display = document.getElementById('nt-mac-display');
   const icon    = document.getElementById('nt-mac-icon');
   const lbl     = document.getElementById('nt-mac-label');
   if (picker)  picker.style.display = 'none';
+  if (overlay) overlay.style.display = 'none';
   if (chevron) chevron.style.transform = '';
+  _unlockBodyScroll();
   if (display) { display.style.borderColor = '#0369a1'; display.style.background = '#0369a10d'; }
   if (icon) {
     icon.style.background = '#0369a11a';
