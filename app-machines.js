@@ -1906,24 +1906,48 @@ function filterDeptPicker(q) {
 
 function toggleDeptPicker() {
   const picker = document.getElementById('nt-dept-picker');
+  const overlay = document.getElementById('nt-dept-bs-overlay');
   const chevron = document.getElementById('nt-dept-chevron');
   const display = document.getElementById('nt-dept-display');
   if (!picker) return;
   _deptPickerOpen = !_deptPickerOpen;
-  picker.style.display = _deptPickerOpen ? 'block' : 'none';
+  picker.style.display = _deptPickerOpen ? 'flex' : 'none';
+  if (overlay) overlay.style.display = _deptPickerOpen ? 'block' : 'none';
   if (chevron) chevron.style.transform = _deptPickerOpen ? 'rotate(180deg)' : '';
   if (display) display.style.borderColor = _deptPickerOpen ? '#c8102e' : '#e2e8f0';
+  // lock/unlock body scroll
+  document.body.style.overflow = _deptPickerOpen ? 'hidden' : '';
   if (_deptPickerOpen) {
-    setTimeout(() => { const s = document.getElementById('nt-dept-search'); if(s) s.focus(); }, 100);
+    // lock scroll position ก่อน focus เพื่อกัน page กระโดด
+    const savedY = window.scrollY;
+    setTimeout(() => {
+      const s = document.getElementById('nt-dept-search');
+      if (s) { s.focus({ preventScroll: true }); }
+      window.scrollTo({ top: savedY, behavior: 'instant' });
+    }, 150);
   }
+}
+function closeDeptPickerSheet() {
+  _deptPickerOpen = false;
+  const picker = document.getElementById('nt-dept-picker');
+  const overlay = document.getElementById('nt-dept-bs-overlay');
+  const chevron = document.getElementById('nt-dept-chevron');
+  const display = document.getElementById('nt-dept-display');
+  if (picker) picker.style.display = 'none';
+  if (overlay) overlay.style.display = 'none';
+  if (chevron) chevron.style.transform = '';
+  if (display) display.style.borderColor = '#e2e8f0';
+  document.body.style.overflow = '';
 }
 
 function selectDeptPickerItem(dept, col) {
   // ปิด picker
   _deptPickerOpen = false;
   const picker = document.getElementById('nt-dept-picker');
+  const overlay = document.getElementById('nt-dept-bs-overlay');
   const chevron = document.getElementById('nt-dept-chevron');
   if (picker) picker.style.display = 'none';
+  if (overlay) overlay.style.display = 'none';
   if (chevron) chevron.style.transform = '';
 
   // อัปเดต display
@@ -2008,16 +2032,36 @@ function filterMacPicker(q) {
 
 function toggleMacPicker() {
   const picker  = document.getElementById('nt-mac-picker');
+  const overlay = document.getElementById('nt-mac-bs-overlay');
   const chevron = document.getElementById('nt-mac-chevron');
   const display = document.getElementById('nt-mac-display');
   if (!picker) return;
   _macPickerOpen = !_macPickerOpen;
-  picker.style.display = _macPickerOpen ? 'block' : 'none';
+  picker.style.display = _macPickerOpen ? 'flex' : 'none';
+  if (overlay) overlay.style.display = _macPickerOpen ? 'block' : 'none';
   if (chevron) chevron.style.transform = _macPickerOpen ? 'rotate(180deg)' : '';
   if (display) display.style.borderColor = _macPickerOpen ? '#0369a1' : '#e2e8f0';
+  document.body.style.overflow = _macPickerOpen ? 'hidden' : '';
   if (_macPickerOpen) {
-    setTimeout(() => { const s = document.getElementById('nt-mac-search'); if(s) s.focus(); }, 100);
+    const savedY = window.scrollY;
+    setTimeout(() => {
+      const s = document.getElementById('nt-mac-search');
+      if (s) { s.focus({ preventScroll: true }); }
+      window.scrollTo({ top: savedY, behavior: 'instant' });
+    }, 150);
   }
+}
+function closeMacPickerSheet() {
+  _macPickerOpen = false;
+  const picker  = document.getElementById('nt-mac-picker');
+  const overlay = document.getElementById('nt-mac-bs-overlay');
+  const chevron = document.getElementById('nt-mac-chevron');
+  const display = document.getElementById('nt-mac-display');
+  if (picker)  picker.style.display = 'none';
+  if (overlay) overlay.style.display = 'none';
+  if (chevron) chevron.style.transform = '';
+  if (display) display.style.borderColor = '#e2e8f0';
+  document.body.style.overflow = '';
 }
 
 function selectMacPickerItem(mid, label) {

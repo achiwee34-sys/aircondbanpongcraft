@@ -564,19 +564,6 @@
           <select id="nt-dept" onchange="onDeptChange(this.value)" style="display:none">
             <option value="">— เลือกแผนก —</option>
           </select>
-          <!-- Picker panel -->
-          <div id="nt-dept-picker" style="display:none;margin-top:6px;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;background:white;box-shadow:0 8px 24px rgba(0,0,0,0.1)">
-            <!-- Search inside picker -->
-            <div style="padding:8px 10px;border-bottom:1px solid #f1f5f9;position:relative">
-              <svg style="position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="nt-dept-search" type="text" placeholder="ค้นหาแผนก..."
-                oninput="filterDeptPicker(this.value)"
-                style="width:100%;padding:7px 10px 7px 30px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:#f8fafc"
-                onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"/>
-            </div>
-            <!-- Dept grid -->
-            <div id="nt-dept-grid" style="display:flex;flex-direction:column;gap:0;max-height:220px;overflow-y:auto"></div>
-          </div>
         </div>
         <div class="fg" id="nt-room-wrap" style="display:none">
           <label style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
@@ -592,24 +579,7 @@
             <span id="nt-mac-label" style="flex:1;font-size:0.88rem;color:#9ca3af;font-weight:500">— เลือกห้อง / เครื่องแอร์ —</span>
             <svg id="nt-mac-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <!-- Hidden select สำหรับ onMachineChange -->
-          <select id="nt-mac" onchange="onMachineChange(this.value)" style="display:none">
-            <option value="">— เลือกห้อง —</option>
-          </select>
-          <!-- Picker panel -->
-          <div id="nt-mac-picker" style="display:none;margin-top:6px;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;background:white;box-shadow:0 8px 24px rgba(0,0,0,0.1)">
-            <div style="padding:8px 10px;border-bottom:1px solid #f1f5f9;position:relative">
-              <svg style="position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="nt-mac-search" type="text" placeholder="ค้นหาห้อง / เครื่องแอร์..."
-                oninput="filterMacPicker(this.value)"
-                style="width:100%;padding:7px 10px 7px 30px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:#f8fafc"
-                onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"/>
-            </div>
-            <div id="nt-mac-grid" style="display:flex;flex-direction:column;gap:0;max-height:260px;overflow-y:auto"></div>
-          </div>
-        </div>
-
-        <!-- History Popup Button — แสดงหลังเลือกห้อง -->
+          <!-- Hidden select สำหรับ onMachineChange -->\n          <select id="nt-mac" onchange="onMachineChange(this.value)" style="display:none">\n            <option value="">— เลือกห้อง —</option>\n          </select>\n        </div>\n\n        <!-- History Popup Button — แสดงหลังเลือกห้อง -->
         <div id="nt-history-btn-wrap" style="display:none;margin-bottom:8px">
           <button type="button" onclick="openRepairHistory()"
             style="width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border:1.5px dashed #fca5a5;border-radius:12px;background:#fff8f9;color:#c8102e;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit">
@@ -2817,6 +2787,44 @@
 
 
 <!-- ── Repair History Popup ── -->
+<!-- ═══ Dept Picker Bottom Sheet ═══ -->
+<div id="nt-dept-bs-overlay" onclick="closeDeptPickerSheet()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:8900;backdrop-filter:blur(2px);touch-action:none"></div>
+<div id="nt-dept-picker" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:8901;background:white;border-radius:20px 20px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.18);max-height:75vh;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior:contain;touch-action:pan-y">
+  <div style="width:40px;height:4px;border-radius:2px;background:#e2e8f0;margin:10px auto 4px"></div>
+  <div style="padding:10px 16px 8px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:0.9rem;font-weight:800;color:#0f172a">เลือกแผนก</span>
+    <button onclick="closeDeptPickerSheet()" style="width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;color:#64748b">×</button>
+  </div>
+  <div style="padding:8px 12px;border-bottom:1px solid #f1f5f9;position:relative">
+    <svg style="position:absolute;left:22px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="nt-dept-search" type="text" placeholder="ค้นหาแผนก..."
+      oninput="filterDeptPicker(this.value)"
+      style="width:100%;padding:9px 10px 9px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.85rem;font-family:inherit;outline:none;box-sizing:border-box;background:#f8fafc"
+      onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"/>
+  </div>
+  <div id="nt-dept-grid" style="display:flex;flex-direction:column;gap:0;overflow-y:auto;flex:1"></div>
+</div>
+
+<!-- ═══ Mac Picker Bottom Sheet ═══ -->
+<div id="nt-mac-bs-overlay" onclick="closeMacPickerSheet()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:8900;backdrop-filter:blur(2px);touch-action:none"></div>
+<div id="nt-mac-picker" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:8901;background:white;border-radius:20px 20px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.18);max-height:75vh;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior:contain;touch-action:pan-y">
+  <div style="width:40px;height:4px;border-radius:2px;background:#e2e8f0;margin:10px auto 4px"></div>
+  <div style="padding:10px 16px 8px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:0.9rem;font-weight:800;color:#0f172a">เลือกห้อง / เครื่องแอร์</span>
+    <button onclick="closeMacPickerSheet()" style="width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;color:#64748b">×</button>
+  </div>
+  <div style="padding:8px 12px;border-bottom:1px solid #f1f5f9;position:relative">
+    <svg style="position:absolute;left:22px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="nt-mac-search" type="text" placeholder="ค้นหาห้อง / เครื่องแอร์..."
+      oninput="filterMacPicker(this.value)"
+      style="width:100%;padding:9px 10px 9px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.85rem;font-family:inherit;outline:none;box-sizing:border-box;background:#f8fafc"
+      onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#e2e8f0'"/>
+  </div>
+  <div id="nt-mac-grid" style="display:flex;flex-direction:column;gap:0;overflow-y:auto;flex:1"></div>
+</div>
+
 <div id="rh-overlay" onclick="closeRepairHistory()"
   style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;backdrop-filter:blur(2px)"></div>
 <div id="rh-popup"
