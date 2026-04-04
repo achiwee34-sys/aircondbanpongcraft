@@ -2272,7 +2272,15 @@ function syncSummaryFromForm() {
     const kg   = row.querySelector('.c-ref-kg')?.value;
     if (type) parts.push(`สารทำความเย็นและน้ำยาล้างระบบ ${type}${kg ? ' '+kg+'กก.' : ''}`);
   });
-  if (parts.length) sumEl.value = parts.map(s=>'- '+s).join('\n');
+  if (parts.length) {
+    sumEl.value = parts.map(s=>'- '+s).join('\n');
+    sumEl.dataset.autoFilled = '1';
+  }
+}
+
+function _clearAutoFilled() {
+  const el = document.getElementById('c-sum');
+  if (el) el.dataset.autoFilled = '0';
 }
 
 function addRefrigRow() {
@@ -2473,7 +2481,7 @@ function openCompleteSheet(tid) {
   }
 
   // ── รีเซ็ตฟิลด์อื่นๆ ──
-  ['c-sum'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['c-sum'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.dataset.autoFilled='0';}});
   resetRefrigRows();
   document.getElementById('c-repair-tags').innerHTML = '';
   const ri = document.getElementById('c-repair-item'); if(ri) ri.value='';
@@ -2579,14 +2587,22 @@ async function doComplete( /* PATCH v67 */) {
   const allParts = [refStr, partsList].filter(Boolean).join(' | ');
 
   const repairStr = repairItems.join('\n');
-  // ── Bug6 fix: กัน sum ซ้ำ repairItems ──
-  // syncSummaryFromForm() pre-fill c-sum ด้วย "- item1\n- item2..." เหมือน repairStr
-  // ถ้า user ไม่แก้ไข c-sum ก็จะซ้ำกัน → strip รายการที่ซ้ำออก เก็บเฉพาะ manual note
-  const repairSet = new Set(repairItems.map(s => s.trim().replace(/^[-\s]+/,'')));
-  const sumLines = sum.split('\n').map(l => l.trim().replace(/^[-\s•]+/,'').trim()).filter(Boolean);
-  const manualLines = sumLines.filter(l => !repairSet.has(l));
-  const manualNote = manualLines.join('\n');
-  t.summary = (repairStr ? repairStr + (manualNote ? '\n' + manualNote : '') : sum);
+  // ── Bug fix: กัน sum ซ้ำ repairItems ──
+  // syncSummaryFromForm() เติม c-sum ด้วย formatItemName() (display names)
+  // repairItems ก็ใช้ formatItemName() เหมือนกัน → ต้อง compare display names ทั้งคู่ lowercase
+  const repairSet = new Set(repairItems.map(s => s.trim().replace(/^[-\s•×\d]+/,'').trim().toLowerCase()));
+  const sumEl = document.getElementById('c-sum');
+  const wasAutoFilled = sumEl?.dataset?.autoFilled === '1';
+  if (wasAutoFilled) {
+    // ช่างไม่แก้ c-sum เลย → ใช้ repairStr ตรงๆ ไม่ต้อง merge
+    t.summary = repairStr;
+  } else {
+    // ช่างพิมพ์เพิ่มเอง → กรองเฉพาะบรรทัดที่ไม่ซ้ำกับ repairItems
+    const sumLines = sum.split('\n').map(l => l.trim().replace(/^[-\s•]+/,'').trim()).filter(Boolean);
+    const manualLines = sumLines.filter(l => !repairSet.has(l.toLowerCase()));
+    const manualNote = manualLines.join('\n');
+    t.summary = repairStr ? repairStr + (manualNote ? '\n' + manualNote : '') : sum;
+  }
   t.parts   = allParts;
   // คำนวณ repairCost จาก price list
   const _rg = _getRepairGroups ? _getRepairGroups() : (db.repairGroups||[]);
@@ -2757,8 +2773,11 @@ function openVerifySheet(tid) {
 
     <!-- รูปหลังซ่อม -->
     ${hasAfter ? `<div>
-      <div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">รูปหลังซ่อม</div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">${t.photosAfter.map(p=>`<div class="ph-thumb" style="flex-shrink:0"><img src="${p}" onclick="openLightbox('${p}')" style="border-radius:8px"/></div>`).join('')}</div>
+      <div class="photo-section-label" style="color:#15803d">
+        <span class="lbl-dot" style="background:#22c55e"></span>✅ รูปหลังซ่อม
+        <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
+      </div>
+      <div class="photo-grid">${t.photosAfter.map(p=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" onclick="openLightbox('${p}')"><img src="${p}"/></div>`).join('')}</div>
     </div>` : ''}
   `;
   openSheet('verify');
@@ -3078,14 +3097,25 @@ function openDetail(tid) {
     </div>`:''}
 
     <!-- Photos -->
-    ${hasBefore||hasAfter?`<div style="margin-bottom:14px">
-      ${hasBefore?`<div style="margin-bottom:8px">
-        <div style="font-size:0.62rem;font-weight:700;color:#c2410c;margin-bottom:6px">📸 ก่อนซ่อม</div>
-        <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:4px">${t.photosBefore.map(p=>`<div class="ph-thumb"><img loading="lazy" decoding="async" src="${p}" onclick="openLightbox('${p}')"/></div>`).join('')}</div>
+    ${hasBefore||hasAfter?`<div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="height:1px;flex:1;background:#e5e7eb"></div>
+        <span style="font-size:0.58rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em">รูปภาพ</span>
+        <div style="height:1px;flex:1;background:#e5e7eb"></div>
+      </div>
+      ${hasBefore?`<div style="margin-bottom:10px">
+        <div class="photo-section-label" style="color:#b45309">
+          <span class="lbl-dot" style="background:#f59e0b"></span>📷 ก่อนซ่อม
+          <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosBefore.length} รูป)</span>
+        </div>
+        <div class="photo-grid">${t.photosBefore.map((p,i)=>`<div class="photo-grid-item${t.photosBefore.length===1?' photo-wide':''}" onclick="openLightbox('${p}')"><img loading="lazy" decoding="async" src="${p}"/></div>`).join('')}</div>
       </div>`:''}
       ${hasAfter?`<div>
-        <div style="font-size:0.62rem;font-weight:700;color:#15803d;margin-bottom:6px">📸 หลังซ่อม</div>
-        <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:4px">${t.photosAfter.map(p=>`<div class="ph-thumb"><img loading="lazy" decoding="async" src="${p}" onclick="openLightbox('${p}')"/></div>`).join('')}</div>
+        <div class="photo-section-label" style="color:#15803d">
+          <span class="lbl-dot" style="background:#22c55e"></span>✅ หลังซ่อม
+          <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
+        </div>
+        <div class="photo-grid">${t.photosAfter.map((p,i)=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" onclick="openLightbox('${p}')"><img loading="lazy" decoding="async" src="${p}"/></div>`).join('')}</div>
       </div>`:''}
     </div>`:''}
 
