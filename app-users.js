@@ -259,6 +259,13 @@ function _doOpenUserSheet(id, defaultRole) {
       pcb.style.display = 'flex';
     } else { pcb.style.display = 'none'; }
   }
+
+  // Show password section only for admin
+  var passSection = document.getElementById('u-pass-section');
+  if (passSection) {
+    passSection.style.display = (CU && CU.role === 'admin') ? 'block' : 'none';
+  }
+
   openSheet('user');
 }
 
@@ -457,29 +464,7 @@ function showAdminCard(title, msg, tid, icon) {
 
 // ── Machine QR ──
 var _mqrMachineId='';
-function showMachineQR(mid){
-  var m=db.machines.find(function(x){return x.id===mid;});
-  if(!m)return;
-  _mqrMachineId=mid;
-  // Title
-  var titleEl=document.getElementById('mqr-title');
-  if(titleEl) titleEl.textContent='⬛ QR — '+(m.serial||m.id);
-  // Subtitle (dept)
-  var subEl=document.getElementById('mqr-subtitle');
-  if(subEl) subEl.textContent=(m.dept||m.location||'')+(m.dept&&m.room?' · '+m.room:'');
-  // Info block — machine name + serial + dept badge
-  var infoEl=document.getElementById('mqr-info');
-  if(infoEl) infoEl.innerHTML=[
-    '<div style="font-size:0.95rem;font-weight:900;color:#0f172a;margin-bottom:4px">'+_esc(m.name||m.serial||m.id)+'</div>',
-    '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:3px">',
-    '<span style="background:#eff6ff;color:#1e40af;border-radius:6px;padding:2px 8px;font-size:0.65rem;font-weight:700;font-family:JetBrains Mono,monospace">'+_esc(m.serial||m.id)+'</span>',
-    m.dept ? '<span style="background:#f0fdf4;color:#15803d;border-radius:6px;padding:2px 8px;font-size:0.65rem;font-weight:700">'+_esc(m.dept)+'</span>' : '',
-    m.btu  ? '<span style="background:#fdf4ff;color:#7e22ce;border-radius:6px;padding:2px 8px;font-size:0.65rem;font-weight:700">'+_esc(m.btu)+' BTU</span>' : '',
-    '</div>',
-  ].join('');
-  drawQR(mid,document.getElementById('mqr-canvas'));
-  openSheet('mqr');
-}
+function showMachineQR(mid){var m=db.machines.find(function(x){return x.id===mid;});if(!m)return;_mqrMachineId=mid;document.getElementById('mqr-title').textContent='⬛ QR — '+(m.serial||m.id);document.getElementById('mqr-info').innerHTML='<b>'+_esc(m.name)+'</b><br>'+_esc(m.serial||m.id)+(m.dept?' · '+_esc(m.dept):'');drawQR(mid,document.getElementById('mqr-canvas'));openSheet('mqr');}
 function downloadMachineQR(){var m=db.machines.find(function(x){return x.id===_mqrMachineId;});if(!m)return;var canvas=document.getElementById('mqr-canvas');var out=document.createElement('canvas');out.width=260;out.height=300;var ctx=out.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,260,300);ctx.drawImage(canvas,20,16,220,220);ctx.fillStyle='#1a1a2e';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.fillText(m.name,130,256);ctx.font='11px Arial';ctx.fillStyle='#6b7280';ctx.fillText(m.serial||m.id,130,274);ctx.fillText('SCG.AIRCON',130,292);var a=document.createElement('a');a.download='QR_'+(m.serial||m.id).replace(/[^a-zA-Z0-9]/g,'_')+'.png';a.href=out.toDataURL('image/png');a.click();showToast('✅ บันทึก QR Code แล้ว');}
 function drawQR(text,canvas){var size=canvas.width;var ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,size,size);var img=new Image();img.crossOrigin='anonymous';img.onload=function(){ctx.fillStyle='white';ctx.fillRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);};img.onerror=function(){ctx.fillStyle='#f3f4f6';ctx.fillRect(0,0,size,size);ctx.fillStyle='#374151';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.fillText('QR: '+text,size/2,size/2);};img.src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(text)+'&margin=0';}
 
@@ -491,7 +476,8 @@ function handleQRFileInput(input){var file=input.files[0];if(!file)return;var se
 function _decodeWithJsQR(imageData,se){if(typeof jsQR!=='function'){se.textContent='❌ อ่าน QR ไม่ได้';return;}var c=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'attemptBoth'});if(c)handleQRResult(c.data);else se.textContent='❌ ไม่พบ QR Code — ลองใหม่';}
 function scanQRFrame(video,se){if(!video.videoWidth||!video.videoHeight)return;var size=Math.min(video.videoWidth,video.videoHeight)*0.8;var sx=(video.videoWidth-size)/2;var sy=(video.videoHeight-size)/2;var canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;canvas.getContext('2d').drawImage(video,sx,sy,size,size,0,0,size,size);if('BarcodeDetector' in window){new BarcodeDetector({formats:['qr_code']}).detect(canvas).then(function(c){if(c.length>0)handleQRResult(c[0].rawValue);}).catch(function(){_scanWithJsQR(canvas,se);});return;}_scanWithJsQR(canvas,se);}
 function _scanWithJsQR(canvas,se){if(typeof jsQR!=='function'){if(se)se.textContent='⚠️ กำลังโหลด...';return;}var d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);var c=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});if(c)handleQRResult(c.data);}
-function handleQRResult(text){closeQRScanner();var mid=text.trim();try{var p=JSON.parse(text);mid=p.id||p.machineId||text;}catch(e){}var m=db.machines.find(function(x){return x.id===mid||x.serial===mid;});if(m){var ds=document.getElementById('nt-dept');if(ds){[].forEach.call(ds.options,function(o){if(o.value===m.dept)o.selected=true;});onDeptChange(m.dept);setTimeout(function(){var ms=document.getElementById('nt-mac');if(ms){[].forEach.call(ms.options,function(o){if(o.value===m.id)o.selected=true;});onMachineChange(m.id);}},150);}showToast('✅ พบเครื่อง: '+m.name);}else showToast('❌ ไม่พบเครื่องรหัส: '+mid);}
+function handleQRResult(text){closeQRScanner();var mid=text.trim();try{var p=JSON.parse(text);mid=p.id||p.machineId||text;}catch(e){}var m=db.machines.find(function(x){return x.id===mid||x.serial===mid;});if(m){var ds=document.getElementById('nt-dept');if(ds){[].forEach.call(ds.options,function(o){if(o.value===m.dept)o.selected=true;});// update custom picker display
+if(typeof selectDeptPickerItem==='function'&&m.dept){var palette=['#c8102e','#e65100','#0369a1','#059669','#7c3aed','#d97706'];var idx=(_deptPickerDepts||[]).indexOf(m.dept);var col=palette[idx>=0?idx%palette.length:0];selectDeptPickerItem(m.dept,col);}else{onDeptChange(m.dept);}setTimeout(function(){var ms=document.getElementById('nt-mac');if(ms){[].forEach.call(ms.options,function(o){if(o.value===m.id)o.selected=true;});onMachineChange(m.id);}},150);}showToast('✅ พบเครื่อง: '+m.name);}else showToast('❌ ไม่พบเครื่องรหัส: '+mid);}
 function closeQRScanner(){clearInterval(_qrInterval);_qrInterval=null;if(_qrStream){_qrStream.getTracks().forEach(function(t){t.stop();});_qrStream=null;}var video=document.getElementById('qr-video');if(video){video.srcObject=null;video.style.display='';}var prev=document.getElementById('qr-preview-img');if(prev){prev.style.display='none';prev.src='';}var fi=document.getElementById('qr-file-input');if(fi)fi.value='';document.getElementById('qr-modal').style.display='none';}
 
 function setProblem(text){document.getElementById('nt-prob').value=text;document.querySelectorAll('.prob-chip').forEach(function(c){c.classList.toggle('selected',c.textContent===text);});}
@@ -561,16 +547,4 @@ function adminResetPassword(uid) {
   showToast('🔑 รีเซ็ต Password ของ "'+u.name+'" แล้ว — ผู้ใช้ต้องตั้งรหัสใหม่เมื่อ Login');
   closeSheet('user');
   renderUsers();
-}
-
-function printMachineQR() {
-  var area = document.getElementById('mqr-print-area');
-  if (!area) return;
-  var m = db.machines.find(function(x){return x.id===_mqrMachineId;});
-  var win = window.open('', '_blank', 'width=380,height=520');
-  win.document.write('<html><head><title>QR '+(m?m.serial||m.id:'')+'</title><style>body{margin:0;padding:20px;font-family:sans-serif;display:flex;justify-content:center;align-items:flex-start}@media print{body{padding:4px}}</style></head><body>');
-  win.document.write(area.outerHTML);
-  win.document.write('</body></html>');
-  win.document.close();
-  setTimeout(function(){ win.focus(); win.print(); }, 500);
 }

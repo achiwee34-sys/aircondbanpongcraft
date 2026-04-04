@@ -25,9 +25,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="firebase-init.js?v=1775272000"></script>
-<script src="photo-storage.js?v=1775272000"></script>
-<script src="conflict-guard.js?v=1775272000"></script>
+<script src="firebase-init.js?v=1775291000"></script>
+<script src="photo-storage.js?v=1775291000"></script>
+<script src="conflict-guard.js?v=1775291000"></script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'><rect width='44' height='44' rx='10' fill='%230A0A0A'/><rect width='44' height='44' rx='10' fill='none' stroke='%23D0021B' stroke-width='2'/><line x1='0' y1='22' x2='44' y2='22' stroke='%23D0021B' stroke-width='0.8' opacity='0.4'/><line x1='22' y1='0' x2='22' y2='44' stroke='%23D0021B' stroke-width='0.8' opacity='0.4'/><rect x='4' y='4' width='8' height='8' fill='%23D0021B' rx='1'/><rect x='32' y='32' width='8' height='8' fill='%23D0021B' rx='1'/><text x='22' y='31' text-anchor='middle' font-size='23' font-weight='900' fill='white' font-family='Arial Black'>A</text></svg>"><rect width='32' height='32' rx='8' fill='%23c8102e'/><g stroke='white' stroke-width='2' stroke-linecap='round'><line x1='16' y1='5' x2='16' y2='27'/><line x1='5' y1='16' x2='27' y2='16'/><line x1='8.5' y1='8.5' x2='23.5' y2='23.5'/><line x1='23.5' y1='8.5' x2='8.5' y2='23.5'/><line x1='16' y1='5' x2='13' y2='8'/><line x1='16' y1='5' x2='19' y2='8'/><line x1='16' y1='27' x2='13' y2='24'/><line x1='16' y1='27' x2='19' y2='24'/><line x1='5' y1='16' x2='8' y2='13'/><line x1='5' y1='16' x2='8' y2='19'/><line x1='27' y1='16' x2='24' y2='13'/><line x1='27' y1='16' x2='24' y2='19'/></g><circle cx='16' cy='16' r='2.5' fill='white'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'>  <defs>    <clipPath id='lc'><rect width='192' height='192' rx='42'/></clipPath>    <radialGradient id='lg' cx='25%' cy='25%' r='75%'>      <stop offset='0%' stop-color='%231e0505'/>      <stop offset='60%' stop-color='%230d0d0d'/>      <stop offset='100%' stop-color='%23050505'/>    </radialGradient>  </defs>  <g clip-path='url(%23lc)'>    <rect width='192' height='192' fill='url(%23lg)'/>    <circle cx='22' cy='22' r='65' fill='%23D0021B' opacity='0.07'/>    <line x1='0' y1='96' x2='192' y2='96' stroke='%23D0021B' stroke-width='2' opacity='0.28'/>    <line x1='96' y1='0' x2='96' y2='192' stroke='%23D0021B' stroke-width='2' opacity='0.28'/>    <line x1='0' y1='48' x2='192' y2='48' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='0' y1='144' x2='192' y2='144' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='48' y1='0' x2='48' y2='192' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='144' y1='0' x2='144' y2='192' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <rect x='15' y='15' width='28' height='28' fill='%23D0021B' rx='4'/>    <rect x='148' y='148' width='28' height='28' fill='%23D0021B' rx='4' opacity='0.6'/>    <rect x='148' y='15' width='28' height='28' fill='%23D0021B' rx='4' opacity='0.22'/>    <rect x='7' y='7' width='179' height='179' rx='35' fill='none' stroke='white' stroke-width='1' opacity='0.07'/>    <rect x='0' y='0' width='192' height='4' fill='white' opacity='0.05'/>    <text x='96' y='131' text-anchor='middle' font-size='96' font-weight='900' fill='white' font-family='Arial Black,Arial Bold,Arial'>A</text>  </g></svg>">
 </head>
@@ -426,7 +426,10 @@
           </div>
           <div style="font-size:0.62rem;color:#94a3b8;margin-top:3px;padding-left:35px">ทั้งหมด · กรองตามสถานะ</div>
         </div>
-        <div id="open-badge-display"></div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div id="open-badge-display"></div>
+          <button id="multi-select-toggle" onclick="toggleMultiSelect()" style="display:none;padding:5px 10px;background:#f1f5f9;color:#64748b;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">☑️ เลือก</button>
+        </div>
       </div>
 
       <!-- Search box -->
@@ -456,8 +459,18 @@
           <div class="sc-l" style="font-size:0.58rem;font-weight:700;margin-top:2px">✅ เสร็จแล้ว</div>
         </div>
       </div>
+      <!-- Multi-select toolbar (Admin only) -->
+      <div id="multi-select-bar" style="display:none;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(135deg,#fff0f2,#ffe4e8);border:1.5px solid #fca5a5;border-radius:12px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
+          <span id="multi-select-count" style="font-size:0.75rem;font-weight:900;color:#9b0b22">0 งาน</span>
+          <span style="font-size:0.65rem;color:#c8102e">เลือกแล้ว</span>
+        </div>
+        <button onclick="selectAllVisibleTickets()" style="padding:5px 10px;background:white;color:#c8102e;border:1.5px solid #fca5a5;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">เลือกทั้งหมด</button>
+        <button onclick="openBulkAssignSheet()" id="bulk-assign-btn" style="padding:5px 12px;background:linear-gradient(135deg,#9b0b22,#c8102e);color:white;border:none;border-radius:8px;font-size:0.7rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;opacity:0.4;pointer-events:none">👤 จ่ายงาน</button>
+        <button onclick="exitMultiSelect()" style="padding:5px 10px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation">ยกเลิก</button>
+      </div>
+
       <div id="ticket-list"></div>
-    </div>
 
 
     <!-- ADMIN TRACKING DASHBOARD -->
@@ -518,14 +531,38 @@
           <div style="flex:1;height:1px;background:#e5e7eb"></div>
         </div>
 
-        <div class="fg">
-          <label style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+        <!-- Custom Dept Picker -->
+        <div class="fg" id="nt-dept-wrap">
+          <label style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             แผนก *
           </label>
-          <select id="nt-dept" onchange="onDeptChange(this.value)" style="border-radius:10px;border:1.5px solid #e2e8f0;padding:10px 14px;font-size:0.88rem;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222.5%22><polyline points=%226 9 12 15 18 9%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;background-size:14px;padding-right:36px;cursor:pointer;color:#374151;font-family:inherit;width:100%;outline:none;transition:border-color 0.15s">
+          <!-- Selected display / trigger -->
+          <div id="nt-dept-display" onclick="toggleDeptPicker()"
+            style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;transition:border-color 0.15s;user-select:none">
+            <div id="nt-dept-icon" style="width:32px;height:32px;border-radius:9px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <span id="nt-dept-label" style="flex:1;font-size:0.88rem;color:#9ca3af;font-weight:500">— เลือกแผนก —</span>
+            <svg id="nt-dept-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <!-- Hidden real select (keeps onDeptChange logic working) -->
+          <select id="nt-dept" onchange="onDeptChange(this.value)" style="display:none">
             <option value="">— เลือกแผนก —</option>
           </select>
+          <!-- Picker panel -->
+          <div id="nt-dept-picker" style="display:none;margin-top:6px;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;background:white;box-shadow:0 8px 24px rgba(0,0,0,0.1)">
+            <!-- Search inside picker -->
+            <div style="padding:8px 10px;border-bottom:1px solid #f1f5f9;position:relative">
+              <svg style="position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="nt-dept-search" type="text" placeholder="ค้นหาแผนก..."
+                oninput="filterDeptPicker(this.value)"
+                style="width:100%;padding:7px 10px 7px 30px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:#f8fafc"
+                onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"/>
+            </div>
+            <!-- Dept grid -->
+            <div id="nt-dept-grid" style="display:flex;flex-direction:column;gap:0;max-height:220px;overflow-y:auto"></div>
+          </div>
         </div>
         <div class="fg" id="nt-room-wrap" style="display:none">
           <label style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
@@ -639,41 +676,7 @@
         </div>
 
         <div class="fr2">
-          <div class="fg" id="nt-priority-field"><label>ความเร่งด่วน</label>
-            <div style="display:flex;gap:8px">
-              <button type="button" id="cs-pri-high" onclick="setPriority('high')"
-                style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:14px;border:2px solid #e2e8f0;background:#f8fafc;cursor:pointer;transition:all 0.2s;font-family:inherit;opacity:0.65">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2L12 2C12 2 3 9 3 15a9 9 0 0 0 18 0C21 9 12 2 12 2Z" fill="#ef4444" opacity="0.15"/>
-                  <path d="M12 2C12 2 3 9 3 15a9 9 0 0 0 18 0C21 9 12 2 12 2Z" stroke="#ef4444" stroke-width="1.8" stroke-linejoin="round"/>
-                  <line x1="12" y1="8" x2="12" y2="14" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/>
-                  <circle cx="12" cy="17" r="1.2" fill="#ef4444"/>
-                </svg>
-                <span style="font-size:0.65rem;font-weight:800;color:#ef4444">ด่วนมาก</span>
-              </button>
-              <button type="button" id="cs-pri-mid" onclick="setPriority('mid')"
-                style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:14px;border:2px solid #f59e0b;background:#fffbeb;cursor:pointer;transition:all 0.2s;font-family:inherit;transform:scale(1.06);box-shadow:0 4px 14px rgba(245,158,11,0.2)">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 3L2 20h20L12 3Z" fill="#f59e0b" opacity="0.15"/>
-                  <path d="M12 3L2 20h20L12 3Z" stroke="#f59e0b" stroke-width="1.8" stroke-linejoin="round"/>
-                  <line x1="12" y1="9" x2="12" y2="14" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/>
-                  <circle cx="12" cy="17" r="1.2" fill="#f59e0b"/>
-                </svg>
-                <span style="font-size:0.65rem;font-weight:800;color:#f59e0b">ปานกลาง</span>
-              </button>
-              <button type="button" id="cs-pri-low" onclick="setPriority('low')"
-                style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:14px;border:2px solid #e2e8f0;background:#f8fafc;cursor:pointer;transition:all 0.2s;font-family:inherit;opacity:0.65">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="9" fill="#22c55e" opacity="0.12"/>
-                  <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="1.8"/>
-                  <line x1="12" y1="8" x2="12" y2="13" stroke="#22c55e" stroke-width="2.2" stroke-linecap="round"/>
-                  <circle cx="12" cy="16" r="1.2" fill="#22c55e"/>
-                </svg>
-                <span style="font-size:0.65rem;font-weight:800;color:#22c55e">ไม่เร่งด่วน</span>
-              </button>
-            </div>
-            <input type="hidden" id="nt-pri" value="mid"/>
-          </div>
+          <input type="hidden" id="nt-pri" value="mid"/>
           <!-- เบอร์ติดต่อ — redesigned -->
           <div class="fg">
             <label style="display:flex;align-items:center;gap:5px">
@@ -2039,31 +2042,49 @@
 
 <!-- Dept QR Sheet -->
 <div class="sheet-overlay" id="deptqr-overlay" onclick="closeSheet('deptqr')"></div>
-<div class="sheet" id="deptqr-sheet" style="max-height:94vh;display:flex;flex-direction:column">
+<div class="sheet" id="deptqr-sheet">
   <div class="sheet-handle"></div>
-  <!-- Header -->
-  <div style="display:flex;align-items:center;padding:12px 16px 10px;border-bottom:1px solid #f1f5f9;flex-shrink:0;gap:8px">
-    <div style="flex:1;min-width:0">
-      <div style="font-size:1rem;font-weight:900;color:var(--text)">🏢 QR Code ทั้งแผนก</div>
-      <div id="deptqr-count-label" style="font-size:0.7rem;color:var(--muted);margin-top:1px"></div>
+  <!-- Fixed Header -->
+  <div style="flex-shrink:0;padding:14px 16px 0">
+    <!-- Logo strip -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="width:36px;height:36px;border-radius:9px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.45);flex-shrink:0">
+        <svg width="36" height="36" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="42" height="42" fill="#0A0A0A"/>
+          <line x1="0" y1="21" x2="42" y2="21" stroke="#D0021B" stroke-width="0.8" opacity="0.4"/>
+          <line x1="21" y1="0" x2="21" y2="42" stroke="#D0021B" stroke-width="0.8" opacity="0.4"/>
+          <rect x="3" y="3" width="9" height="9" fill="#D0021B" rx="1.5"/>
+          <rect x="30" y="30" width="9" height="9" fill="#D0021B" rx="1.5" opacity="0.7"/>
+          <text x="21" y="29" text-anchor="middle" font-size="22" font-weight="900" fill="white" font-family="Arial Black,Arial Bold,Arial">A</text>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.82rem;font-weight:900;color:#0f172a;letter-spacing:0.03em">QR Code ทั้งแผนก</div>
+        <div style="font-size:0.62rem;color:#94a3b8;font-weight:600;letter-spacing:0.05em">AIRCONDITION · BP PROCESS</div>
+      </div>
+      <button onclick="window.print()" style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:linear-gradient(135deg,#0891b2,#0e7490);border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.72rem;font-weight:800;color:white;flex-shrink:0;box-shadow:0 2px 8px rgba(8,145,178,0.35)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        พิมพ์
+      </button>
+      <button onclick="closeSheet('deptqr')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:#6b7280;margin-left:6px;flex-shrink:0">✕</button>
     </div>
-    <button onclick="printDeptQR()" style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:#7c3aed;color:white;border:none;border-radius:10px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
-      พิมพ์
-    </button>
-    <button onclick="closeSheet('deptqr')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0">✕</button>
+    <!-- Search box -->
+    <div style="position:relative;margin-bottom:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="deptqr-search" type="text" placeholder="ค้นหาแผนก หรือ Serial..."
+        style="width:100%;box-sizing:border-box;padding:9px 10px 9px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.8rem;font-family:inherit;outline:none;transition:border 0.15s;background:#f8fafc"
+        oninput="_onDeptQRSearch()" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'"/>
+    </div>
+    <!-- Dept filter tabs -->
+    <div id="deptqr-tabs" style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:8px"></div>
+    <!-- Count label -->
+    <div id="deptqr-count" style="font-size:0.68rem;color:#94a3b8;font-weight:600;padding-bottom:6px"></div>
   </div>
-  <!-- Dept filter tabs (scrollable) -->
-  <div id="deptqr-tabs" style="display:flex;gap:6px;overflow-x:auto;padding:10px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid #f1f5f9"></div>
-  <!-- Search -->
-  <div style="padding:8px 16px;flex-shrink:0;border-bottom:1px solid #f1f5f9">
-    <input type="search" id="deptqr-search" placeholder="🔍 ค้นหา Air ID / ชื่อเครื่อง..." oninput="deptQRSearch(this.value)"
-      style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:0.8rem;background:#f8fafc;color:var(--text);outline:none;box-sizing:border-box">
-  </div>
-  <!-- Body -->
-  <div class="sheet-body" id="deptqr-body" style="padding:12px 14px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch"></div>
-  <div style="padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));flex-shrink:0;border-top:1px solid #f1f5f9">
-    <button onclick="closeSheet('deptqr')" style="width:100%;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit">ปิด</button>
+  <!-- Scrollable body -->
+  <div class="sheet-body" id="deptqr-body" style="flex:1;overflow-y:auto;padding:0 16px 8px"></div>
+  <!-- Fixed bottom -->
+  <div class="sheet-actions" style="flex-shrink:0">
+    <button class="btn btn-ghost btn-full" onclick="closeSheet('deptqr')">ปิด</button>
   </div>
 </div>
 
@@ -2100,53 +2121,53 @@
 
 <!-- Machine QR Sheet -->
 <div class="sheet-overlay" id="mqr-overlay" onclick="closeSheet('mqr')"></div>
-<div class="sheet" id="mqr-sheet" style="max-height:92vh">
+<div class="sheet" id="mqr-sheet">
   <div class="sheet-handle"></div>
-  <!-- Header -->
-  <div style="display:flex;align-items:center;padding:14px 16px 10px;gap:10px;border-bottom:1px solid #f1f5f9;flex-shrink:0">
+  <!-- Logo strip header -->
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid #f1f5f9;flex-shrink:0">
+    <div style="width:34px;height:34px;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.45);flex-shrink:0">
+      <svg width="34" height="34" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="42" height="42" fill="#0A0A0A"/>
+        <line x1="0" y1="21" x2="42" y2="21" stroke="#D0021B" stroke-width="0.8" opacity="0.4"/>
+        <line x1="21" y1="0" x2="21" y2="42" stroke="#D0021B" stroke-width="0.8" opacity="0.4"/>
+        <rect x="3" y="3" width="9" height="9" fill="#D0021B" rx="1.5"/>
+        <rect x="30" y="30" width="9" height="9" fill="#D0021B" rx="1.5" opacity="0.7"/>
+        <text x="21" y="29" text-anchor="middle" font-size="22" font-weight="900" fill="white" font-family="Arial Black,Arial Bold,Arial">A</text>
+      </svg>
+    </div>
     <div style="flex:1;min-width:0">
-      <div style="font-size:1rem;font-weight:900;color:var(--text)" id="mqr-title">⬛ QR Code</div>
-      <div id="mqr-subtitle" style="font-size:0.7rem;color:var(--muted);margin-top:2px"></div>
+      <div style="font-size:0.78rem;font-weight:900;color:#0f172a;letter-spacing:0.02em" id="mqr-title">QR Code เครื่องแอร์</div>
+      <div style="font-size:0.58rem;color:#94a3b8;font-weight:600;letter-spacing:0.06em;text-transform:uppercase">AIRCONDITION · BP PROCESS</div>
     </div>
-    <button onclick="closeSheet('mqr')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0">✕</button>
+    <button onclick="closeSheet('mqr')" style="width:30px;height:30px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0">✕</button>
   </div>
-
-  <div class="sheet-body" style="display:flex;flex-direction:column;align-items:center;gap:0;padding:0;overflow-y:auto">
-    <!-- QR Card — printable area -->
-    <div id="mqr-print-area" style="width:100%;padding:20px;background:white;display:flex;flex-direction:column;align-items:center;gap:0">
-      <!-- Logo strip -->
-      <div style="width:100%;max-width:260px;background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:16px 16px 0 0;padding:10px 14px;display:flex;align-items:center;gap:10px">
-        <div style="width:30px;height:30px;background:#dc2626;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;color:white;flex-shrink:0">❄️</div>
-        <div>
-          <div style="font-size:0.7rem;font-weight:900;color:white;letter-spacing:0.04em">SCG.AIRCON</div>
-          <div style="font-size:0.55rem;color:rgba(255,255,255,0.55)">BP Plant Engineering</div>
-        </div>
+  <!-- Card body -->
+  <div class="sheet-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;padding:20px 16px 12px">
+    <!-- QR Card -->
+    <div style="background:white;border-radius:20px;box-shadow:0 6px 28px rgba(0,0,0,0.13);padding:20px 20px 16px;width:100%;max-width:280px;box-sizing:border-box;text-align:center;border:1px solid #f1f5f9">
+      <!-- Machine info top -->
+      <div id="mqr-info" style="font-size:0.8rem;color:#0f172a;font-weight:700;margin-bottom:14px;line-height:1.45"></div>
+      <!-- QR canvas -->
+      <div style="display:inline-block;background:#f8fafc;padding:12px;border-radius:14px;border:1.5px solid #e2e8f0;margin-bottom:12px">
+        <canvas id="mqr-canvas" width="200" height="200"></canvas>
       </div>
-      <!-- QR body -->
-      <div style="width:100%;max-width:260px;background:white;border:1.5px solid #e5e7eb;border-top:none;border-bottom:none;padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px">
-        <canvas id="mqr-canvas" width="200" height="200" style="border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1)"></canvas>
-        <div id="mqr-info" style="text-align:center;width:100%"></div>
-      </div>
-      <!-- Footer strip -->
-      <div style="width:100%;max-width:260px;background:#f8fafc;border:1.5px solid #e5e7eb;border-top:none;border-radius:0 0 16px 16px;padding:8px 14px;text-align:center">
-        <div style="font-size:0.6rem;color:#94a3b8">สแกนเพื่อดึงข้อมูลเครื่องแอร์</div>
+      <!-- Scan hint -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:5px;font-size:0.66rem;color:#94a3b8;font-weight:600">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="17" width="3" height="3"/><rect x="18" y="17" width="3" height="3"/><rect x="14" y="14" width="3" height="3"/></svg>
+        สแกนเพื่อดึงข้อมูลเครื่องแอร์อัตโนมัติ
       </div>
     </div>
-
-    <!-- Action buttons -->
-    <div style="width:100%;padding:10px 16px 4px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <button onclick="downloadMachineQR()" style="padding:11px 8px;background:#0f172a;color:white;border:none;border-radius:12px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        บันทึกรูป
-      </button>
-      <button onclick="printMachineQR()" style="padding:11px 8px;background:#7c3aed;color:white;border:none;border-radius:12px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
-        พิมพ์
-      </button>
-    </div>
-    <div style="width:100%;padding:0 16px 16px">
-      <button onclick="closeSheet('mqr')" style="width:100%;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit">ปิด</button>
-    </div>
+  </div>
+  <!-- Fixed action buttons -->
+  <div class="sheet-actions" style="gap:8px;flex-shrink:0">
+    <button class="btn btn-primary" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="downloadMachineQR()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      บันทึกรูป
+    </button>
+    <button class="btn btn-ghost" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="window.print()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      พิมพ์
+    </button>
   </div>
 </div>
 
@@ -2398,19 +2419,65 @@
 </div>
 
 <!-- Assign Sheet -->
+<!-- Bulk Assign Sheet -->
+<div class="sheet-overlay" id="bulk-assign-overlay" onclick="closeSheet('bulk-assign')"></div>
+<div class="sheet" id="bulk-assign-sheet" style="max-height:calc(93vh - env(safe-area-inset-top,0px));flex-direction:column;overflow:hidden;border-radius:24px 24px 0 0">
+  <div class="sheet-handle"></div>
+  <!-- Header -->
+  <div style="padding:14px 18px 16px;flex-shrink:0;background:linear-gradient(135deg,#9b0b22,#c8102e)">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:40px;height:40px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="6" height="6" rx="1"/><rect x="3" y="13" width="6" height="6" rx="1"/><line x1="15" y1="8" x2="21" y2="8"/><line x1="15" y1="16" x2="21" y2="16"/><line x1="9" y1="8" x2="9" y2="8"/><line x1="9" y1="16" x2="9" y2="16"/></svg>
+      </div>
+      <div>
+        <div style="font-size:1rem;font-weight:900;color:white">มอบหมายหลายงาน</div>
+        <div id="bulk-assign-label" style="font-size:0.68rem;color:rgba(255,255,255,0.75);margin-top:2px"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Ticket chips -->
+  <div style="padding:10px 14px 4px;flex-shrink:0;background:#fff0f2;border-bottom:1px solid #fecaca">
+    <div style="font-size:0.6rem;font-weight:800;color:#9b0b22;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">งานที่เลือก</div>
+    <div id="bulk-ticket-chips" style="display:flex;flex-wrap:wrap;gap:4px;max-height:72px;overflow-y:auto"></div>
+  </div>
+  <!-- Body -->
+  <div class="sheet-body" style="flex:1;overflow-y:auto;padding:14px 14px 0;background:#f1f5f9">
+    <div style="font-size:0.62rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>เลือกช่าง<div style="flex:1;height:1px;background:#e2e8f0"></div>
+    </div>
+    <div id="bulk-tech-list" style="margin-bottom:14px;display:flex;flex-direction:column;gap:8px"></div>
+    <div style="font-size:0.62rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+      <div style="flex:1;height:1px;background:#e2e8f0"></div>หมายเหตุ<div style="flex:1;height:1px;background:#e2e8f0"></div>
+    </div>
+    <textarea id="bulk-note" rows="2" placeholder="คำแนะนำหรือข้อสังเกต (ถ้ามี)..."
+      style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:0.85rem;font-family:inherit;resize:none;background:white;box-sizing:border-box;outline:none;margin-bottom:4px;transition:border-color 0.2s"
+      onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+  </div>
+  <!-- Actions -->
+  <div style="flex-shrink:0;padding:12px 14px calc(env(safe-area-inset-bottom,0px) + 12px);background:white;border-top:1px solid #f1f5f9;display:flex;gap:8px">
+    <button onclick="closeSheet('bulk-assign')" style="flex:1;padding:14px;background:#f1f5f9;color:#64748b;border:none;border-radius:14px;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation">ยกเลิก</button>
+    <button onclick="doBulkAssign()" style="flex:2.5;padding:14px;background:linear-gradient(135deg,#9b0b22,#c8102e);color:white;border:none;border-radius:14px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation;box-shadow:0 4px 16px rgba(200,16,46,0.4)"
+      onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''"
+      ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      มอบหมายทั้งหมด
+    </button>
+  </div>
+</div>
+
 <div class="sheet-overlay" id="assign-overlay" onclick="closeSheet('assign')"></div>
 <div class="sheet" id="assign-sheet" style="max-height:calc(93vh - env(safe-area-inset-top,0px));flex-direction:column;overflow:hidden;border-radius:24px 24px 0 0">
   <div class="sheet-handle"></div>
 
   <!-- Header -->
-  <div style="padding:14px 18px 16px;flex-shrink:0;background:linear-gradient(135deg,#1e1b4b,#312e81)">
+  <div style="padding:14px 18px 16px;flex-shrink:0;background:linear-gradient(135deg,#9b0b22,#c8102e)">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-      <div style="width:40px;height:40px;background:rgba(167,139,250,0.2);border:1.5px solid rgba(167,139,250,0.4);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      <div style="width:40px;height:40px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:1rem;font-weight:900;color:white;letter-spacing:-0.01em">มอบหมายงาน</div>
-        <div id="assign-ticket-label" style="font-size:0.68rem;color:rgba(167,139,250,0.8);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div id="assign-ticket-label" style="font-size:0.68rem;color:rgba(255,255,255,0.75);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       </div>
     </div>
 
@@ -2457,7 +2524,7 @@
     </div>
     <textarea id="a-note" rows="2" placeholder="คำแนะนำหรือข้อสังเกตเพิ่มเติม (ถ้ามี)..."
       style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:0.85rem;font-family:inherit;resize:none;background:white;box-sizing:border-box;outline:none;margin-bottom:4px;transition:border-color 0.2s"
-      onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+      onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
   </div>
 
   <!-- Actions -->
@@ -2467,7 +2534,7 @@
       ยกเลิก
     </button>
     <button onclick="doAssign()"
-      style="flex:2.5;padding:14px;background:linear-gradient(135deg,#4f46e5,#6366f1);color:white;border:none;border-radius:14px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation;box-shadow:0 4px 16px rgba(99,102,241,0.4)"
+      style="flex:2.5;padding:14px;background:linear-gradient(135deg,#9b0b22,#c8102e);color:white;border:none;border-radius:14px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation;box-shadow:0 4px 16px rgba(200,16,46,0.4)"
       onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''"
       ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -3078,91 +3145,77 @@
 
 <!-- User Sheet -->
 <div class="sheet-overlay" id="user-overlay" onclick="closeSheet('user')"></div>
-<div class="sheet" id="user-sheet" style="max-height:96vh;display:flex;flex-direction:column;border-radius:24px 24px 0 0">
+<div class="sheet" id="user-sheet">
   <div class="sheet-handle"></div>
-
   <!-- Fixed Header -->
-  <div style="display:flex;align-items:center;padding:12px 16px 10px;border-bottom:1px solid #f1f5f9;flex-shrink:0;gap:10px">
-    <div id="u-avatar-preview" onclick="triggerPhotoInput()"
-      style="width:46px;height:46px;border-radius:50%;background:#eff6ff;border:2.5px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;cursor:pointer;flex-shrink:0">
-      👤
+  <div style="flex-shrink:0;padding:14px 16px 12px;border-bottom:1.5px solid #f1f5f9;background:white">
+    <div style="display:flex;align-items:center;gap:12px">
+      <!-- Avatar -->
+      <div id="u-avatar-preview"
+        style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border:2.5px solid #a5b4fc;display:flex;align-items:center;justify-content:center;font-size:1.6rem;cursor:pointer;overflow:hidden;flex-shrink:0;position:relative;box-shadow:0 2px 8px rgba(99,102,241,0.2)"
+        onclick="triggerPhotoInput()">
+        <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:#6366f1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;border:2px solid white">📷</div>
+      </div>
+      <input type="file" id="u-photo-input" accept="image/*" style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px" onchange="previewUserPhoto(this)"/>
+      <input type="hidden" id="u-photo"/>
+      <input type="hidden" id="u-id"/>
+      <!-- Title -->
+      <div style="flex:1;min-width:0">
+        <div id="us-title" style="font-size:0.95rem;font-weight:900;color:#0f172a">👤 เพิ่มผู้ใช้</div>
+        <div style="font-size:0.65rem;color:#94a3b8;font-weight:600;margin-top:1px">แตะรูปเพื่อเปลี่ยนโปรไฟล์</div>
+      </div>
+      <!-- Close -->
+      <button onclick="closeSheet('user')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0">✕</button>
     </div>
-    <div style="flex:1;min-width:0">
-      <div id="us-title" style="font-size:1rem;font-weight:900;color:var(--text)">👤 เพิ่มผู้ใช้</div>
-      <div style="font-size:0.68rem;color:var(--muted);margin-top:1px">แตะรูปเพื่อเปลี่ยนรูปโปรไฟล์</div>
-    </div>
-    <button onclick="closeSheet('user')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0">✕</button>
   </div>
-  <input type="file" id="u-photo-input" accept="image/*" style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px" onchange="previewUserPhoto(this)"/>
-  <input type="hidden" id="u-photo"/>
-  <input type="hidden" id="u-id"/>
 
-  <!-- Scrollable body -->
-  <div class="sheet-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+  <!-- Scrollable Body -->
+  <div class="sheet-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 8px">
 
-    <!-- Section: ข้อมูลพื้นฐาน -->
-    <div style="background:#f8fafc;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px">
-      <div style="font-size:0.68rem;font-weight:800;color:#64748b;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px">ข้อมูลพื้นฐาน</div>
-      <div class="fg">
-        <label>ชื่อ-นามสกุล *</label>
-        <input type="text" id="u-name" placeholder="ชื่อเต็ม" style="background:white"/>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fg">
-          <label>Username *</label>
-          <input type="text" id="u-uname" autocapitalize="none" placeholder="username" style="background:white"/>
-        </div>
-        <div class="fg">
-          <label>บทบาท</label>
-          <select id="u-role" style="background:white">
-            <option value="admin">👑 แอดมิน</option>
-            <option value="tech">🔧 ช่างซ่อม</option>
-            <option value="reporter">📢 ผู้แจ้งงาน</option>
-            <option value="executive">📊 ผู้บริหาร</option>
-          </select>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fg">
-          <label>แผนก</label>
-          <input type="text" id="u-dept" placeholder="ชื่อแผนก" style="background:white"/>
-        </div>
-        <div class="fg">
-          <label>เบอร์โทร</label>
-          <input type="tel" id="u-tel" oninput="fmtPhone(this)" maxlength="12" placeholder="0812345678" style="background:white"/>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fg">
-          <label>LINE / ติดต่อ</label>
-          <input type="text" id="u-contact" placeholder="LINE ID หรืออื่นๆ" style="background:white"/>
-        </div>
-        <div class="fg">
-          <label>📧 อีเมล</label>
-          <input type="email" id="u-email" placeholder="name@example.com" autocapitalize="none" style="background:white"/>
-        </div>
-      </div>
+    <!-- Section 1: ข้อมูลพื้นฐาน -->
+    <div style="font-size:0.65rem;font-weight:800;color:#7c3aed;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+      <div style="flex:1;height:1px;background:linear-gradient(to right,#e9d5ff,transparent)"></div>
+      ข้อมูลพื้นฐาน
+      <div style="flex:1;height:1px;background:linear-gradient(to left,#e9d5ff,transparent)"></div>
     </div>
 
-    <!-- Section: ตั้งรหัสผ่าน -->
-    <div style="background:#f8fafc;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px">
-      <div style="font-size:0.68rem;font-weight:800;color:#64748b;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px">รหัสผ่าน</div>
+    <div class="fg"><label>ชื่อ-นามสกุล *</label><input type="text" id="u-name"/></div>
+    <div class="fr2">
+      <div class="fg"><label>Username *</label><input type="text" id="u-uname" autocapitalize="none"/></div>
+      <div class="fg"><label>บทบาท</label>
+        <select id="u-role">
+          <option value="admin">👑 แอดมิน</option>
+          <option value="tech">🔧 ช่างซ่อม</option>
+          <option value="reporter">📢 ผู้แจ้งงาน</option>
+          <option value="executive">📊 ผู้บริหาร</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label>แผนก</label><input type="text" id="u-dept"/></div>
+      <div class="fg"><label>เบอร์โทร</label><input type="tel" id="u-tel" oninput="fmtPhone(this)" maxlength="12"/></div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label>LINE / ติดต่อ</label><input type="text" id="u-contact"/></div>
+      <div class="fg"><label>📧 อีเมล</label><input type="email" id="u-email" placeholder="name@example.com" autocapitalize="none"/></div>
+    </div>
 
-      <!-- Current password info (admin view) -->
-      <div id="u-pass-current" style="display:none;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:8px 12px;font-size:0.75rem;color:#92400e;align-items:center;gap:7px">
-        <span>🔑</span>
-        <span>รหัสปัจจุบัน: <b id="u-pass-val" style="font-family:'JetBrains Mono',monospace"></b></span>
+    <!-- Section 2: รหัสผ่าน (admin only) -->
+    <div id="u-pass-section" style="display:none;margin-top:16px">
+      <div style="font-size:0.65rem;font-weight:800;color:#0891b2;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:1px;background:linear-gradient(to right,#bae6fd,transparent)"></div>
+        รหัสผ่าน
+        <div style="flex:1;height:1px;background:linear-gradient(to left,#bae6fd,transparent)"></div>
       </div>
 
-      <!-- New password -->
       <div class="fg">
-        <label>Password ใหม่ <span style="color:#94a3b8;font-weight:400">(ว่าง = ไม่เปลี่ยน)</span></label>
+        <label>Password ใหม่</label>
         <div style="position:relative;display:flex;align-items:center">
-          <input type="password" id="u-pass" placeholder="อย่างน้อย 8 ตัวอักษร" style="width:100%;padding-right:72px;background:white" oninput="checkPassStrength(this.value)"/>
+          <input type="password" id="u-pass" placeholder="(ว่าง=ไม่เปลี่ยน)" style="width:100%;padding-right:80px" oninput="checkPassStrength(this.value)"/>
           <button type="button" id="u-pass-toggle"
-            onclick="(function(){const i=document.getElementById('u-pass');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'}).call(this)"
-            style="position:absolute;right:6px;background:#f1f5f9;border:none;border-radius:7px;padding:5px 9px;font-size:0.8rem;cursor:pointer;color:#374151;font-family:inherit">
-            👁
+            onclick="(function(){const i=document.getElementById('u-pass');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁 ดู':'🙈 ซ่อน'}).call(this)"
+            style="position:absolute;right:6px;background:#f1f5f9;border:none;border-radius:7px;padding:5px 10px;font-size:0.7rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;white-space:nowrap">
+            👁 ดู
           </button>
         </div>
         <!-- Strength bar -->
@@ -3170,36 +3223,34 @@
           <div style="height:4px;border-radius:4px;background:#e2e8f0;overflow:hidden">
             <div id="u-pass-strength-bar" style="height:100%;width:0%;transition:width 0.3s,background 0.3s;border-radius:4px"></div>
           </div>
-          <div id="u-pass-strength-label" style="font-size:0.7rem;margin-top:3px;font-weight:600"></div>
+          <div id="u-pass-strength-label" style="font-size:0.72rem;margin-top:3px;font-weight:600"></div>
         </div>
-      </div>
-
-      <!-- Confirm password -->
-      <div class="fg">
-        <label>ยืนยัน Password</label>
-        <div style="position:relative;display:flex;align-items:center">
-          <input type="password" id="u-pass-confirm" placeholder="พิมพ์ Password อีกครั้ง" style="width:100%;padding-right:72px;background:white" oninput="checkPassMatch()"/>
+        <!-- Confirm -->
+        <div style="position:relative;display:flex;align-items:center;margin-top:6px">
+          <input type="password" id="u-pass-confirm" placeholder="ยืนยัน Password" style="width:100%;padding-right:80px" oninput="checkPassMatch()"/>
           <button type="button"
-            onclick="(function(){const i=document.getElementById('u-pass-confirm');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'}).call(this)"
-            style="position:absolute;right:6px;background:#f1f5f9;border:none;border-radius:7px;padding:5px 9px;font-size:0.8rem;cursor:pointer;color:#374151;font-family:inherit">
-            👁
+            onclick="(function(){const i=document.getElementById('u-pass-confirm');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁 ดู':'🙈 ซ่อน'}).call(this)"
+            style="position:absolute;right:6px;background:#f1f5f9;border:none;border-radius:7px;padding:5px 10px;font-size:0.7rem;font-weight:700;cursor:pointer;color:#374151;font-family:inherit;white-space:nowrap">
+            👁 ดู
           </button>
         </div>
-        <div id="u-pass-match" style="font-size:0.7rem;margin-top:3px;font-weight:600;min-height:14px"></div>
+        <div id="u-pass-match" style="font-size:0.72rem;margin-top:3px;font-weight:600;min-height:14px"></div>
+        <div id="u-pass-current" style="display:none;margin-top:5px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:7px 10px;font-size:0.8rem;color:#92400e;align-items:center;gap:7px">
+          <span>🔑</span>
+          <span>รหัสปัจจุบัน: <b id="u-pass-val" style="font-family:'JetBrains Mono',monospace;letter-spacing:0.05em"></b></span>
+        </div>
       </div>
     </div>
 
-  </div><!-- end sheet-body -->
+  </div>
 
   <!-- Fixed bottom actions -->
-  <div style="padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid #f1f5f9;flex-shrink:0;background:var(--surface);display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center">
-    <button onclick="closeSheet('user')" style="padding:12px 18px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
-      ยกเลิก
-    </button>
-    <button onclick="saveUser()" style="padding:12px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:white;border:none;border-radius:12px;font-size:0.85rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+  <div class="sheet-actions" style="flex-shrink:0;gap:8px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)">
+    <button class="btn btn-primary" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="saveUser()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
       บันทึก
     </button>
+    <button class="btn btn-ghost" style="flex:1" onclick="closeSheet('user')">ยกเลิก</button>
   </div>
 </div>
 
@@ -3236,17 +3287,17 @@
 <!-- SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script src="app-tracking.js?v=1775272000"></script>
-<script src="func-loc-data.js?v=1775272000"></script>
-<script src="app-core.js?v=1775272000"></script>
-<script src="app-tickets.js?v=1775272000"></script>
-<script src="app-machines.js?v=1775272000"></script>
-<script src="app-users.js?v=1775272000"></script>
-<script src="app-reports.js?v=1775272000"></script>
-<script src="app-admin.js?v=1775272000"></script>
-<script src="app-backend.js?v=1775272000"></script>
-<script src="app-executive.js?v=1775272000"></script>
-<script src="app-backup.js?v=1775272000"></script>
+<script src="app-tracking.js?v=1775291000"></script>
+<script src="func-loc-data.js?v=1775291000"></script>
+<script src="app-core.js?v=1775291000"></script>
+<script src="app-tickets.js?v=1775291000"></script>
+<script src="app-machines.js?v=1775291000"></script>
+<script src="app-users.js?v=1775291000"></script>
+<script src="app-reports.js?v=1775291000"></script>
+<script src="app-admin.js?v=1775291000"></script>
+<script src="app-backend.js?v=1775291000"></script>
+<script src="app-executive.js?v=1775291000"></script>
+<script src="app-backup.js?v=1775291000"></script>
 <style>
 /* ======= PM PLAN PAGE ======= */
 #pg-pmplan { padding:0 !important; overflow-y:hidden !important; flex-direction:column; }

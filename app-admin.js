@@ -636,14 +636,16 @@ let _deptQRFilter = '';
 
 function openDeptQRSheet() {
   _deptQRFilter = '';
-  _deptQRSearch = '';
-  var si = document.getElementById('deptqr-search'); if(si) si.value='';
+  const si = document.getElementById('deptqr-search');
+  if (si) si.value = '';
   _buildDeptQRTabs();
   _renderDeptQRBody();
   openSheet('deptqr');
 }
-var _deptQRSearch = '';
-function deptQRSearch(val) { _deptQRSearch = val.toLowerCase().trim(); _renderDeptQRBody(); }
+
+function _onDeptQRSearch() {
+  _renderDeptQRBody();
+}
 
 function _buildDeptQRTabs() {
   const depts = [...new Set(db.machines.map(m => m.dept || m.location || 'ไม่ระบุแผนก'))].sort();
@@ -675,21 +677,24 @@ function _setDeptQRFilter(val) {
 
 function _renderDeptQRBody() {
   const body = document.getElementById('deptqr-body'); if (!body) return;
+  const searchQ = (document.getElementById('deptqr-search')?.value || '').trim().toLowerCase();
 
   let machines = _deptQRFilter
     ? db.machines.filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === _deptQRFilter)
     : db.machines;
-  if (_deptQRSearch) {
-    const kw = _deptQRSearch;
+
+  if (searchQ) {
     machines = machines.filter(m =>
-      (m.serial||m.id).toLowerCase().includes(kw) ||
-      (m.name||'').toLowerCase().includes(kw) ||
-      (m.dept||'').toLowerCase().includes(kw)
+      (m.serial||'').toLowerCase().includes(searchQ) ||
+      (m.name||'').toLowerCase().includes(searchQ) ||
+      (m.dept||m.location||'').toLowerCase().includes(searchQ) ||
+      (m.id||'').toLowerCase().includes(searchQ)
     );
   }
+
   // Update count label
-  const cl = document.getElementById('deptqr-count-label');
-  if(cl) cl.textContent = machines.length + ' เครื่อง' + (_deptQRFilter ? ' · ' + _deptQRFilter : '');
+  const countEl = document.getElementById('deptqr-count');
+  if (countEl) countEl.textContent = machines.length ? `พบ ${machines.length} เครื่อง` : '';
 
   if (!machines.length) {
     body.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#94a3b8"><div style="font-size:2.5rem;margin-bottom:10px">🔍</div><div style="font-weight:700">ไม่พบเครื่องแอร์</div></div>';
@@ -760,61 +765,3 @@ function _renderDeptQRBody() {
 }
 
 // ============================================================
-
-// ── Print QR Code (single machine) ─────────────────────────
-function printMachineQR() {
-  const area = document.getElementById('mqr-print-area');
-  if (!area) return;
-  const win = window.open('', '_blank', 'width=400,height=500');
-  win.document.write('<html><head><title>QR Code</title><style>body{margin:0;padding:20px;font-family:sans-serif;display:flex;justify-content:center}@media print{button{display:none}}</style></head><body>');
-  win.document.write(area.outerHTML);
-  win.document.write('</body></html>');
-  win.document.close();
-  setTimeout(() => { win.focus(); win.print(); }, 400);
-}
-
-// ── Print Dept QR (all visible) ─────────────────────────────
-function printDeptQR() {
-  const body = document.getElementById('deptqr-body');
-  if (!body) return;
-  const dept = _deptQRFilter || 'ทั้งหมด';
-  const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(`<html><head><title>QR Code — ${dept}</title>
-  <style>
-    body{margin:0;padding:16px;font-family:sans-serif;background:white}
-    h2{font-size:14px;margin:0 0 12px;color:#1e293b}
-    @media print{
-      body{padding:8px}
-      .qr-grid{grid-template-columns:repeat(6,1fr)!important}
-    }
-    .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
-    .qr-card{background:white;border:1px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;break-inside:avoid}
-    .qr-card img{width:70px;height:70px;border-radius:5px}
-    .qr-id{font-family:monospace;font-size:9px;font-weight:700;color:#7c3aed;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
-    .qr-name{font-size:8px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
-  </style></head><body>`);
-  win.document.write('<h2>🏢 QR Code แผนก: ' + dept + '</h2>');
-  win.document.write('<div class="qr-grid">');
-  // Build QR cards from current filtered machines
-  let machines = _deptQRFilter
-    ? db.machines.filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === _deptQRFilter)
-    : db.machines;
-  if (_deptQRSearch) {
-    const kw = _deptQRSearch;
-    machines = machines.filter(m =>
-      (m.serial||m.id).toLowerCase().includes(kw) ||
-      (m.name||'').toLowerCase().includes(kw)
-    );
-  }
-  machines.forEach(m => {
-    const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=' + encodeURIComponent(m.id) + '&margin=2&format=png';
-    win.document.write(`<div class="qr-card">
-      <img src="${qrSrc}" width="70" height="70" />
-      <div class="qr-id">${m.serial||m.id}</div>
-      <div class="qr-name">${(m.name||'').slice(0,16)}</div>
-    </div>`);
-  });
-  win.document.write('</div></body></html>');
-  win.document.close();
-  setTimeout(() => { win.focus(); win.print(); }, 800);
-}

@@ -26,7 +26,7 @@ function t(key) {
 // DATABASE
 // ============================================================
 const DB_KEY = 'airtrack_pwa';
-const APP_VER = 'v20260403_88';
+const APP_VER = 'v20260403_87';
 const FUNC_LOC = window._FUNC_LOC_DATA || {};
 // ── FUNC_LOC โหลดจาก func-loc-data.js (แยกไฟล์เพื่อลดขนาด app-core.js) ──
  // bump this to force reset
@@ -293,7 +293,7 @@ const _LOGIN_MAX_ATTEMPTS = 5;
 const _LOGIN_LOCKOUT_MS   = 5 * 60 * 1000; // 5 นาที
 let _loginAttempts = 0;
 let _loginLockedUntil = 0;
-const TK_PER_PAGE = 15;
+const TK_PER_PAGE = 10;
 
 // (demo login removed)
 
@@ -1238,10 +1238,14 @@ async function generateRepairPDF(tid) {
   const poRows = (t.purchaseOrder?.rows||[]).filter(r=>r.name);
   // push เฉพาะ PO rows ที่ไม่ซ้ำกับ repairRows
   const repairNames = new Set(repairRows.map(r=>r.name.trim().toLowerCase()));
+  // ตรวจ refrigerant types ที่มีใน repairRows แล้ว ป้องกัน PO ซ้ำ
+  const REFS = ['R-22','R-32','R-407C','R-407c','R-410A','R-410a','R-134A','R-134a','R-141B'];
+  const usedRefs = new Set(REFS.filter(ref => repairRows.some(r=>r.name.includes(ref))));
   poRows.forEach(r => {
-    if (!repairNames.has((r.name||'').trim().toLowerCase())) {
-      quotRows.push({ name:r.name, qty:r.qty||1, unit:'EA', unitPrice:r.price||0, total:(r.qty||1)*(r.price||0) });
-    }
+    const nm = (r.name||'').trim().toLowerCase();
+    if (repairNames.has(nm)) return; // ชื่อซ้ำตรงๆ
+    if (REFS.some(ref => r.name.includes(ref) && usedRefs.has(ref))) return; // refrigerant ซ้ำ
+    quotRows.push({ name:r.name, qty:r.qty||1, unit:'EA', unitPrice:r.price||0, total:(r.qty||1)*(r.price||0) });
   });
 
   const subTotal    = quotRows.reduce((s,r)=>s+r.total,0);
@@ -2364,10 +2368,12 @@ function _resetIdleTimer() {
 function _forceCloseAllSheets() {
   document.querySelectorAll('.sheet').forEach(s => {
     s.classList.remove('open');
-    s.style.visibility = 'hidden';
-    s.style.pointerEvents = 'none';
+    s.style.display = 'none';
+    s.style.visibility = '';
+    s.style.pointerEvents = '';
     requestAnimationFrame(() => {
       if (!s.classList.contains('open')) {
+        s.style.display = '';
         s.style.visibility = '';
         s.style.pointerEvents = '';
       }
@@ -2384,9 +2390,18 @@ function _forceCloseAllSheets() {
     try { d.close(); } catch(e2) {}
     d.style.display = 'none';
   });
+  // cleanup dynamic overlays
+  document.querySelectorAll('.cdel-overlay, #admin-manage-tk-ov').forEach(el => el.remove());
 }
-// bfcache restore + Android Chrome restore (ไม่ check e.persisted เพื่อให้ครอบคลุมทุกกรณี)
-window.addEventListener('pageshow', () => { _forceCloseAllSheets(); });
+// bfcache restore + Android Chrome restore
+window.addEventListener('pageshow', (e) => {
+  // เสมอ force close — ไม่ว่าจะมาจาก bfcache หรือไม่
+  _forceCloseAllSheets();
+  // ถ้ามาจาก bfcache ให้ reload หน้า (ป้องกัน state เก่า)
+  if (e.persisted) {
+    window.location.reload();
+  }
+});
 // close ทันที DOMContentLoaded กัน sheet ค้างจาก session ก่อนหน้า
 document.addEventListener('DOMContentLoaded', () => { _forceCloseAllSheets(); });
 
@@ -2432,11 +2447,15 @@ async function initApp() {
   requestAnimationFrame(() => {
     // ── PATCH: close modals/sheets อีกรอบหลัง paint (ป้องกัน sheet ค้างหลัง login) ──
     _closeAllModals();
+    _forceCloseAllSheets();
     // Hide ทุก page ก่อน แล้วค่อย goPage (ป้องกัน page เก่าค้างจาก session ก่อน)
     document.querySelectorAll('.page.active').forEach(p => p.classList.remove('active'));
     _activePage = null;
     goPage(CU.role === 'executive' ? 'executive' : 'home');
     if (typeof checkAutoBackup === 'function') checkAutoBackup();
+    // ── PATCH: อีกรอบหลัง goPage render เสร็จ ป้องกัน sheet ถูก re-open ──
+    setTimeout(() => _forceCloseAllSheets(), 300);
+    setTimeout(() => _forceCloseAllSheets(), 800);
   });
 
   // ── Phase 3: งานที่เหลือ defer หลัง paint ──
@@ -2523,8 +2542,8 @@ function setupBottomNav() {
     settings:   '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
     incomplete: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
     history:    '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
-    search:     '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
     executive:  '<rect x="2" y="3" width="6" height="8" rx="1"/><rect x="9" y="7" width="6" height="4" rx="1"/><rect x="16" y="5" width="6" height="6" rx="1"/><line x1="5" y1="11" x2="5" y2="21"/><line x1="12" y1="11" x2="12" y2="21"/><line x1="19" y1="11" x2="19" y2="21"/>',
+    airsearch:  '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
   };
 
   const mkIcon = p => `<span class="bn-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG[p]||''}</svg></span>`;
@@ -2534,7 +2553,7 @@ function setupBottomNav() {
         {page:'home',       label:'หน้าแรก'},
         {page:'tickets',    label:'งาน',       badge:'open-badge'},
         {page:'machines',   label:'เครื่องแอร์'},
-        {page:'airsearch',  label:'ค้นหา',     action:()=>openSheet('airsearch')},
+        {page:'chatroom',   label:'แชท',       badge:'cr-nav-badge'},
         {page:'report',     label:'รายงาน'},
         {page:'settings',   label:'ตั้งค่า'},
       ]
@@ -2547,12 +2566,12 @@ function setupBottomNav() {
         ]
     : CU.role === 'tech'
       ? [
-          {page:'home',     label:'หน้าแรก'},
-          {page:'new',      label:'แจ้งซ่อม'},
-          {page:'tickets',  label:'รายการ', badge:'open-badge'},
-          {page:'airsearch',label:'ค้นหา',  action:()=>openSheet('airsearch')},
-          {page:'chatroom', label:'แชท',    badge:'cr-nav-badge'},
-          {page:'settings', label:'ตั้งค่า'},
+          {page:'home',       label:'หน้าแรก'},
+          {page:'new',        label:'แจ้งซ่อม'},
+          {page:'tickets',    label:'รายการ', badge:'open-badge'},
+          {page:'airsearch',  label:'ค้นหา',  action:()=>openSheet('airsearch')},
+          {page:'chatroom',   label:'แชท',    badge:'cr-nav-badge'},
+          {page:'settings',   label:'ตั้งค่า'},
         ]
       : [
           {page:'home',     label:'หน้าแรก'},
@@ -2576,8 +2595,6 @@ function setupBottomNav() {
     const iconColor = item.page === 'incomplete' ? 'color:#d97706' : '';
     const iconHtml = item.page === 'incomplete'
       ? `<span class="bn-icon" style="${iconColor}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG['incomplete']}</svg></span>`
-      : item.page === 'airsearch'
-      ? mkIcon('search')
       : mkIcon(item.page);
     btn.innerHTML = iconHtml + `<span class="bn-label"${item.page==='incomplete'?' style="color:#d97706"':''}>${item.label}</span>` + (item.badge ? `<span class="bn-badge" id="${item.badge}"></span>` : '');
     nav.appendChild(btn);
@@ -2720,7 +2737,13 @@ function goPage(name) {
   requestAnimationFrame(() => {
     if (name === 'home') renderHome();
     else if (name === 'executive') renderExecutiveDashboard();
-    else if (name === 'tickets') renderTickets();
+    else if (name === 'tickets') {
+      // แสดงปุ่ม multi-select เฉพาะ admin
+      const msBtn = document.getElementById('multi-select-toggle');
+      if (msBtn) msBtn.style.display = CU?.role === 'admin' ? 'block' : 'none';
+      // reset multi-select ถ้าออกจาก tickets แล้วกลับมา
+      if (_multiSelectMode) exitMultiSelect(); else renderTickets();
+    }
     else if (name === 'mywork') renderMyWork();
     else if (name === 'tracking') {
       if (CU?.role === 'admin') renderTracking();
@@ -2753,7 +2776,7 @@ function goPage(name) {
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 1800);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 4000);
       }
-      setTimeout(()=>{ setPriority('mid'); const priField=document.getElementById('nt-priority-field'); if(priField) priField.style.display=CU.role==='reporter'?'none':''; },50);
+      setTimeout(()=>{ const priField=document.getElementById('nt-priority-field'); if(priField) priField.style.display='none'; },50);
     }
     else if (name === 'chat') { renderChatPage(); }
     else if (name === 'settings') { renderSettingsPage(); renderTopbarAvatar(); }

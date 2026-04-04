@@ -154,17 +154,53 @@ function openMachineHistory(mid) {
 // ── AIR ID Search ──────────────────────────────────────────────
 function openAirIdSearch() {
   document.getElementById('airsearch-input').value = '';
-  document.getElementById('airsearch-results').innerHTML =
-    '<div style="text-align:center;padding:40px 16px;color:#94a3b8"><div style="font-size:2rem;margin-bottom:8px">🔍</div><div style="font-size:0.85rem;font-weight:700">พิมพ์ AIR ID, Serial หรือชื่อเครื่อง</div><div style="font-size:0.72rem;margin-top:4px">เพื่อดูประวัติและค่าใช้จ่ายทั้งหมด</div></div>';
   openSheet('airsearch');
-  setTimeout(() => { const inp = document.getElementById('airsearch-input'); if(inp) inp.focus(); }, 350);
+  setTimeout(() => {
+    renderAirSearchResults();
+    const inp = document.getElementById('airsearch-input');
+    if(inp) inp.focus();
+  }, 350);
 }
 
 function renderAirSearchResults() {
   const q = (document.getElementById('airsearch-input').value||'').trim().toLowerCase();
   const el = document.getElementById('airsearch-results');
   if (!q) {
-    el.innerHTML = '<div style="text-align:center;padding:32px 16px;color:#94a3b8"><div style="font-size:0.8rem">พิมพ์คำค้นหาเพื่อดูผลลัพธ์</div></div>';
+    // แสดงงานซ่อมล่าสุด 10 รายการ
+    const recentTix = (db.tickets||[])
+      .slice()
+      .sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))
+      .slice(0,10);
+    if (!recentTix.length) {
+      el.innerHTML = '<div style="text-align:center;padding:32px 16px;color:#94a3b8"><div style="font-size:0.8rem">ยังไม่มีงานซ่อม</div></div>';
+      return;
+    }
+    const statusLabel = {new:'ใหม่',assigned:'จ่ายงาน',working:'กำลังซ่อม',done:'เสร็จแล้ว',verified:'ยืนยัน',closed:'ปิดงาน'};
+    const statusColor = {new:'#f59e0b',assigned:'#3b82f6',working:'#8b5cf6',done:'#10b981',verified:'#0891b2',closed:'#94a3b8'};
+    el.innerHTML = `
+      <div style="font-size:0.68rem;font-weight:800;color:#94a3b8;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;padding:0 2px">งานซ่อมล่าสุด</div>
+      ${recentTix.map(t => {
+        const m = (db.machines||[]).find(x=>x.id===t.machineId||x.name===t.machine);
+        const st = t.status||'new';
+        const stColor = statusColor[st]||'#94a3b8';
+        const stLabel = statusLabel[st]||st;
+        return `
+        <div onclick="closeSheet('airsearch');setTimeout(()=>safeOpenDetail('${t.id}'),220)"
+          style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent"
+          onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#c8102e">${t.id}</div>
+              <div style="font-size:0.82rem;font-weight:800;color:#0f172a;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml((t.problem||'').slice(0,40))}${(t.problem||'').length>40?'…':''}</div>
+              ${m?`<div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${escapeHtml(m.name||'')}${m.dept?' · '+escapeHtml(m.dept):''}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+              <span style="font-size:0.62rem;background:${stColor}18;color:${stColor};border:1px solid ${stColor}40;border-radius:6px;padding:2px 7px;font-weight:800">${stLabel}</span>
+              <span style="font-size:0.6rem;color:#94a3b8">${(t.createdAt||'').slice(0,10)}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}`;
     return;
   }
   const matched = (db.machines||[]).filter(m =>
@@ -1821,6 +1857,105 @@ function openMacTableSheet() {
 
 function renderMachines() {
   requestAnimationFrame(() => updateNewMacBadge()); applyMachineFilter(); }
+// ── Custom Dept Picker ──────────────────────────────────────
+let _deptPickerDepts = [];
+let _deptPickerOpen = false;
+
+function renderDeptPickerGrid(depts) {
+  const grid = document.getElementById('nt-dept-grid');
+  if (!grid) return;
+  if (!depts.length) {
+    grid.innerHTML = `<div style="padding:20px;text-align:center;color:#94a3b8;font-size:0.8rem">ไม่พบแผนก</div>`;
+    return;
+  }
+  // สีแต่ละแผนกตาม index
+  const palette = ['#c8102e','#e65100','#0369a1','#059669','#7c3aed','#d97706'];
+  grid.innerHTML = depts.map((d, i) => {
+    const col = palette[i % palette.length];
+    const cnt = (db.machines||[]).filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === d).length;
+    return `<div class="dept-picker-item" data-dept="${d}"
+      onclick="selectDeptPickerItem('${d.replace(/'/g,"\\'")}','${col}')"
+      style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.12s;-webkit-tap-highlight-color:transparent"
+      onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background=''"
+      ontouchstart="this.style.background='#f8fafc'" ontouchend="this.style.background=''">
+      <div style="width:34px;height:34px;border-radius:10px;background:${col}1a;border:1.5px solid ${col}33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d}</div>
+        ${cnt ? `<div style="font-size:0.62rem;color:#94a3b8;margin-top:1px">${cnt} เครื่อง</div>` : ''}
+      </div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+}
+
+function filterDeptPicker(q) {
+  const filtered = q ? _deptPickerDepts.filter(d => d.toLowerCase().includes(q.toLowerCase())) : _deptPickerDepts;
+  renderDeptPickerGrid(filtered);
+}
+
+function toggleDeptPicker() {
+  const picker = document.getElementById('nt-dept-picker');
+  const chevron = document.getElementById('nt-dept-chevron');
+  const display = document.getElementById('nt-dept-display');
+  if (!picker) return;
+  _deptPickerOpen = !_deptPickerOpen;
+  picker.style.display = _deptPickerOpen ? 'block' : 'none';
+  if (chevron) chevron.style.transform = _deptPickerOpen ? 'rotate(180deg)' : '';
+  if (display) display.style.borderColor = _deptPickerOpen ? '#c8102e' : '#e2e8f0';
+  if (_deptPickerOpen) {
+    setTimeout(() => { const s = document.getElementById('nt-dept-search'); if(s) s.focus(); }, 100);
+  }
+}
+
+function selectDeptPickerItem(dept, col) {
+  // ปิด picker
+  _deptPickerOpen = false;
+  const picker = document.getElementById('nt-dept-picker');
+  const chevron = document.getElementById('nt-dept-chevron');
+  if (picker) picker.style.display = 'none';
+  if (chevron) chevron.style.transform = '';
+
+  // อัปเดต display
+  const display = document.getElementById('nt-dept-display');
+  const icon    = document.getElementById('nt-dept-icon');
+  const label   = document.getElementById('nt-dept-label');
+  if (display) display.style.borderColor = col;
+  if (display) display.style.background = col+'0d';
+  if (icon) {
+    icon.style.background = col+'1a';
+    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+  }
+  if (label) { label.textContent = dept; label.style.color = '#0f172a'; label.style.fontWeight = '700'; }
+
+  // set hidden select + trigger onDeptChange
+  const sel = document.getElementById('nt-dept');
+  if (sel) { sel.value = dept; }
+  onDeptChange(dept);
+
+  // clear search
+  const s = document.getElementById('nt-dept-search');
+  if (s) s.value = '';
+  renderDeptPickerGrid(_deptPickerDepts);
+}
+
+function resetDeptPicker() {
+  _deptPickerOpen = false;
+  const picker  = document.getElementById('nt-dept-picker');
+  const chevron = document.getElementById('nt-dept-chevron');
+  const display = document.getElementById('nt-dept-display');
+  const icon    = document.getElementById('nt-dept-icon');
+  const label   = document.getElementById('nt-dept-label');
+  if (picker)  picker.style.display = 'none';
+  if (chevron) chevron.style.transform = '';
+  if (display) { display.style.borderColor = '#e2e8f0'; display.style.background = 'white'; }
+  if (icon)    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+  if (icon)    icon.style.background = '#f1f5f9';
+  if (label)   { label.textContent = '— เลือกแผนก —'; label.style.color = '#9ca3af'; label.style.fontWeight = '500'; }
+}
+// ───────────────────────────────────────────────────────────
+
 function populateMachineSelect() {
   // Populate dept dropdown
   const deptSel = document.getElementById('nt-dept'); if(!deptSel) return;
@@ -1847,6 +1982,10 @@ function populateMachineSelect() {
     depts.map(d => `<option value="${d}">${d}</option>`).join('');
   document.getElementById('nt-mac').innerHTML = '<option value="">— เลือกห้อง —</option>';
   document.getElementById('nt-room-wrap').style.display = 'none';
+
+  // ── Populate custom dept picker grid ──
+  _deptPickerDepts = depts;
+  renderDeptPickerGrid(depts);
 
   // ── pre-fill ข้อมูลผู้แจ้ง ──
   const nameEl   = document.getElementById('nt-reporter-name');
