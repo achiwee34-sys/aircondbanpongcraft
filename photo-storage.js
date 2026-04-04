@@ -35,16 +35,23 @@ async function uploadPhotoToStorage(base64, path) {
   if (!FSstorage) return base64;
 
   try {
-    // ── แปลง base64 → Blob แบบ manual (ไม่ใช้ fetch เพราะ Android บางรุ่น reject data URL) ──
-    const parts = base64.split(',');
-    const mime  = (parts[0].match(/:(.*?);/)||['','image/jpeg'])[1];
-    const raw   = atob(parts[1]);
-    const arr   = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-    const blob = new Blob([arr], { type: mime });
-
+    // แปลง base64 → Blob (ไม่ใช้ fetch เพราะบาง browser ไม่รองรับ data: URL)
+    let blob;
+    try {
+      const arr = base64.split(',');
+      const mime = (arr[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+      const bstr = atob(arr[1]);
+      const n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
+      blob = new Blob([u8arr], { type: mime });
+    } catch(convErr) {
+      // fallback: ลอง fetch
+      const res = await fetch(base64);
+      blob = await res.blob();
+    }
     const ref = FSstorage.ref(path);
-    const snapshot = await ref.put(blob, { contentType: mime });
+    const snapshot = await ref.put(blob, { contentType: 'image/jpeg' });
     const url = await snapshot.ref.getDownloadURL();
     return url;
   } catch(e) {

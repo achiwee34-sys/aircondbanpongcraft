@@ -1361,24 +1361,15 @@ function onChatFileSelect(input) {
         _chatPendingImgs.push({ type:'pdf', name:f.name, data:e.target.result });
         done++; updateProgress(); renderChatImgPreview();
       };
-      reader.onerror = () => { done++; updateProgress(); };
       reader.readAsDataURL(f);
     } else {
-      // timeout 8s fallback to raw FileReader
-      const fallback = () => {
-        const r2 = new FileReader();
-        r2.onload = e2 => { _chatPendingImgs.push({ type:'img', data:e2.target.result }); done++; updateProgress(); renderChatImgPreview(); };
-        r2.onerror = () => { done++; updateProgress(); };
-        r2.readAsDataURL(f);
-      };
-      const t = setTimeout(fallback, 8000);
       compressChatPhoto(f).then(data => {
-        clearTimeout(t);
         _chatPendingImgs.push({ type:'img', data });
         done++; updateProgress(); renderChatImgPreview();
       }).catch(() => {
-        clearTimeout(t);
-        fallback();
+        const reader = new FileReader();
+        reader.onload = e => { _chatPendingImgs.push({ type:'img', data:e.target.result }); done++; updateProgress(); renderChatImgPreview(); };
+        reader.readAsDataURL(f);
       });
     }
   });
@@ -2842,61 +2833,102 @@ function histDateClear()  {
   renderHistory();
 }
 
-// ── Export รายงานสรุป Excel ────────────────────────────────────
-function exportReportExcel() {
+// ── Export Report Summary Excel ─────────────────────────────
+function exportSummaryExcel() {
   if (typeof XLSX === 'undefined') { showToast('⚠️ กรุณารอโหลด SheetJS'); return; }
-  const wb = XLSX.utils.book_new();
-  const today = new Date().toLocaleDateString('th-TH');
-  const monthLabel = MONTH_TH[rptMonth] + ' ' + (rptYear+543);
 
-  // Sheet 1: สรุปรายเดือน (12 เดือน)
-  const now = new Date();
-  const months = [];
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({ year: d.getFullYear(), month: d.getMonth(), label: MONTH_TH[d.getMonth()]+' '+(d.getFullYear()+543) });
+  const monthLabel = MONTH_TH[rptMonth] + ' ' + (rptYear + 543);
+  const today = new Date().toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  // กรองงานตามเดือนและแผนก
+  let T = db.tickets || [];
+  if (_rptDeptFilter) {
+    const machIds = new Set((db.machines||[]).filter(m => (m.dept||m.location||'') === _rptDeptFilter).map(m => m.id));
+    T = T.filter(t => machIds.has(t.machineId));
   }
-  const monthRows = [['เดือน','จำนวนงาน','ค่าแรงซ่อม','ค่าสั่งซื้อ','รวม']];
-  months.forEach(m => {
-    const tix = (db.tickets||[]).filter(t => {
-      const d = new Date(t.updatedAt||t.createdAt||'');
-      return d.getFullYear()===m.year && d.getMonth()===m.month && (Number(t.cost||0)||Number(t.repairCost||0)||Number(t.partsCost||0));
-    });
-    const repair = tix.reduce((s,t)=>s+(Number(t.repairCost||0)||Number(t.cost||0)),0);
-    const parts  = tix.reduce((s,t)=>s+Math.max(Number(t.partsCost||0),Number(t.purchaseOrder?.total||0)),0);
-    monthRows.push([m.label, tix.length, repair, parts, repair+parts]);
+  const monthTickets = T.filter(t => {
+    const d = new Date(t.createdAt || t.updatedAt || '');
+    return d.getFullYear() === rptYear && d.getMonth() === rptMonth;
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monthRows), 'รายเดือน');
 
-  // Sheet 2: รายละเอียดงานทั้งหมด
-  const detRows = [['Ticket ID','ปัญหา','เครื่อง','แผนก','ช่าง','สถานะ','วันที่','ค่าแรง','ค่าอะไหล่','รวม']];
-  (db.tickets||[]).forEach(t => {
-    const m = (db.machines||[]).find(x=>x.id===t.machineId);
-    detRows.push([
-      t.id, t.problem||'', t.machine||'', m?.dept||m?.location||'',
-      t.assignee||'', t.status||'', (t.createdAt||'').slice(0,10),
-      Number(t.repairCost||0), Number(t.partsCost||0), Number(t.cost||0)
-    ]);
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detRows), 'รายละเอียด');
+  const STATUS_LABEL = {
+    new: 'ใหม่', assigned: 'มอบหมาย', accepted: 'รับงาน',
+    inprogress: 'กำลังซ่อม', waiting_part: 'รออะไหล่',
+    done: 'เสร็จ', verified: 'ตรวจรับ', closed: 'ปิดงาน'
+  };
+  const PRIORITY_LABEL = { high: 'ด่วน', medium: 'ปกติ', low: 'ต่ำ' };
 
-  // Sheet 3: สรุปแต่ละแผนก
-  const deptMap = {};
-  (db.tickets||[]).forEach(t => {
-    const m = (db.machines||[]).find(x=>x.id===t.machineId);
-    const dept = m?.dept||m?.location||'ไม่ระบุ';
-    if (!deptMap[dept]) deptMap[dept] = {count:0,repair:0,parts:0};
-    deptMap[dept].count++;
-    deptMap[dept].repair += Number(t.repairCost||0);
-    deptMap[dept].parts  += Number(t.partsCost||0);
-  });
-  const deptRows = [['แผนก','จำนวนงาน','ค่าแรงซ่อม','ค่าสั่งซื้อ','รวม']];
-  Object.entries(deptMap).sort((a,b)=>(b[1].repair+b[1].parts)-(a[1].repair+a[1].parts)).forEach(([dept,v]) => {
-    deptRows.push([dept, v.count, v.repair, v.parts, v.repair+v.parts]);
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(deptRows), 'แยกแผนก');
+  const wb = XLSX.utils.book_new();
 
-  const fname = `AIRCON_Report_${today.replace(/\//g,'-')}.xlsx`;
+  // ── Sheet 1: สรุปรายเดือน ──
+  const doneList   = monthTickets.filter(t => ['done','verified','closed'].includes(t.status));
+  const activeList = monthTickets.filter(t => !['done','verified','closed'].includes(t.status));
+  const highList   = monthTickets.filter(t => t.priority === 'high');
+  const totalCost  = monthTickets.reduce((s, t) => s + Number(t.repairCost||t.cost||0), 0);
+  const totalParts = monthTickets.reduce((s, t) => s + Number(t.partsCost||0), 0);
+
+  const sumRows = [
+    ['รายงานสรุปงานซ่อม', monthLabel, (_rptDeptFilter ? 'แผนก: ' + _rptDeptFilter : 'ทุกแผนก'), '', 'วันที่พิมพ์: ' + today],
+    [],
+    ['รายการ', 'จำนวน', 'หน่วย'],
+    ['งานทั้งหมดในเดือน', monthTickets.length, 'งาน'],
+    ['งานเสร็จ', doneList.length, 'งาน'],
+    ['งานค้าง', activeList.length, 'งาน'],
+    ['งานด่วน', highList.length, 'งาน'],
+    ['ค่าซ่อม', totalCost, 'บาท'],
+    ['ค่าอะไหล่', totalParts, 'บาท'],
+    ['รวมค่าใช้จ่าย', totalCost + totalParts, 'บาท'],
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(sumRows);
+  ws1['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws1, 'สรุป ' + MONTH_TH[rptMonth].slice(0,3));
+
+  // ── Sheet 2: รายการงานทั้งหมดในเดือน ──
+  const detHeader = ['เลขงาน','วันที่แจ้ง','แผนก','เครื่อง Serial','ชื่อเครื่อง','อาการ','ลำดับความสำคัญ','สถานะ','ช่างรับงาน','วันที่เสร็จ','ค่าซ่อม','ค่าอะไหล่','รวม'];
+  const detRows = [detHeader, ...monthTickets.map(t => {
+    const mach = (db.machines||[]).find(m => m.id === t.machineId) || {};
+    const tech = (db.users||[]).find(u => u.id === t.assigneeId);
+    const dept = mach.dept || mach.location || '';
+    const repCost  = Number(t.repairCost || t.cost || 0);
+    const partCost = Number(t.partsCost || 0);
+    return [
+      t.id || '',
+      t.createdAt ? t.createdAt.slice(0, 10) : '',
+      dept,
+      mach.serial || '',
+      mach.name || '',
+      t.problem || '',
+      PRIORITY_LABEL[t.priority] || t.priority || '',
+      STATUS_LABEL[t.status] || t.status || '',
+      tech ? tech.name : (t.assigneeId || ''),
+      t.updatedAt && ['done','verified','closed'].includes(t.status) ? t.updatedAt.slice(0, 10) : '',
+      repCost,
+      partCost,
+      repCost + partCost,
+    ];
+  })];
+  const ws2 = XLSX.utils.aoa_to_sheet(detRows);
+  ws2['!cols'] = [10,12,16,14,20,32,10,12,14,12,10,10,10].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws2, 'รายการงาน');
+
+  // ── Sheet 3: สรุปตามช่าง ──
+  const techMap = {};
+  monthTickets.forEach(t => {
+    const key = t.assigneeId || '__none__';
+    if (!techMap[key]) techMap[key] = { name: '', done: 0, active: 0, total: 0 };
+    const u = (db.users||[]).find(u => u.id === t.assigneeId);
+    techMap[key].name = u ? u.name : (t.assigneeId ? t.assigneeId : 'ยังไม่มอบหมาย');
+    techMap[key].total++;
+    if (['done','verified','closed'].includes(t.status)) techMap[key].done++;
+    else techMap[key].active++;
+  });
+  const techHeader = ['ช่างซ่อม', 'งานทั้งหมด', 'เสร็จแล้ว', 'ค้างอยู่'];
+  const techRows = [techHeader, ...Object.values(techMap).sort((a,b) => b.total - a.total).map(r => [r.name, r.total, r.done, r.active])];
+  const ws3 = XLSX.utils.aoa_to_sheet(techRows);
+  ws3['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws3, 'สรุปตามช่าง');
+
+  const fname = `Report_${MONTH_TH[rptMonth].slice(0,3)}_${rptYear+543}${_rptDeptFilter?'_'+_rptDeptFilter:''}_${today.replace(/\//g,'-')}.xlsx`;
   XLSX.writeFile(wb, fname);
-  showToast('📊 Export Excel สำเร็จ: '+fname);
+  showToast('📊 Export Excel สำเร็จ: ' + fname);
 }
