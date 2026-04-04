@@ -2143,7 +2143,7 @@
 
 <!-- Repair History Sheet — รูปแบบเดียวกับ AIR ID Search -->
 <div class="sheet-overlay" id="repairhist-overlay" onclick="closeSheet('repairhist')"></div>
-<div class="sheet" id="repairhist-sheet" style="max-height:92vh">
+<div class="sheet" id="repairhist-sheet" style="max-height:calc(92dvh - var(--safe-top,0px))">
   <div class="sheet-handle"></div>
   <div class="sheet-title" style="display:flex;align-items:center;gap:8px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -3670,42 +3670,9 @@ window.filterRepairHistPage = function(q) {
 };
 
 /* ────────────────────────────────────────────────────
-   ITEM 11: Fix sub-page headers (คำขอเพิ่มเครื่อง,
-   เพิ่มเครื่องแอร์ใหม่, ตารางเครื่องแอร์)
-   Fix padding-top so header is under App Header Bar
+   ITEM 11: Sub-page header padding ใช้ --head-h + --safe-top
+   (แก้ตรงใน app-machines.js / app-tracking.js แล้ว — block นี้ไม่จำเป็น)
 ──────────────────────────────────────────────────── */
-(function fixSubPageHeaders() {
-  // Patch openMachineRequestsPage to fix header padding
-  const origOpenReq = window.openMachineRequestsPage;
-  if (typeof origOpenReq === 'function') {
-    window.openMachineRequestsPage = function() {
-      origOpenReq.apply(this, arguments);
-      requestAnimationFrame(() => {
-        const page = document.getElementById('_mac-req-page');
-        if (!page) return;
-        // Find the dark gradient header
-        const hdr = page.querySelector('div[style*="linear-gradient(135deg,#0f172a"]');
-        if (hdr) {
-          hdr.style.paddingTop = 'calc(env(safe-area-inset-top,0px) + 14px)';
-        }
-      });
-    };
-  }
-
-  // Patch openNewMachinesTable similarly
-  const origOpenNew = window.openNewMachinesTable;
-  if (typeof origOpenNew === 'function') {
-    window.openNewMachinesTable = function() {
-      origOpenNew.apply(this, arguments);
-      requestAnimationFrame(() => {
-        const page = document.getElementById('_new-mac-page') || document.getElementById('_newmac-page');
-        if (!page) return;
-        const hdr = page.querySelector('div[style*="linear-gradient"]');
-        if (hdr) hdr.style.paddingTop = 'calc(env(safe-area-inset-top,0px) + 14px)';
-      });
-    };
-  }
-})();
 
 /* ────────────────────────────────────────────────────
    ITEM 5: Fix Header positioning for tickets page

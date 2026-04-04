@@ -1331,7 +1331,7 @@ function openRepairPicker() {
 
   ov.innerHTML = `
     <!-- Header compact -->
-    <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 45%,#c8102e 100%);flex-shrink:0;padding:calc(env(safe-area-inset-top,0px) + 6px) 0 0">
+    <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 45%,#c8102e 100%);flex-shrink:0;padding:calc(var(--head-h,56px) + var(--safe-top,0px)) 0 0">
       <!-- Top bar — single row -->
       <div style="padding:0 12px 6px;display:flex;align-items:center;gap:8px">
         <button id="rp-close" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:white;font-size:1.2rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>

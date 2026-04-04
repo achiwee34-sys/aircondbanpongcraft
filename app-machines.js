@@ -2811,7 +2811,7 @@ function openMachineRequestsPage() {
 
     page.innerHTML = `
       <!-- Header -->
-      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:calc(env(safe-area-inset-top,0px)+16px) 16px 16px;flex-shrink:0">
+      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
           <button onclick="document.getElementById('_mac-req-page').remove()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">‹</button>
           <div style="flex:1">
@@ -3227,7 +3227,7 @@ function openNewMachinesTable() {
 
   pg.innerHTML = `
     <!-- ── Header ── -->
-    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:calc(env(safe-area-inset-top,0px)+10px) 14px 0;flex-shrink:0">
+    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 14px 0;flex-shrink:0">
       <!-- top bar -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <button onclick="document.getElementById('_nmtable').remove()"
