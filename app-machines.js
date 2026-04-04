@@ -1965,7 +1965,7 @@ function selectDeptPickerItem(dept, col) {
   if (display) display.style.background = col+'0d';
   if (icon) {
     icon.style.background = col+'1a';
-    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+    icon.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>`;
   }
   if (label) { label.textContent = dept; label.style.color = '#0f172a'; label.style.fontWeight = '700'; }
 
@@ -1990,7 +1990,7 @@ function resetDeptPicker() {
   if (picker)  picker.style.display = 'none';
   if (chevron) chevron.style.transform = '';
   if (display) { display.style.borderColor = '#e2e8f0'; display.style.background = 'white'; }
-  if (icon)    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+  if (icon)    icon.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>`;
   if (icon)    icon.style.background = '#f1f5f9';
   if (label)   { label.textContent = '— เลือกแผนก —'; label.style.color = '#9ca3af'; label.style.fontWeight = '500'; }
 }
@@ -2079,7 +2079,7 @@ function selectMacPickerItem(mid, label) {
   if (display) { display.style.borderColor = '#0369a1'; display.style.background = '#0369a10d'; }
   if (icon) {
     icon.style.background = '#0369a11a';
-    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>`;
+    icon.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="12" cy="12" r="3.5"/><path d="M12 8.5v1M12 14.5v1M8.5 12h1M14.5 12h1"/><line x1="2" y1="7" x2="22" y2="7"/><line x1="5" y1="5" x2="5" y2="5.01"/><line x1="8" y1="5" x2="8" y2="5.01"/></svg>`;
   }
   if (lbl) { lbl.textContent = label; lbl.style.color = '#0f172a'; lbl.style.fontWeight = '700'; }
   const sel = document.getElementById('nt-mac');
@@ -2103,7 +2103,7 @@ function resetMacPicker() {
   if (display) { display.style.borderColor = '#e2e8f0'; display.style.background = 'white'; }
   if (icon) {
     icon.style.background = '#f1f5f9';
-    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>`;
+    icon.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="12" cy="12" r="3.5"/><path d="M12 8.5v1M12 14.5v1M8.5 12h1M14.5 12h1"/><line x1="2" y1="7" x2="22" y2="7"/><line x1="5" y1="5" x2="5" y2="5.01"/><line x1="8" y1="5" x2="8" y2="5.01"/></svg>`;
   }
   if (label) { label.textContent = '— เลือกห้อง / เครื่องแอร์ —'; label.style.color = '#9ca3af'; label.style.fontWeight = '500'; }
   const s = document.getElementById('nt-mac-search');
