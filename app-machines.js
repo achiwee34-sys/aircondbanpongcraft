@@ -184,13 +184,17 @@ function renderAirSearchResults() {
         const st = t.status||'new';
         const stColor = statusColor[st]||'#94a3b8';
         const stLabel = statusLabel[st]||st;
+        const airId = m ? m.id.replace(/^csv_/,'') : '';
         return `
         <div onclick="closeSheet('airsearch');setTimeout(()=>safeOpenDetail('${t.id}'),220)"
           style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent"
           onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#c8102e">${t.id}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap">
+                <span style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#c8102e">${t.id}</span>
+                ${airId?`<span style="font-size:0.6rem;font-family:'JetBrains Mono',monospace;font-weight:700;color:#0891b2;background:#ecfeff;border-radius:4px;padding:1px 5px">AIR: ${airId}</span>`:''}
+              </div>
               <div style="font-size:0.82rem;font-weight:800;color:#0f172a;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml((t.problem||'').slice(0,40))}${(t.problem||'').length>40?'…':''}</div>
               ${m?`<div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${escapeHtml(m.name||'')}${m.dept?' · '+escapeHtml(m.dept):''}</div>`:''}
             </div>
@@ -225,10 +229,13 @@ function renderAirSearchResults() {
     <div onclick="closeSheet('airsearch');setTimeout(()=>openMachineHistory('${m.id}'),220)"
       style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent"
       onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
-      <!-- Top row: serial + dept -->
+      <!-- Top row: AIR ID + serial + dept -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#0891b2">${m.serial||m.id}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px">
+            <span style="font-size:0.7rem;font-family:'JetBrains Mono',monospace;font-weight:900;color:#c8102e;background:#fff0f2;border-radius:4px;padding:1px 6px">AIR: ${m.id.replace(/^csv_/,'')}</span>
+            ${m.serial?`<span style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;font-weight:700;color:#0891b2">${escapeHtml(m.serial)}</span>`:''}
+          </div>
           <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${escapeHtml(m.name)}</div>
           <div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${m.dept?escapeHtml(m.dept):''}${m.brand?' · '+escapeHtml(m.brand):''}${m.btu?' · '+Number(m.btu).toLocaleString()+' BTU':''}</div>
         </div>

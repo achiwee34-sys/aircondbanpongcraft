@@ -277,12 +277,58 @@ function renderRptCostMonthly() {
   // หาเดือนปัจจุบัน (rptMonth/rptYear)
   const currentIdx = monthData.findIndex(m => m.year===rptYear && m.month===rptMonth);
 
+  // ── SVG Chart ──
+  const SVG_W = 340, SVG_H = 120, PAD_L = 42, PAD_R = 8, PAD_T = 10, PAD_B = 28;
+  const chartW = SVG_W - PAD_L - PAD_R;
+  const chartH = SVG_H - PAD_T - PAD_B;
+  const barW2  = Math.floor(chartW / 12) - 3;
+
+  // Y gridlines (3 lines)
+  const yStep = maxTotal > 0 ? maxTotal / 3 : 1;
+  const gridLines = [1,2,3].map(i => {
+    const val = yStep * i;
+    const y = PAD_T + chartH - Math.round(val / maxTotal * chartH);
+    const label = val >= 1000000 ? (val/1000000).toFixed(1)+'M' : val >= 1000 ? Math.round(val/1000)+'K' : val;
+    return { y, label };
+  });
+
+  const svgBars = monthData.map((m, i) => {
+    const x = PAD_L + i * (chartW / 12) + 1;
+    const isCurrent = i === currentIdx;
+    const totalH = m.total > 0 ? Math.max(Math.round(m.total / maxTotal * chartH), 4) : 0;
+    const repH2  = m.total > 0 ? Math.round(m.repair / m.total * totalH) : 0;
+    const parH2  = totalH - repH2;
+    const yBase  = PAD_T + chartH;
+    const repCol  = isCurrent ? '#2563eb' : '#60a5fa';
+    const parCol  = isCurrent ? '#ea580c' : '#fb923c';
+    const parts = [];
+    if (totalH === 0) {
+      parts.push(`<rect x="${x}" y="${yBase-2}" width="${barW2}" height="2" rx="1" fill="#e2e8f0"/>`);
+    } else {
+      if (repH2 > 0) parts.push(`<rect x="${x}" y="${yBase-totalH}" width="${barW2}" height="${repH2}" rx="0" fill="${repCol}"/>`);
+      if (parH2 > 0) parts.push(`<rect x="${x}" y="${yBase-parH2}" width="${barW2}" height="${parH2}" rx="0" fill="${parCol}"/>`);
+      // round top
+      parts.push(`<rect x="${x}" y="${yBase-totalH}" width="${barW2}" height="4" rx="3" fill="${repH2>0?repCol:parCol}"/>`);
+    }
+    // current outline
+    if (isCurrent && totalH > 0) parts.push(`<rect x="${x-1}" y="${yBase-totalH-1}" width="${barW2+2}" height="${totalH+1}" rx="3" fill="none" stroke="#c8102e" stroke-width="1.5"/>`);
+    // clickable overlay
+    parts.push(`<rect x="${x-1}" y="${PAD_T}" width="${barW2+2}" height="${chartH+2}" rx="3" fill="transparent" style="cursor:pointer" onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')"><title>฿${m.total.toLocaleString()} · ${m.count} งาน</title></rect>`);
+    return parts.join('');
+  }).join('');
+
+  const svgLabels = monthData.map((m, i) => {
+    const x = PAD_L + i * (chartW / 12) + barW2/2 + 1;
+    const isCurrent = i === currentIdx;
+    return `<text x="${x}" y="${SVG_H - 6}" text-anchor="middle" font-size="7" font-weight="${isCurrent?'800':'500'}" fill="${isCurrent?'#c8102e':'#94a3b8'}">${m.label.replace(' ','')}</text>`;
+  }).join('');
+
   el.innerHTML = `
     <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div>
         <div style="font-size:0.88rem;font-weight:900;color:#0f172a">📅 ค่าใช้จ่ายรายเดือน</div>
-        <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">12 เดือนล่าสุด · กดเดือนเพื่อดูรายละเอียด</div>
+        <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">12 เดือนล่าสุด · กดแท่งดูรายละเอียด</div>
       </div>
       <div style="text-align:right">
         <div style="font-size:1rem;font-weight:900;color:#c8102e">฿${grandTotal.toLocaleString()}</div>
@@ -290,53 +336,50 @@ function renderRptCostMonthly() {
       </div>
     </div>
 
-    <!-- Summary 2 badges -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:10px 12px">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+    <!-- Summary badges: ค่าแรง + ค่าสั่งซื้อ -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:9px 12px">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
           <div style="width:8px;height:8px;border-radius:2px;background:#3b82f6"></div>
-          <span style="font-size:0.6rem;color:#0369a1;font-weight:700;text-transform:uppercase">ค่าแรงซ่อม</span>
+          <span style="font-size:0.6rem;color:#0369a1;font-weight:700">ค่าแรงซ่อม</span>
         </div>
         <div style="font-size:1rem;font-weight:900;color:#0369a1">${grandRepair>0?'฿'+grandRepair.toLocaleString():'—'}</div>
-        <div style="font-size:0.58rem;color:#64748b;margin-top:2px">จาก Price List</div>
+        <div style="font-size:0.58rem;color:#64748b;margin-top:1px">จาก Price List</div>
       </div>
-      <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:10px 12px">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+      <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:9px 12px">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
           <div style="width:8px;height:8px;border-radius:2px;background:#f97316"></div>
-          <span style="font-size:0.6rem;color:#c2410c;font-weight:700;text-transform:uppercase">ค่าสั่งซื้อ</span>
+          <span style="font-size:0.6rem;color:#c2410c;font-weight:700">ค่าสั่งซื้อ</span>
         </div>
         <div style="font-size:1rem;font-weight:900;color:#c2410c">${grandParts>0?'฿'+grandParts.toLocaleString():'—'}</div>
-        <div style="font-size:0.58rem;color:#64748b;margin-top:2px">จาก PO/PR</div>
+        <div style="font-size:0.58rem;color:#64748b;margin-top:1px">จาก PO/PR</div>
       </div>
     </div>
 
-    <!-- Bar chart -->
-    <div style="display:flex;align-items:flex-end;gap:3px;height:80px;margin-bottom:4px">
-      ${monthData.map((m,i) => {
-        const h = m.total > 0 ? Math.max(Math.round(m.total/maxTotal*72), 6) : 2;
-        const isCurrent = i === currentIdx;
-        const repH = m.total>0 ? Math.round(m.repair/m.total*h) : 0;
-        const parH = h - repH;
-        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer"
-          onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')">
-          <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:72px">
-            ${m.total>0 ? `<div style="width:100%;display:flex;flex-direction:column;border-radius:4px 4px 0 0;overflow:hidden;outline:${isCurrent?'2px solid #c8102e':'none'};outline-offset:1px">
-              ${repH>0?`<div style="height:${repH}px;background:${isCurrent?'#2563eb':'#93c5fd'}"></div>`:''}
-              ${parH>0?`<div style="height:${parH}px;background:${isCurrent?'#ea580c':'#fdba74'}"></div>`:''}
-            </div>` : `<div style="width:100%;height:2px;background:#f1f5f9;border-radius:1px"></div>`}
-          </div>
-          <div style="font-size:0.48rem;color:${isCurrent?'#c8102e':'#94a3b8'};font-weight:${isCurrent?'900':'500'};text-align:center;margin-top:3px;line-height:1.1">${m.label}</div>
-        </div>`;
-      }).join('')}
+    <!-- SVG Bar Chart -->
+    <div style="background:#f8fafc;border-radius:14px;padding:8px 6px 4px;margin-bottom:8px;overflow:hidden">
+      <svg width="100%" viewBox="0 0 ${SVG_W} ${SVG_H}" style="display:block;overflow:visible">
+        <!-- Y gridlines -->
+        ${gridLines.map(g=>`
+          <line x1="${PAD_L}" y1="${g.y}" x2="${SVG_W-PAD_R}" y2="${g.y}" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="3,3"/>
+          <text x="${PAD_L-4}" y="${g.y+3}" text-anchor="end" font-size="7" fill="#94a3b8">${g.label}</text>
+        `).join('')}
+        <!-- baseline -->
+        <line x1="${PAD_L}" y1="${PAD_T+chartH}" x2="${SVG_W-PAD_R}" y2="${PAD_T+chartH}" stroke="#e2e8f0" stroke-width="1"/>
+        <!-- bars -->
+        ${svgBars}
+        <!-- x labels -->
+        ${svgLabels}
+      </svg>
     </div>
     <!-- legend -->
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:8px;height:8px;border-radius:2px;background:#93c5fd"></div><span style="font-size:0.6rem;color:#64748b">ค่าแรง</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:8px;height:8px;border-radius:2px;background:#fdba74"></div><span style="font-size:0.6rem;color:#64748b">ค่าอะไหล่</span></div>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;padding:0 2px">
+      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:2px;background:#60a5fa"></div><span style="font-size:0.62rem;color:#64748b">ค่าแรง</span></div>
+      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:2px;background:#fb923c"></div><span style="font-size:0.62rem;color:#64748b">ค่าอะไหล่</span></div>
       <span style="font-size:0.58rem;color:#cbd5e1;margin-left:auto">กดแท่งดูรายงาน</span>
     </div>
 
-    <!-- Month rows (top months) -->
+    <!-- Month rows (top 5) -->
     <div style="border-top:1px solid #f1f5f9;padding-top:10px">
       ${monthData.filter(m=>m.total>0).sort((a,b)=>b.total-a.total).slice(0,5).map(m => {
         const pct = Math.round(m.total/grandTotal*100);
@@ -349,8 +392,8 @@ function renderRptCostMonthly() {
             <div style="font-size:0.6rem;color:#94a3b8;margin-top:1px">${m.count} งาน</div>
           </div>
           <div style="flex:1">
-            <div style="background:#f1f5f9;border-radius:99px;height:6px;overflow:hidden;display:flex">
-              <div style="height:100%;width:${barW*repW/100}%;background:#3b82f6;transition:width 0.5s"></div>
+            <div style="background:#f1f5f9;border-radius:99px;height:7px;overflow:hidden;display:flex">
+              <div style="height:100%;width:${barW*repW/100}%;background:#3b82f6;transition:width 0.5s;border-radius:99px 0 0 99px"></div>
               <div style="height:100%;width:${barW*(100-repW)/100}%;background:#f97316;transition:width 0.5s"></div>
             </div>
           </div>
@@ -502,24 +545,10 @@ function renderRptCostByDept(tickets, deptFilter) {
       <div style="font-size:1rem;font-weight:900;color:#c8102e">฿${totalCost.toLocaleString()}</div>
     </div>
 
-    <!-- Summary badges -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:10px 12px">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
-          <div style="width:8px;height:8px;border-radius:2px;background:#3b82f6"></div>
-          <span style="font-size:0.6rem;color:#0369a1;font-weight:700;text-transform:uppercase">ค่าแรงซ่อม</span>
-        </div>
-        <div style="font-size:1rem;font-weight:900;color:#0369a1">${totalRepair>0?'฿'+totalRepair.toLocaleString():'—'}</div>
-        <div style="font-size:0.58rem;color:#64748b;margin-top:2px">จาก Price List</div>
-      </div>
-      <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:10px 12px">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
-          <div style="width:8px;height:8px;border-radius:2px;background:#f97316"></div>
-          <span style="font-size:0.6rem;color:#c2410c;font-weight:700;text-transform:uppercase">ค่าสั่งซื้อ</span>
-        </div>
-        <div style="font-size:1rem;font-weight:900;color:#c2410c">${totalParts>0?'฿'+totalParts.toLocaleString():'—'}</div>
-        <div style="font-size:0.58rem;color:#64748b;margin-top:2px">จาก PO/PR</div>
-      </div>
+    <!-- inline summary (compact) -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      ${totalRepair>0?`<span style="background:#eff6ff;color:#1d4ed8;border-radius:8px;padding:4px 10px;font-size:0.68rem;font-weight:800">🔧 ค่าแรง ฿${totalRepair.toLocaleString()}</span>`:''}
+      ${totalParts>0?`<span style="background:#fff7ed;color:#c2410c;border-radius:8px;padding:4px 10px;font-size:0.68rem;font-weight:800">📦 ค่าสั่งซื้อ ฿${totalParts.toLocaleString()}</span>`:''}
     </div>
 
     <!-- Dept rows -->

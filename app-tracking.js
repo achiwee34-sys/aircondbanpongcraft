@@ -2174,13 +2174,13 @@ function formatSummary(text) {
   if (lines.length > 1) {
     return lines.map(function(l){
       var safe = escapeHtml(l.replace(/^[-–\s]+/,'').trim());
-      return '<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px">'
-        + '<span style="color:#c8102e;font-weight:700;flex-shrink:0;margin-top:1px">•</span>'
-        + '<span style="flex:1">' + safe + '</span></div>';
+      return '<div style="display:flex;gap:7px;align-items:flex-start;margin-bottom:5px;padding:4px 8px;background:#f8fafc;border-radius:7px;border-left:3px solid #c8102e">'
+        + '<span style="color:#c8102e;font-weight:900;flex-shrink:0;font-size:0.85rem;line-height:1.4">•</span>'
+        + '<span style="flex:1;font-size:0.82rem;font-weight:600;color:#1e293b;line-height:1.5">' + safe + '</span></div>';
     }).join('');
   }
   // PATCH audit-XSS1: escape plain text
-  return '<div>' + escapeHtml(text) + '</div>';
+  return '<div style="font-size:0.82rem;color:#1e293b;font-weight:500">' + escapeHtml(text) + '</div>';
 }
 
 

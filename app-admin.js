@@ -715,6 +715,7 @@ function _renderDeptQRBody() {
 
   let html = '';
   Object.entries(deptMap).sort(([a],[b])=>a.localeCompare(b)).forEach(([dept, list]) => {
+    const deptKey = encodeURIComponent(dept);
     const gridW = Math.min(list.length, COLS) * (ITEM_W + GAP);
     html += `
       <div style="margin-bottom:20px">
@@ -726,6 +727,12 @@ function _renderDeptQRBody() {
             <div style="font-size:0.62rem;color:rgba(255,255,255,0.7);margin-top:1px">${list.length} เครื่อง · ${Math.ceil(list.length/COLS)} แถว</div>
           </div>
           <div style="background:rgba(255,255,255,0.2);color:white;border-radius:99px;padding:3px 10px;font-size:0.68rem;font-weight:800;flex-shrink:0">${list.length}</div>
+          <!-- ปุ่มพิมพ์แผนกนี้ A4 -->
+          <button onclick="printDeptQRA4('${deptKey}')"
+            style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.5);border-radius:8px;color:white;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;-webkit-tap-highlight-color:transparent">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            A4
+          </button>
         </div>
 
         <!-- QR Grid — scroll แนวนอน แถวละ 10 -->
@@ -733,12 +740,14 @@ function _renderDeptQRBody() {
           <div style="display:grid;grid-template-columns:repeat(${Math.min(COLS,list.length)},${ITEM_W}px);grid-template-rows:auto;gap:${GAP}px;width:max-content;min-width:100%">
             ${list.map(m => {
               const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=' + encodeURIComponent(m.id) + '&margin=2&format=png';
+              // ข้อ 6: AIR ID = m.id (ตัดคำนำหน้า csv_)
+              const airId = m.id.replace(/^csv_/,'');
               return `
               <div onclick="showMachineQR('${m.id}')"
-                style="width:${ITEM_W}px;background:white;border-radius:10px;padding:7px 5px;text-align:center;border:1.5px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;box-sizing:border-box;transition:all 0.15s"
+                style="width:${ITEM_W}px;background:white;border-radius:10px;padding:7px 5px 5px;text-align:center;border:1.5px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;box-sizing:border-box;transition:all 0.15s"
                 ontouchstart="this.style.borderColor='#7c3aed';this.style.transform='scale(0.93)'"
                 ontouchend="this.style.borderColor='#e5e7eb';this.style.transform=''">
-                <div style="width:72px;height:72px;margin:0 auto 5px;border-radius:7px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center;position:relative">
+                <div style="width:72px;height:72px;margin:0 auto 4px;border-radius:7px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center;position:relative">
                   <img
                     src="${qrSrc}"
                     width="72" height="72"
@@ -752,8 +761,10 @@ function _renderDeptQRBody() {
                     <span style="font-size:0.45rem;color:#cbd5e1;margin-top:3px">ต้องการเน็ต</span>
                   </div>
                 </div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;font-weight:800;color:#7c3aed;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px">${m.serial||m.id.replace('csv_','')}</div>
-                <div style="font-size:0.48rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;padding:0 2px">${(m.name||'').slice(0,14)}${m.name&&m.name.length>14?'…':''}</div>
+                <!-- AIR ID (ข้อ 6) -->
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.5rem;font-weight:900;color:#c8102e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;background:#fff0f2;border-radius:4px;margin-bottom:2px">${airId}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.5rem;font-weight:700;color:#7c3aed;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px">${m.serial||''}</div>
+                <div style="font-size:0.45rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;padding:0 2px">${(m.name||'').slice(0,14)}${m.name&&m.name.length>14?'…':''}</div>
               </div>`;
             }).join('')}
           </div>
@@ -762,6 +773,87 @@ function _renderDeptQRBody() {
   });
 
   body.innerHTML = html;
+}
+
+// ── พิมพ์ QR แผนกนี้ A4 ──────────────────────────────────────
+function printDeptQRA4(deptKey) {
+  const dept = decodeURIComponent(deptKey);
+  const list = (db.machines||[]).filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === dept);
+  if (!list.length) return;
+
+  const QR_SIZE = 100; // px สำหรับ print
+  const COLS_A4 = 6;   // 6 คอลัมน์ต่อหน้า A4
+
+  const rows = [];
+  for (let i = 0; i < list.length; i += COLS_A4) {
+    rows.push(list.slice(i, i + COLS_A4));
+  }
+
+  const gridHtml = rows.map(row => `
+    <tr>
+      ${row.map(m => {
+        const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=${QR_SIZE}x${QR_SIZE}&data=' + encodeURIComponent(m.id) + '&margin=3&format=png';
+        const airId = m.id.replace(/^csv_/,'');
+        return `<td style="padding:6px;text-align:center;border:1px solid #e5e7eb;vertical-align:top;width:${Math.floor(170/COLS_A4)}mm">
+          <img src="${qrSrc}" width="${QR_SIZE}" height="${QR_SIZE}" style="display:block;margin:0 auto 3px"/>
+          <div style="font-family:monospace;font-size:7pt;font-weight:900;color:#c8102e;margin-bottom:1px">${airId}</div>
+          <div style="font-family:monospace;font-size:6pt;font-weight:700;color:#7c3aed;margin-bottom:1px">${m.serial||''}</div>
+          <div style="font-size:6pt;color:#374151;font-weight:600;line-height:1.3">${m.name||''}</div>
+          <div style="font-size:5.5pt;color:#94a3b8">${m.dept||m.location||''}</div>
+        </td>`;
+      }).join('')}
+      ${row.length < COLS_A4 ? Array(COLS_A4 - row.length).fill('<td style="border:1px solid #f1f5f9"></td>').join('') : ''}
+    </tr>
+  `).join('');
+
+  const win = window.open('','_blank','width=900,height=700');
+  win.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>QR Code — ${dept}</title>
+<style>
+  @page { size: A4 portrait; margin: 10mm; }
+  body { font-family: 'Sarabun', 'TH Sarabun New', sans-serif; margin: 0; padding: 0; }
+  .header { display:flex; align-items:center; justify-content:space-between; padding:8px 0 6px; border-bottom:2px solid #c8102e; margin-bottom:10px; }
+  .logo-block { display:flex; align-items:center; gap:8px; }
+  .logo-sq { width:32px; height:32px; background:#0a0a0a; border-radius:6px; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; font-weight:900; }
+  .title-main { font-size:13pt; font-weight:900; color:#0f172a; }
+  .title-sub { font-size:7pt; color:#94a3b8; margin-top:1px; }
+  .dept-badge { background:#7c3aed; color:white; border-radius:6px; padding:4px 12px; font-size:9pt; font-weight:800; }
+  .meta { font-size:7pt; color:#94a3b8; text-align:right; margin-top:2px; }
+  table { width:100%; border-collapse:collapse; }
+  td { page-break-inside: avoid; }
+  img { image-rendering: crisp-edges; }
+  @media print {
+    button { display: none !important; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head><body>
+<div class="header">
+  <div class="logo-block">
+    <div class="logo-sq">A</div>
+    <div>
+      <div class="title-main">AIRCONDITION BP PROCESS</div>
+      <div class="title-sub">SCG BP Plant Engineering — QR Code Registry</div>
+    </div>
+  </div>
+  <div style="text-align:right">
+    <div class="dept-badge">${dept}</div>
+    <div class="meta">${list.length} เครื่อง &nbsp;·&nbsp; พิมพ์: ${new Date().toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'numeric'})}</div>
+  </div>
+</div>
+<table>${gridHtml}</table>
+<div style="margin-top:10px;padding-top:6px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
+  <div style="font-size:6pt;color:#94a3b8">AIRCONDITION BP Process — SCG BP Plant Engineering</div>
+  <div style="font-size:6pt;color:#94a3b8">สแกน QR เพื่อแจ้งซ่อมหรือดูประวัติ</div>
+</div>
+<div style="text-align:center;margin-top:12px">
+  <button onclick="window.print()" style="padding:8px 24px;background:#7c3aed;color:white;border:none;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;font-family:inherit">🖨️ พิมพ์ A4</button>
+  <button onclick="window.close()" style="padding:8px 24px;background:#f1f5f9;color:#374151;border:none;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;font-family:inherit;margin-left:8px">ปิด</button>
+</div>
+</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 800);
 }
 
 // ============================================================

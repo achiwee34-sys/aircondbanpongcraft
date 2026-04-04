@@ -143,18 +143,18 @@ function buildUserCard(u, tm) {
     if (uniqueMachines.length > 0) {
       machineCards = '<div style="border-top:1px solid #f1f5f9;padding:8px 14px 10px;background:#fafafa">'
         + '<div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px">เครื่องที่รับผิดชอบ</div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-        + uniqueMachines.slice(0, 6).map(function(item) {
+        + '<div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;touch-action:pan-x">'
+        + uniqueMachines.map(function(item) {
             var mac = item.mac; var t = item.t;
             var btu = mac&&mac.btu ? Number(mac.btu).toLocaleString()+' BTU' : '';
             var macName = mac ? mac.name : (t.machine||'—');
             var stColor = {new:'#6b7280',assigned:'#7c3aed',accepted:'#0891b2',inprogress:'#e65100',waiting_part:'#b45309',done:'#059669'}[t.status]||'#6b7280';
             var stIcon  = {new:'🆕',assigned:'📋',accepted:'✋',inprogress:'⚙️',waiting_part:'⏳',done:'✅'}[t.status]||'❄️';
-            return '<div onclick="openDetail(\'' + t.id + '\')" style="background:white;border:1.5px solid #e2e8f0;border-radius:10px;padding:7px 10px;cursor:pointer;touch-action:manipulation;min-width:0;flex:1;min-width:130px;max-width:calc(50% - 3px);box-sizing:border-box;-webkit-tap-highlight-color:transparent"'
+            return '<div onclick="openDetail(\'' + t.id + '\')" style="background:white;border:1.5px solid #e2e8f0;border-radius:10px;padding:7px 10px;cursor:pointer;flex-shrink:0;width:140px;box-sizing:border-box;-webkit-tap-highlight-color:transparent"'
               + ' ontouchstart="this.style.background=\'#f8fafc\'" ontouchend="this.style.background=\'white\'">'
               + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">'
               + '<span style="font-size:0.75rem">❄️</span>'
-              + '<div style="font-size:0.7rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">' + _esc(macName.length>18?macName.slice(0,18)+'…':macName) + '</div>'
+              + '<div style="font-size:0.7rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">' + _esc(macName.length>20?macName.slice(0,20)+'…':macName) + '</div>'
               + '</div>'
               + (btu ? '<div style="font-size:0.58rem;color:#64748b;margin-bottom:3px">' + btu + '</div>' : '')
               + '<div style="display:flex;align-items:center;gap:4px">'
@@ -163,7 +163,6 @@ function buildUserCard(u, tm) {
               + '</div>'
               + '</div>';
           }).join('')
-        + (uniqueMachines.length > 6 ? '<div style="font-size:0.65rem;color:#94a3b8;padding:6px;display:flex;align-items:center">+' + (uniqueMachines.length-6) + ' เครื่อง</div>' : '')
         + '</div></div>';
     }
 
