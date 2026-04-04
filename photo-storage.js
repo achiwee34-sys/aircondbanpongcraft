@@ -35,11 +35,16 @@ async function uploadPhotoToStorage(base64, path) {
   if (!FSstorage) return base64;
 
   try {
-    // แปลง base64 → Blob
-    const res = await fetch(base64);
-    const blob = await res.blob();
+    // ── แปลง base64 → Blob แบบ manual (ไม่ใช้ fetch เพราะ Android บางรุ่น reject data URL) ──
+    const parts = base64.split(',');
+    const mime  = (parts[0].match(/:(.*?);/)||['','image/jpeg'])[1];
+    const raw   = atob(parts[1]);
+    const arr   = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    const blob = new Blob([arr], { type: mime });
+
     const ref = FSstorage.ref(path);
-    const snapshot = await ref.put(blob, { contentType: 'image/jpeg' });
+    const snapshot = await ref.put(blob, { contentType: mime });
     const url = await snapshot.ref.getDownloadURL();
     return url;
   } catch(e) {

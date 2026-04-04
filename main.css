@@ -1179,9 +1179,8 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 #po-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
 /* Bug1-fix: ensure user page header buttons (เพิ่ม) are always tappable — z-index สูงกว่า sheet-overlay (500) */
-#pg-users { position: relative; z-index: 2; }
+#pg-users { position: relative; z-index: 2; overflow-y: auto !important; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 #pg-users button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto !important; position: relative; z-index: 10 !important; cursor: pointer; min-height: 36px; min-width: 36px; }
-#pg-users { overflow-y: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 #users-list { position: relative; z-index: 1; pointer-events: auto; }
 #users-list * { pointer-events: auto; }
 /* Bug3-fix: detail card centres vertically on mobile — ไม่ต้อง display:none (ใช้ .sheet default แล้ว) */

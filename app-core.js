@@ -1868,31 +1868,25 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
         if(!page) return;
         const container = fr.parentElement;
         const isMob = window.innerWidth < 768;
+        // Bug8 fix: mobile ใช้ padding น้อยลง ให้ document เต็มจอ
         const pad = isMob ? 4 : 32;
         const viewW = (container ? container.clientWidth : window.innerWidth) - pad;
         const pageW = 794; // A4 at 96dpi
         const scale = Math.min(1, viewW / pageW);
-        page.style.transformOrigin = 'top left';
+        page.style.transformOrigin = 'top center';
         page.style.transform = 'scale('+scale+')';
-        page.style.margin = '0';
+        page.style.marginTop = '4px';
+        page.style.marginBottom = (scale < 1 ? -(pageW*(1-scale)*0.5) : 8)+'px';
         doc.body.style.margin = '0';
-        doc.body.style.padding = '8px';
         doc.body.style.background = '#c0c6cc';
-        doc.body.style.overflow = 'auto'; // ← ให้ scroll ได้
-        doc.body.style.boxSizing = 'border-box';
-        // คำนวณ iframe height จากขนาดเนื้อหาจริงหลัง scale
-        const naturalH = page.getBoundingClientRect().height || doc.body.scrollHeight || 900;
-        const scaledH = naturalH * scale + 60;
-        fr.style.height = Math.max(500, scaledH) + 'px';
-        fr.style.minHeight = '';
+        doc.body.style.overflow = 'hidden';
+        const scaledH = (doc.documentElement.scrollHeight || doc.body.scrollHeight || 900) * scale + 40;
+        fr.style.height = Math.max(600, scaledH) + 'px';
       } catch(e){}
     };
+    // Always use blob URL — fixes Android content:// cross-origin block
     const blob = new Blob([h],{type:'text/html;charset=utf-8'});
-    fr.onload = function(){
-      setTimeout(applyScale, 80);
-      setTimeout(applyScale, 400);
-      setTimeout(applyScale, 900);
-    };
+    fr.onload = function(){ setTimeout(applyScale, 150); setTimeout(applyScale, 500); };
     fr.src = URL.createObjectURL(blob);
   };
 
@@ -1952,10 +1946,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     reader.onload = (e) => {
       DS.quotationImg = e.target.result;
       const prev = document.getElementById('_ds_qi_preview');
-      if(prev) prev.innerHTML = `<img src="${DS.quotationImg}" style="max-width:100%;max-height:100%;object-fit:contain"/><div style="font-size:0.6rem;color:#1a5276;font-weight:700;margin-top:3px">แตะเพื่อเปลี่ยน</div>`;
-      // ── FIX: persist ทันทีที่อัปโหลด ──
-      savePDFConfig(Object.assign(getPDFConfig(), { quotationImg: DS.quotationImg }));
-      showToast('✅ บันทึกรูปใบเสนอราคาแล้ว');
+      if(prev) prev.innerHTML = `<img src="${DS.quotationImg}" style="max-width:100%;max-height:100%;object-fit:contain"/>`;
       renderPreview();
     };
     reader.readAsDataURL(file);
@@ -1964,8 +1955,6 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     DS.quotationImg = '';
     const prev = document.getElementById('_ds_qi_preview');
     if(prev) prev.innerHTML = '<span style="font-size:1rem">📄</span>';
-    // ── FIX: persist การลบรูปด้วย ──
-    savePDFConfig(Object.assign(getPDFConfig(), { quotationImg: '' }));
     renderPreview();
   };
   window._dsLogoUpload = (input) => {
@@ -1976,8 +1965,6 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
       // update preview thumbnail
       const prev = document.getElementById('_ds_logo_preview');
       if(prev) prev.innerHTML = `<img src="${DS.logoData}" style="width:100%;height:100%;object-fit:contain"/>`;
-      // ── FIX: persist logo ด้วย ──
-      savePDFConfig(Object.assign(getPDFConfig(), { logo: DS.logoData }));
       renderPreview();
       // refresh form to show delete button
       const fp = document.getElementById('_ds_form_panel');
@@ -2753,7 +2740,7 @@ function goPage(name) {
     else if (name === 'tickets') {
       // แสดงปุ่ม multi-select เฉพาะ admin
       const msBtn = document.getElementById('multi-select-toggle');
-      if (msBtn) msBtn.style.display = CU?.role === 'admin' ? 'flex' : 'none';
+      if (msBtn) msBtn.style.display = CU?.role === 'admin' ? 'block' : 'none';
       // reset multi-select ถ้าออกจาก tickets แล้วกลับมา
       if (_multiSelectMode) exitMultiSelect(); else renderTickets();
     }

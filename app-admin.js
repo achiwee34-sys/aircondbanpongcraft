@@ -778,7 +778,10 @@ function _renderDeptQRBody() {
 // ── พิมพ์ QR แผนกนี้ A4 ──────────────────────────────────────
 function printDeptQRA4(deptKey) {
   const dept = decodeURIComponent(deptKey);
-  const list = (db.machines||[]).filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === dept);
+  const isAll = dept === '__ALL__' || dept === '';
+  const list = isAll
+    ? (db.machines||[])
+    : (db.machines||[]).filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === dept);
   if (!list.length) return;
 
   const QR_SIZE = 100; // px สำหรับ print

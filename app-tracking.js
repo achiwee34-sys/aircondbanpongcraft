@@ -16,14 +16,14 @@ function fmtPhone(el) {
 }
 function compressPhoto(file) {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('compress timeout')), 10000);
+    const timer = setTimeout(() => reject(new Error('timeout')), 15000);
     const reader = new FileReader();
-    reader.onerror = () => { clearTimeout(timeout); reject(reader.error); };
+    reader.onerror = () => { clearTimeout(timer); reject(reader.error); };
     reader.onload = ev => {
       const img = new Image();
-      img.onerror = () => { clearTimeout(timeout); reject(new Error('img load failed')); };
+      img.onerror = () => { clearTimeout(timer); reject(new Error('img error')); };
       img.onload = () => {
-        clearTimeout(timeout);
+        clearTimeout(timer);
         let w = img.width, h = img.height;
         if (w > PHOTO_MAX_PX || h > PHOTO_MAX_PX) {
           if (w > h) { h = Math.round(h * PHOTO_MAX_PX / w); w = PHOTO_MAX_PX; }
@@ -43,14 +43,15 @@ function compressPhoto(file) {
 // ── Chat photo compress (smaller) ──
 function compressChatPhoto(file) {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('chat compress timeout')), 10000);
+    // timeout 10s ป้องกันค้าง
+    const timer = setTimeout(() => reject(new Error('timeout')), 10000);
     const reader = new FileReader();
-    reader.onerror = () => { clearTimeout(timeout); reject(reader.error); };
+    reader.onerror = () => { clearTimeout(timer); reject(reader.error); };
     reader.onload = ev => {
       const img = new Image();
-      img.onerror = () => { clearTimeout(timeout); reject(new Error('img load failed')); };
+      img.onerror = () => { clearTimeout(timer); reject(new Error('img error')); };
       img.onload = () => {
-        clearTimeout(timeout);
+        clearTimeout(timer);
         const MAX = 512;
         let w = img.width, h = img.height;
         if (w > MAX || h > MAX) {
@@ -106,22 +107,31 @@ function previewPics(input, gridId, type) {
   const pct = () => Math.round((done / total) * 100);
   showPhotoStatus(gridId, `⏳ กำลังโหลด 0% (0/${total})`, 'loading');
   _photoLoading += total;
+  // safety timeout 20s ป้องกัน _photoLoading ค้าง
+  const _safetyTimer = setTimeout(() => {
+    if (_photoLoading > 0) {
+      _photoLoading = Math.max(0, _photoLoading - (total - done));
+      showPhotoStatus(gridId, '⚠️ โหลดรูปช้า — บางรูปอาจไม่ครบ', 'warn');
+    }
+  }, 20000);
 
   toProcess.forEach(f => {
     compressPhoto(f).then(data => {
       pendingPhotos[type].push(data);
       done++;
-      _photoLoading = Math.max(0, _photoLoading - 1); // guard: ไม่ให้ติดลบ
+      _photoLoading = Math.max(0, _photoLoading - 1);
       if (done < total) {
         showPhotoStatus(gridId, `⏳ กำลังโหลด ${pct()}% (${done}/${total})`, 'loading');
       } else {
+        clearTimeout(_safetyTimer);
         showPhotoStatus(gridId, `✅ โหลดสำเร็จ ${done} รูป — เหลือ ${MAX_PHOTOS_PER_TYPE - pendingPhotos[type].length} ช่อง`, 'ok');
       }
       renderPhotoGrid(gridId, pendingPhotos[type], type);
     }).catch(() => {
-      _photoLoading = Math.max(0, _photoLoading - 1); // guard: ไม่ให้ติดลบ
       done++;
-      showPhotoStatus(gridId, '⚠️ บีบอัดรูปไม่สำเร็จ 1 รูป', 'err');
+      _photoLoading = Math.max(0, _photoLoading - 1);
+      if (done >= total) clearTimeout(_safetyTimer);
+      showPhotoStatus(gridId, `⚠️ บีบอัดรูปไม่สำเร็จ (${done}/${total})`, 'err');
     });
   });
   input.value = '';
@@ -342,11 +352,17 @@ async function _doSubmitTicket(mid, prob) {
   db._seq++; // ยังคง increment เพื่อ backward compat
   const now = nowStr();
   // ── PATCH v67: upload photos → Firebase Storage ก่อนสร้าง ticket ──
-  try {
+  // แยก try-catch ของ upload ออก → ถ้า upload ล้มเหลว ยังสร้าง ticket ได้ (ใช้ base64)
   if (typeof uploadPendingPhotosToStorage === 'function') {
-    showToast('⏳ กำลัง upload รูปภาพ...');
-    await uploadPendingPhotosToStorage(tid);
+    try {
+      showToast('⏳ กำลัง upload รูปภาพ...');
+      await uploadPendingPhotosToStorage(tid);
+    } catch(uploadErr) {
+      console.warn('[_doSubmitTicket] photo upload error (will use base64):', uploadErr);
+      // ไม่ abort — ใช้ base64 แทน Storage URL
+    }
   }
+  try {
   const t = {id:tid,machineId:mid,machine:m.name,problem:prob,detail:document.getElementById('nt-detail').value.trim(),priority:document.getElementById('nt-pri').value,status:'new',reporterId:CU.id,reporter:CU.name,assigneeId:null,assignee:null,createdAt:now,updatedAt:now,cost:0,summary:'',parts:'',note:document.getElementById('nt-note').value.trim(),contact:document.getElementById('nt-tel').value.trim(),photosBefore:[...pendingPhotos.before],photosAfter:[],history:[{act:'📢 แจ้งงาน',by:CU.name,at:now}]};
   db.tickets.push(t);
   notifyRole('admin','📢 แจ้งงานใหม่ ['+tid+']',CU.name+' แจ้ง: "'+prob+'" ที่ '+m.name,tid);
@@ -1896,7 +1912,7 @@ function openRepairManager() {
   const renderGroupList = () => {
     const totalItems = db.repairGroups.reduce((s,g)=>s+(g.items?.length||0),0);
     page.innerHTML = `
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:12px 16px 16px;flex-shrink:0">
+      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:calc(env(safe-area-inset-top,0px)+14px) 16px 18px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
           <button onclick="document.getElementById('_rm_page').remove()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
@@ -1954,7 +1970,7 @@ function openRepairManager() {
     const c = _rmColors[gi % _rmColors.length];
     page.innerHTML = `
       <!-- Header gradient แดง เหมือน list page -->
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:12px 16px 16px;flex-shrink:0">
+      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:calc(env(safe-area-inset-top,0px)+14px) 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
           <button onclick="window._rmBackToList()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
@@ -2991,15 +3007,15 @@ function openDetail(tid) {
     </div>
 
     <!-- Machine — prominent -->
-    <div style="background:#0f172a;padding:12px 16px 14px">
-      <div style="font-size:0.55rem;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">❄️ เครื่องแอร์ / ห้อง</div>
-      <div style="font-size:1rem;font-weight:900;color:white;line-height:1.3;margin-bottom:2px">${t.machine||'—'}</div>
-      ${_m?.location?`<div style="font-size:0.68rem;color:#94a3b8;margin-bottom:6px">📍 ${_m.location}</div>`:''}
+    <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:12px 16px 14px;border-bottom:3px solid #c8102e">
+      <div style="font-size:0.55rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">❄️ เครื่องแอร์ / ห้อง</div>
+      <div style="font-size:1rem;font-weight:900;color:#f8fafc;line-height:1.3;margin-bottom:2px">${t.machine||'—'}</div>
+      ${_m?.location?`<div style="font-size:0.68rem;color:#cbd5e1;margin-bottom:6px">📍 ${_m.location}</div>`:''}
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        ${_serial?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:#475569;background:#1e293b;padding:2px 8px;border-radius:4px">${_serial}</span>`:''}
-        ${_m?.btu?`<span style="font-size:0.6rem;color:#94a3b8;background:#1e293b;padding:2px 8px;border-radius:4px">${Number(_m.btu).toLocaleString()} BTU</span>`:''}
-        ${_m?.refrigerant?`<span style="font-size:0.6rem;color:#fca5a5;background:#1e293b;padding:2px 8px;border-radius:4px">${_m.refrigerant}</span>`:''}
-        ${_m?.vendor?`<span style="font-size:0.6rem;color:#a5b4fc;background:#1e293b;padding:2px 8px;border-radius:4px;font-weight:700">${_m.vendor}</span>`:''}
+        ${_serial?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:#e2e8f0;background:rgba(255,255,255,0.12);padding:3px 8px;border-radius:4px;font-weight:700">${_serial}</span>`:''}
+        ${_m?.btu?`<span style="font-size:0.62rem;color:#e2e8f0;background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:4px">${Number(_m.btu).toLocaleString()} BTU</span>`:''}
+        ${_m?.refrigerant?`<span style="font-size:0.62rem;color:#fca5a5;background:rgba(200,16,46,0.25);padding:3px 8px;border-radius:4px;font-weight:700">${_m.refrigerant}</span>`:''}
+        ${_m?.vendor?`<span style="font-size:0.62rem;color:#bfdbfe;background:rgba(59,130,246,0.2);padding:3px 8px;border-radius:4px;font-weight:700">${_m.vendor}</span>`:''}
       </div>
     </div>
   </div>

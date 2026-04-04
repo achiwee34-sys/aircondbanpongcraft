@@ -225,13 +225,31 @@ async function fsListen() {
   if (_fsListener) _fsListener();
 
   let _refreshTimer = null;
+  // ── fallback poll ทุก 30s ถ้า onSnapshot ไม่ fire ──
+  let _lastSnapAt = Date.now();
+  const _pollTimer = setInterval(async () => {
+    if (Date.now() - _lastSnapAt > 35000) {
+      console.warn('[fsListen] onSnapshot silent > 35s — polling manually');
+      try { await fsLoad(); if (CU) { refreshPage(); updateOpenBadge(); updateNBadge(); } } catch(e) {}
+    }
+  }, 30000);
 
   _fsListener = FSdb.collection('appdata').doc('main').onSnapshot(snap => {
+    _lastSnapAt = Date.now();
     if (!snap.exists || !CU) return;
     const data = snap.data();
-    if (_fsSaving && !_fsChatSaving) return;
-    // ── ถ้า local _seq ใหม่กว่า remote → ข้ามการ overwrite (local เพิ่งบันทึก) ──
-    if (data._seq && db._seq && db._seq > data._seq) return;
+    // ── ลด false-skip: เฉพาะเมื่อกำลัง fsSaving จริงๆ และไม่ใช่ chat ──
+    if (_fsSaving && !_fsChatSaving) {
+      // รอ 2s แล้วลอง refresh ถ้า _fsSaving ยังอยู่
+      setTimeout(() => { if (!_fsSaving && CU) { refreshPage(); updateOpenBadge(); } }, 2000);
+      return;
+    }
+    // ── seq check: ให้ผ่านถ้า remote มี ticket มากกว่า ──
+    if (data._seq && db._seq && db._seq > data._seq) {
+      const remoteTicketCount = Array.isArray(data.tickets) ? data.tickets.length : 0;
+      const localTicketCount  = (db.tickets||[]).length;
+      if (remoteTicketCount <= localTicketCount) return; // local ใหม่กว่าจริง
+    }
     const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
     const DEMO_IDS       = ['u2','u3','u4','u5'];
     const check = (key) => {
@@ -339,5 +357,8 @@ async function fsListen() {
         }
       } catch(e) {}
     }, 200);
-  }, err => console.warn('fsListen error:', err));
+  }, err => {
+    console.warn('fsListen error:', err);
+    clearInterval(_pollTimer);
+  });
 }
