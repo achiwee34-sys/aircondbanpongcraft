@@ -16,12 +16,14 @@ function fmtPhone(el) {
 }
 function compressPhoto(file) {
   return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('compress timeout')), 10000);
     const reader = new FileReader();
-    reader.onerror = reject;
+    reader.onerror = () => { clearTimeout(timeout); reject(reader.error); };
     reader.onload = ev => {
       const img = new Image();
-      img.onerror = reject;
+      img.onerror = () => { clearTimeout(timeout); reject(new Error('img load failed')); };
       img.onload = () => {
+        clearTimeout(timeout);
         let w = img.width, h = img.height;
         if (w > PHOTO_MAX_PX || h > PHOTO_MAX_PX) {
           if (w > h) { h = Math.round(h * PHOTO_MAX_PX / w); w = PHOTO_MAX_PX; }
@@ -41,12 +43,14 @@ function compressPhoto(file) {
 // ── Chat photo compress (smaller) ──
 function compressChatPhoto(file) {
   return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('chat compress timeout')), 10000);
     const reader = new FileReader();
-    reader.onerror = reject;
+    reader.onerror = () => { clearTimeout(timeout); reject(reader.error); };
     reader.onload = ev => {
       const img = new Image();
-      img.onerror = reject;
+      img.onerror = () => { clearTimeout(timeout); reject(new Error('img load failed')); };
       img.onload = () => {
+        clearTimeout(timeout);
         const MAX = 512;
         let w = img.width, h = img.height;
         if (w > MAX || h > MAX) {
@@ -107,7 +111,7 @@ function previewPics(input, gridId, type) {
     compressPhoto(f).then(data => {
       pendingPhotos[type].push(data);
       done++;
-      _photoLoading--;
+      _photoLoading = Math.max(0, _photoLoading - 1); // guard: ไม่ให้ติดลบ
       if (done < total) {
         showPhotoStatus(gridId, `⏳ กำลังโหลด ${pct()}% (${done}/${total})`, 'loading');
       } else {
@@ -115,9 +119,9 @@ function previewPics(input, gridId, type) {
       }
       renderPhotoGrid(gridId, pendingPhotos[type], type);
     }).catch(() => {
-      _photoLoading--;
+      _photoLoading = Math.max(0, _photoLoading - 1); // guard: ไม่ให้ติดลบ
       done++;
-      showPhotoStatus(gridId, 'บีบอัดรูปไม่สำเร็จ', 'err');
+      showPhotoStatus(gridId, '⚠️ บีบอัดรูปไม่สำเร็จ 1 รูป', 'err');
     });
   });
   input.value = '';
