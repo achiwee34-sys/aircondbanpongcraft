@@ -1904,6 +1904,21 @@ function filterDeptPicker(q) {
   renderDeptPickerGrid(filtered);
 }
 
+function _lockBodyScroll() {
+  const y = window.scrollY;
+  document.body.style.cssText += ';position:fixed;top:-'+y+'px;left:0;right:0;overflow:hidden';
+  document.body.dataset.scrollY = y;
+}
+function _unlockBodyScroll() {
+  const y = parseInt(document.body.dataset.scrollY || '0');
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
+  window.scrollTo({ top: y, behavior: 'instant' });
+}
+
 function toggleDeptPicker() {
   const picker = document.getElementById('nt-dept-picker');
   const overlay = document.getElementById('nt-dept-bs-overlay');
@@ -1916,14 +1931,12 @@ function toggleDeptPicker() {
   if (chevron) chevron.style.transform = _deptPickerOpen ? 'rotate(180deg)' : '';
   if (display) display.style.borderColor = _deptPickerOpen ? '#c8102e' : '#e2e8f0';
   // lock/unlock body scroll
-  document.body.style.overflow = _deptPickerOpen ? 'hidden' : '';
+  if (_deptPickerOpen) { _lockBodyScroll(); } else { _unlockBodyScroll(); }
   if (_deptPickerOpen) {
     // lock scroll position ก่อน focus เพื่อกัน page กระโดด
-    const savedY = window.scrollY;
     setTimeout(() => {
       const s = document.getElementById('nt-dept-search');
       if (s) { s.focus({ preventScroll: true }); }
-      window.scrollTo({ top: savedY, behavior: 'instant' });
     }, 150);
   }
 }
@@ -1937,7 +1950,7 @@ function closeDeptPickerSheet() {
   if (overlay) overlay.style.display = 'none';
   if (chevron) chevron.style.transform = '';
   if (display) display.style.borderColor = '#e2e8f0';
-  document.body.style.overflow = '';
+  _unlockBodyScroll();
 }
 
 function selectDeptPickerItem(dept, col) {
@@ -2042,12 +2055,11 @@ function toggleMacPicker() {
   if (chevron) chevron.style.transform = _macPickerOpen ? 'rotate(180deg)' : '';
   if (display) display.style.borderColor = _macPickerOpen ? '#0369a1' : '#e2e8f0';
   document.body.style.overflow = _macPickerOpen ? 'hidden' : '';
+  if (_macPickerOpen) { _lockBodyScroll(); } else { _unlockBodyScroll(); }
   if (_macPickerOpen) {
-    const savedY = window.scrollY;
     setTimeout(() => {
       const s = document.getElementById('nt-mac-search');
       if (s) { s.focus({ preventScroll: true }); }
-      window.scrollTo({ top: savedY, behavior: 'instant' });
     }, 150);
   }
 }
@@ -2061,7 +2073,7 @@ function closeMacPickerSheet() {
   if (overlay) overlay.style.display = 'none';
   if (chevron) chevron.style.transform = '';
   if (display) display.style.borderColor = '#e2e8f0';
-  document.body.style.overflow = '';
+  _unlockBodyScroll();
 }
 
 function selectMacPickerItem(mid, label) {

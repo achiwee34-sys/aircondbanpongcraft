@@ -579,7 +579,13 @@
             <span id="nt-mac-label" style="flex:1;font-size:0.88rem;color:#9ca3af;font-weight:500">— เลือกห้อง / เครื่องแอร์ —</span>
             <svg id="nt-mac-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <!-- Hidden select สำหรับ onMachineChange -->\n          <select id="nt-mac" onchange="onMachineChange(this.value)" style="display:none">\n            <option value="">— เลือกห้อง —</option>\n          </select>\n        </div>\n\n        <!-- History Popup Button — แสดงหลังเลือกห้อง -->
+          <!-- Hidden select สำหรับ onMachineChange -->
+          <select id="nt-mac" onchange="onMachineChange(this.value)" style="display:none">
+            <option value="">— เลือกห้อง —</option>
+          </select>
+        </div>
+
+        <!-- History Popup Button — แสดงหลังเลือกห้อง -->
         <div id="nt-history-btn-wrap" style="display:none;margin-bottom:8px">
           <button type="button" onclick="openRepairHistory()"
             style="width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border:1.5px dashed #fca5a5;border-radius:12px;background:#fff8f9;color:#c8102e;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit">
