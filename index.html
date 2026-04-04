@@ -428,7 +428,10 @@
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <div id="open-badge-display"></div>
-          <button id="multi-select-toggle" onclick="toggleMultiSelect()" style="display:none;padding:5px 10px;background:#f1f5f9;color:#64748b;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">☑️ เลือก</button>
+          <button id="multi-select-toggle" onclick="toggleMultiSelect()" style="display:none;padding:6px 12px;background:linear-gradient(135deg,#9b0b22,#c8102e);color:white;border:none;border-radius:10px;font-size:0.68rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;display:none;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(200,16,46,0.35)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="5" width="6" height="6" rx="1"/><rect x="3" y="13" width="6" height="6" rx="1"/><line x1="15" y1="8" x2="21" y2="8"/><line x1="15" y1="16" x2="21" y2="16"/></svg>
+            จ่ายงาน
+          </button>
         </div>
       </div>
 
@@ -460,14 +463,25 @@
         </div>
       </div>
       <!-- Multi-select toolbar (Admin only) -->
-      <div id="multi-select-bar" style="display:none;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(135deg,#fff0f2,#ffe4e8);border:1.5px solid #fca5a5;border-radius:12px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
-          <span id="multi-select-count" style="font-size:0.75rem;font-weight:900;color:#9b0b22">0 งาน</span>
-          <span style="font-size:0.65rem;color:#c8102e">เลือกแล้ว</span>
+      <div id="multi-select-bar" style="display:none;flex-direction:column;gap:8px;padding:10px 12px;background:linear-gradient(135deg,#fff0f2,#ffe4e8);border:1.5px solid #fca5a5;border-radius:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;background:#c8102e;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="5" width="6" height="6" rx="1"/><rect x="3" y="13" width="6" height="6" rx="1"/><line x1="15" y1="8" x2="21" y2="8"/><line x1="15" y1="16" x2="21" y2="16"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.75rem;font-weight:900;color:#9b0b22">โหมดจ่ายงานหลายรายการ</div>
+            <div style="font-size:0.62rem;color:#c8102e;margin-top:1px">แตะงานเพื่อติ๊กเลือก · <span id="multi-select-count" style="font-weight:900">0 งาน</span>ที่เลือก</div>
+          </div>
+          <button onclick="exitMultiSelect()" style="padding:5px 10px;background:white;color:#64748b;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation">✕ ยกเลิก</button>
         </div>
-        <button onclick="selectAllVisibleTickets()" style="padding:5px 10px;background:white;color:#c8102e;border:1.5px solid #fca5a5;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">เลือกทั้งหมด</button>
-        <button onclick="openBulkAssignSheet()" id="bulk-assign-btn" style="padding:5px 12px;background:linear-gradient(135deg,#9b0b22,#c8102e);color:white;border:none;border-radius:8px;font-size:0.7rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;opacity:0.4;pointer-events:none">👤 จ่ายงาน</button>
-        <button onclick="exitMultiSelect()" style="padding:5px 10px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation">ยกเลิก</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="selectAllVisibleTickets()" style="padding:5px 11px;background:white;color:#c8102e;border:1.5px solid #fca5a5;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">☑️ เลือกทั้งหมด</button>
+          <button onclick="selectNewTickets()" style="padding:5px 11px;background:white;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">🆕 เฉพาะงานใหม่</button>
+          <button onclick="openBulkAssignSheet()" id="bulk-assign-btn" style="margin-left:auto;padding:6px 14px;background:linear-gradient(135deg,#9b0b22,#c8102e);color:white;border:none;border-radius:9px;font-size:0.72rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;opacity:0.4;pointer-events:none;display:flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(200,16,46,0.3)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            จ่ายงาน
+          </button>
+        </div>
       </div>
 
       <div id="ticket-list"></div>

@@ -953,7 +953,13 @@ function enterMultiSelect() {
   const bar = document.getElementById('multi-select-bar');
   const btn = document.getElementById('multi-select-toggle');
   if (bar) { bar.style.display = 'flex'; }
-  if (btn) { btn.style.background = '#ffe4e8'; btn.style.color = '#c8102e'; btn.style.borderColor = '#fca5a5'; btn.textContent = '✕ ยกเลิก'; }
+  if (btn) {
+    btn.style.background = '#f1f5f9';
+    btn.style.color = '#64748b';
+    btn.style.border = '1.5px solid #e5e7eb';
+    btn.style.boxShadow = 'none';
+    btn.innerHTML = '✕ ยกเลิก';
+  }
   _updateMultiSelectUI();
   renderTickets();
 }
@@ -963,7 +969,13 @@ function exitMultiSelect() {
   const bar = document.getElementById('multi-select-bar');
   const btn = document.getElementById('multi-select-toggle');
   if (bar) bar.style.display = 'none';
-  if (btn) { btn.style.background = '#f1f5f9'; btn.style.color = '#64748b'; btn.style.borderColor = '#e5e7eb'; btn.textContent = '☑️ เลือก'; }
+  if (btn) {
+    btn.style.background = 'linear-gradient(135deg,#9b0b22,#c8102e)';
+    btn.style.color = 'white';
+    btn.style.border = 'none';
+    btn.style.boxShadow = '0 2px 8px rgba(200,16,46,0.35)';
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="5" width="6" height="6" rx="1"/><rect x="3" y="13" width="6" height="6" rx="1"/><line x1="15" y1="8" x2="21" y2="8"/><line x1="15" y1="16" x2="21" y2="16"/></svg> จ่ายงาน';
+  }
   renderTickets();
 }
 function toggleTicketSelect(tid, e) {
@@ -1005,6 +1017,24 @@ function selectAllVisibleTickets() {
     _applyCardSelectStyle(wrap, true);
   });
   _updateMultiSelectUI();
+}
+// เลือกเฉพาะงานใหม่ที่ยังไม่จ่าย
+function selectNewTickets() {
+  // deselect all first
+  document.querySelectorAll('.tk-wrap[data-tid]').forEach(wrap => {
+    _applyCardSelectStyle(wrap, false);
+  });
+  _selectedTickets.clear();
+  document.querySelectorAll('.tk-wrap[data-tid]').forEach(wrap => {
+    const tid = wrap.dataset.tid;
+    const t = tid ? db.tickets.find(x => x.id === tid) : null;
+    if (t && t.status === 'new') {
+      _selectedTickets.add(tid);
+      _applyCardSelectStyle(wrap, true);
+    }
+  });
+  _updateMultiSelectUI();
+  if (_selectedTickets.size === 0) showToast('ไม่พบงานใหม่ในหน้านี้');
 }
 function openBulkAssignSheet() {
   if (_selectedTickets.size === 0) return;

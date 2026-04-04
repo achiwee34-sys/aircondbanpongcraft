@@ -1896,7 +1896,7 @@ function openRepairManager() {
   const renderGroupList = () => {
     const totalItems = db.repairGroups.reduce((s,g)=>s+(g.items?.length||0),0);
     page.innerHTML = `
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:calc(env(safe-area-inset-top,0px)+14px) 16px 18px;flex-shrink:0">
+      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:12px 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
           <button onclick="document.getElementById('_rm_page').remove()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
@@ -1954,7 +1954,7 @@ function openRepairManager() {
     const c = _rmColors[gi % _rmColors.length];
     page.innerHTML = `
       <!-- Header gradient แดง เหมือน list page -->
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:calc(env(safe-area-inset-top,0px)+14px) 16px 16px;flex-shrink:0">
+      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:12px 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
           <button onclick="window._rmBackToList()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
