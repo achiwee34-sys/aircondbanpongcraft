@@ -668,7 +668,7 @@ body.dark-mode div[style*="background:#f0fdf4"][style*="border:1px solid #bbf7d0
   .topbar { padding-left: 20px !important; padding-right: 20px !important; }
 
   /* Content fills remaining space — transition ตาม sidebar */
-  .content-area { flex: 1 1 0; min-width: 0; overflow: hidden; overflow-x: hidden !important; overflow-y: auto !important; min-height: 0; max-width: 100%; }
+  .content-area { flex: 1 1 0; min-width: 0; overflow: hidden; overflow-x: hidden !important; overflow-y: hidden !important; min-height: 0; max-width: 100%; position: relative; }
   #main-col {
     flex: 1 1 0;
     min-width: 0;
@@ -934,7 +934,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 }
 .page.active { display: block; }
 /* chatroom + executive page use flex layout */
-#pg-chatroom.active, #pg-executive.active, #pg-report.active, #pg-pmplan.active { display: flex !important; flex-direction: column; padding-bottom: 14px; }
+#pg-chatroom.active, #pg-executive.active, #pg-report.active, #pg-pmplan.active { display: flex !important; flex-direction: column; padding-bottom: 14px; overflow-y: auto !important; }
 /* machines page — overflow-y visible for dropdown, clip x */
 #pg-machines { overflow-y: auto !important; overflow-x: hidden !important; }
 
@@ -1313,8 +1313,8 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
     background: white !important;
   }
   #main-col { order: 1 !important; flex: 1 1 0 !important; min-height: 0 !important; overflow: hidden !important; }
-  .content-area { flex: 1 1 0 !important; overflow: hidden !important; overflow-y: auto !important; min-height: 0 !important; }
-  .content-area > .page { overflow-y: auto !important; overflow-x: hidden !important; padding: 8px !important; height: 100% !important; }
+  .content-area { flex: 1 1 0 !important; overflow: hidden !important; min-height: 0 !important; position: relative !important; }
+  .content-area > .page { overflow-y: auto !important; overflow-x: hidden !important; padding: 12px 16px !important; }
   .bn-item {
     flex-direction: column !important;
     justify-content: center !important;
