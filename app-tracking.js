@@ -703,17 +703,29 @@ function openPOForm(tid) {
     if (pp) {
       pp.style.display = 'flex';
       pp.style.flexDirection = 'column';
-      // ── Android keyboard fix for PO panel ──
+      // ── iOS + Android keyboard fix for PO panel ──
       if (window.visualViewport && !pp._kbBound) {
         pp._kbFix = () => {
           if (pp.style.display === 'none') return;
           const vvh = window.visualViewport.height;
           const pg = document.getElementById('pg-purchase');
+          // ปรับทั้ง pg และ pp ให้ตรงกับ visualViewport จริง
           if (pg) pg.style.height = vvh + 'px';
+          pp.style.height = vvh + 'px';
+          pp.style.maxHeight = vvh + 'px';
+          // scroll active input into view หลัง keyboard ขึ้น
+          const active = document.activeElement;
+          if (active && pp.contains(active)) {
+            setTimeout(() => active.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+          }
         };
         window.visualViewport.addEventListener('resize', pp._kbFix);
+        window.visualViewport.addEventListener('scroll', pp._kbFix);
         pp._kbBound = true;
       }
+      // reset height เมื่อเปิด panel ใหม่
+      pp.style.height = '';
+      pp.style.maxHeight = '';
     }
 
     // ── Warning / Info banner ── ต้องทำหลัง panel แสดงเพื่อให้ DOM พร้อม
@@ -3070,7 +3082,7 @@ function openDetail(tid) {
       <div style="color:#374151;font-size:0.82rem;line-height:1.65">${escapeHtml(t.detail)}</div>
     </div>`:''}
 
-    ${t.waitPart?renderWaitPartBlock(t):''}
+    ${(t.waitPart && !t.purchaseOrder)?renderWaitPartBlock(t):''}
     ${t.purchaseOrder?renderPOBlock(t):''}
 
     <!-- Summary block -->

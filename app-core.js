@@ -918,7 +918,7 @@ async function viewQuotationFull(tid) {
     +'@media screen and (max-width:820px){.page{padding:6mm;transform:scale(var(--ps,1));margin-left:0!important;margin-right:0!important}}'
     +'table{border-collapse:collapse;width:100%}'
     +'td,th{font-family:\'Sarabun\',Arial,sans-serif}'
-    +'@media print{body{background:white}.page{margin:0;padding:10mm;box-shadow:none;width:100%}.no-print{display:none!important}@page{size:A4;margin:0}}'
+    +'@media print{body{background:white}html,body{width:210mm}.page{margin:0;padding:10mm;box-shadow:none;width:210mm;max-width:210mm;min-height:auto;transform:none!important}.no-print{display:none!important}@page{size:A4 portrait;margin:0}}'
     +'</style></head><body>'
     +'<div class="page">'
 
@@ -1077,28 +1077,27 @@ async function viewQuotationFull(tid) {
       page.style.marginBottom = (scale < 1 ? -(pageW * (1-scale) * 0.5) : 8) + 'px';
       // ปรับความสูง iframe: ใช้ความสูงจริงของเนื้อหาหลัง scale
       var rawH = doc.documentElement.scrollHeight || doc.body.scrollHeight || 1200;
-      var scaledH = rawH * scale + 60;
-      iframe.style.height = Math.max(wrap.clientHeight || window.innerHeight, scaledH) + 'px';
+      var scaledH = rawH * scale;
+      // marginBottom: ชดเชย whitespace ที่เกิดจาก transform scale (ต้องลบออก ไม่ใช่บวก)
+      page.style.marginBottom = (scale < 1 ? Math.ceil(rawH * (1 - scale) * -1) + 8 : 8) + 'px';
+      iframe.style.height = Math.max(scaledH + 80, wrap.clientHeight || 400) + 'px';
     } catch(e){}
   };
 
   requestAnimationFrame(function(){
     // iOS Safari freezes on contentDocument.write — use blob URL instead
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isIOS) {
-      iframe.onload = function(){ setTimeout(applyScale, 150); setTimeout(applyScale, 500); };
-      var blob = new Blob([html], {type:'text/html;charset=utf-8'});
-      iframe.src = URL.createObjectURL(blob);
-      window.removeEventListener('resize', applyScale);
-      window.addEventListener('resize', applyScale);
-    } else {
-      // Always use blob URL — fixes Android content:// cross-origin block
-      iframe.onload = function(){ setTimeout(applyScale, 150); setTimeout(applyScale, 500); };
-      window.removeEventListener('resize', applyScale);
-      window.addEventListener('resize', applyScale);
-      var blob = new Blob([html], {type:'text/html;charset=utf-8'});
-      iframe.src = URL.createObjectURL(blob);
-    }
+    var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    // เรียก applyScale หลายครั้งเพื่อรอ font/image load ครบ
+    iframe.onload = function(){
+      setTimeout(applyScale, 100);
+      setTimeout(applyScale, 350);
+      setTimeout(applyScale, 800);
+      setTimeout(applyScale, 1500);
+    };
+    window.removeEventListener('resize', applyScale);
+    window.addEventListener('resize', applyScale);
+    iframe.src = URL.createObjectURL(blob);
   });
   showToast('📄 ใบเสนอราคา '+t.id);
 
@@ -1350,7 +1349,7 @@ async function generateRepairPDF(tid) {
 body{font-family:'Sarabun',Arial,sans-serif;font-size:9.5pt;color:#000;background:#c8c8c8;min-height:100vh;overflow-x:hidden}
 .page{width:210mm;min-height:297mm;margin:12px auto;background:white;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:10mm;transform-origin:top center}
 @media screen{.page{margin:8px auto}}
-@media print{body{background:white}.page{box-shadow:none;margin:0;padding:10mm;width:100%;transform:none!important}.no-print{display:none!important}@page{size:A4;margin:0}}
+@media print{body{background:white}html,body{width:210mm}.page{box-shadow:none;margin:0;padding:10mm;width:210mm;max-width:210mm;min-height:auto;transform:none!important}.no-print{display:none!important}@page{size:A4 portrait;margin:0}}
 table{border-collapse:collapse;width:100%}
 td,th{font-family:'Sarabun',Arial,sans-serif}
 </style>

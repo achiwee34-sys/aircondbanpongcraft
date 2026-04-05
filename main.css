@@ -1205,7 +1205,21 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 /* PATCH: display:none ป้องกัน Android Chrome restore sheet ค้าง */
 .sheet { display: none; position: fixed; bottom: 0; left: 50%; width: 100%; max-width: 600px; background: white; border-radius: 18px 18px 0 0; z-index: 501; max-height: calc(92vh - env(safe-area-inset-top, 0px)); max-height: calc(92dvh - env(safe-area-inset-top, 0px)); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: calc(var(--safe-bot) + 20px); transform: translateX(-50%) translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -4px 30px rgba(0,0,0,0.12); }
 .sheet.open { display: flex; flex-direction: column; overflow-y: hidden; }
-/* tablet: sheet ลอยตรงกลางจอ ไม่ติดขอบล่าง */
+/* Bug-fix: verify-sheet keyboard-safe max-height */
+#verify-sheet {
+  max-height: calc(96dvh - env(safe-area-inset-top, 0px)) !important;
+}
+#verify-sheet .sheet-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
+}
+/* Bug-fix: verify sheet actions ต้องอยู่ด้านล่างเสมอ */
+#verify-sheet > div:last-child {
+  flex-shrink: 0;
+  background: white;
+}
 @media (min-width: 768px) {
   .sheet { bottom: auto; top: 50%; max-width: 660px; max-height: 88vh; border-radius: 18px; transform: translateX(-50%) translateY(-50%) scale(0.94); box-shadow: 0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06); }
   .sheet.open { display: flex; flex-direction: column; overflow-y: hidden; transform: translateX(-50%) translateY(-50%) scale(1); }
@@ -1217,7 +1231,9 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 [style*="overflow-y:auto"], [style*="overflow-y: auto"] { -webkit-overflow-scrolling: touch; }
 /* ── Purchase page iOS fixes ── */
 #pg-purchase { -webkit-overflow-scrolling: touch; }
-#pur-list { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+#pur-list { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; overflow-y: auto; }
+/* Bug-fix: pur-list-panel ต้องมี overflow-y: auto ให้ scroll ได้ */
+#pg-purchase #pur-list-panel { overflow-y: auto !important; }
 #pur-track-content { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 #po-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
@@ -1496,7 +1512,24 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 /* cr-chat-panel */
 #cr-chat-panel { display: flex; flex-direction: column; min-height: 0; }
 #pg-purchase #pur-list-panel,
-#pg-purchase #pur-po-panel { padding:14px; }
+#pg-purchase #pur-po-panel { padding:0; }
+
+/* Bug-fix: po-panel ต้องเป็น flex column เต็ม viewport และ scroll ได้ */
+#pur-po-panel {
+  position: relative;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+/* po-body ต้องมี padding-bottom พอที่ sticky footer จะไม่บัง content */
+#po-body { padding-bottom: 100px !important; }
+/* sticky footer ของ po-panel: ใช้ sticky แทน fixed เพื่อไม่ลอยเมื่อ keyboard ขึ้น */
+#pur-po-panel > div:last-child {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
 
 
 
