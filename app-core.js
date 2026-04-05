@@ -2869,6 +2869,8 @@ function openSheet(name){
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       sh.classList.add('open');
+      // lock body scroll เพื่อกัน page ขยับตอน keyboard ขึ้น
+      if (typeof _lockBodyScroll === 'function') _lockBodyScroll();
       const onFocusIn = (e) => {
         const el = e.target;
         if (!el || !['INPUT','TEXTAREA','SELECT'].includes(el.tagName)) return;
@@ -2885,6 +2887,10 @@ function closeSheet(name){
   if (name === 'chat') {
     const sh = document.getElementById('chat-sheet');
     if (sh) {
+      // blur ก่อนเพื่อ dismiss keyboard แล้ว reset transform
+      if (document.activeElement && sh.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
       sh.classList.remove('visible');
       if (sh._chatKbFix && window.visualViewport) {
         window.visualViewport.removeEventListener('resize', sh._chatKbFix);
@@ -2892,6 +2898,7 @@ function closeSheet(name){
         delete sh._chatKbFix;
       }
       sh.style.height = ''; sh.style.top = ''; sh.style.transform = '';
+      if (typeof _unlockBodyScroll === 'function') _unlockBodyScroll();
     }
     return;
   }
@@ -2904,9 +2911,15 @@ function closeSheet(name){
   const sh = document.getElementById(name+'-sheet');
   const ov = document.getElementById(name+'-overlay');
   if (sh) {
+    // blur ก่อนเพื่อ dismiss keyboard
+    if (document.activeElement && sh.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
     sh.classList.remove('open');
     if (sh._kbHandler) { sh.removeEventListener('focusin', sh._kbHandler); delete sh._kbHandler; }
   }
+  // unlock body scroll
+  if (typeof _unlockBodyScroll === 'function') _unlockBodyScroll();
   if (ov) { ov.classList.remove('open'); ov.style.display = 'none'; setTimeout(() => { if (!ov.classList.contains('open')) ov.style.display = ''; }, 400); }
 }
 

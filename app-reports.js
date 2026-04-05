@@ -2149,7 +2149,7 @@ function renderPurchaseTech() {
     const isRecv = po?.receiveStatus === 'received';
 
     // ── step ปัจจุบัน 0-3 ──
-    const hasPO = !!(po?.pr || po?.po); // มี PO form แล้ว
+    const hasPO = !!(po?.pr || po?.po || po?.purchasing); // มี PO form แล้ว หรือ Admin กำลังดำเนินการ
     const step = isRecv ? 3 : hasPO ? 2 : req ? 1 : 0;
 
     const steps = [

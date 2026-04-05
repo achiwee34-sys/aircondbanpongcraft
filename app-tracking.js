@@ -988,7 +988,21 @@ function closePOModal() { closePOInline(); }
 function closePOInline() {
   const pp = document.getElementById('pur-po-panel');
   const lp = document.getElementById('pur-list-panel');
-  if (pp) pp.style.display = 'none';
+  if (pp) {
+    // cleanup keyboard listener
+    if (pp._kbFix && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', pp._kbFix);
+      window.visualViewport.removeEventListener('scroll', pp._kbFix);
+      delete pp._kbFix;
+      delete pp._kbBound;
+    }
+    pp.style.display = 'none';
+    pp.style.height = '';
+    pp.style.maxHeight = '';
+  }
+  // restore page height
+  const pg = document.getElementById('pg-purchase');
+  if (pg) pg.style.height = '';
   if (lp) { lp.style.display = 'flex'; lp.style.flexDirection = 'column'; }
   // reset header bar เพื่อให้ renderPurchase สร้างใหม่ได้
   const hb = document.getElementById('pur-header-bar');
