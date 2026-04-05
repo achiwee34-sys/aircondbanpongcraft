@@ -1460,11 +1460,14 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
 // ============================================================
 window.openRepairHistoryPage = function() {
   const inp = document.getElementById('repairhist-input');
-  if (inp) inp.value = '';
+  if (inp) {
+    inp.value = '';
+    // reset readonly ทุกครั้งเปิด — ป้องกัน Android auto-focus keyboard
+    inp.setAttribute('inputmode', 'none');
+  }
   openSheet('repairhist');
   setTimeout(() => {
     renderRepairHistResults();
-    // ไม่ focus อัตโนมัติ — ป้องกัน page ขยับเมื่อ keyboard ขึ้น
   }, 350);
 };
 
@@ -1478,20 +1481,22 @@ window.renderRepairHistResults = function() {
   const statusLabel = { done:'เสร็จแล้ว', verified:'ตรวจรับแล้ว', closed:'ปิดแล้ว',
     inprogress:'กำลังซ่อม', accepted:'รับงาน', assigned:'จ่ายงาน', new:'ใหม่' };
 
-  let tickets = (window.db?.tickets || [])
-    .filter(t => ['done','verified','closed'].includes(t.status))
+  // แสดงทุก status ใน list ล่าสุด, กรองแค่ done/verified/closed ตอนค้นหา
+  const allTickets = (window.db?.tickets || [])
     .sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+  let tickets = allTickets.filter(t => ['done','verified','closed'].includes(t.status));
 
   if (!q) {
-    const total = tickets.length;
+    // ไม่มี keyword — แสดง 20 รายการล่าสุด ทุก status
+    const recent = allTickets.slice(0, 20);
+    const doneCount = tickets.length;
     const totalCost = tickets.reduce((s,t)=>s+(parseFloat(t.cost)||0),0);
     el.innerHTML = `
       <div style="font-size:0.68rem;font-weight:800;color:#94a3b8;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;padding:0 2px;display:flex;align-items:center;justify-content:space-between">
-        <span>งานซ่อมเสร็จล่าสุด</span>
-        <span style="color:#16a34a;font-weight:900">${total} งาน · ฿${totalCost.toLocaleString()}</span>
+        <span>รายการล่าสุด 20 งาน</span>
+        <span style="color:#16a34a;font-weight:900">${doneCount} งานเสร็จ · ฿${totalCost.toLocaleString()}</span>
       </div>
-      ${tickets.slice(0,20).map(t => renderRepairHistRow(t, statusColor, statusLabel)).join('')}
-      ${total > 20 ? `<div style="text-align:center;padding:10px;color:#94a3b8;font-size:0.75rem">แสดง 20 จาก ${total} รายการ — ค้นหาเพื่อกรอง</div>` : ''}`;
+      ${recent.map(t => renderRepairHistRow(t, statusColor, statusLabel)).join('')}`;
     return;
   }
 

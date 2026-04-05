@@ -155,12 +155,10 @@ function openMachineHistory(mid) {
 
 // ── AIR ID Search ──────────────────────────────────────────────
 function openAirIdSearch() {
-  document.getElementById('airsearch-input').value = '';
+  const inp = document.getElementById('airsearch-input');
+  if (inp) { inp.value = ''; inp.setAttribute('inputmode', 'none'); }
   openSheet('airsearch');
-  setTimeout(() => {
-    renderAirSearchResults();
-    // ไม่ focus อัตโนมัติ — ป้องกัน page ขยับเมื่อ keyboard ขึ้น
-  }, 350);
+  setTimeout(() => { renderAirSearchResults(); }, 350);
 }
 
 function renderAirSearchResults() {
