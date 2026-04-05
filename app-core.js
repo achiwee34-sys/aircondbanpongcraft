@@ -350,6 +350,7 @@ async function doRegister() {  // PATCH: async เพื่อ await hashPasswor
     const doAfterSave = () => {
       if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'สมัครสมาชิก'; }
       notifyRole('admin', '👤 ผู้ใช้ใหม่สมัครแล้ว', name + ' (' + uname + ') สมัครเป็นผู้แจ้งงาน');
+      if (typeof lineMessagingEvent === 'function') lineMessagingEvent('newUser', newUser);
       showRegisterSuccess(name, () => {
         hideRegister();
         document.getElementById('lu').value = uname;
@@ -3012,6 +3013,10 @@ function dismissNotif(id) {
 }
 
 function sendLineNotifyEvent(event, t) {
+  // ── LINE Messaging API (push ตรงหา userId) ──
+  if (typeof lineMessagingEvent === 'function') {
+    lineMessagingEvent(event, t).catch(e => console.warn('[lineMessaging]', e));
+  }
   const ln = db.lineNotify; if (!ln) return;
   const ser = (typeof getSerial==='function') ? (getSerial(t) ? ' ['+getSerial(t)+']' : '') : '';
   const base = '\n🏭 SCG AIRCON BP\n';
