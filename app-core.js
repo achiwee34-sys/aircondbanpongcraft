@@ -300,6 +300,11 @@ function hideRegister() {
 }
 
 async function doRegister() {  // PATCH: async เพื่อ await hashPassword
+  // ── LIFF path: ถ้าสมัครผ่าน LINE → delegate ไป doRegisterWithLine ──
+  const lineId = document.getElementById('reg-line-user-id')?.value?.trim();
+  if (lineId && typeof doRegisterWithLine === 'function') {
+    return doRegisterWithLine();
+  }
   const name  = document.getElementById('reg-name').value.trim();
   const uname = document.getElementById('reg-user').value.trim().toLowerCase();
   const pass  = document.getElementById('reg-pass').value;
@@ -2405,6 +2410,12 @@ window.addEventListener('pageshow', (e) => {
 // close ทันที DOMContentLoaded กัน sheet ค้างจาก session ก่อนหน้า
 document.addEventListener('DOMContentLoaded', () => {
   _forceCloseAllSheets();
+
+  // ── LIFF: ตรวจ LINE Login อัตโนมัติ ──
+  if (typeof autoLiffLogin === 'function') {
+    // defer เล็กน้อยให้ db load ก่อน (db อยู่ใน localStorage และ load ทันที)
+    setTimeout(autoLiffLogin, 200);
+  }
 
   // ══ Global: ป้องกัน input/textarea/select auto-focus ทั้งแอพ ══
   // ทุก field จะมี inputmode="none" + tabindex="-1" ตั้งต้น
