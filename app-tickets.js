@@ -508,7 +508,26 @@ function closeSwipeCard(card) {
 }
 
 // ── Global Search ──
+// ── unlock body scroll after global search close ──
+function _unlockBodyScroll() {
+  const sy = parseInt(document.body.style.top || '0') * -1;
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
+  if (sy) window.scrollTo(0, sy);
+}
+
 function openGlobalSearch() {
+  // ── ล็อก body scroll ป้องกัน Android viewport เลื่อนเมื่อ keyboard ขึ้น ──
+  const _scrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = '-' + _scrollY + 'px';
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.overflow = 'hidden';
+
   const ov = document.createElement('div');
   ov.id = '_gsearch_ov';
   ov.style.cssText = 'position:fixed;inset:0;z-index:9950;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:flex;flex-direction:column;animation:fadeIn 0.15s ease';
@@ -527,7 +546,9 @@ function openGlobalSearch() {
   const closeBtn = document.createElement('button');
   closeBtn.textContent='✕';
   closeBtn.style.cssText='background:none;border:none;color:#94a3b8;font-size:1.1rem;cursor:pointer;padding:0 4px';
-  closeBtn.onclick=()=>ov.remove();
+  closeBtn.onclick=()=>{
+    ov.remove(); _unlockBodyScroll();
+  };
   bar.appendChild(inp); bar.appendChild(closeBtn);
   box.appendChild(bar);
   ov.appendChild(box);
@@ -537,7 +558,10 @@ function openGlobalSearch() {
   results.style.cssText='flex:1;overflow-y:auto;padding:8px 12px;-webkit-overflow-scrolling:touch';
   ov.appendChild(results);
   document.body.appendChild(ov);
-  inp.focus();
+  // ไม่ focus อัตโนมัติ — ป้องกัน page ขยับเมื่อ keyboard ขึ้น
+  inp.setAttribute('inputmode', 'none');
+  inp.addEventListener('touchstart', () => inp.removeAttribute('inputmode'), {once:true});
+  inp.addEventListener('click', () => inp.removeAttribute('inputmode'), {once:true});
 
   // Search function
   const doSearch = (q) => {
@@ -563,7 +587,7 @@ function openGlobalSearch() {
     if(tickets.length) {
       html+='<div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:8px 4px 6px">📋 ใบงาน ('+tickets.length+')</div>';
       html+=tickets.map(t=>`
-        <div onclick="ov.remove();goPage('tickets');setTimeout(()=>safeOpenDetail('${t.id}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+        <div onclick="ov.remove();_unlockBodyScroll();goPage('tickets');setTimeout(()=>safeOpenDetail('${t.id}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="width:36px;height:36px;border-radius:9px;background:${sColor(t.status)}20;border:1.5px solid ${sColor(t.status)}40;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:${sColor(t.status)};flex-shrink:0;font-family:'JetBrains Mono',monospace">${t.id.slice(-3)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)}</div>
@@ -585,7 +609,7 @@ function openGlobalSearch() {
     if(machines.length) {
       html+='<div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:12px 4px 6px">❄️ เครื่องแอร์ ('+machines.length+')</div>';
       html+=machines.map(m=>`
-        <div onclick="ov.remove();goPage('machines');setTimeout(()=>{const s=document.getElementById('mac-search');if(s){s.value='${m.serial}';applyMachineFilter();}},200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+        <div onclick="ov.remove();setTimeout(()=>{goPage('machines');setTimeout(()=>openMachineDetail('${m.id}'),250)},100)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="width:36px;height:36px;border-radius:9px;background:#eff6ff;border:1.5px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">❄️</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(m.name)}</div>
@@ -606,7 +630,7 @@ function openGlobalSearch() {
       html+='<div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:12px 4px 6px">👤 ผู้ใช้งาน ('+users.length+')</div>';
       const roleC={tech:{bg:'#f0fdf4',cl:'#166534'},reporter:{bg:'#eff6ff',cl:'#1d4ed8'},admin:{bg:'#fdf4ff',cl:'#7c3aed'}};
       html+=users.map(u=>`
-        <div onclick="ov.remove();goPage('users');setTimeout(()=>switchUserTab('${u.role}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+        <div onclick="ov.remove();_unlockBodyScroll();goPage('users');setTimeout(()=>switchUserTab('${u.role}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="width:36px;height:36px;border-radius:50%;background:${getAvatarColor(u.id)};display:flex;align-items:center;justify-content:center;font-size:0.88rem;font-weight:900;color:white;flex-shrink:0">${getAvatarInitials(u.name)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:0.85rem;font-weight:700;color:#0f172a">${u.name}</div>
@@ -630,7 +654,11 @@ function openGlobalSearch() {
 
   results.innerHTML='<div style="text-align:center;padding:32px;color:#94a3b8;font-size:0.88rem">พิมพ์เพื่อค้นหา...</div>';
   inp.addEventListener('input', () => doSearch(inp.value));
-  ov.addEventListener('click', e => { if(e.target===ov) ov.remove(); });
+  ov.addEventListener('click', e => {
+    if(e.target===ov) {
+      ov.remove(); _unlockBodyScroll();
+    }
+  });
 }
 
 function renderPagination(page, totalPages, total, from, to) {

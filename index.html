@@ -2144,7 +2144,7 @@
           <input id="airsearch-input" type="text" placeholder="พิมพ์ AIR ID, Serial, ชื่อเครื่อง..."
             style="width:100%;box-sizing:border-box;padding:9px 10px 9px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-family:inherit;outline:none;transition:border 0.15s"
             oninput="renderAirSearchResults()" onfocus="this.style.borderColor='#0891b2'" onblur="this.style.borderColor='#e2e8f0'"
-            inputmode="none" onclick="this.removeAttribute('inputmode')" ontouchstart="this.removeAttribute('inputmode')"/>
+            inputmode="none" tabindex="-1" onclick="this.removeAttribute('inputmode');this.removeAttribute('tabindex')" ontouchstart="this.removeAttribute('inputmode');this.removeAttribute('tabindex')"/>
         </div>
         <button onclick="document.getElementById('airsearch-input').value='';renderAirSearchResults()"
           style="padding:0 12px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.75rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit;white-space:nowrap">ล้าง</button>
@@ -2174,7 +2174,7 @@
           <input id="repairhist-input" type="text" placeholder="ค้นหา TK, ห้อง, ปัญหา, ช่าง..."
             style="width:100%;box-sizing:border-box;padding:9px 10px 9px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-family:inherit;outline:none;transition:border 0.15s"
             oninput="renderRepairHistResults()" onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"
-            inputmode="none" onclick="this.removeAttribute('inputmode')" ontouchstart="this.removeAttribute('inputmode')"/>
+            inputmode="none" tabindex="-1" onclick="this.removeAttribute('inputmode');this.removeAttribute('tabindex')" ontouchstart="this.removeAttribute('inputmode');this.removeAttribute('tabindex')"/>
         </div>
         <button onclick="document.getElementById('repairhist-input').value='';renderRepairHistResults()"
           style="padding:0 12px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.75rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit;white-space:nowrap">ล้าง</button>
