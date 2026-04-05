@@ -1,42 +1,55 @@
 // ══════════════════════════════════════════════════════════════
 //  line-messaging.js — LINE Messaging API Push Notifications
-//  ใช้ Flex Message + ปุ่มเปิดแอพ
+//  v2.0 | ส่งผ่าน Google Apps Script (แก้ CORS)
 // ══════════════════════════════════════════════════════════════
 
-const LINE_CHANNEL_TOKEN = '7PUnKKarK4u0k+RsI9UQHQ0FtWOH3SrwZta4D2sXg0C1kCxSnJdZbYRz5ufn2FQEt04zetsmkPXPNDTTFUaMkc4tMuHMKG43FR5Iy3YENhAmjJBqF50JVzvGanSglsiecPOzbN0UMx4XaJKN0VmqtwdB04t89/1O/w1cDnyilFU=';
-const LINE_LIFF_URL = 'https://liff.line.me/2009699254-TXIz4KN1';
+const LINE_LIFF_URL      = 'https://liff.line.me/2009699254-TXIz4KN1';
 const LINE_ADMIN_USER_ID = 'U06dd3c0d1756f7497ecf67c6fccf3e52';
 
+// ── ส่งผ่าน GAS proxy (ไม่ถูก CORS block) ────────────────────
 async function linePush(lineUserId, messages) {
-  if (!lineUserId || !LINE_CHANNEL_TOKEN) return;
+  if (!lineUserId) return;
+  const gsUrl = (typeof db !== 'undefined' && db.gsUrl) ? db.gsUrl : '';
+  if (!gsUrl) {
+    console.warn('[LINE Push] ยังไม่ได้ตั้งค่า Google Apps Script URL ใน Settings');
+    return;
+  }
   try {
-    await fetch('https://api.line.me/v2/bot/message/push', {
+    await fetch(gsUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + LINE_CHANNEL_TOKEN
-      },
-      body: JSON.stringify({ to: lineUserId, messages })
+      mode: 'no-cors',   // GAS ต้องใช้ no-cors
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'linePush', to: lineUserId, messages })
     });
-  } catch (e) { console.warn('[LINE Push] error:', e); }
+  } catch (e) {
+    console.warn('[LINE Push] error:', e);
+  }
 }
 
-async function linePushAdmin(messages) { await linePush(LINE_ADMIN_USER_ID, messages); }
+async function linePushAdmin(messages) {
+  await linePush(LINE_ADMIN_USER_ID, messages);
+}
 
 async function linePushRole(role, messages) {
   const users = (db.users || []).filter(u => u.role === role && u.lineUserId);
   for (const u of users) await linePush(u.lineUserId, messages);
 }
 
-// ── สีตาม event ──
+// ── สีตาม event ──────────────────────────────────────────────
 const EVENT_COLORS = {
-  new: '#c8102e', assign: '#1d4ed8', accept: '#d97706',
-  start: '#7c3aed', done: '#16a34a', newUser: '#0891b2'
+  new:     '#c8102e',
+  assign:  '#1d4ed8',
+  accept:  '#d97706',
+  start:   '#7c3aed',
+  done:    '#16a34a',
+  newUser: '#0891b2'
 };
 
-function ticketUrl(tid) { return LINE_LIFF_URL + (tid ? '?ticket=' + tid : ''); }
+function ticketUrl(tid) {
+  return LINE_LIFF_URL + (tid ? '?ticket=' + tid : '');
+}
 
-// ── สร้าง Flex Message ──
+// ── สร้าง Flex Message ─────────────────────────────────────────
 function buildFlex(headerColor, headerIcon, headerText, rows, btnLabel, btnUrl) {
   return {
     type: 'flex',
@@ -71,8 +84,9 @@ function buildFlex(headerColor, headerIcon, headerText, rows, btnLabel, btnUrl) 
   };
 }
 
+// ── Main event handler ────────────────────────────────────────
 async function lineMessagingEvent(event, t) {
-  const time = typeof nowStr === 'function' ? nowStr() : new Date().toLocaleString('th-TH');
+  const time     = typeof nowStr === 'function' ? nowStr() : new Date().toLocaleString('th-TH');
   const priority = typeof prTH === 'function' ? prTH(t.priority) : (t.priority || '—');
 
   if (event === 'new') {

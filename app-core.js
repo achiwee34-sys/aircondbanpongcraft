@@ -560,6 +560,14 @@ function renderSettingsPage() {
   const adminTools = document.getElementById('sp-admin-tools');
   if (adminTools) adminTools.style.display = CU.role === 'admin' ? 'block' : 'none';
 
+  // LINE & GAS card — admin only + fill current URL
+  const lineGasCard = document.getElementById('sp-line-gas-card');
+  if (lineGasCard) {
+    lineGasCard.style.display = CU.role === 'admin' ? 'block' : 'none';
+    const urlEl = document.getElementById('sp-gs-url');
+    if (urlEl) urlEl.value = db.gsUrl || '';
+  }
+
   // Backend panel — show only for admin
   const backendPanel = document.getElementById('sp-backend-panel');
   if (backendPanel) {
@@ -621,6 +629,17 @@ function spSave() {
   const hint = document.getElementById('sp-save-hint');
   if(hint) { hint.style.display=''; setTimeout(()=>hint.style.display='none',2500); }
   showToast('✅ บันทึกข้อมูลแล้ว');
+}
+
+// ── บันทึก Cloudflare Workers URL ──────────────────────────────
+function spSaveGsUrl() {
+  const url = document.getElementById('sp-gs-url')?.value.trim();
+  if (!url) { showToast('⚠️ กรุณากรอก URL'); return; }
+  db.gsUrl = url;
+  saveDB();
+  const ok = document.getElementById('sp-gs-url-ok');
+  if (ok) { ok.style.display = 'block'; setTimeout(() => ok.style.display = 'none', 3000); }
+  showToast('✅ บันทึก URL แล้ว');
 }
 
 // legacy aliases (ใช้ในที่อื่นอาจเรียก)
