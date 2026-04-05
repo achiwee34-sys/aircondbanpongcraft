@@ -14,7 +14,7 @@
 //
 // ══════════════════════════════════════════════════════════════
 
-const LIFF_ID = 'YOUR_LIFF_ID_HERE';   // ← ใส่ LIFF ID จาก LINE Developers
+const LIFF_ID = '2009699254-TXIz4KN1';   // ← ใส่ LIFF ID จาก LINE Developers
 
 // ── State ──────────────────────────────────────────────────────
 let _liffReady = false;

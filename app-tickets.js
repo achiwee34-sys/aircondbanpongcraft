@@ -1049,6 +1049,7 @@ function doBulkAccept() {
     t.status = 'accepted'; t.updatedAt = now;
     t.history.push({act:'✋ รับงาน (Bulk)', by:CU.name, at:now});
     notifyRole('admin','✋ ช่างรับงาน ['+tid+']',CU.name+' รับงาน "'+t.problem+'"',tid);
+    if (typeof sendLineNotifyEvent === 'function') sendLineNotifyEvent('accept', t);
     syncTicket(t);
     count++;
   });
@@ -1251,6 +1252,7 @@ function doBulkAssign() {
     if (note) t.note = note;
     t.history.push({act:'📋 จ่ายงาน (Bulk)', by:CU.name, at:now, detail:note});
     notifyUser(techId,'📋 มีงานมอบหมาย ['+tid+']','งาน "'+t.problem+'" ที่ '+t.machine,tid);
+    if (typeof sendLineNotifyEvent === 'function') sendLineNotifyEvent('assign', t);
     syncTicket(t);
     count++;
   });
