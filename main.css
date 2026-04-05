@@ -1626,3 +1626,25 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
   flex-shrink: 0;
   min-height: fit-content;
 }
+
+/* ══ Multi-select swipe visual enhancements ══ */
+/* card ที่เลือกแล้ว — highlight ชัดเจน */
+.tk-wrap .tk[style*="scale(0.985)"] {
+  box-shadow: 0 0 0 2px #c8102e, 0 4px 16px rgba(200,16,46,0.15) !important;
+}
+/* checkbox ใน multi-select mode */
+.tk-checkbox {
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease !important;
+}
+/* swipe-right hint: กรอบซ้ายสีเขียว animate */
+.tk-swipeable {
+  transition: border-left-color 0.1s ease, border-left-width 0.1s ease;
+}
+/* multi-select bar ที่ด้านบน */
+#multi-select-bar {
+  animation: slideDown 0.2s ease;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

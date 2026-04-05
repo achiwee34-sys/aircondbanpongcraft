@@ -412,9 +412,11 @@ function initSwipeCards() {
     let startX=0, startY=0, dx=0, dragging=false, moved=false, rafId=null;
     const THRESHOLD = 50;
     const MAX_SWIPE = 160;
+    const SELECT_THRESHOLD = 40;
     card.style.willChange = 'transform';
 
-    const getActions = () => card.closest('.tk-wrap')?.querySelector('.tk-swipe-actions');
+    const getActions = () => card.closest('.' + 'tk-wrap')?.querySelector('.tk-swipe-actions');
+    const getTid = () => card.dataset.tid;
 
     card.addEventListener('touchstart', e => {
       startX = e.touches[0].clientX;
@@ -441,6 +443,11 @@ function initSwipeCards() {
           const cur = Math.max(0, MAX_SWIPE - Math.min(dx, MAX_SWIPE));
           card.style.transform = `translateX(-${cur}px)`;
           if (actions) actions.style.maxWidth = cur + 'px';
+        } else if (dx > 0 && !card._open) {
+          const shift = Math.min(dx * 0.35, 20);
+          card.style.transform = `translateX(${shift}px)`;
+          card.style.borderLeftWidth = shift > 5 ? '6px' : '3px';
+          card.style.borderLeftColor = shift > 8 ? '#16a34a' : '';
         }
       });
     }, {passive:true});
@@ -453,6 +460,8 @@ function initSwipeCards() {
       card.style.transition = T;
       const actions = getActions();
       if (actions) actions.style.transition = 'max-width 0.22s cubic-bezier(0.4,0,0.2,1)';
+      card.style.borderLeftWidth = '';
+      card.style.borderLeftColor = '';
 
       if (!card._open && dx < -THRESHOLD) {
         card.style.transform = `translateX(-${MAX_SWIPE}px)`;
@@ -463,8 +472,17 @@ function initSwipeCards() {
       } else if (card._open) {
         card.style.transform = `translateX(-${MAX_SWIPE}px)`;
         if (actions) actions.style.maxWidth = MAX_SWIPE + 'px';
+      } else if (!card._open && dx > SELECT_THRESHOLD) {
+        card.style.transform = 'translateX(0)';
+        const tid = getTid();
+        if (tid) {
+          if (!_multiSelectMode) enterMultiSelect();
+          toggleTicketSelect(tid);
+          if (navigator.vibrate) navigator.vibrate(30);
+        }
       } else {
         closeSwipeCard(card);
+        card.style.transform = 'translateX(0)';
       }
     });
   });
@@ -994,12 +1012,21 @@ function toggleTicketSelect(tid, e) {
 function _applyCardSelectStyle(wrap, selected) {
   const card = wrap.querySelector('.tk');
   if (!card) return;
+  // outline + background tint ให้เห็นชัดขึ้น
   card.style.outline = selected ? '2.5px solid #c8102e' : 'none';
   card.style.outlineOffset = selected ? '-2px' : '0';
+  card.style.background = selected ? '#fff5f5' : 'white';
+  card.style.borderLeftColor = selected ? '#c8102e' : '';
+  card.style.borderLeftWidth = selected ? '5px' : '';
+  // animate scale ให้รู้สึก "snap"
+  card.style.transition = 'transform 0.15s ease, background 0.15s ease, outline 0.15s ease';
+  card.style.transform = selected ? 'scale(0.985)' : 'scale(1)';
   const cb = wrap.querySelector('.tk-checkbox');
   if (cb) {
     cb.style.background = selected ? '#c8102e' : 'white';
     cb.style.borderColor = selected ? '#c8102e' : '#cbd5e1';
+    cb.style.transform = selected ? 'scale(1.15)' : 'scale(1)';
+    cb.style.transition = 'transform 0.15s ease, background 0.15s ease';
     cb.innerHTML = selected ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="2 6 5 9 10 3"/></svg>' : '';
   }
 }
@@ -1437,8 +1464,7 @@ window.openRepairHistoryPage = function() {
   openSheet('repairhist');
   setTimeout(() => {
     renderRepairHistResults();
-    const i = document.getElementById('repairhist-input');
-    if (i) i.focus();
+    // ไม่ focus อัตโนมัติ — ป้องกัน page ขยับเมื่อ keyboard ขึ้น
   }, 350);
 };
 

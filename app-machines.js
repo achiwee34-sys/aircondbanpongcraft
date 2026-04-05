@@ -159,8 +159,7 @@ function openAirIdSearch() {
   openSheet('airsearch');
   setTimeout(() => {
     renderAirSearchResults();
-    const inp = document.getElementById('airsearch-input');
-    if(inp) inp.focus();
+    // ไม่ focus อัตโนมัติ — ป้องกัน page ขยับเมื่อ keyboard ขึ้น
   }, 350);
 }
 
