@@ -1648,3 +1648,13 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ══ Global: ป้องกัน input/textarea auto-focus ทั้งแอพ ══
+   ทุก input และ textarea จะไม่เปิด keyboard อัตโนมัติ
+   user ต้องแตะเองเพื่อพิมพ์ — page จะไม่ขยับ           */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+textarea,
+select {
+  /* ป้องกัน iOS zoom เมื่อ focus */
+  font-size: max(16px, 1em) !important;
+}

@@ -156,7 +156,7 @@ function openMachineHistory(mid) {
 // ── AIR ID Search ──────────────────────────────────────────────
 function openAirIdSearch() {
   const inp = document.getElementById('airsearch-input');
-  if (inp) { inp.value = ''; inp.setAttribute('inputmode', 'none'); }
+  if (inp) { inp.value = ''; }
   openSheet('airsearch');
   setTimeout(() => { renderAirSearchResults(); }, 350);
 }

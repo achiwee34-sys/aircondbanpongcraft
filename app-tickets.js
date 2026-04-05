@@ -559,9 +559,7 @@ function openGlobalSearch() {
   ov.appendChild(results);
   document.body.appendChild(ov);
   // ไม่ focus อัตโนมัติ — ป้องกัน page ขยับเมื่อ keyboard ขึ้น
-  inp.setAttribute('inputmode', 'none');
-  inp.addEventListener('touchstart', () => inp.removeAttribute('inputmode'), {once:true});
-  inp.addEventListener('click', () => inp.removeAttribute('inputmode'), {once:true});
+  // inputmode/tabindex จัดการโดย global _lockField ใน DOMContentLoaded
 
   // Search function
   const doSearch = (q) => {

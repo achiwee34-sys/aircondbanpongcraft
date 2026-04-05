@@ -2403,7 +2403,40 @@ window.addEventListener('pageshow', (e) => {
   }
 });
 // close ทันที DOMContentLoaded กัน sheet ค้างจาก session ก่อนหน้า
-document.addEventListener('DOMContentLoaded', () => { _forceCloseAllSheets(); });
+document.addEventListener('DOMContentLoaded', () => {
+  _forceCloseAllSheets();
+
+  // ══ Global: ป้องกัน input/textarea/select auto-focus ทั้งแอพ ══
+  // ทุก field จะมี inputmode="none" + tabindex="-1" ตั้งต้น
+  // เมื่อ user แตะเองจะถูก unlock ให้พิมพ์ได้ปกติ
+  function _lockField(el) {
+    if (el._noAutoFocusInit) return;
+    if (['checkbox','radio','range','hidden','submit','button','file','image'].includes(el.type)) return;
+    el._noAutoFocusInit = true;
+    // ตั้งค่าเริ่มต้น
+    el.setAttribute('inputmode', 'none');
+    el.setAttribute('tabindex', '-1');
+    const unlock = () => {
+      el.removeAttribute('inputmode');
+      el.removeAttribute('tabindex');
+    };
+    el.addEventListener('touchstart', unlock, { once: true, passive: true });
+    el.addEventListener('mousedown',  unlock, { once: true });
+  }
+
+  // ล็อก fields ที่มีอยู่แล้ว
+  document.querySelectorAll('input, textarea, select').forEach(_lockField);
+
+  // ล็อก fields ที่ถูก inject ทีหลัง (dynamic forms, sheets, overlays)
+  const _fieldObserver = new MutationObserver(mutations => {
+    mutations.forEach(m => m.addedNodes.forEach(node => {
+      if (node.nodeType !== 1) return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(node.tagName)) _lockField(node);
+      node.querySelectorAll?.('input, textarea, select').forEach(_lockField);
+    }));
+  });
+  _fieldObserver.observe(document.body, { childList: true, subtree: true });
+});
 
 
 // ── Emergency overlay reset — เคลียร์ทุก overlay ที่ค้างอยู่ ──
