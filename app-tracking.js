@@ -2625,7 +2625,11 @@ async function doComplete( /* PATCH v67 */) {
   } else {
     // ช่างพิมพ์เพิ่มเอง → กรองเฉพาะบรรทัดที่ไม่ซ้ำกับ repairItems
     const sumLines = sum.split('\n').map(l => l.trim().replace(/^[-\s•]+/,'').trim()).filter(Boolean);
-    const manualLines = sumLines.filter(l => !repairSet.has(l.toLowerCase()));
+    const manualLines = sumLines.filter(l => {
+      // strip qty suffix (×N) ก่อน compare
+      const stripped = l.replace(/\s*[×xX]\d+\s*$/, '').trim().toLowerCase();
+      return !repairSet.has(stripped) && !repairSet.has(l.toLowerCase());
+    });
     const manualNote = manualLines.join('\n');
     t.summary = repairStr ? repairStr + (manualNote ? '\n' + manualNote : '') : sum;
   }
@@ -3101,22 +3105,45 @@ function openDetail(tid) {
 
     <!-- Summary block -->
     ${t.summary?`
-    <div style="border:1px solid #d1fae5;border-radius:10px;overflow:hidden;margin-bottom:14px;background:white">
-      <div style="background:#15803d;padding:9px 13px;display:flex;align-items:center;justify-content:space-between">
-        <span style="color:white;font-size:0.78rem;font-weight:800">✅ สรุปการซ่อม</span>
-        ${totalCost?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:900;color:#bbf7d0">฿${totalCost.toLocaleString()}</span>`:''}
+    <div style="border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 12px rgba(21,128,61,0.12)">
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#15803d,#16a34a);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem">✅</div>
+          <span style="color:white;font-size:0.88rem;font-weight:800;letter-spacing:0.01em">สรุปการซ่อม</span>
+        </div>
+        ${totalCost?`<div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:4px 10px"><span style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;font-weight:900;color:white">฿${totalCost.toLocaleString()}</span></div>`:''}
       </div>
-      <div style="padding:10px 13px">
-        <div style="color:#374151;font-size:0.82rem;line-height:1.65;margin-bottom:${t.parts||rc||pc?'8px':'0'}">${formatSummary(t.summary)}</div>
-        ${t.parts?`<div style="font-size:0.75rem;color:#166534;background:#f0fdf4;border-radius:6px;padding:6px 10px;display:flex;gap:6px;align-items:flex-start"><span>🔩</span><span>อะไหล่: ${escapeHtml(t.parts)}</span></div>`:''}
-        ${(rc||pc)?`<div style="display:grid;grid-template-columns:${rc&&pc?'1fr 1fr':'1fr'};gap:8px;margin-top:8px">
-          ${rc?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px">
-            <div style="font-size:0.52rem;color:#1d4ed8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">ค่าแรงซ่อม</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:900;color:#1d4ed8">฿${rc.toLocaleString()}</div>
+      <!-- Body -->
+      <div style="background:white;padding:12px 14px;border:1px solid #d1fae5;border-top:none;border-radius:0 0 16px 16px">
+        <!-- Repair items list -->
+        <div style="margin-bottom:${t.parts||rc||pc?'10px':'0'}">
+          ${(t.summary||'').split('\n').filter(Boolean).map((line,i)=>{
+            const clean = line.trim().replace(/^[-•\s]+/,'');
+            return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;${i>0?'border-top:1px solid #f0fdf4':''}">
+              <div style="width:20px;height:20px;border-radius:6px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span style="font-size:0.82rem;color:#1e293b;font-weight:600;line-height:1.5;flex:1">${escapeHtml(clean)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+        ${t.parts?`
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:8px 12px;display:flex;gap:8px;align-items:flex-start;margin-bottom:${rc||pc?'10px':'0'}">
+          <span style="font-size:0.9rem;flex-shrink:0">🔩</span>
+          <div>
+            <div style="font-size:0.58rem;color:#15803d;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">อะไหล่ที่ใช้</div>
+            <div style="font-size:0.78rem;color:#166534;font-weight:600">${escapeHtml(t.parts)}</div>
+          </div>
+        </div>`:''} 
+        ${(rc||pc)?`<div style="display:grid;grid-template-columns:${rc&&pc?'1fr 1fr':'1fr'};gap:8px;margin-top:${t.parts?'0':'2px'}">
+          ${rc?`<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;text-align:center">
+            <div style="font-size:0.55rem;color:#1d4ed8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">ค่าแรงซ่อม</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:900;color:#1d4ed8">฿${rc.toLocaleString()}</div>
           </div>`:''}
-          ${pc?`<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px">
-            <div style="font-size:0.52rem;color:#c2410c;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">ค่าอะไหล่</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:900;color:#c2410c">฿${pc.toLocaleString()}</div>
+          ${pc?`<div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;text-align:center">
+            <div style="font-size:0.55rem;color:#c2410c;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">ค่าอะไหล่</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:900;color:#c2410c">฿${pc.toLocaleString()}</div>
           </div>`:''}
         </div>`:''}
       </div>

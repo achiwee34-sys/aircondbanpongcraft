@@ -1008,8 +1008,80 @@ function enterMultiSelect() {
     btn.style.boxShadow = 'none';
     btn.innerHTML = '✕ ยกเลิก';
   }
+  // ปรับ title + action label + filter button ตาม role
+  const titleEl = document.getElementById('multi-select-title');
+  const actionLbl = document.getElementById('bulk-action-label');
+  const newOnlyBtn = document.getElementById('bulk-new-only-btn');
+  if (CU?.role === 'admin') {
+    if (titleEl) titleEl.textContent = 'โหมดจ่ายงานหลายรายการ';
+    if (actionLbl) actionLbl.textContent = 'จ่ายงาน';
+    if (newOnlyBtn) newOnlyBtn.style.display = '';
+  } else if (CU?.role === 'tech') {
+    if (titleEl) titleEl.textContent = 'โหมดรับงานหลายรายการ';
+    if (actionLbl) actionLbl.textContent = 'รับงาน';
+    if (newOnlyBtn) newOnlyBtn.style.display = 'none';
+  } else if (CU?.role === 'reporter') {
+    if (titleEl) titleEl.textContent = 'โหมดตรวจรับหลายรายการ';
+    if (actionLbl) actionLbl.textContent = 'ตรวจรับงาน';
+    if (newOnlyBtn) newOnlyBtn.style.display = 'none';
+  }
   _updateMultiSelectUI();
   renderTickets();
+}
+
+// router — เปิด sheet ที่ถูกต้องตาม role
+function openBulkActionSheet() {
+  if (_selectedTickets.size === 0) return;
+  if (CU?.role === 'admin') openBulkAssignSheet();
+  else if (CU?.role === 'tech') doBulkAccept();
+  else if (CU?.role === 'reporter') doBulkVerify();
+}
+
+// Tech: รับงานหลายงานพร้อมกัน
+function doBulkAccept() {
+  if (_selectedTickets.size === 0) return;
+  const now = nowStr();
+  let count = 0;
+  _selectedTickets.forEach(tid => {
+    const t = db.tickets.find(x => x.id === tid);
+    if (!t || t.assigneeId !== CU.id) return;
+    if (!['assigned'].includes(t.status)) return;
+    t.status = 'accepted'; t.updatedAt = now;
+    t.history.push({act:'✋ รับงาน (Bulk)', by:CU.name, at:now});
+    notifyRole('admin','✋ ช่างรับงาน ['+tid+']',CU.name+' รับงาน "'+t.problem+'"',tid);
+    syncTicket(t);
+    count++;
+  });
+  if (count === 0) { showToast('⚠️ ไม่มีงานที่รับได้ (ต้องเป็นงานที่จ่ายให้คุณแล้ว)'); return; }
+  saveDB();
+  exitMultiSelect();
+  refreshPage();
+  showToast(`✅ รับงานแล้ว ${count} รายการ`);
+  if (navigator.vibrate) navigator.vibrate([100,30,100]);
+}
+
+// Reporter: ตรวจรับหลายงานพร้อมกัน
+function doBulkVerify() {
+  if (_selectedTickets.size === 0) return;
+  const now = nowStr();
+  let count = 0;
+  _selectedTickets.forEach(tid => {
+    const t = db.tickets.find(x => x.id === tid);
+    if (!t || t.reporterId !== CU.id) return;
+    if (!['done'].includes(t.status)) return;
+    t.status = 'verified'; t.updatedAt = now;
+    t.history.push({act:'🔍 ตรวจรับงาน (Bulk)', by:CU.name, at:now});
+    if (t.assigneeId) notifyUser(t.assigneeId,'🔍 ผู้แจ้งตรวจรับ ['+tid+']','งาน "'+t.problem+'" ผ่านการตรวจรับแล้ว',tid);
+    notifyRole('admin','🔍 ตรวจรับงาน ['+tid+']',CU.name+' ตรวจรับงาน "'+t.problem+'"',tid);
+    syncTicket(t);
+    count++;
+  });
+  if (count === 0) { showToast('⚠️ ไม่มีงานที่ตรวจรับได้ (ต้องเป็นงานเสร็จแล้วที่คุณเป็นผู้แจ้ง)'); return; }
+  saveDB();
+  exitMultiSelect();
+  refreshPage();
+  showToast(`✅ ตรวจรับงานแล้ว ${count} รายการ`);
+  if (navigator.vibrate) navigator.vibrate([100,30,100]);
 }
 function exitMultiSelect() {
   _multiSelectMode = false;

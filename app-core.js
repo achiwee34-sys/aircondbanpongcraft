@@ -2767,9 +2767,16 @@ function goPage(name) {
     if (name === 'home') renderHome();
     else if (name === 'executive') renderExecutiveDashboard();
     else if (name === 'tickets') {
-      // แสดงปุ่ม multi-select เฉพาะ admin
+      // แสดงปุ่ม multi-select สำหรับ admin, tech, reporter
       const msBtn = document.getElementById('multi-select-toggle');
-      if (msBtn) msBtn.style.display = CU?.role === 'admin' ? 'flex' : 'none';
+      if (msBtn) {
+        const canMulti = ['admin','tech','reporter'].includes(CU?.role);
+        msBtn.style.display = canMulti ? 'flex' : 'none';
+        if (canMulti) {
+          const lbl = CU?.role === 'admin' ? 'จ่ายงาน' : CU?.role === 'tech' ? 'รับงาน' : 'ตรวจรับ';
+          msBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="5" width="6" height="6" rx="1"/><rect x="3" y="13" width="6" height="6" rx="1"/><line x1="15" y1="8" x2="21" y2="8"/><line x1="15" y1="16" x2="21" y2="16"/></svg> ${lbl}`;
+        }
+      }
       // reset multi-select ถ้าออกจาก tickets แล้วกลับมา
       if (_multiSelectMode) exitMultiSelect(); else renderTickets();
     }
