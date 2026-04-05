@@ -3029,154 +3029,173 @@ function openDetail(tid) {
   const rc = Number(t.repairCost||0), pc = Number(t.partsCost||0), tc = Number(t.cost||0);
   const totalCost = (rc||pc) ? rc+pc : tc;
 
+  // dedup summary lines (strip BTU spec & ×N before comparing)
+  const _summaryLines = (t.summary||'').split('\n').filter(Boolean).map(l=>l.trim().replace(/^[-•\s]+/,''));
+  const _dedupLines = (()=>{
+    const seen = new Set();
+    return _summaryLines.filter(line => {
+      const key = line.replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi,'').replace(/\s*[×x]\d+/gi,'').trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  })();
+
   document.getElementById('detail-body').innerHTML = `
 
-  <!-- ═══ HEADER ═══ -->
-  <div style="margin:-12px -16px 0;background:white;border-bottom:1px solid #e5e7eb">
+  <!-- HERO HEADER -->
+  <div style="margin:-12px -16px 0">
 
-    <!-- Top bar: ticket ID + close -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:4px;height:28px;background:#c8102e;border-radius:2px;flex-shrink:0"></div>
-        <div>
-          <div style="font-size:0.58rem;font-family:'JetBrains Mono',monospace;color:#9ca3af;letter-spacing:.08em;margin-bottom:1px">${t.id}</div>
-          <div style="font-size:0.78rem;font-weight:800;color:#0f172a">${escapeHtml(t.problem)}</div>
+    <!-- Machine banner -->
+    <div style="background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(200,16,46,0.08);border-radius:50%"></div>
+
+      <!-- ID + close row -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:3px;height:16px;background:#c8102e;border-radius:2px"></div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:#64748b;letter-spacing:.1em">${t.id}</span>
         </div>
+        <button onclick="closeSheet('detail')" style="width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
       </div>
-      <button onclick="closeSheet('detail')" style="width:28px;height:28px;border-radius:6px;background:#f1f5f9;border:none;color:#64748b;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+
+      <!-- Machine name -->
+      <div style="font-size:0.95rem;font-weight:900;color:white;line-height:1.25;margin-bottom:2px">${escapeHtml(t.machine||'—')}</div>
+      ${_m?.location?`<div style="font-size:0.65rem;color:#64748b;margin-bottom:8px">📍 ${escapeHtml(_m.location)}</div>`:`<div style="margin-bottom:8px"></div>`}
+
+      <!-- Machine specs -->
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+        ${_serial?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:#94a3b8;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${_serial}</span>`:''}
+        ${_m?.btu?`<span style="font-size:0.58rem;color:#7dd3fc;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${Number(_m.btu).toLocaleString()} BTU</span>`:''}
+        ${_m?.refrigerant?`<span style="font-size:0.58rem;color:#fca5a5;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${_m.refrigerant}</span>`:''}
+        ${_m?.vendor?`<span style="font-size:0.58rem;color:#a5b4fc;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155;font-weight:700">${_m.vendor}</span>`:''}
+      </div>
+
+      <!-- Status + priority + cost -->
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="background:${st.bg};color:${st.cl};border:1px solid ${st.bc};border-radius:20px;padding:3px 10px;font-size:0.68rem;font-weight:700">${st.label}</span>
+        <span style="background:${pr.bg};color:${pr.cl};border-radius:20px;padding:3px 10px;font-size:0.68rem;font-weight:600">${pr.label}</span>
+        ${totalCost?`<span style="background:rgba(253,211,77,0.15);color:#fcd34d;border:1px solid rgba(253,211,77,0.3);border-radius:20px;padding:3px 10px;font-size:0.7rem;font-weight:800;margin-left:auto;font-family:'JetBrains Mono',monospace">฿${totalCost.toLocaleString()}</span>`:''}
+      </div>
     </div>
 
-    <!-- Status chips -->
-    <div style="display:flex;align-items:center;gap:6px;padding:0 16px 12px;flex-wrap:wrap">
-      <span style="background:${st.bg};color:${st.cl};border:1px solid ${st.bc};border-radius:5px;padding:3px 10px;font-size:0.68rem;font-weight:700">${st.label}</span>
-      <span style="background:${pr.bg};color:${pr.cl};border-radius:5px;padding:3px 10px;font-size:0.68rem;font-weight:600">${pr.label}</span>
-      ${totalCost?`<span style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:5px;padding:3px 10px;font-size:0.68rem;font-weight:700;margin-left:auto">฿${totalCost.toLocaleString()}</span>`:''}
-    </div>
-
-    <!-- Machine — prominent -->
-    <div style="background:#0f172a;padding:12px 16px 14px">
-      <div style="font-size:0.55rem;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">❄️ เครื่องแอร์ / ห้อง</div>
-      <div style="font-size:1rem;font-weight:900;color:white;line-height:1.3;margin-bottom:2px">${t.machine||'—'}</div>
-      ${_m?.location?`<div style="font-size:0.68rem;color:#94a3b8;margin-bottom:6px">📍 ${_m.location}</div>`:''}
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        ${_serial?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:#475569;background:#1e293b;padding:2px 8px;border-radius:4px">${_serial}</span>`:''}
-        ${_m?.btu?`<span style="font-size:0.6rem;color:#94a3b8;background:#1e293b;padding:2px 8px;border-radius:4px">${Number(_m.btu).toLocaleString()} BTU</span>`:''}
-        ${_m?.refrigerant?`<span style="font-size:0.6rem;color:#fca5a5;background:#1e293b;padding:2px 8px;border-radius:4px">${_m.refrigerant}</span>`:''}
-        ${_m?.vendor?`<span style="font-size:0.6rem;color:#a5b4fc;background:#1e293b;padding:2px 8px;border-radius:4px;font-weight:700">${_m.vendor}</span>`:''}
-      </div>
+    <!-- Problem pill -->
+    <div style="background:white;border-bottom:1px solid #f1f5f9;padding:9px 16px;display:flex;align-items:center;gap:8px">
+      <div style="width:6px;height:6px;border-radius:50%;background:#c8102e;flex-shrink:0"></div>
+      <span style="font-size:0.8rem;font-weight:700;color:#0f172a;flex:1">${escapeHtml(t.problem)}</span>
     </div>
   </div>
 
-  <!-- ═══ BODY ═══ -->
-  <div style="padding:14px 0 0">
+  <!-- BODY -->
+  <div style="padding:12px 0 0">
 
-    <!-- People grid -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:14px">
-      <div style="background:white;padding:10px 12px">
-        <div style="font-size:0.55rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">ผู้แจ้ง</div>
-        <div style="font-size:0.82rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.reporter||'—'}</div>
-        <div style="font-size:0.62rem;color:#6b7280;margin-top:2px">📍 ${_dept}</div>
-        ${t.contact?`<div style="font-size:0.62rem;color:#3b82f6;margin-top:1px">📞 ${t.contact}</div>`:''}
+    <!-- Info grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px">
+        <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">👤 ผู้แจ้ง</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.reporter||'—')}</div>
+        <div style="font-size:0.62rem;color:#64748b;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(_dept)}</div>
+        ${t.contact?`<a href="tel:${t.contact}" style="font-size:0.62rem;color:#3b82f6;font-weight:600;text-decoration:none;display:block;margin-top:1px">📞 ${t.contact}</a>`:''}
       </div>
-      <div style="background:white;padding:10px 12px">
-        <div style="font-size:0.55rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">ช่างผู้รับผิดชอบ</div>
-        <div style="font-size:0.82rem;font-weight:700;color:${t.assignee?'#0f172a':'#9ca3af'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.assignee||'ยังไม่มอบหมาย'}</div>
-        ${t.scheduledAt?`<div style="font-size:0.62rem;color:#7c3aed;margin-top:2px">📅 ${t.scheduledAt}</div>`:`<div style="font-size:0.62rem;color:#d1d5db;margin-top:2px">—</div>`}
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px">
+        <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">🔧 ช่าง</div>
+        <div style="font-size:0.8rem;font-weight:700;color:${t.assignee?'#0f172a':'#94a3b8'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.assignee||'ยังไม่มอบหมาย')}</div>
+        ${t.scheduledAt?`<div style="font-size:0.62rem;color:#7c3aed;margin-top:1px">📅 ${t.scheduledAt}</div>`:`<div style="font-size:0.62rem;color:#d1d5db;margin-top:1px">—</div>`}
       </div>
-      <div style="background:#f9fafb;padding:8px 12px;border-top:1px solid #f1f5f9">
-        <div style="font-size:0.52rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">วันที่แจ้ง</div>
-        <div style="font-size:0.72rem;font-weight:600;color:#374151">${fmtDT(t.createdAt)}</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:7px 11px">
+        <div style="font-size:0.5rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">📅 วันที่แจ้ง</div>
+        <div style="font-size:0.7rem;font-weight:600;color:#374151">${fmtDT(t.createdAt)}</div>
       </div>
-      <div style="background:#f9fafb;padding:8px 12px;border-top:1px solid #f1f5f9">
-        <div style="font-size:0.52rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">อัปเดตล่าสุด</div>
-        <div style="font-size:0.72rem;font-weight:600;color:#374151">${fmtDT(t.updatedAt)}</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:7px 11px">
+        <div style="font-size:0.5rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">🔄 อัปเดต</div>
+        <div style="font-size:0.7rem;font-weight:600;color:#374151">${fmtDT(t.updatedAt)}</div>
       </div>
     </div>
 
     <!-- Problem detail -->
     ${t.detail?`
-    <div style="border:1px solid #e5e7eb;border-left:3px solid #c8102e;border-radius:0 8px 8px 0;padding:10px 13px;margin-bottom:14px;background:white">
-      <div style="font-size:0.55rem;font-weight:700;color:#c8102e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">รายละเอียดปัญหา</div>
-      <div style="color:#374151;font-size:0.82rem;line-height:1.65">${escapeHtml(t.detail)}</div>
+    <div style="border-radius:10px;border:1px solid #fee2e2;border-left:3px solid #c8102e;padding:9px 13px;margin-bottom:12px;background:#fff8f8">
+      <div style="font-size:0.52rem;font-weight:700;color:#c8102e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">รายละเอียดปัญหา</div>
+      <div style="color:#374151;font-size:0.8rem;line-height:1.65">${escapeHtml(t.detail)}</div>
     </div>`:''}
 
     ${(t.waitPart && !t.purchaseOrder)?renderWaitPartBlock(t):''}
     ${t.purchaseOrder?renderPOBlock(t):''}
 
-    <!-- Summary block -->
-    ${t.summary?`
-    <div style="border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 12px rgba(21,128,61,0.12)">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,#15803d,#16a34a);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem">✅</div>
-          <span style="color:white;font-size:0.88rem;font-weight:800;letter-spacing:0.01em">สรุปการซ่อม</span>
+    <!-- SUMMARY BLOCK (deduped) -->
+    ${_dedupLines.length>0?`
+    <div style="border-radius:14px;overflow:hidden;margin-bottom:12px;border:1px solid #bbf7d0;box-shadow:0 1px 8px rgba(21,128,61,0.08)">
+      <div style="background:#15803d;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:1rem">✅</span>
+          <span style="color:white;font-size:0.82rem;font-weight:800">ผลการซ่อม</span>
+          <span style="background:rgba(255,255,255,0.15);color:white;border-radius:20px;padding:1px 7px;font-size:0.6rem;font-weight:700">${_dedupLines.length} รายการ</span>
         </div>
-        ${totalCost?`<div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:4px 10px"><span style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;font-weight:900;color:white">฿${totalCost.toLocaleString()}</span></div>`:''}
+        ${totalCost?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.88rem;font-weight:900;color:#bbf7d0">฿${totalCost.toLocaleString()}</span>`:''}
       </div>
-      <!-- Body -->
-      <div style="background:white;padding:12px 14px;border:1px solid #d1fae5;border-top:none;border-radius:0 0 16px 16px">
-        <!-- Repair items list -->
-        <div style="margin-bottom:${t.parts||rc||pc?'10px':'0'}">
-          ${(t.summary||'').split('\n').filter(Boolean).map((line,i)=>{
-            const clean = line.trim().replace(/^[-•\s]+/,'');
-            return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;${i>0?'border-top:1px solid #f0fdf4':''}">
-              <div style="width:20px;height:20px;border-radius:6px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-              <span style="font-size:0.82rem;color:#1e293b;font-weight:600;line-height:1.5;flex:1">${escapeHtml(clean)}</span>
-            </div>`;
-          }).join('')}
-        </div>
-        ${t.parts?`
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:8px 12px;display:flex;gap:8px;align-items:flex-start;margin-bottom:${rc||pc?'10px':'0'}">
-          <span style="font-size:0.9rem;flex-shrink:0">🔩</span>
-          <div>
-            <div style="font-size:0.58rem;color:#15803d;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">อะไหล่ที่ใช้</div>
-            <div style="font-size:0.78rem;color:#166534;font-weight:600">${escapeHtml(t.parts)}</div>
+      <div style="background:white;padding:10px 12px">
+        ${_dedupLines.map((line,i)=>`
+        <div style="display:flex;align-items:flex-start;gap:9px;padding:${i===0?'0':'7px'} 0 7px;${i>0?'border-top:1px solid #f0fdf4':''}">
+          <div style="width:18px;height:18px;border-radius:5px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-        </div>`:''} 
-        ${(rc||pc)?`<div style="display:grid;grid-template-columns:${rc&&pc?'1fr 1fr':'1fr'};gap:8px;margin-top:${t.parts?'0':'2px'}">
-          ${rc?`<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;text-align:center">
-            <div style="font-size:0.55rem;color:#1d4ed8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">ค่าแรงซ่อม</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:900;color:#1d4ed8">฿${rc.toLocaleString()}</div>
-          </div>`:''}
-          ${pc?`<div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;text-align:center">
-            <div style="font-size:0.55rem;color:#c2410c;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">ค่าอะไหล่</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:900;color:#c2410c">฿${pc.toLocaleString()}</div>
-          </div>`:''}
+          <span style="font-size:0.8rem;color:#1e293b;font-weight:600;line-height:1.5;flex:1">${escapeHtml(line)}</span>
+        </div>`).join('')}
+        ${t.parts?`
+        <div style="margin-top:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:7px 10px;display:flex;gap:7px;align-items:flex-start">
+          <span style="font-size:0.85rem">🔩</span>
+          <div>
+            <div style="font-size:0.52rem;color:#15803d;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:1px">อะไหล่ที่ใช้</div>
+            <div style="font-size:0.76rem;color:#166534;font-weight:600">${escapeHtml(t.parts)}</div>
+          </div>
         </div>`:''}
+        ${(rc||pc)?`
+        <div style="display:grid;grid-template-columns:${rc&&pc?'1fr 1fr':'1fr'};gap:7px;margin-top:8px">
+          ${rc?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:0.52rem;color:#1d4ed8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">ค่าแรงซ่อม</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:900;color:#1d4ed8">฿${rc.toLocaleString()}</div>
+          </div>`:''}
+          ${pc?`<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:0.52rem;color:#c2410c;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">ค่าอะไหล่</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:900;color:#c2410c">฿${pc.toLocaleString()}</div>
+          </div>`:''}
+          ${(rc&&pc)?`<div style="grid-column:1/-1;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:0.7rem;font-weight:700;color:#166534">💰 รวมทั้งหมด</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:900;color:#15803d">฿${totalCost.toLocaleString()}</span>
+          </div>`:''}\
+        </div>`:''}\
       </div>
-    </div>`:''}
+    </div>`:''}\
 
     <!-- Photos -->
-    ${hasBefore||hasAfter?`<div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    ${hasBefore||hasAfter?`
+    <div style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
-        <span style="font-size:0.58rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em">รูปภาพ</span>
+        <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📷 รูปภาพ</span>
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
       </div>
-      ${hasBefore?`<div style="margin-bottom:10px">
+      ${hasBefore?`<div style="margin-bottom:8px">
         <div class="photo-section-label" style="color:#b45309">
-          <span class="lbl-dot" style="background:#f59e0b"></span>📷 ก่อนซ่อม
+          <span class="lbl-dot" style="background:#f59e0b"></span>ก่อนซ่อม
           <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosBefore.length} รูป)</span>
         </div>
         <div class="photo-grid">${t.photosBefore.map((p,i)=>`<div class="photo-grid-item${t.photosBefore.length===1?' photo-wide':''}" onclick="openLightbox('${p}')"><img loading="lazy" decoding="async" src="${p}"/></div>`).join('')}</div>
       </div>`:''}
       ${hasAfter?`<div>
         <div class="photo-section-label" style="color:#15803d">
-          <span class="lbl-dot" style="background:#22c55e"></span>✅ หลังซ่อม
+          <span class="lbl-dot" style="background:#22c55e"></span>หลังซ่อม
           <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
         </div>
         <div class="photo-grid">${t.photosAfter.map((p,i)=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" onclick="openLightbox('${p}')"><img loading="lazy" decoding="async" src="${p}"/></div>`).join('')}</div>
       </div>`:''}
-    </div>`:''}
+    </div>`:''}\
 
     <!-- Timeline -->
     <div style="margin-bottom:6px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
-        <span style="font-size:0.58rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em">ประวัติดำเนินการ</span>
+        <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📋 ประวัติดำเนินการ</span>
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
       </div>
       <div class="tl">${(t.history||[]).map((h,i)=>{
@@ -3208,7 +3227,8 @@ function openDetail(tid) {
       }).join('')}</div>
     </div>
   </div>
-  `;
+  `
+;
 
   // ── Action buttons ──
   const acts = [];
