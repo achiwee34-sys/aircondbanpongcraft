@@ -315,6 +315,11 @@ async function saveUser() {
   if (dupName) { showFormError('u-name','ชื่อ-นามสกุล "'+d.name+'" มีผู้ใช้งานอยู่แล้ว'); return; }
   var dup = db.users.find(function(u){ return u.username.toLowerCase()===d.username.toLowerCase()&&u.id!==id; });
   if (dup) { showFormError('u-uname','Username "'+d.username+'" มีผู้ใช้งานอยู่แล้ว'); return; }
+  // ตรวจ lineUserId ซ้ำ
+  if (d.lineUserId) {
+    var dupLine = db.users.find(function(u){ return u.lineUserId===d.lineUserId&&u.id!==id; });
+    if (dupLine) { showFormError('u-line-user-id','LINE User ID นี้ผูกกับ "'+dupLine.name+'" อยู่แล้ว'); return; }
+  }
   try {
     if (id) {
       var ex = db.users.find(function(x){return x.id===id;});

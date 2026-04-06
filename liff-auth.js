@@ -80,9 +80,109 @@ function loginWithLine() {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  _isLineUserAlreadyLoggedIn()
+//  — ตรวจสอบว่า LINE User ID นี้กำลัง login อยู่ใน session อื่นหรือไม่
+//  — ใช้ Firestore timestamp เพื่อตรวจ active session
+// ══════════════════════════════════════════════════════════════
+function _isLineUserAlreadyLoggedIn(lineUserId, existingUserId) {
+  // ตรวจ localStorage session ปัจจุบัน
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      // ถ้า session ยังไม่หมดอายุ และเป็น user เดิม → ถือว่า login อยู่แล้ว (ok ให้ผ่าน)
+      if (s.uid === existingUserId && s.exp > Date.now()) {
+        return false; // เป็น user คนเดิม → ไม่ซ้ำ
+      }
+    }
+  } catch(e) {}
+
+  // ตรวจ active session จาก db (Firestore) — ถ้ามี activeSessions field
+  if (db.activeSessions) {
+    const session = db.activeSessions[existingUserId];
+    if (session && session.lineUserId === lineUserId && session.exp > Date.now()) {
+      // มี session ที่ยังใช้งานอยู่จาก device อื่น
+      const deviceInfo = session.device || 'อุปกรณ์อื่น';
+      const loginTime  = session.loginAt ? new Date(session.loginAt).toLocaleTimeString('th-TH') : '';
+      return { deviceInfo, loginTime };
+    }
+  }
+  return false;
+}
+
+// ── บันทึก active session ลง db ──────────────────────────────
+function _saveActiveSession(userId, lineUserId) {
+  if (!db.activeSessions) db.activeSessions = {};
+  db.activeSessions[userId] = {
+    lineUserId,
+    exp: Date.now() + 8 * 60 * 60 * 1000, // 8h
+    loginAt: Date.now(),
+    device: navigator.userAgent.includes('Mobile') ? '📱 มือถือ' : '💻 คอมพิวเตอร์'
+  };
+  // sync ไป Firestore เบื้องหลัง
+  if (typeof fsSave === 'function') fsSave();
+}
+
+// ── ล้าง active session เมื่อ logout ─────────────────────────
+function _clearActiveSession(userId) {
+  if (db.activeSessions && db.activeSessions[userId]) {
+    delete db.activeSessions[userId];
+    if (typeof fsSave === 'function') fsSave();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  _showDuplicateLoginWarning()
+//  — แสดง popup เตือนเมื่อ LINE นี้ login อยู่ที่อื่นแล้ว
+// ══════════════════════════════════════════════════════════════
+function _showDuplicateLoginWarning(sessionInfo, onForceLogin) {
+  // ลบ overlay เก่าถ้ามี
+  document.querySelectorAll('.dup-login-overlay').forEach(el => el.remove());
+
+  const ov = document.createElement('div');
+  ov.className = 'dup-login-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+
+  const timeText = sessionInfo.loginTime ? ` (เข้าสู่ระบบ ${sessionInfo.loginTime})` : '';
+
+  ov.innerHTML = `
+    <div style="background:white;border-radius:20px;padding:24px 20px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="font-size:2.5rem;margin-bottom:12px">⚠️</div>
+      <div style="font-size:1rem;font-weight:900;color:#1e293b;margin-bottom:8px">LINE นี้ถูกใช้งานอยู่แล้ว</div>
+      <div style="font-size:0.82rem;color:#64748b;line-height:1.5;margin-bottom:6px">
+        บัญชี LINE นี้กำลังเข้าสู่ระบบอยู่ที่<br>
+        <b style="color:#0f172a">${sessionInfo.deviceInfo}</b>${timeText}
+      </div>
+      <div style="font-size:0.75rem;color:#ef4444;background:#fff0f0;border:1px solid #fecaca;border-radius:10px;padding:8px 12px;margin-bottom:20px;line-height:1.5">
+        🔒 แต่ละบัญชีสามารถเข้าสู่ระบบได้<br>1 อุปกรณ์ในเวลาเดียวกัน
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="dup-force-btn" style="width:100%;padding:12px;border-radius:12px;border:none;background:#c8102e;color:white;font-size:0.88rem;font-weight:800;cursor:pointer;font-family:inherit">
+          🔄 เข้าสู่ระบบที่นี่แทน
+        </button>
+        <div style="font-size:0.68rem;color:#94a3b8;margin-top:2px">(session บน${sessionInfo.deviceInfo}จะถูกยกเลิก)</div>
+        <button class="dup-cancel-btn" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid #e5e7eb;background:white;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;color:#374151">
+          ยกเลิก
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(ov);
+
+  ov.querySelector('.dup-force-btn').addEventListener('click', () => {
+    ov.remove();
+    onForceLogin();
+  });
+  ov.querySelector('.dup-cancel-btn').addEventListener('click', () => {
+    ov.remove();
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
 //  doLoginWithLine()
 //  — ค้นหา user จาก lineUserId → login เข้าระบบทันที
 //  — ถ้ายังไม่มี user → เปิดหน้าสมัครพร้อม pre-fill ข้อมูล
+//  — ถ้า login ซ้ำ (มี session อื่น active) → แสดง warning
 // ══════════════════════════════════════════════════════════════
 async function doLoginWithLine() {
   if (!_liffProfile) {
@@ -96,28 +196,56 @@ async function doLoginWithLine() {
   const existing = (db.users || []).find(u => u.lineUserId === lineUserId);
 
   if (existing) {
+    // ── ตรวจสอบ login ซ้ำ ────────────────────────────────────
+    const dupSession = _isLineUserAlreadyLoggedIn(lineUserId, existing.id);
+
+    if (dupSession) {
+      // มี session อื่น active → แสดง warning
+      _showDuplicateLoginWarning(dupSession, () => {
+        // user กด "เข้าสู่ระบบที่นี่แทน" → force login
+        _doLineLogin(existing, lineUserId);
+      });
+      return;
+    }
+
     // ── Login ทันที ──────────────────────────────────────────
-    clearLoginErr();
-    CU = existing;
-    const sessionData = {
-      uid: existing.id,
-      uname: existing.username,
-      exp: Date.now() + 8 * 60 * 60 * 1000,  // 8h
-      lineAuth: true
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').classList.add('visible');
-    initApp();
-    loadMachinesData().then(() => {
-      if (typeof refreshMachineList === 'function') refreshMachineList();
-    });
-    showToast('✅ เข้าสู่ระบบด้วย LINE สำเร็จ');
+    _doLineLogin(existing, lineUserId);
   } else {
+    // ── ตรวจซ้ำเผื่อกรณี lineUserId ซ้ำกันใน db ─────────────
+    const dupByLineId = (db.users || []).filter(u => u.lineUserId === lineUserId);
+    if (dupByLineId.length > 1) {
+      showToast('⚠️ พบข้อมูลซ้ำในระบบ กรุณาติดต่อแอดมิน');
+      console.warn('[LIFF] duplicate lineUserId found:', lineUserId, dupByLineId);
+      return;
+    }
     // ── ยังไม่มีบัญชี → เปิดหน้าสมัคร พร้อม pre-fill ──────
     showRegister();
     _prefillLineRegister(displayName, lineUserId, pictureUrl);
   }
+}
+
+// ── ฟังก์ชัน login หลัก (แยกออกมาเพื่อ reuse) ───────────────
+function _doLineLogin(existing, lineUserId) {
+  clearLoginErr();
+  CU = existing;
+  const sessionData = {
+    uid: existing.id,
+    uname: existing.username,
+    exp: Date.now() + 8 * 60 * 60 * 1000,  // 8h
+    lineAuth: true
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+
+  // บันทึก active session เพื่อป้องกัน login ซ้ำ
+  _saveActiveSession(existing.id, lineUserId);
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  initApp();
+  loadMachinesData().then(() => {
+    if (typeof refreshMachineList === 'function') refreshMachineList();
+  });
+  showToast('✅ เข้าสู่ระบบด้วย LINE สำเร็จ');
 }
 
 // ── Pre-fill ข้อมูล LINE ลงในฟอร์มสมัคร ─────────────────────
@@ -176,10 +304,13 @@ async function doRegisterWithLine() {
   if (!name)       { showFormError('reg-name', 'กรุณากรอกชื่อ-นามสกุล'); return; }
   if (!lineUserId) { showToast('❌ ไม่พบ LINE User ID กรุณาลองใหม่'); return; }
 
-  // ตรวจซ้ำ (กันกด 2 ครั้ง)
-  if ((db.users || []).find(u => u.lineUserId === lineUserId)) {
-    showToast('✅ บัญชีนี้มีอยู่แล้ว กำลังเข้าสู่ระบบ...');
-    setTimeout(doLoginWithLine, 800);
+  // ── ตรวจซ้ำ lineUserId (กันกด 2 ครั้ง หรือมี tab อื่นเปิดอยู่) ──
+  const dupUser = (db.users || []).find(u => u.lineUserId === lineUserId);
+  if (dupUser) {
+    hideRegister();
+    renderLinLoginButton();
+    renderLoginDivider();
+    showToast('✅ บัญชีนี้มีอยู่แล้ว กดปุ่ม LINE เพื่อเข้าสู่ระบบ');
     return;
   }
 
@@ -210,16 +341,10 @@ async function doRegisterWithLine() {
       name + ' (LINE: ' + lineUserId.slice(-6) + ') สมัครเป็นผู้แจ้งงาน');
     showRegisterSuccess(name, () => {
       hideRegister();
-      // auto-login ทันทีหลังสมัคร
-      CU = newUser;
-      const sessionData = {
-        uid: newUser.id, uname: newUser.username,
-        exp: Date.now() + 8 * 60 * 60 * 1000, lineAuth: true
-      };
-      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').classList.add('visible');
-      initApp();
+      // ไม่ auto-login — ให้ผู้ใช้กดปุ่มเองที่หน้า login
+      renderLinLoginButton();
+      renderLoginDivider();
+      showToast('✅ สมัครสำเร็จ! กดปุ่ม LINE เพื่อเข้าสู่ระบบ');
     });
   };
 
@@ -234,6 +359,10 @@ async function doRegisterWithLine() {
 // ── เปลี่ยน LINE Account (logout LIFF แล้ว login ใหม่) ────────
 function switchLineAccount() {
   if (!_liffReady || typeof liff === 'undefined') return;
+  // ล้าง active session
+  if (typeof CU !== 'undefined' && CU && CU.id) {
+    _clearActiveSession(CU.id);
+  }
   _liffProfile = null;
   try {
     liff.logout();
@@ -292,8 +421,8 @@ function renderLoginDivider() {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  Auto-detect LIFF login เมื่อโหลดหน้า
-//  — ถ้าเปิดใน LINE + มี profile → auto-login ทันที
+//  initLiffUI() — โหลด LIFF แล้วแสดงปุ่มให้ผู้ใช้กดเอง
+//  ไม่มี auto-login ทุกกรณี — ผู้ใช้ต้องกดปุ่มเข้าสู่ระบบเอง
 // ══════════════════════════════════════════════════════════════
 async function autoLiffLogin() {
   if (LIFF_ID === 'YOUR_LIFF_ID_HERE') return;
@@ -301,31 +430,7 @@ async function autoLiffLogin() {
   const ok = await initLiff();
   if (!ok) return;
 
+  // แค่ render ปุ่ม — ไม่ auto-login ไม่ว่ากรณีใด
   renderLinLoginButton();
   renderLoginDivider();
-
-  // ถ้า LINE logged in (ทั้งใน LINE client และ browser ปกติ) → auto-login ทันที
-  // _liffInLine = เปิดใน LINE browser | _liffProfile = ดึง profile ได้แล้ว
-  if (_liffProfile) {
-    const existing = (db.users || []).find(u => u.lineUserId === _liffProfile.userId);
-    if (existing) {
-      // ตรวจว่า session ปัจจุบันเป็นของ user คนนี้อยู่แล้วหรือยัง (ไม่ต้อง re-login ซ้ำ)
-      try {
-        const raw = localStorage.getItem(SESSION_KEY);
-        if (raw) {
-          const s = JSON.parse(raw);
-          if (s.uid === existing.id && s.exp > Date.now()) {
-            // session ยังใช้ได้และเป็น user เดิม → skip (initApp จะ restore session เอง)
-            return;
-          }
-        }
-      } catch(e) {}
-      // มี account + session หมดหรือเป็นของคนอื่น → auto-login
-      setTimeout(() => doLoginWithLine(), 300);
-    }
-    // ถ้าไม่มี account → แสดงปุ่มให้กดสมัคร (รอ user action)
-  } else if (!_liffInLine) {
-    // เปิดจาก browser ปกติ และยังไม่ได้ login LINE → แสดงปุ่มให้กดเอง
-    // (ไม่ force redirect เพราะจะกวน user ที่ใช้ username/password)
-  }
 }
