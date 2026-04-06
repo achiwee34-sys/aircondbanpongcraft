@@ -85,6 +85,7 @@ async function fsLoad() {
       if (Array.isArray(data.calEvents))                        db.calEvents = data.calEvents;
       if (data.chats)                                           db.chats    = data.chats;
       if (data._seq)                                            db._seq     = data._seq;
+      if (data.gsUrl)                                           db.gsUrl    = data.gsUrl;
 
       try {
         const sigSnap = await FSdb.collection('appdata').doc('signatures').get(); if(window.bkCountRead) window.bkCountRead(1);
@@ -161,6 +162,7 @@ async function fsSaveNow() {
       chats:           db.chats           || {},
       machineRequests: db.machineRequests || [],
       _seq:            db._seq            || 1,
+      gsUrl:           db.gsUrl           || '',
       updatedAt:       new Date().toISOString()
     });
     if (Object.keys(allSigs).length > 0) {

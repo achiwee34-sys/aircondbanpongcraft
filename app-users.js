@@ -14,7 +14,7 @@ function debugUserBtn() {
   var log = [];
   // 1. ตรวจ DOM elements
   var ids = ['us-title','u-id','u-name','u-photo','u-uname','u-pass','u-pass-confirm','u-role',
-             'u-dept','u-tel','u-email','u-contact','u-avatar-preview','u-pass-toggle',
+             'u-dept','u-tel','u-email','u-contact','u-line-user-id','u-avatar-preview','u-pass-toggle',
              'u-pass-current','u-pass-val','user-overlay','user-sheet'];
   var missing = ids.filter(function(id){ return !document.getElementById(id); });
   log.push('Missing IDs: ' + (missing.length ? missing.join(', ') : 'none ✅'));
@@ -241,6 +241,7 @@ function _doOpenUserSheet(id, defaultRole) {
   document.getElementById('u-tel').value     = (u&&u.tel)||'';
   document.getElementById('u-contact').value = (u&&u.contact)||'';
   var ue = document.getElementById('u-email'); if(ue) ue.value = (u&&u.email)||'';
+  var ul = document.getElementById('u-line-user-id'); if(ul) ul.value = (u&&u.lineUserId)||'';
 
   var prevEl = document.getElementById('u-avatar-preview');
   if (prevEl) {
@@ -296,6 +297,7 @@ async function saveUser() {
     tel:      document.getElementById('u-tel').value.trim(),
     contact:  document.getElementById('u-contact').value.trim(),
     email:    (document.getElementById('u-email')||{value:''}).value.trim().toLowerCase(),
+    lineUserId: (document.getElementById('u-line-user-id')||{value:''}).value.trim(),
     photo:    photo,
   };
   document.querySelectorAll('#user-sheet .field-error').forEach(function(e){e.remove();});
