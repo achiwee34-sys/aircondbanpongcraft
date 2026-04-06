@@ -142,6 +142,8 @@ async function fsSaveNow() {
   const _authed = await _waitForAuth();
   if (!_authed) { console.warn("[fsSaveNow] auth not ready"); return; }
   _fsSaving = true;
+  // ── increment _seq ก่อน write เสมอ → ป้องกัน onSnapshot restore ข้อมูลที่เพิ่งลบ ──
+  db._seq = (db._seq || 0) + 1;
   try {
     const ticketsNoSig = (db.tickets||[]).map(t => {
       if (!t.signatures) return t;
@@ -161,7 +163,7 @@ async function fsSaveNow() {
       calEvents:       db.calEvents       || [],
       chats:           db.chats           || {},
       machineRequests: db.machineRequests || [],
-      _seq:            db._seq            || 1,
+      _seq:            db._seq,
       gsUrl:           db.gsUrl           || '',
       updatedAt:       new Date().toISOString()
     });
@@ -230,8 +232,9 @@ async function fsListen() {
     if (!snap.exists || !CU) return;
     const data = snap.data();
     if (_fsSaving && !_fsChatSaving) return;
-    // ── ถ้า local _seq ใหม่กว่า remote → ข้ามการ overwrite (local เพิ่งบันทึก) ──
-    if (data._seq && db._seq && db._seq > data._seq) return;
+    // ── ถ้า local _seq ใหม่กว่าหรือเท่ากับ remote → remote เป็นข้อมูลเก่า ข้ามทั้งหมด ──
+    // (ป้องกัน onSnapshot ที่ยิงกลับมาหลัง delete restore ข้อมูลที่เพิ่งลบ)
+    if (data._seq && db._seq && db._seq >= data._seq) return;
     const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
     const DEMO_IDS       = ['u2','u3','u4','u5'];
     const check = (key) => {

@@ -135,7 +135,7 @@ async function fsSaveNowSafe() {
       calEvents:       db.calEvents       || [],
       chats:           db.chats           || {},
       machineRequests: db.machineRequests || [],
-      _seq:            db._seq            || 1,
+      _seq:            db._seq = (db._seq || 0) + 1,   // increment ก่อน write เสมอ
       updatedAt:       new Date().toISOString(),
     };
 
