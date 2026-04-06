@@ -26,7 +26,7 @@ function t(key) {
 // DATABASE
 // ============================================================
 const DB_KEY = 'airtrack_pwa';
-const APP_VER = 'v20260406_88';
+const APP_VER = 'v20260406_89';
 const FUNC_LOC = window._FUNC_LOC_DATA || {};
 // ── FUNC_LOC โหลดจาก func-loc-data.js (แยกไฟล์เพื่อลดขนาด app-core.js) ──
  // bump this to force reset
@@ -41,6 +41,7 @@ if (localStorage.getItem(VER_KEY) !== APP_VER) {
   let oldDB = null;
   try { oldDB = JSON.parse(localStorage.getItem(DB_KEY)); } catch(e){}
   localStorage.removeItem(DB_KEY);
+  localStorage.removeItem(SESSION_KEY); // ← clear session — บังคับ login ใหม่หลัง deploy
   localStorage.setItem(VER_KEY, APP_VER);
   // ── restore ข้อมูลสำคัญ (users, tickets, chats) ──
   if (oldDB) {
