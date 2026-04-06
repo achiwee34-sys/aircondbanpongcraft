@@ -213,6 +213,21 @@ function renderHome() {
         <div class="kpi-lbl" style="color:#16a34a;font-size:0.6rem">เดือนนี้</div>
       </div>
     </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;box-sizing:border-box;width:100%;overflow:hidden">
+      <button onclick="goPage('purchase')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1.5px solid #d1fae5;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <div style="font-size:0.67rem;font-weight:700;color:#374151">สั่งซื้ออะไหล่</div>
+        <span id="pur-badge-home" style="display:none;position:absolute;top:6px;right:10px;background:#c8102e;color:white;border-radius:99px;padding:1px 5px;font-size:0.6rem;font-weight:700"></span>
+      </button>
+      <button onclick="openRepairHistoryPage()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <div style="font-size:0.67rem;font-weight:600;color:#374151">ประวัติ</div>
+      </button>
+      <button onclick="goPage('chatroom')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <div style="font-size:0.67rem;font-weight:600;color:#374151">แชท</div>
+      </button>
+    </div>
     <div class="home-section-hd" style="margin-top:4px">
       <div class="home-section-lbl">งานของฉัน</div>
       <button onclick="goPage('tickets')" style="font-size:0.7rem;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:700;font-family:inherit">ดูทั้งหมด →</button>

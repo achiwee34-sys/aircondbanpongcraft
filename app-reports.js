@@ -2123,7 +2123,7 @@ function renderPurchaseTech() {
     t.assigneeId === CU.id && (t.status === 'waiting_part' || t.techRequest)
   );
   const pendingCount = myTickets.filter(t => !t.techRequest && t.status === 'waiting_part').length;
-  document.querySelectorAll('#pur-badge').forEach(b => {
+  document.querySelectorAll('#pur-badge, #pur-badge-home').forEach(b => {
     b.textContent = pendingCount||''; b.style.display = pendingCount>0?'flex':'none';
   });
 

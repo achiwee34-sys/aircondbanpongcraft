@@ -2674,9 +2674,9 @@ function setupBottomNav() {
       ? [
           {page:'home',       label:'หน้าแรก'},
           {page:'new',        label:'แจ้งซ่อม'},
-          {page:'tickets',    label:'รายการ', badge:'open-badge'},
-          {page:'history',    label:'ประวัติ', action:()=>openRepairHistoryPage()},
-          {page:'chatroom',   label:'แชท',    badge:'cr-nav-badge'},
+          {page:'tickets',    label:'รายการ',  badge:'open-badge'},
+          {page:'purchase',   label:'อะไหล่',  badge:'pur-badge'},
+          {page:'chatroom',   label:'แชท',     badge:'cr-nav-badge'},
           {page:'settings',   label:'ตั้งค่า'},
         ]
       : [
