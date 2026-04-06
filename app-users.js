@@ -352,6 +352,15 @@ function delUser(id) {
     if (!db.deletedUserIds) db.deletedUserIds = [];
     if (db.deletedUserIds.indexOf(id) === -1) db.deletedUserIds.push(id);
 
+    // ── force เขียน localStorage ทันที (ก่อน async) เพื่อกัน F5 เด้งกลับ ──
+    try {
+      const _dbKey = typeof DB_KEY !== 'undefined' ? DB_KEY : 'airtrack_pwa';
+      const snap = JSON.parse(localStorage.getItem(_dbKey) || '{}');
+      snap.users = db.users;
+      snap.deletedUserIds = db.deletedUserIds;
+      localStorage.setItem(_dbKey, JSON.stringify(snap));
+    } catch(e) {}
+
     db.tickets.forEach(function(t){
       if (t.assigneeId===id&&['done','verified','closed'].indexOf(t.status)===-1) {
         t.assigneeId=null; t.assignee=null; t.status='new'; t.updatedAt=nowStr();

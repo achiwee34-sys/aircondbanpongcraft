@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════
 //  line-messaging.js — LINE Messaging API Push Notifications
-//  v3.0 | แก้ปัญหาไม่ส่งข้อมูล + ใช้ GAS batch route
+//  v3.1 | แก้ reporter ส่งไม่ได้ + gsUrl race condition fix
 // ══════════════════════════════════════════════════════════════
 
 const LINE_LIFF_URL      = 'https://liff.line.me/2009699254-TXIz4KN1';
@@ -40,8 +40,8 @@ async function linePushAdmin(messages) {
     .filter(u => u.role === 'admin' && u.lineUserId)
     .map(u => u.lineUserId);
 
-  // ถ้าไม่มี admin ใน db → fallback hardcode LINE_ADMIN_USER_ID
-  const targets = adminIds.length > 0 ? adminIds : [LINE_ADMIN_USER_ID];
+  // รวม hardcode fallback เสมอ — ป้องกัน race condition ที่ db.users ยังโหลดไม่ครบ
+  const targets = [...new Set([...adminIds, LINE_ADMIN_USER_ID])];
 
   console.info('[LINE Push Admin] targets:', targets, '| gsUrl:', gsUrl.slice(0,40)+'...');
 
@@ -69,7 +69,8 @@ async function linePushRole(role, messages) {
     .map(u => u.lineUserId);
 
   if (userIds.length === 0) {
-    // fallback → ให้ GAS ดึงจาก sheet Users เอง
+    // fallback → ให้ GAS ดึงจาก sheet Users เอง (ป้องกัน race condition db.users ยังโหลดไม่ครบ)
+    console.info('[LINE Push Role] db.users ว่าง — GAS fallback for role:', role);
     try {
       await fetch(gsUrl, {
         method: 'POST',
@@ -77,7 +78,7 @@ async function linePushRole(role, messages) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'linePushRole', role, messages })
       });
-      console.info('[LINE Push Role] GAS fallback for role:', role);
+      console.info('[LINE Push Role] ✅ GAS fallback sent for role:', role);
     } catch (e) {
       console.warn('[LINE Push Role] GAS fallback error:', e);
     }

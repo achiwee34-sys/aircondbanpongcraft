@@ -253,6 +253,11 @@ async function fsListen() {
       let d = data[key];
       if (!d) return false;
       if (key === 'users' && Array.isArray(d)) {
+        // ── sync deletedUserIds จาก remote ก่อน — ป้องกันมือถือที่มี blacklist เก่า ──
+        if (Array.isArray(data.deletedUserIds) && data.deletedUserIds.length > 0) {
+          const merged = new Set([...(db.deletedUserIds || []), ...data.deletedUserIds]);
+          db.deletedUserIds = [...merged];
+        }
         // deletedUserIds = blacklist ที่ admin ลบไปแล้ว ห้าม merge กลับ
         const deletedIds = new Set(db.deletedUserIds || []);
         const remoteUsers = d.filter(u =>
@@ -311,6 +316,9 @@ async function fsListen() {
       db.notifications = newNotifs;
       return true;
     })();
+
+    // ── sync gsUrl ทุกครั้งที่ onSnapshot ยิง (ป้องกัน Reporter ได้ db.gsUrl='' เพราะ cache เก่า) ──
+    if (data.gsUrl && data.gsUrl !== db.gsUrl) { db.gsUrl = data.gsUrl; console.info('[onSnapshot] gsUrl updated'); }
 
     let changed = check('users') | check('machines') | check('tickets') | check('calEvents') | check('machineRequests');
     if (data._seq && data._seq !== db._seq) { db._seq = data._seq; changed = true; }
