@@ -27,7 +27,15 @@ async function linePush(lineUserId, messages) {
 }
 
 async function linePushAdmin(messages) {
-  await linePush(LINE_ADMIN_USER_ID, messages);
+  // ส่งหา admin ทุกคนที่มี lineUserId (ดึงจาก db.users จริง)
+  const admins = (typeof db !== 'undefined' ? db.users || [] : [])
+    .filter(u => u.role === 'admin' && u.lineUserId);
+  if (admins.length > 0) {
+    for (const u of admins) await linePush(u.lineUserId, messages);
+  } else {
+    // fallback → hardcode LINE_ADMIN_USER_ID ถ้ายังไม่มี admin ลงทะเบียน LINE
+    await linePush(LINE_ADMIN_USER_ID, messages);
+  }
 }
 
 async function linePushRole(role, messages) {

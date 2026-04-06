@@ -231,6 +231,17 @@ async function doRegisterWithLine() {
   }
 }
 
+// ── เปลี่ยน LINE Account (logout LIFF แล้ว login ใหม่) ────────
+function switchLineAccount() {
+  if (!_liffReady || typeof liff === 'undefined') return;
+  _liffProfile = null;
+  try {
+    liff.logout();
+  } catch(e) {}
+  // login ใหม่ → LINE จะให้เลือก account
+  liff.login({ redirectUri: location.href });
+}
+
 // ══════════════════════════════════════════════════════════════
 //  แสดง LIFF Login Button ที่หน้า Login
 //  (เรียกจาก DOMContentLoaded หลัง initLiff())
@@ -248,16 +259,21 @@ function renderLinLoginButton() {
 
   container.style.display = 'block';
 
-  // ถ้ามี profile แล้ว (เปิดใน LINE และ logged in) → แสดงชื่อ
+  // ถ้ามี profile แล้ว → แสดงชื่อ + ปุ่มเปลี่ยน account
   if (_liffProfile) {
     container.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;background:#06C755;border-radius:14px;padding:12px 16px;cursor:pointer;box-shadow:0 4px 16px rgba(6,199,85,0.35)" onclick="doLoginWithLine()">
-        <img src="${_liffProfile.pictureUrl}" style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.5)" onerror="this.style.display='none'">
-        <div style="flex:1">
-          <div style="color:#fff;font-size:0.75rem;font-weight:600;opacity:0.8">เข้าสู่ระบบในฐานะ</div>
-          <div style="color:#fff;font-size:0.9rem;font-weight:800">${_liffProfile.displayName}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;background:#06C755;border-radius:14px;padding:12px 16px;cursor:pointer;box-shadow:0 4px 16px rgba(6,199,85,0.35)" onclick="doLoginWithLine()">
+          <img src="${_liffProfile.pictureUrl}" style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.5)" onerror="this.style.display='none'">
+          <div style="flex:1">
+            <div style="color:#fff;font-size:0.75rem;font-weight:600;opacity:0.8">เข้าสู่ระบบในฐานะ</div>
+            <div style="color:#fff;font-size:0.9rem;font-weight:800">${_liffProfile.displayName}</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>
         </div>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>
+        <button onclick="switchLineAccount()" style="width:100%;background:none;border:1.5px solid #d1d5db;border-radius:10px;padding:8px 12px;font-size:0.78rem;color:#6b7280;font-weight:600;cursor:pointer;font-family:inherit">
+          ไม่ใช่ฉัน? เปลี่ยน LINE Account
+        </button>
       </div>`;
   } else {
     container.innerHTML = `
