@@ -68,6 +68,9 @@ function renderHistory() {
     (t.assignee||'').toLowerCase().includes(kw)
   );
 
+  // dedup tickets by id (กัน Firebase merge ซ้ำ)
+  const _seenTids = new Set();
+  tickets = tickets.filter(t => { if (_seenTids.has(t.id)) return false; _seenTids.add(t.id); return true; });
   // sort newest first
   tickets.sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
 

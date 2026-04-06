@@ -1295,15 +1295,20 @@ async function generateRepairPDF(tid) {
     return { name:r.name, qty:r.qty, unit, unitPrice:price, total:r.qty*price };
   });
   const poRows = (t.purchaseOrder?.rows||[]).filter(r=>r.name);
-  // push เฉพาะ PO rows ที่ไม่ซ้ำกับ repairRows
-  const repairNames = new Set(repairRows.map(r=>r.name.trim().toLowerCase()));
+  // push เฉพาะ PO rows ที่ไม่ซ้ำกับ repairRows (normalize: lowercase + trim + remove spaces)
+  const _norm = s => (s||'').toLowerCase().replace(/\s+/g,'').replace(/[\-–—]/g,'-');
+  const repairNames = new Set(repairRows.map(r=>_norm(r.name)));
   // ตรวจ refrigerant types ที่มีใน repairRows แล้ว ป้องกัน PO ซ้ำ
   const REFS = ['R-22','R-32','R-407C','R-407c','R-410A','R-410a','R-134A','R-134a','R-141B'];
   const usedRefs = new Set(REFS.filter(ref => repairRows.some(r=>r.name.includes(ref))));
+  // dedup quotRows เอง กันซ้ำในกรณีที่ parse ซ้ำ
+  const seenQuot = new Set(quotRows.map(r=>_norm(r.name)));
   poRows.forEach(r => {
-    const nm = (r.name||'').trim().toLowerCase();
+    const nm = _norm(r.name);
     if (repairNames.has(nm)) return; // ชื่อซ้ำตรงๆ
+    if (seenQuot.has(nm)) return; // ซ้ำกับที่มีใน quotRows แล้ว
     if (REFS.some(ref => r.name.includes(ref) && usedRefs.has(ref))) return; // refrigerant ซ้ำ
+    seenQuot.add(nm);
     quotRows.push({ name:r.name, qty:r.qty||1, unit:'EA', unitPrice:r.price||0, total:(r.qty||1)*(r.price||0) });
   });
 
