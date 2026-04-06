@@ -38,8 +38,15 @@ function doPost(e) {
     else if (p.action === 'linePush') {
       // รองรับทั้งส่งหา userId เดียว และ array
       if (Array.isArray(p.to)) {
-        var results = p.to.map(uid => linePush(uid, p.messages));
+        var results = p.to.filter(Boolean).map(function(uid) {
+          return linePush(uid, p.messages);
+        });
+        Logger.log('[linePush batch] sent to ' + p.to.length + ' users');
         return corsOutput({synced: true, results: results});
+      }
+      if (!p.to) {
+        Logger.log('[linePush] ERROR: missing to field');
+        return corsOutput({synced: false, err: 'missing to'});
       }
       var r = linePush(p.to, p.messages);
       return corsOutput(r);
@@ -89,18 +96,33 @@ function doGet(e) {
 
 // ── LINE Push หา userId เดียว ──────────────────────────────
 function linePush(to, messages) {
-  if (!to || !messages) return {ok: false, detail: 'missing params'};
-  var res = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {
-    method: 'post',
-    contentType: 'application/json',
-    headers: {'Authorization': 'Bearer ' + LINE_CHANNEL_TOKEN},
-    payload: JSON.stringify({to: to, messages: messages}),
-    muteHttpExceptions: true
-  });
-  var code = res.getResponseCode();
-  var body = res.getContentText();
-  Logger.log('[LINE Push] to=' + to + ' | ' + code + ': ' + body);
-  return code === 200 ? {ok: true, to: to} : {ok: false, to: to, detail: body};
+  if (!to || !messages) {
+    Logger.log('[LINE Push] ERROR: missing params — to=' + to);
+    return {ok: false, detail: 'missing params'};
+  }
+  if (!LINE_CHANNEL_TOKEN || LINE_CHANNEL_TOKEN.length < 10) {
+    Logger.log('[LINE Push] ERROR: LINE_CHANNEL_TOKEN ไม่ได้ตั้งค่า');
+    return {ok: false, detail: 'missing token'};
+  }
+  try {
+    var res = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {'Authorization': 'Bearer ' + LINE_CHANNEL_TOKEN},
+      payload: JSON.stringify({to: to, messages: messages}),
+      muteHttpExceptions: true
+    });
+    var code = res.getResponseCode();
+    var body = res.getContentText();
+    Logger.log('[LINE Push] to=' + to + ' | HTTP ' + code + ' | ' + body);
+    if (code !== 200) {
+      Logger.log('[LINE Push] FAIL — ตรวจสอบ LINE_CHANNEL_TOKEN และ userId ใน GAS log');
+    }
+    return code === 200 ? {ok: true, to: to} : {ok: false, to: to, code: code, detail: body};
+  } catch(fetchErr) {
+    Logger.log('[LINE Push] EXCEPTION: ' + fetchErr.toString());
+    return {ok: false, to: to, detail: fetchErr.toString()};
+  }
 }
 
 // ── LINE Push หา role ทั้งหมด (ดึงจาก sheet Users) ─────────

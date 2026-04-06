@@ -347,6 +347,11 @@ function delUser(id) {
   showConfirmDelete(u, function() {
     if (window.bkAudit) window.bkAudit('ลบ User', u.username||u.name, {name:u.name,role:u.role}, null);
     db.users = db.users.filter(function(x){return x.id!==id;});
+
+    // ── บันทึก deletedUserIds เพื่อกัน onSnapshot merge กลับ ──
+    if (!db.deletedUserIds) db.deletedUserIds = [];
+    if (db.deletedUserIds.indexOf(id) === -1) db.deletedUserIds.push(id);
+
     db.tickets.forEach(function(t){
       if (t.assigneeId===id&&['done','verified','closed'].indexOf(t.status)===-1) {
         t.assigneeId=null; t.assignee=null; t.status='new'; t.updatedAt=nowStr();

@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════
 //  line-messaging.js — LINE Messaging API Push Notifications
-//  v2.0 | ส่งผ่าน Google Apps Script (แก้ CORS)
+//  v3.0 | แก้ปัญหาไม่ส่งข้อมูล + ใช้ GAS batch route
 // ══════════════════════════════════════════════════════════════
 
 const LINE_LIFF_URL      = 'https://liff.line.me/2009699254-TXIz4KN1';
@@ -17,30 +17,82 @@ async function linePush(lineUserId, messages) {
   try {
     await fetch(gsUrl, {
       method: 'POST',
-      mode: 'no-cors',   // GAS ต้องใช้ no-cors
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'linePush', to: lineUserId, messages })
     });
+    console.info('[LINE Push] sent to', lineUserId);
   } catch (e) {
     console.warn('[LINE Push] error:', e);
   }
 }
 
+// ── ส่งหา Admin ทุกคน — ใช้ GAS linePushRole (batch, เร็วกว่า) ──
 async function linePushAdmin(messages) {
-  // ส่งหา admin ทุกคนที่มี lineUserId (ดึงจาก db.users จริง)
-  const admins = (typeof db !== 'undefined' ? db.users || [] : [])
-    .filter(u => u.role === 'admin' && u.lineUserId);
-  if (admins.length > 0) {
-    for (const u of admins) await linePush(u.lineUserId, messages);
-  } else {
-    // fallback → hardcode LINE_ADMIN_USER_ID ถ้ายังไม่มี admin ลงทะเบียน LINE
-    await linePush(LINE_ADMIN_USER_ID, messages);
+  const gsUrl = (typeof db !== 'undefined' && db.gsUrl) ? db.gsUrl : '';
+  if (!gsUrl) {
+    console.warn('[LINE Push] ยังไม่ได้ตั้งค่า GAS URL');
+    return;
+  }
+
+  // รวบ lineUserId ของ admin ทั้งหมดจาก db
+  const adminIds = (typeof db !== 'undefined' ? db.users || [] : [])
+    .filter(u => u.role === 'admin' && u.lineUserId)
+    .map(u => u.lineUserId);
+
+  // ถ้าไม่มี admin ใน db → fallback hardcode
+  const targets = adminIds.length > 0 ? adminIds : [LINE_ADMIN_USER_ID];
+
+  try {
+    await fetch(gsUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'linePush', to: targets, messages })
+    });
+    console.info('[LINE Push Admin] sent to', targets.length, 'admin(s)');
+  } catch (e) {
+    console.warn('[LINE Push Admin] error:', e);
   }
 }
 
+// ── ส่งหา role ทั้งหมด — ใช้ GAS linePushRole (batch) ────────
 async function linePushRole(role, messages) {
-  const users = (db.users || []).filter(u => u.role === role && u.lineUserId);
-  for (const u of users) await linePush(u.lineUserId, messages);
+  const gsUrl = (typeof db !== 'undefined' && db.gsUrl) ? db.gsUrl : '';
+  if (!gsUrl) return;
+
+  // รวบ lineUserId จาก db ฝั่ง client ก่อน (เร็วกว่าให้ GAS query เอง)
+  const userIds = (typeof db !== 'undefined' ? db.users || [] : [])
+    .filter(u => u.role === role && u.lineUserId)
+    .map(u => u.lineUserId);
+
+  if (userIds.length === 0) {
+    // fallback → ให้ GAS ดึงจาก sheet Users เอง
+    try {
+      await fetch(gsUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'linePushRole', role, messages })
+      });
+      console.info('[LINE Push Role] GAS fallback for role:', role);
+    } catch (e) {
+      console.warn('[LINE Push Role] GAS fallback error:', e);
+    }
+    return;
+  }
+
+  try {
+    await fetch(gsUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'linePush', to: userIds, messages })
+    });
+    console.info('[LINE Push Role]', role, '— sent to', userIds.length, 'user(s)');
+  } catch (e) {
+    console.warn('[LINE Push Role] error:', e);
+  }
 }
 
 // ── สีตาม event ──────────────────────────────────────────────
@@ -94,6 +146,13 @@ function buildFlex(headerColor, headerIcon, headerText, rows, btnLabel, btnUrl) 
 
 // ── Main event handler ────────────────────────────────────────
 async function lineMessagingEvent(event, t) {
+  // ตรวจ GAS URL ก่อนส่งทุกครั้ง
+  const gsUrl = (typeof db !== 'undefined' && db.gsUrl) ? db.gsUrl : '';
+  if (!gsUrl) {
+    console.warn('[lineMessagingEvent] ยังไม่ได้ตั้งค่า GAS URL — ข้ามการส่ง LINE');
+    return;
+  }
+
   const time     = typeof nowStr === 'function' ? nowStr() : new Date().toLocaleString('th-TH');
   const priority = typeof prTH === 'function' ? prTH(t.priority) : (t.priority || '—');
 
@@ -102,19 +161,21 @@ async function lineMessagingEvent(event, t) {
       [['เลขงาน', t.id], ['ปัญหา', t.problem], ['เครื่อง', t.machine],
        ['ผู้แจ้ง', t.reporter], ['ความด่วน', priority], ['เวลา', time]],
       '📋 ดูรายละเอียดงาน', ticketUrl(t.id));
+    // ส่ง admin + ช่าง พร้อมกันใน request เดียว (batch)
     await linePushAdmin([flex]);
     await linePushRole('tech', [flex]);
 
   } else if (event === 'assign') {
     const tech = (db.users || []).find(u => u.name === t.assignee || u.id === t.assigneeId);
-    const flex = buildFlex(EVENT_COLORS.assign, '📌', 'งานถูกมอบหมายให้คุณ!',
+    const flexTech = buildFlex(EVENT_COLORS.assign, '📌', 'งานถูกมอบหมายให้คุณ!',
       [['เลขงาน', t.id], ['ปัญหา', t.problem], ['เครื่อง', t.machine],
        ['ความด่วน', priority], ['เวลา', time]],
       '✅ ดูงานและรับงาน', ticketUrl(t.id));
-    if (tech?.lineUserId) await linePush(tech.lineUserId, [flex]);
-    await linePushAdmin([buildFlex(EVENT_COLORS.assign, '📌', 'มอบหมายงานแล้ว',
+    const flexAdmin = buildFlex(EVENT_COLORS.assign, '📌', 'มอบหมายงานแล้ว',
       [['เลขงาน', t.id], ['มอบให้', t.assignee || '—'], ['เวลา', time]],
-      '📋 ดูงาน', ticketUrl(t.id))]);
+      '📋 ดูงาน', ticketUrl(t.id));
+    if (tech?.lineUserId) await linePush(tech.lineUserId, [flexTech]);
+    await linePushAdmin([flexAdmin]);
 
   } else if (event === 'accept') {
     const reporter = (db.users || []).find(u => u.name === t.reporter || u.id === t.reporterId);

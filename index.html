@@ -22,8 +22,6 @@
 
 <!-- ========== LINE LIFF SDK ========== -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script src="liff-auth.js?v=1775295000"></script>
-<script src="line-messaging.js?v=1775295000"></script>
 
 <!-- ========== FIREBASE SDK (v11 — audit #10) ========== -->
 <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
@@ -1731,14 +1729,18 @@
           </div>
         </div>
         <div style="padding:14px 16px">
-          <div style="font-size:0.72rem;font-weight:700;color:#475569;margin-bottom:6px">Cloudflare Workers URL</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input id="sp-gs-url" type="url" placeholder="https://xxx.workers.dev"
-              style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:0.8rem;font-family:inherit;color:var(--text);outline:none;box-sizing:border-box"/>
+          <div style="font-size:0.72rem;font-weight:700;color:#475569;margin-bottom:4px">Google Apps Script URL</div>
+          <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:8px">วาง Web App URL จาก Google Apps Script (Deploy → Web App)</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <input id="sp-gs-url" type="url" placeholder="https://script.google.com/macros/s/xxx/exec"
+              style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:0.75rem;font-family:inherit;color:var(--text);outline:none;box-sizing:border-box"/>
             <button onclick="spSaveGsUrl()" style="background:#06C755;color:white;border:none;border-radius:10px;padding:9px 14px;font-size:0.8rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap">บันทึก</button>
           </div>
-          <div id="sp-gs-url-ok" style="display:none;margin-top:6px;font-size:0.72rem;color:#15803d;font-weight:700">✅ บันทึกแล้ว — การแจ้งเตือน LINE พร้อมใช้งาน</div>
-          <div style="margin-top:8px;font-size:0.65rem;color:#94a3b8">วาง URL จาก Cloudflare Workers เพื่อเปิดใช้การแจ้งเตือน LINE</div>
+          <button onclick="spTestLinePush()" style="width:100%;background:#f0fdf4;border:1.5px solid #86efac;color:#166534;border-radius:10px;padding:9px;font-size:0.78rem;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:6px">
+            📤 ทดสอบส่ง LINE แจ้งเตือน
+          </button>
+          <div id="sp-gs-url-ok" style="display:none;margin-top:4px;font-size:0.72rem;color:#15803d;font-weight:700">✅ บันทึกแล้ว — การแจ้งเตือน LINE พร้อมใช้งาน</div>
+          <div id="sp-gs-test-result" style="display:none;margin-top:4px;font-size:0.72rem;font-weight:700"></div>
         </div>
       </div>
 
@@ -3370,6 +3372,8 @@
 <script src="app-tracking.js?v=1775295000" defer></script>
 <script src="func-loc-data.js?v=1775295000" defer></script>
 <script src="app-core.js?v=1775295000" defer></script>
+<script src="liff-auth.js?v=1775295000" defer></script>
+<script src="line-messaging.js?v=1775295000" defer></script>
 <script src="app-tickets.js?v=1775295000" defer></script>
 <script src="app-machines.js?v=1775295000" defer></script>
 <script src="app-users.js?v=1775295000" defer></script>

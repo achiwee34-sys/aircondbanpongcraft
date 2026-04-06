@@ -63,16 +63,27 @@ async function fsLoad() {
       const data = snap.data();
       if (typeof syncDocVersion === 'function') syncDocVersion(data);
 
+      // โหลด deletedUserIds blacklist ก่อน — ใช้ตอน merge users
+      if (Array.isArray(data.deletedUserIds)) {
+        const existing = new Set(db.deletedUserIds || []);
+        data.deletedUserIds.forEach(id => existing.add(id));
+        db.deletedUserIds = [...existing];
+      }
+      const deletedIds = new Set(db.deletedUserIds || []);
+
       // ── users: MERGE ไม่ทับ — local users ใหม่ที่ยังไม่ sync ต้องอยู่รอด ──
       if (Array.isArray(data.users) && data.users.length) {
         const remoteUsers = data.users.filter(u =>
-          !DEMO_USERNAMES.includes(u.username) && !DEMO_IDS.includes(u.id)
+          !DEMO_USERNAMES.includes(u.username) &&
+          !DEMO_IDS.includes(u.id) &&
+          !deletedIds.has(u.id)    // ← กัน user ที่ลบแล้วกลับมา
         );
         const remoteIds = new Set(remoteUsers.map(u => u.id));
         const localOnlyUsers = (db.users||[]).filter(u =>
           !remoteIds.has(u.id) &&
           !DEMO_USERNAMES.includes(u.username) &&
-          !DEMO_IDS.includes(u.id)
+          !DEMO_IDS.includes(u.id) &&
+          !deletedIds.has(u.id)    // ← กัน local ด้วย
         );
         db.users = [...remoteUsers, ...localOnlyUsers];
         if (localOnlyUsers.length > 0) {
@@ -163,6 +174,7 @@ async function fsSaveNow() {
       calEvents:       db.calEvents       || [],
       chats:           db.chats           || {},
       machineRequests: db.machineRequests || [],
+      deletedUserIds:  db.deletedUserIds  || [],
       _seq:            db._seq,
       gsUrl:           db.gsUrl           || '',
       updatedAt:       new Date().toISOString()
@@ -241,12 +253,19 @@ async function fsListen() {
       let d = data[key];
       if (!d) return false;
       if (key === 'users' && Array.isArray(d)) {
-        const remoteUsers = d.filter(u => !DEMO_USERNAMES.includes(u.username) && !DEMO_IDS.includes(u.id));
+        // deletedUserIds = blacklist ที่ admin ลบไปแล้ว ห้าม merge กลับ
+        const deletedIds = new Set(db.deletedUserIds || []);
+        const remoteUsers = d.filter(u =>
+          !DEMO_USERNAMES.includes(u.username) &&
+          !DEMO_IDS.includes(u.id) &&
+          !deletedIds.has(u.id)   // ← กัน user ที่ลบแล้วกลับมา
+        );
         const remoteIds = new Set(remoteUsers.map(u => u.id));
         const localOnly = (db.users||[]).filter(u =>
           !remoteIds.has(u.id) &&
           !DEMO_USERNAMES.includes(u.username) &&
-          !DEMO_IDS.includes(u.id)
+          !DEMO_IDS.includes(u.id) &&
+          !deletedIds.has(u.id)   // ← กัน user ที่ลบแล้วกลับมาจาก local ด้วย
         );
         const merged = [...remoteUsers, ...localOnly];
         const sig = a => a.map(u=>u.id).sort().join(',');

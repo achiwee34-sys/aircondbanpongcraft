@@ -631,15 +631,59 @@ function spSave() {
   showToast('✅ บันทึกข้อมูลแล้ว');
 }
 
-// ── บันทึก Cloudflare Workers URL ──────────────────────────────
+// ── บันทึก Google Apps Script URL ──────────────────────────────
 function spSaveGsUrl() {
   const url = document.getElementById('sp-gs-url')?.value.trim();
-  if (!url) { showToast('⚠️ กรุณากรอก URL'); return; }
+  if (!url) { showToast('⚠️ กรุณากรอก Google Apps Script URL'); return; }
   db.gsUrl = url;
   saveDB();
   const ok = document.getElementById('sp-gs-url-ok');
   if (ok) { ok.style.display = 'block'; setTimeout(() => ok.style.display = 'none', 3000); }
-  showToast('✅ บันทึก URL แล้ว');
+  showToast('✅ บันทึก GAS URL แล้ว');
+}
+
+// ── ทดสอบส่ง LINE แจ้งเตือน ────────────────────────────────────
+async function spTestLinePush() {
+  const resultEl = document.getElementById('sp-gs-test-result');
+  const gsUrl = db.gsUrl;
+  if (!gsUrl) {
+    showToast('⚠️ กรุณาบันทึก Google Apps Script URL ก่อน');
+    return;
+  }
+  if (resultEl) { resultEl.style.display='block'; resultEl.style.color='#0891b2'; resultEl.textContent='⏳ กำลังส่งทดสอบ...'; }
+  try {
+    const testMsg = [{
+      type: 'flex', altText: '🔔 ทดสอบแจ้งเตือน SCG AIRCON',
+      contents: {
+        type: 'bubble', size: 'kilo',
+        header: { type:'box', layout:'vertical', backgroundColor:'#c8102e', paddingAll:'14px',
+          contents:[{ type:'text', text:'🔔  ทดสอบแจ้งเตือน', color:'#ffffff', weight:'bold', size:'md' }] },
+        body: { type:'box', layout:'vertical', spacing:'sm', paddingAll:'14px',
+          contents:[
+            { type:'box', layout:'horizontal', spacing:'sm', contents:[
+              { type:'text', text:'ระบบ', color:'#888888', size:'sm', flex:2 },
+              { type:'text', text:'SCG AIRCON BP', color:'#111111', size:'sm', flex:5, weight:'bold' }]},
+            { type:'box', layout:'horizontal', spacing:'sm', contents:[
+              { type:'text', text:'ทดสอบโดย', color:'#888888', size:'sm', flex:2 },
+              { type:'text', text:CU ? CU.name : 'Admin', color:'#111111', size:'sm', flex:5, weight:'bold' }]},
+            { type:'box', layout:'horizontal', spacing:'sm', contents:[
+              { type:'text', text:'เวลา', color:'#888888', size:'sm', flex:2 },
+              { type:'text', text:nowStr(), color:'#111111', size:'sm', flex:5, weight:'bold' }]}]},
+        footer: { type:'box', layout:'vertical', paddingAll:'12px',
+          contents:[{ type:'button', style:'primary', color:'#c8102e', height:'sm',
+            action:{ type:'uri', label:'✅ การแจ้งเตือน LINE ใช้งานได้!', uri:'https://liff.line.me/2009699254-TXIz4KN1' }}]}
+      }
+    }];
+    const adminIds = (db.users||[]).filter(u=>u.role==='admin'&&u.lineUserId).map(u=>u.lineUserId);
+    const targets = adminIds.length > 0 ? adminIds : ['U06dd3c0d1756f7497ecf67c6fccf3e52'];
+    await fetch(gsUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'linePush', to:targets, messages:testMsg }) });
+    if (resultEl) { resultEl.style.color='#15803d'; resultEl.textContent='✅ ส่งทดสอบแล้ว — ตรวจ LINE ของ Admin ('+targets.length+' คน)'; }
+    showToast('📤 ส่ง LINE ทดสอบแล้ว');
+  } catch(e) {
+    if (resultEl) { resultEl.style.color='#dc2626'; resultEl.textContent='❌ ส่งไม่ได้: '+e.message; }
+    showToast('❌ ส่งไม่ได้: '+e.message);
+  }
 }
 
 // legacy aliases (ใช้ในที่อื่นอาจเรียก)
