@@ -49,20 +49,41 @@ async function clearFirestoreData(type) {
     if (type === 'reset' || type === 'tickets') {
       db.tickets = [];
       db.notifications = [];
-      db._seq = 1;
     }
     if (type === 'reset' || type === 'users') {
+      // เพิ่ม id ที่ถูกล้างลง deletedUserIds blacklist — กัน onSnapshot merge กลับมา
+      if (!db.deletedUserIds) db.deletedUserIds = [];
+      (db.users || []).forEach(u => {
+        if (u.id !== CU.id && db.deletedUserIds.indexOf(u.id) === -1) {
+          db.deletedUserIds.push(u.id);
+        }
+      });
       // เก็บเฉพาะ user ที่ login อยู่
       db.users = db.users.filter(u => u.id === CU.id);
     }
     // machines ไม่แตะเลย — เก็บไว้ทุกกรณี
 
+    // เพิ่ม _seq ให้สูงกว่า remote → onSnapshot ที่ยิงกลับมาจะถูก skip
+    db._seq = (db._seq || 0) + 100;
+
     saveDB();
     if (_firebaseReady && FSdb) {
+      // ✅ เขียน Firestore ถูก format (field ตรงๆ เหมือน fsSaveNow)
+      const ticketsNoSig = (db.tickets || []).map(t => {
+        if (!t.signatures) return t;
+        const { signatures, ...rest } = t; return rest;
+      });
       await FSdb.collection('appdata').doc('main').set({
-        data: JSON.stringify(db),
-        updatedAt: new Date().toISOString(),
-        updatedBy: CU?.name || 'admin'
+        users:          db.users           || [],
+        machines:       db.machines        || [],
+        tickets:        ticketsNoSig,
+        calEvents:      db.calEvents       || [],
+        chats:          db.chats           || {},
+        machineRequests:db.machineRequests || [],
+        deletedUserIds: db.deletedUserIds  || [],
+        _seq:           db._seq,
+        gsUrl:          db.gsUrl           || '',
+        updatedAt:      new Date().toISOString()
       });
       showToast('✅ ล้างข้อมูลใน Firestore เรียบร้อย — เครื่องแอร์ยังอยู่ครบ');
     } else {
