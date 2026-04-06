@@ -31,7 +31,7 @@ async function linePush(lineUserId, messages) {
 async function linePushAdmin(messages) {
   const gsUrl = (typeof db !== 'undefined' && db.gsUrl) ? db.gsUrl : '';
   if (!gsUrl) {
-    console.warn('[LINE Push] ยังไม่ได้ตั้งค่า GAS URL');
+    console.warn('[LINE Push Admin] ❌ ยังไม่ได้ตั้งค่า GAS URL — ไปที่ Settings > Firebase Sync > GAS URL');
     return;
   }
 
@@ -40,8 +40,10 @@ async function linePushAdmin(messages) {
     .filter(u => u.role === 'admin' && u.lineUserId)
     .map(u => u.lineUserId);
 
-  // ถ้าไม่มี admin ใน db → fallback hardcode
+  // ถ้าไม่มี admin ใน db → fallback hardcode LINE_ADMIN_USER_ID
   const targets = adminIds.length > 0 ? adminIds : [LINE_ADMIN_USER_ID];
+
+  console.info('[LINE Push Admin] targets:', targets, '| gsUrl:', gsUrl.slice(0,40)+'...');
 
   try {
     await fetch(gsUrl, {
@@ -50,9 +52,9 @@ async function linePushAdmin(messages) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'linePush', to: targets, messages })
     });
-    console.info('[LINE Push Admin] sent to', targets.length, 'admin(s)');
+    console.info('[LINE Push Admin] ✅ sent to', targets.length, 'admin(s):', targets);
   } catch (e) {
-    console.warn('[LINE Push Admin] error:', e);
+    console.warn('[LINE Push Admin] ❌ error:', e);
   }
 }
 

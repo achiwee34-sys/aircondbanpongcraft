@@ -2,13 +2,13 @@
 (function(){
   try {
     var v = localStorage.getItem('scg_ver');
-    if (v !== 'v95') {
-      var keysToKeep = ['scg_fb_cfg','scg_firebase','aircon_session','aircon_dark','aircon_lang','aircon_db'];
+    if (v !== 'v96') {
+      var keysToKeep = ['scg_fb_cfg','scg_firebase','aircon_session','aircon_dark','aircon_lang','airtrack_pwa'];
       var saved = {};
       keysToKeep.forEach(function(k){ var val=localStorage.getItem(k); if(val) saved[k]=val; });
       localStorage.clear();
       keysToKeep.forEach(function(k){ if(saved[k]) localStorage.setItem(k,saved[k]); });
-      localStorage.setItem('scg_ver','v95');
+      localStorage.setItem('scg_ver','v96');
     }
   } catch(e){}
 })();

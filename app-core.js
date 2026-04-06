@@ -26,7 +26,7 @@ function t(key) {
 // DATABASE
 // ============================================================
 const DB_KEY = 'airtrack_pwa';
-const APP_VER = 'v20260403_87';
+const APP_VER = 'v20260406_88';
 const FUNC_LOC = window._FUNC_LOC_DATA || {};
 // ── FUNC_LOC โหลดจาก func-loc-data.js (แยกไฟล์เพื่อลดขนาด app-core.js) ──
  // bump this to force reset
@@ -637,9 +637,11 @@ function spSaveGsUrl() {
   if (!url) { showToast('⚠️ กรุณากรอก Google Apps Script URL'); return; }
   db.gsUrl = url;
   saveDB();
+  // sync ขึ้น Firestore — device อื่นจะได้ gsUrl ผ่าน onSnapshot
+  if (typeof fsSave === 'function') fsSave();
   const ok = document.getElementById('sp-gs-url-ok');
   if (ok) { ok.style.display = 'block'; setTimeout(() => ok.style.display = 'none', 3000); }
-  showToast('✅ บันทึก GAS URL แล้ว');
+  showToast('✅ บันทึก GAS URL แล้ว — sync ขึ้น Firestore เรียบร้อย');
 }
 
 // ── ทดสอบส่ง LINE แจ้งเตือน ────────────────────────────────────
