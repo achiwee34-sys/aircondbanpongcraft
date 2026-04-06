@@ -288,13 +288,28 @@ async function autoLiffLogin() {
   renderLinLoginButton();
   renderLoginDivider();
 
-  // ถ้าเปิดใน LINE และ logged in → auto-login ทันที (ไม่ต้องกด)
-  if (_liffInLine && _liffProfile) {
+  // ถ้า LINE logged in (ทั้งใน LINE client และ browser ปกติ) → auto-login ทันที
+  // _liffInLine = เปิดใน LINE browser | _liffProfile = ดึง profile ได้แล้ว
+  if (_liffProfile) {
     const existing = (db.users || []).find(u => u.lineUserId === _liffProfile.userId);
     if (existing) {
-      // มี account → login เลย
+      // ตรวจว่า session ปัจจุบันเป็นของ user คนนี้อยู่แล้วหรือยัง (ไม่ต้อง re-login ซ้ำ)
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (raw) {
+          const s = JSON.parse(raw);
+          if (s.uid === existing.id && s.exp > Date.now()) {
+            // session ยังใช้ได้และเป็น user เดิม → skip (initApp จะ restore session เอง)
+            return;
+          }
+        }
+      } catch(e) {}
+      // มี account + session หมดหรือเป็นของคนอื่น → auto-login
       setTimeout(() => doLoginWithLine(), 300);
     }
     // ถ้าไม่มี account → แสดงปุ่มให้กดสมัคร (รอ user action)
+  } else if (!_liffInLine) {
+    // เปิดจาก browser ปกติ และยังไม่ได้ login LINE → แสดงปุ่มให้กดเอง
+    // (ไม่ force redirect เพราะจะกวน user ที่ใช้ username/password)
   }
 }
