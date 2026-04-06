@@ -271,7 +271,9 @@ async function fsListen() {
         const sig = a => a.map(u=>u.id).sort().join(',');
         if (sig(merged) === sig(db.users||[])) return false;
         db.users = merged;
-        if (localOnly.length > 0) fsSaveNow().catch(()=>{});
+        // ถ้า remote มี deletedUser อยู่ → force save เพื่อลบออกจาก Firestore ด้วย
+        const remoteHasDeleted = d.some(u => deletedIds.has(u.id));
+        if (localOnly.length > 0 || remoteHasDeleted) fsSaveNow().catch(()=>{});
         return true;
       }
       const localArr = db[key];

@@ -430,8 +430,10 @@ async function autoLiffLogin() {
   const ok = await initLiff();
   if (!ok) return;
 
-  // ── Auto-login เมื่อ redirect กลับมาจาก LINE OAuth ──
-  // ตรวจว่า app ยังไม่ได้ login อยู่
+  // ── Auto-login เฉพาะเมื่อ URL มี ?code= (LINE OAuth redirect จริงๆ) ──
+  // ไม่ auto-login ถ้าเป็นการเปิดหน้าปกติ หรือ logout แล้วกลับมา
+  const isOAuthRedirect = location.search.includes('code=') && location.search.includes('liffClientId=');
+
   const isLoggedInApp = (function() {
     try {
       const raw = localStorage.getItem(SESSION_KEY);
@@ -441,14 +443,14 @@ async function autoLiffLogin() {
     } catch(e) { return false; }
   })();
 
-  if (_liffProfile && !isLoggedInApp) {
-    // มี LINE profile (หลัง OAuth redirect) แต่ยังไม่ได้ login → auto-login ทันที
+  if (isOAuthRedirect && _liffProfile && !isLoggedInApp) {
+    // มาจาก LINE OAuth redirect จริงๆ และยังไม่ได้ login → auto-login
     console.info('[LIFF] Auto-login after OAuth redirect:', _liffProfile.displayName);
     await doLoginWithLine();
     return;
   }
 
-  // login แล้ว หรือไม่มี profile → แค่ render ปุ่ม
+  // กรณีอื่น → แค่ render ปุ่ม ไม่ auto-login
   renderLinLoginButton();
   renderLoginDivider();
 }
