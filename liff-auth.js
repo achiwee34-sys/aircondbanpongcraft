@@ -54,6 +54,10 @@ async function initLiff() {
     if (liff.isLoggedIn()) {
       _liffProfile = await liff.getProfile();
       console.info('[LIFF] profile:', _liffProfile.displayName);
+      // อัพเดต Landing Page card ถ้ามี
+      if (typeof window._liffLandingUpdateCard === 'function') {
+        window._liffLandingUpdateCard(_liffProfile);
+      }
     }
 
     return true;
@@ -192,8 +196,35 @@ async function doLoginWithLine() {
 
   const { userId: lineUserId, displayName, pictureUrl } = _liffProfile;
 
+  // ── ตรวจ lineUserId ซ้ำใน db ─────────────────────────────
+  // FIX: ป้องกัน user ซ้ำที่สมัครผ่าน race condition ก่อนหน้า
+  const allMatches = (db.users || []).filter(u => u.lineUserId === lineUserId);
+  if (allMatches.length > 1) {
+    // มี user ซ้ำ → เลือก user ที่เก่าสุด (createdAt น้อยที่สุด) เป็น canonical
+    const canonical = allMatches.slice().sort((a, b) =>
+      (a.createdAt || '').localeCompare(b.createdAt || '')
+    )[0];
+    // ลบ duplicate ออกจาก local db
+    const dupIds = allMatches.filter(u => u.id !== canonical.id).map(u => u.id);
+    db.users = (db.users || []).filter(u => !dupIds.includes(u.id));
+    // เพิ่ม dupIds เข้า deletedUserIds เพื่อป้องกัน sync กลับ
+    db.deletedUserIds = [...new Set([...(db.deletedUserIds || []), ...dupIds])];
+    // save เพื่อทำความสะอาด Firestore ด้วย
+    if (typeof fsSaveNow === 'function') fsSaveNow().catch(() => {});
+    console.warn('[LIFF] cleaned duplicate lineUserId:', lineUserId, '| removed:', dupIds, '| kept:', canonical.id);
+    showToast('⚠️ พบข้อมูลซ้ำและทำความสะอาดแล้ว');
+    // ดำเนินการต่อด้วย canonical user
+    const dupSession = _isLineUserAlreadyLoggedIn(lineUserId, canonical.id);
+    if (dupSession) {
+      _showDuplicateLoginWarning(dupSession, () => _doLineLogin(canonical, lineUserId));
+      return;
+    }
+    _doLineLogin(canonical, lineUserId);
+    return;
+  }
+
   // ── ค้นหา user ที่ผูก lineUserId ไว้แล้ว ──
-  const existing = (db.users || []).find(u => u.lineUserId === lineUserId);
+  const existing = allMatches[0] || null;
 
   if (existing) {
     // ── ตรวจสอบ login ซ้ำ ────────────────────────────────────
@@ -304,7 +335,35 @@ async function doRegisterWithLine() {
   if (!name)       { showFormError('reg-name', 'กรุณากรอกชื่อ-นามสกุล'); return; }
   if (!lineUserId) { showToast('❌ ไม่พบ LINE User ID กรุณาลองใหม่'); return; }
 
-  // ── ตรวจซ้ำ lineUserId (กันกด 2 ครั้ง หรือมี tab อื่นเปิดอยู่) ──
+  // ── ตรวจซ้ำ lineUserId จาก Firestore โดยตรง (ป้องกัน local cache เก่า) ──
+  // FIX: ป้องกัน race condition ที่ทำให้ user สมัครซ้ำได้เมื่อ local db ยังไม่ sync
+  try {
+    if (typeof FSdb !== 'undefined' && FSdb) {
+      const snap = await FSdb.collection('appdata').doc('main').get();
+      if (snap.exists) {
+        const remoteUsers = snap.data().users || [];
+        const remoteMatch = remoteUsers.find(u => u.lineUserId === lineUserId);
+        if (remoteMatch) {
+          // พบใน Firestore → merge เข้า local db ก่อน แล้ว redirect login
+          const alreadyLocal = (db.users || []).find(u => u.id === remoteMatch.id);
+          if (!alreadyLocal) {
+            db.users = db.users || [];
+            db.users.push(remoteMatch);
+            try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch(e) {}
+          }
+          hideRegister();
+          renderLinLoginButton();
+          renderLoginDivider();
+          showToast('✅ บัญชีนี้มีอยู่แล้ว กดปุ่ม LINE เพื่อเข้าสู่ระบบ');
+          return;
+        }
+      }
+    }
+  } catch(fsCheckErr) {
+    console.warn('[doRegisterWithLine] Firestore dup-check failed, fallback to local:', fsCheckErr.message);
+  }
+
+  // ── fallback: ตรวจ local db ด้วย (กันกด 2 ครั้งในระหว่าง Firestore check) ──
   const dupUser = (db.users || []).find(u => u.lineUserId === lineUserId);
   if (dupUser) {
     hideRegister();
