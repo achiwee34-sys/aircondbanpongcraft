@@ -206,6 +206,9 @@ function initDB() {
   };
 }
 function saveDB() {
+  invalidateMacCache();
+  invalidateTkCache();
+  setTimeout(() => {
     try {
       // strip signatures ออกก่อน save localStorage
       const dbForLocal = {...db, tickets: (db.tickets||[]).map(t=>{
