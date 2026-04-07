@@ -563,7 +563,7 @@ function openMachineExportMenu(btn) {
 
 // ── Export: รายการเครื่องแอร์ทั้งหมด ──
 function exportMachineList() {
-  if (typeof XLSX === 'undefined') { waitForXLSX(exportMachines); return; }
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportMachineList); return; }
 
   const list = window._macFilteredList?.length ? window._macFilteredList : (db.machines || []);
   const today = new Date();

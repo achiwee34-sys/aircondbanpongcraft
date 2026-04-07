@@ -327,8 +327,25 @@ async function fsListen() {
     // ── sync gsUrl ทุกครั้งที่ onSnapshot ยิง (ป้องกัน Reporter ได้ db.gsUrl='' เพราะ cache เก่า) ──
     if (data.gsUrl && data.gsUrl !== db.gsUrl) { db.gsUrl = data.gsUrl; console.info('[onSnapshot] gsUrl updated'); }
 
+    // ── Bug #5 fix: snapshot CU role BEFORE check('users') merges remote data ──
+    const _cuBefore = CU ? (db.users||[]).find(u => u.id === CU.id) : null;
+    const _roleBefore = _cuBefore ? _cuBefore.role : null;
+
     let changed = check('users') | check('machines') | check('tickets') | check('calEvents') | check('machineRequests');
     if (data._seq && data._seq !== db._seq) { db._seq = data._seq; changed = true; }
+
+    // ── ถ้า role ของ CU เปลี่ยน (Admin สลับ role) → force setupBottomNav + goPage ──
+    if (CU && _roleBefore) {
+      const _cuAfter = (db.users||[]).find(u => u.id === CU.id);
+      if (_cuAfter && _cuAfter.role !== _roleBefore) {
+        CU.role = _cuAfter.role;
+        console.info('[onSnapshot] role changed:', _roleBefore, '\u2192', CU.role);
+        try {
+          if (typeof setupBottomNav === 'function') setupBottomNav();
+          if (typeof goPage === 'function') goPage('home');
+        } catch(e) { console.warn('[onSnapshot] role reload error:', e); }
+      }
+    }
 
     if (chatChanged) {
       try {
