@@ -38,17 +38,13 @@ async function savePhotosToFirestore(ticketId, photosBefore, photosAfter) {
   if (!authed) return { before: [], after: [] };
 
   try {
-    // ✅ fix #2: เพิ่ม techId (จาก CU) เพื่อให้ Firestore rule resource.data.techId ทำงานได้
-    // ✅ fix #2: ใช้ merge:true เพื่อไม่ทับรูปเก่าที่มีอยู่แล้ว
-    const payload = {
-      ticketId,
-      before:  photosBefore || [],
-      after:   photosAfter  || [],
-      savedAt: new Date().toISOString(),
-    };
-    if (typeof CU !== 'undefined' && CU && CU.id) payload.techId = CU.id;
     await _withTimeout(
-      FSdb.collection('ticket_photos').doc(ticketId).set(payload, { merge: true }),
+      FSdb.collection('ticket_photos').doc(ticketId).set({
+        ticketId,
+        before:  photosBefore || [],
+        after:   photosAfter  || [],
+        savedAt: new Date().toISOString()
+      }),
       30000, 'savePhotos'
     );
     const beforeKeys = (photosBefore||[]).map(function(_, i) { return 'fs:' + ticketId + ':b' + i; });
@@ -61,20 +57,7 @@ async function savePhotosToFirestore(ticketId, photosBefore, photosAfter) {
 }
 
 // ── โหลดรูปจาก Firestore ──────────────────────────────────
-// ✅ H2 fix: LRU cache จำกัด 20 entries ป้องกัน memory leak
 var _photoCache = {};
-var _photoCacheKeys = [];
-var _PHOTO_CACHE_MAX = 20;
-
-function _photoCacheSet(key, val) {
-  if (_photoCacheKeys.includes(key)) {
-    _photoCacheKeys.splice(_photoCacheKeys.indexOf(key), 1);
-  } else if (_photoCacheKeys.length >= _PHOTO_CACHE_MAX) {
-    delete _photoCache[_photoCacheKeys.shift()];
-  }
-  _photoCacheKeys.push(key);
-  _photoCache[key] = val;
-}
 
 async function loadPhotosFromFirestore(ticketId) {
   if (!ticketId) return { before: [], after: [] };
@@ -87,7 +70,7 @@ async function loadPhotosFromFirestore(ticketId) {
     );
     if (snap.exists) {
       const data = { before: snap.data().before||[], after: snap.data().after||[] };
-      _photoCacheSet(ticketId, data); // ✅ H2 fix: LRU eviction
+      _photoCache[ticketId] = data;
       return data;
     }
   } catch(e) {
@@ -116,16 +99,8 @@ async function resolvePhotoUrl(key, ticketId) {
 async function uploadPendingPhotosToStorage(ticketId) {
   const beforeData = (pendingPhotos.before || []).filter(function(p) { return p && p.startsWith('data:'); });
   const afterData  = (pendingPhotos.after  || []).filter(function(p) { return p && p.startsWith('data:'); });
-  // รูปที่ resolve เป็น https:// แล้ว — เก็บ key เดิมไว้ ไม่ต้อง upload ใหม่
-  const beforeExisting = (pendingPhotos.before || []).filter(function(p) { return p && (p.startsWith('https://') || p.startsWith('fs:')); });
-  const afterExisting  = (pendingPhotos.after  || []).filter(function(p) { return p && (p.startsWith('https://') || p.startsWith('fs:')); });
 
-  if (!beforeData.length && !afterData.length) {
-    // ไม่มีรูปใหม่ แต่ preserve รูปเก่า
-    if (beforeExisting.length) pendingPhotos.before = beforeExisting;
-    if (afterExisting.length)  pendingPhotos.after  = afterExisting;
-    return;
-  }
+  if (!beforeData.length && !afterData.length) return;
 
   if (typeof showToast === 'function') showToast('⏳ กำลังบันทึกรูปภาพ...');
 
@@ -136,19 +111,17 @@ async function uploadPendingPhotosToStorage(ticketId) {
     );
 
     if (result.before.length || result.after.length) {
-      // merge รูปเก่า (https/fs) + รูปใหม่ที่ upload
-      pendingPhotos.before = [...beforeExisting, ...result.before];
-      pendingPhotos.after  = [...afterExisting,  ...result.after];
+      pendingPhotos.before = result.before;
+      pendingPhotos.after  = result.after;
     } else {
-      // upload ล้มเหลว — preserve รูปเก่า แต่ทิ้งรูปใหม่
-      pendingPhotos.before = beforeExisting;
-      pendingPhotos.after  = afterExisting;
+      pendingPhotos.before = [];
+      pendingPhotos.after  = [];
       if (typeof showToast === 'function') showToast('⚠️ บันทึกรูปไม่สำเร็จ — ส่งงานโดยไม่มีรูป');
     }
   } catch(e) {
     console.warn('[Photo] error:', e.message);
-    pendingPhotos.before = beforeExisting;
-    pendingPhotos.after  = afterExisting;
+    pendingPhotos.before = [];
+    pendingPhotos.after  = [];
     if (typeof showToast === 'function') showToast('⚠️ บันทึกรูปหมดเวลา — ส่งงานโดยไม่มีรูป');
   }
 }
