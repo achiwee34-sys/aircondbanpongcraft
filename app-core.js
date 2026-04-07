@@ -960,14 +960,24 @@ async function viewQuotationFull(tid) {
     });
     return rows;
   };
+  // ── normalize key สำหรับ dedup (fuzzy: ตัด BTU, BTU-range, qty, น้ำยา prefix) ──
+  const _pdfNormKey = s => s
+    .trim()
+    .replace(/^[-\s•×\d]+/, '')
+    .replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi, '')
+    .replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi, '')
+    .replace(/\s*[×xX]\d+\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+
   const items = parseItems()
     .filter(r => r.name && r.name.trim() !== '')
-    // ── normalize: ตัด trailing punctuation และ whitespace ──
     .map(r => ({ ...r, name: r.name.trim().replace(/[.。．。]+$/, '').trim() }))
-    // ── dedup: รวม qty ถ้าชื่อเดียวกัน (case-insensitive, ignore trailing dot) ──
+    // ── dedup fuzzy: รวม qty ถ้า normalize key เดียวกัน ──
     .reduce((acc, r) => {
-      const key = r.name.toLowerCase().replace(/\s+/g,' ');
-      const ex = acc.find(x => x.name.toLowerCase().replace(/\s+/g,' ') === key);
+      const key = _pdfNormKey(r.name);
+      const ex = acc.find(x => _pdfNormKey(x.name) === key);
       if (ex) { ex.qty += r.qty; }
       else { acc.push({...r}); }
       return acc;
@@ -1350,7 +1360,27 @@ async function generateRepairPDF(tid) {
     }
     return rows;
   };
-  const repairRows = parseRepairItems();
+  // ── dedup repairRows ด้วย fuzzy normalize ──
+  const _quotNormKey = s => s
+    .trim()
+    .replace(/^[-\s•×\d]+/, '')
+    .replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi, '')
+    .replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi, '')
+    .replace(/\s*[×xX]\d+\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+
+  const repairRows = (() => {
+    const raw = parseRepairItems();
+    const seen = new Map();
+    raw.forEach(r => {
+      const k = _quotNormKey(r.name);
+      if (seen.has(k)) { seen.get(k).qty += r.qty; }
+      else { seen.set(k, {...r}); }
+    });
+    return [...seen.values()];
+  })();
   const macBTU = machine?.btu ? Number(machine.btu) : 0;
   const getPrice = (name) => {
     const g = (db.repairGroups||[]);
@@ -3215,7 +3245,17 @@ function sendLineNotifyEvent(event, t) {
     const msg = base+'⚙️ เริ่มซ่อมแล้ว\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n👷 ช่าง: '+(t.assignee||'—')+'\n🕐 '+nowStr();
     if(ln.tokenAdmin) lineNotifyFn(ln.tokenAdmin,msg);
   } else if (event==='done' && ln.evDone) {
-    const msg = base+'✅ ซ่อมเสร็จแล้ว!\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n❄️ '+t.machine+'\n👷 ช่าง: '+(t.assignee||'—')+'\n📝 '+(t.summary||'')+'\n🕐 '+nowStr();
+    // dedup summary lines ก่อนใส่ใน LINE message
+    const _lineSumNorm = s => s.trim().replace(/^[-\s•×\d]+/,'').replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi,'').replace(/\s*[×xX]\d+\s*$/,'').replace(/\s+/g,' ').toLowerCase().trim();
+    const _lineSum = (()=>{
+      const seen = new Set();
+      return (t.summary||'').split('\n').filter(Boolean).filter(l=>{
+        const k = _lineSumNorm(l);
+        if(!k||seen.has(k)) return false;
+        seen.add(k); return true;
+      }).join('\n');
+    })();
+    const msg = base+'✅ ซ่อมเสร็จแล้ว!\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n❄️ '+t.machine+'\n👷 ช่าง: '+(t.assignee||'—')+'\n📝 '+_lineSum+'\n🕐 '+nowStr();
     if(ln.tokenAdmin) lineNotifyFn(ln.tokenAdmin,msg);
     if(ln.tokenTech)  lineNotifyFn(ln.tokenTech,msg);
   }

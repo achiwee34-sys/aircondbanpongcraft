@@ -4,8 +4,8 @@
 let pendingPhotos = {before:[], after:[]};
 let _photoLoading = 0;
 const MAX_PHOTOS_PER_TYPE = 3;   // สูงสุด 3 รูปต่อประเภท
-const PHOTO_MAX_PX = 800;        // resize ให้ไม่เกิน 800px (ลดจาก 1024 เพื่อ upload เร็วขึ้น)
-const PHOTO_QUALITY = 0.65;      // JPEG quality (ลดจาก 0.72)
+const PHOTO_MAX_PX = 640;        // resize ไม่เกิน 640px — เล็กที่สุดที่เปิดชัดบนมือถือ
+const PHOTO_QUALITY = 0.50;      // JPEG quality 50% — ลดขนาดไฟล์สูงสุด
 
 // ── Phone number auto-format: 091-234-5678 ──
 function fmtPhone(el) {
@@ -132,7 +132,7 @@ function renderPhotoGrid(gridId, photos, type) {
   if (!el) return;
   el.innerHTML = photos.map((p,i) => `
     <div class="pg-item" style="animation:fadeIn 0.25s ease">
-      <img src="${p}" onclick="openLightbox('${p}')"/>
+      <img src="${p}" onclick="_resolveAndLightbox(this)"/>
       <button class="pg-del" onclick="removePic(${i},'${gridId}','${type}')">✕</button>
     </div>`).join('');
   // Show slot count
@@ -2612,11 +2612,29 @@ async function doComplete( /* PATCH v67 */) {
   const refStr = refrigPairs.join(', ');
   const allParts = [refStr, partsList].filter(Boolean).join(' | ');
 
-  const repairStr = repairItems.join('\n');
-  // ── Bug fix: กัน sum ซ้ำ repairItems ──
-  // syncSummaryFromForm() เติม c-sum ด้วย formatItemName() (display names)
-  // repairItems ก็ใช้ formatItemName() เหมือนกัน → ต้อง compare display names ทั้งคู่ lowercase
-  const repairSet = new Set(repairItems.map(s => s.trim().replace(/^[-\s•×\d]+/,'').trim().toLowerCase()));
+  // ── dedup repairItems ก่อน join ──
+  // normalize key: ตัด BTU suffix, ขนาด, qty, whitespace, lowercase
+  const _normKey = s => s
+    .trim()
+    .replace(/^[-\s•×\d]+/, '')           // ตัด prefix
+    .replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi, '') // ตัด "ขนาด 48,000 BTU"
+    .replace(/\s*[×xX]\d+\s*$/, '')       // ตัด "×6"
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+
+  // dedup repairItems ตามชื่อ normalize (กรณีเลือกซ้ำ 2 รอบ)
+  const seenRepair = new Set();
+  const dedupedItems = repairItems.filter(s => {
+    const k = _normKey(s);
+    if (seenRepair.has(k)) return false;
+    seenRepair.add(k);
+    return true;
+  });
+
+  const repairStr = dedupedItems.join('\n');
+  const repairSet = new Set(dedupedItems.map(_normKey));
+
   const sumEl = document.getElementById('c-sum');
   const wasAutoFilled = sumEl?.dataset?.autoFilled === '1';
   if (wasAutoFilled) {
@@ -2626,9 +2644,8 @@ async function doComplete( /* PATCH v67 */) {
     // ช่างพิมพ์เพิ่มเอง → กรองเฉพาะบรรทัดที่ไม่ซ้ำกับ repairItems
     const sumLines = sum.split('\n').map(l => l.trim().replace(/^[-\s•]+/,'').trim()).filter(Boolean);
     const manualLines = sumLines.filter(l => {
-      // strip qty suffix (×N) ก่อน compare
-      const stripped = l.replace(/\s*[×xX]\d+\s*$/, '').trim().toLowerCase();
-      return !repairSet.has(stripped) && !repairSet.has(l.toLowerCase());
+      const k = _normKey(l);
+      return !repairSet.has(k);
     });
     const manualNote = manualLines.join('\n');
     t.summary = repairStr ? repairStr + (manualNote ? '\n' + manualNote : '') : sum;
@@ -2807,7 +2824,7 @@ function openVerifySheet(tid) {
         <span class="lbl-dot" style="background:#22c55e"></span>✅ รูปหลังซ่อม
         <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
       </div>
-      <div class="photo-grid">${t.photosAfter.map(p=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" onclick="openLightbox('${p}')"><img src="${p}"/></div>`).join('')}</div>
+      <div class="photo-grid">${t.photosAfter.map(p=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" onclick="_resolveAndLightbox(this)"><img src="${p}"/></div>`).join('')}</div>
     </div>` : ''}
   `;
   openSheet('verify');
@@ -3029,12 +3046,22 @@ function openDetail(tid) {
   const rc = Number(t.repairCost||0), pc = Number(t.partsCost||0), tc = Number(t.cost||0);
   const totalCost = (rc||pc) ? rc+pc : tc;
 
-  // dedup summary lines (strip BTU spec & ×N before comparing)
+  // dedup summary lines — normalize เหมือน doComplete
+  const _normSumKey = s => s
+    .trim()
+    .replace(/^[-\s•×\d]+/, '')
+    .replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi, '')
+    .replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi, '')
+    .replace(/\s*[×xX]\d+\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
   const _summaryLines = (t.summary||'').split('\n').filter(Boolean).map(l=>l.trim().replace(/^[-•\s]+/,''));
   const _dedupLines = (()=>{
     const seen = new Set();
     return _summaryLines.filter(line => {
-      const key = line.replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi,'').replace(/\s*[×x]\d+/gi,'').trim().toLowerCase();
+      const key = _normSumKey(line);
+      if (!key) return false;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -3180,14 +3207,14 @@ function openDetail(tid) {
           <span class="lbl-dot" style="background:#f59e0b"></span>ก่อนซ่อม
           <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosBefore.length} รูป)</span>
         </div>
-        <div class="photo-grid">${t.photosBefore.map((p,i)=>`<div class="photo-grid-item${t.photosBefore.length===1?' photo-wide':''}" onclick="openLightbox('${p}')"><img loading="lazy" decoding="async" src="${p}"/></div>`).join('')}</div>
+        <div class="photo-grid">${t.photosBefore.map((p,i)=>`<div class="photo-grid-item${t.photosBefore.length===1?' photo-wide':''}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join('')}</div>
       </div>`:''}
       ${hasAfter?`<div>
         <div class="photo-section-label" style="color:#15803d">
           <span class="lbl-dot" style="background:#22c55e"></span>หลังซ่อม
           <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
         </div>
-        <div class="photo-grid">${t.photosAfter.map((p,i)=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" onclick="openLightbox('${p}')"><img loading="lazy" decoding="async" src="${p}"/></div>`).join('')}</div>
+        <div class="photo-grid">${t.photosAfter.map((p,i)=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join('')}</div>
       </div>`:''}
     </div>`:''}\
 
@@ -3295,6 +3322,62 @@ function openDetail(tid) {
   }
   document.getElementById('detail-actions').innerHTML = acts.join('');
   openSheet('detail');
+  // ── Async photo resolver: load fs: placeholder photos after sheet opens ──
+  setTimeout(() => _resolveDetailPhotos(t.id), 100);
+}
+
+// ── Async photo resolver for detail sheet ──────────────────────────
+async function _resolveDetailPhotos(ticketId) {
+  const items = document.querySelectorAll('[data-photo-key]');
+  if (!items.length) return;
+
+  // load all photos from Firestore (one batch call per ticket)
+  let photoData = null;
+  const hasFsKey = [...items].some(el => (el.dataset.photoKey||'').startsWith('fs:'));
+  if (hasFsKey && typeof loadPhotosFromFirestore === 'function') {
+    try { photoData = await loadPhotosFromFirestore(ticketId); } catch(e) {}
+  }
+
+  for (const div of items) {
+    const key = div.dataset.photoKey || '';
+    const img = div.querySelector('img');
+    const spin = div.querySelector('._ph-spin');
+    if (!img) continue;
+
+    let src = null;
+    try {
+      if (key.startsWith('data:') || key.startsWith('https://')) {
+        src = key;
+      } else if (key.startsWith('fs:') && photoData) {
+        const parts = key.split(':');
+        const slot = parts[2] || '';
+        const type = slot[0] === 'b' ? 'before' : 'after';
+        const idx  = parseInt(slot.slice(1)) || 0;
+        src = photoData[type]?.[idx] || null;
+      } else if (typeof resolvePhotoUrl === 'function') {
+        src = await resolvePhotoUrl(key, ticketId);
+      }
+    } catch(e) { console.warn('[photo resolve]', e); }
+
+    if (src) {
+      img.src = src;
+      img.style.opacity = '1';
+      // set onclick for lightbox
+      div.onclick = () => openLightbox(src);
+      if (spin) spin.remove();
+    } else {
+      // show broken image placeholder
+      if (spin) spin.innerHTML = '🖼️';
+    }
+  }
+}
+
+// ── Lightbox helper called from photo divs (fallback) ──
+function _resolveAndLightbox(el) {
+  const key = el.dataset.photoKey || '';
+  const img = el.querySelector('img');
+  const src = img?.src || key;
+  if (src && src.startsWith('data:')) openLightbox(src);
 }
 
 function refreshPage() {

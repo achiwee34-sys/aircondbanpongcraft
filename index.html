@@ -111,6 +111,9 @@
 .lc-orange{background:linear-gradient(145deg,#ff8c2d,#cc5500);box-shadow:0 8px 28px rgba(255,140,45,.45),0 2px 8px rgba(0,0,0,.3)}
 .lc-purple{background:linear-gradient(145deg,#a64dff,#6200cc);box-shadow:0 8px 28px rgba(166,77,255,.45),0 2px 8px rgba(0,0,0,.3)}
 .lc-teal  {background:linear-gradient(145deg,#00d4cc,#007a75);box-shadow:0 8px 28px rgba(0,212,204,.4),0 2px 8px rgba(0,0,0,.3)}
+.liff-svg{width:2rem;height:2rem;position:relative;z-index:2;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.liff-lock{position:absolute;bottom:4px;right:4px;width:16px;height:16px;background:rgba(0,0,0,.45);border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:3;backdrop-filter:blur(2px)}
+.liff-btn-auth .liff-circle{opacity:1}
 
 /* Divider */
 .liff-divider{display:flex;align-items:center;gap:10px;margin:16px 0;animation:sl-up .5s .5s ease both}
@@ -196,45 +199,82 @@
   <div class="liff-section-lbl">เมนูหลัก</div>
   <div class="liff-menu-grid">
 
-    <button class="liff-btn" onclick="liffMenu('new-ticket')">
-      <div class="liff-circle lc-red" style="position:relative">
-        <span class="liff-icon">🔧</span>
+    <!-- แจ้งซ่อม — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('new-ticket')">
+      <div class="liff-circle lc-red">
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        <div class="liff-lock">
+          <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
+        </div>
       </div>
       <div class="liff-lbl">แจ้งซ่อม</div>
     </button>
 
-    <button class="liff-btn" onclick="liffMenu('my-tickets')">
-      <div class="liff-circle lc-blue" style="position:relative">
-        <span class="liff-icon">📋</span>
+    <!-- งานของฉัน — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('my-tickets')">
+      <div class="liff-circle lc-blue">
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>
         <div class="liff-badge" id="liff-badge" style="display:none">0</div>
+        <div class="liff-lock">
+          <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
+        </div>
       </div>
       <div class="liff-lbl">งานของฉัน</div>
     </button>
 
-    <button class="liff-btn" onclick="liffMenu('verify')">
+    <!-- ตรวจรับงาน — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('verify')">
       <div class="liff-circle lc-green">
-        <span class="liff-icon">✅</span>
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div class="liff-lock">
+          <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
+        </div>
       </div>
       <div class="liff-lbl">ตรวจรับงาน</div>
     </button>
 
-    <button class="liff-btn" onclick="liffMenu('search')">
+    <!-- ค้นหาเครื่อง — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('search')">
       <div class="liff-circle lc-orange">
-        <span class="liff-icon">🔍</span>
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <div class="liff-lock">
+          <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
+        </div>
       </div>
       <div class="liff-lbl">ค้นหาเครื่อง</div>
     </button>
 
-    <button class="liff-btn" onclick="liffMenu('history')">
+    <!-- ประวัติซ่อม — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('history')">
       <div class="liff-circle lc-purple">
-        <span class="liff-icon">📊</span>
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <div class="liff-lock">
+          <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
+        </div>
       </div>
       <div class="liff-lbl">ประวัติซ่อม</div>
     </button>
 
+    <!-- สมัครใช้งาน — ไม่ต้อง login (ไม่มี lock) -->
     <button class="liff-btn" onclick="liffMenu('register')">
       <div class="liff-circle lc-teal">
-        <span class="liff-icon">✍️</span>
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+        </svg>
       </div>
       <div class="liff-lbl">สมัครใช้งาน</div>
     </button>
