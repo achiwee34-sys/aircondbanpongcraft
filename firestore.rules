@@ -2,44 +2,66 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── helper: ตรวจสอบ app secret หรือ Firebase Auth ──
-    // ระบบใช้ custom auth — ต้องผ่าน Firebase Auth anonymous หรือส่ง appSecret ใน request
-    function isAuthenticated() {
-      return request.auth != null;
+    // ── F-02: helper functions ──────────────────────────────────
+    // บล็อก Anonymous auth — ต้องเป็น real user เท่านั้น
+    function isRealUser() {
+      return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
 
-    // ── aircon_data: ต้อง authenticated เท่านั้น ──
+    // F-05: role จาก Firebase Custom Claims
+    function hasRole(role) {
+      return isRealUser() && request.auth.token.role == role;
+    }
+    function isAdmin()    { return hasRole('admin'); }
+    function isTech()     { return hasRole('tech'); }
+    function isReporter() { return hasRole('reporter'); }
+    function isAnyStaff() { return isRealUser() && request.auth.token.role in ['admin','tech','reporter']; }
+
+    // ── aircon_data ─────────────────────────────────────────────
     match /aircon_data/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read:  if isAnyStaff();
+      allow write: if isAdmin() || isTech();
     }
 
-    // ── appdata: อ่านได้ถ้า authenticated, เขียนได้ถ้า authenticated ──
+    // ── appdata: main + signatures ──────────────────────────────
     match /appdata/{doc} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read:  if isAnyStaff();
+      // เฉพาะ admin เขียน main/signatures ได้
+      allow write: if isAdmin();
     }
 
-    // ── machines: ต้อง authenticated ──
+    // ── machines ────────────────────────────────────────────────
     match /machines/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read:  if isAnyStaff();
+      allow create, update: if isAdmin() || isTech();
+      allow delete: if isAdmin();
     }
 
-    // ── users collection: ต้อง authenticated ──
+    // ── users: admin เท่านั้น write, user อ่านได้เฉพาะตัวเอง ──
     match /users/{userId} {
-      allow read, write: if isAuthenticated();
+      allow read:  if isAdmin() || (isRealUser() && request.auth.uid == userId);
+      allow write: if isAdmin();
     }
 
-    // ── tickets, pm, history: ต้อง authenticated ──
+    // ── tickets ─────────────────────────────────────────────────
     match /tickets/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read:   if isAnyStaff();
+      allow create: if isAnyStaff();
+      // ช่างแก้ไขได้เฉพาะ ticket ที่ assigned ให้ตัวเอง หรือ admin
+      allow update: if isAdmin()
+                    || (isTech() && resource.data.assigneeId == request.auth.uid);
+      allow delete: if isAdmin();
     }
 
-    // ── ticket_photos: เก็บรูปแยก document ──
+    // ── ticket_photos ───────────────────────────────────────────
     match /ticket_photos/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read:   if isAnyStaff();
+      allow create: if isAnyStaff();
+      allow update, delete: if isAdmin();
     }
 
-    // ── block everything else ──
+    // ── block everything else ───────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }

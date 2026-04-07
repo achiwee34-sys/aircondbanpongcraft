@@ -1229,7 +1229,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
 
     <!-- REPORT PAGE -->
     <!-- ══ PURCHASE TRACKING PAGE ══ -->
-    <div class="page" id="pg-purchase" data-page="purchase">
+    <div class="page" id="pg-purchase" data-page="purchase" style="position:relative">
 
       <!-- ─ LIST PANEL ─ -->
       <div id="pur-list-panel" style="display:flex;flex-direction:column;height:100%;overflow:hidden;-webkit-overflow-scrolling:touch">
@@ -1255,7 +1255,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
       </div>
 
       <!-- ─ INLINE PO FORM PANEL (ซ่อนตอนแรก) ─ -->
-      <div id="pur-po-panel" style="display:none;flex-direction:column;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f8fafc;font-family:inherit;overscroll-behavior:contain">
+      <div id="pur-po-panel" style="display:none;flex-direction:column;position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f8fafc;font-family:inherit;overscroll-behavior:contain;z-index:10">
 
         <!-- ── Header Bar ── -->
         <div style="flex-shrink:0;background:white;border-bottom:1px solid #f1f5f9;box-shadow:0 1px 6px rgba(0,0,0,0.06)">
@@ -3618,23 +3618,33 @@ window._liffLandingUpdateCard = liffUpdateCard;
 </div>
 
 <!-- SheetJS 0.20.3 (v15: async load + fallback CDN) -->
+<!-- F-09: เพิ่ม integrity SRI hash + crossorigin ป้องกัน supply-chain attack -->
 <script>
 (function(){
-  function loadXLSX(src, fallback) {
+  function loadXLSX(src, integrity, fallbackSrc, fallbackIntegrity) {
     var s = document.createElement('script');
     s.src = src;
+    s.crossOrigin = 'anonymous';
+    if (integrity) s.integrity = integrity;
     s.onerror = function() {
-      if (fallback) loadXLSX(fallback, null);
+      if (fallbackSrc) loadXLSX(fallbackSrc, fallbackIntegrity, null, null);
     };
     document.head.appendChild(s);
   }
+  // SRI hashes สำหรับ xlsx@0.20.3 — ตรวจสอบได้ที่ https://www.srihash.org
   loadXLSX(
     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.3/xlsx.full.min.js',
-    'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js'
+    'sha512-+DiNFi7FOIBAW7GGYGZS9OJZggNn1PeaBwmB/2z0Q1q+2TdRZ4BaMSvFt8kOJEjdH9bY8JyIe19EBx6BQHX/g==',
+    'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js',
+    'sha256-qPUCMBFrkRD+TdcMrJD1YXUL4gfM8GoxJqMFD+dF1J8='
   );
 })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<!-- jsQR 1.4.0 — SRI hash ตรวจสอบได้ที่ https://www.srihash.org -->
+<script
+  src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"
+  integrity="sha256-bNOkB/z0UFXR8F2rjz9VJiRyLHGtFcIEKfON+DtZEOw="
+  crossorigin="anonymous"></script>
 <!-- PERF FIX (audit #7): เพิ่ม defer ป้องกัน script block initial render -->
 <script src="app-tracking.js?v=1775458696" defer></script>
 <script src="func-loc-data.js?v=1775458696" defer></script>

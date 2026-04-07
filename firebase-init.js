@@ -34,12 +34,19 @@ function initFirebase() {
     if (firebase.auth) {
       firebase.auth().onAuthStateChanged(user => {
         if (user) {
+          // F-02: ยืนยัน sign_in_provider ไม่ใช่ anonymous
+          if (user.isAnonymous) {
+            console.warn('[Firebase] Anonymous auth ไม่อนุญาต — กรุณา sign in ด้วย LIFF/Custom Token');
+            firebase.auth().signOut();
+            _firebaseAuthReady = false;
+            return;
+          }
           _firebaseAuthReady = true;
         } else {
           _firebaseAuthReady = false;
-          firebase.auth().signInAnonymously().catch(e => {
-            console.warn('[Firebase] Anonymous sign-in failed:', e.message);
-          });
+          // F-02: ลบ signInAnonymously() ออก — auth ทำผ่าน LIFF Custom Token เท่านั้น
+          // เรียก signInWithCustomToken(token) จาก liff-auth.js หลัง LIFF login สำเร็จ
+          console.info('[Firebase] ยังไม่ได้ auth — รอ LIFF sign in');
         }
       });
     } else {

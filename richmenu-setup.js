@@ -14,8 +14,14 @@ const fs   = require('fs');
 const path = require('path');
 const https = require('https');
 
-// ── ใส่ค่า Token ──────────────────────────────────────────────
-const CHANNEL_ACCESS_TOKEN = '7PUnKKarK4u0k+RsI9UQHQ0FtWOH3SrwZta4D2sXg0C1kCxSnJdZbYRz5ufn2FQEt04zetsmkPXPNDTTFUaMkc4tMuHMKG43FR5Iy3YENhAmjJBqF50JVzvGanSglsiecPOzbN0UMx4XaJKN0VmqtwdB04t89/1O/w1cDnyilFU=';
+// ── F-01: อ่าน token จาก environment variable — ห้าม hardcode ──
+// รันด้วย:  LINE_CHANNEL_TOKEN=xxx node richmenu-setup.js
+// หรือสร้างไฟล์ .env แล้วใช้ dotenv
+const CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_TOKEN || '';
+if (!CHANNEL_ACCESS_TOKEN) {
+  console.error('❌ LINE_CHANNEL_TOKEN ยังไม่ได้ตั้งค่า — กรุณาตั้ง environment variable ก่อนรัน script');
+  process.exit(1);
+}
 const LIFF_URL = 'https://liff.line.me/2009699254-TXIz4KN1';
 
 // ── Rich Menu Definition ───────────────────────────────────────

@@ -199,6 +199,9 @@ function initDB() {
     _seq: 1,
     notifications: [],
     gsUrl: '',
+    // F-12: ⚠️ SECURITY — tokenAdmin / tokenTech เป็น LINE Notify token ที่เก็บใน localStorage
+    // ห้าม sync ค่านี้ขึ้น Firestore เด็ดขาด (มีอยู่ใน fsSaveNow แล้วว่าไม่ส่ง field นี้)
+    // token ควรเก็บเฉพาะเครื่อง admin เท่านั้น — ถ้า sync ขึ้น Cloud จะ expose ให้ user ทุกคนอ่านได้
     lineNotify: { tokenAdmin:'', tokenTech:'', evNew:true, evAccept:true, evDone:true },
   };
 }
@@ -234,46 +237,85 @@ function saveDB() {
 // ============================================================
 // SECURITY — Password Hashing (SHA-256 via WebCrypto)
 // ============================================================
-const HASH_PREFIX = 'sha256:';
+// ── F-04: Password hashing — PBKDF2 + random salt (210,000 iterations) ──
+// Format: pbkdf2:<iterations>:<salt_hex>:<hash_hex>
+// Legacy: sha256:<hex>  →  migrate อัตโนมัติตอน login
+const HASH_PREFIX       = 'sha256:';  // legacy — ยังใช้ detect เพื่อ migrate
+const PBKDF2_PREFIX     = 'pbkdf2:';
+const PBKDF2_ITERATIONS = 210000;
 
+async function _pbkdf2Hash(plain, saltBytes) {
+  const enc     = new TextEncoder();
+  const keyMat  = await crypto.subtle.importKey('raw', enc.encode(plain), 'PBKDF2', false, ['deriveBits']);
+  const bits     = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes, iterations: PBKDF2_ITERATIONS },
+    keyMat, 256
+  );
+  return new Uint8Array(bits);
+}
+
+function _toHex(buf) {
+  return Array.from(buf).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// สร้าง hash ใหม่ด้วย PBKDF2 + random salt
 async function hashPassword(plain) {
   try {
-    const buf = await crypto.subtle.digest(
-      'SHA-256', new TextEncoder().encode(plain)
-    );
-    return HASH_PREFIX + Array.from(new Uint8Array(buf))
-      .map(b => b.toString(16).padStart(2,'0')).join('');
+    const salt    = crypto.getRandomValues(new Uint8Array(16));
+    const hashBuf = await _pbkdf2Hash(plain, salt);
+    return `${PBKDF2_PREFIX}${PBKDF2_ITERATIONS}:${_toHex(salt)}:${_toHex(hashBuf)}`;
   } catch(e) {
     console.warn('[Auth] WebCrypto unavailable:', e);
     return plain; // fallback safe
   }
 }
 
+// Legacy SHA-256 (ใช้เฉพาะ migrate)
+async function _sha256Hash(plain) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(plain));
+  return HASH_PREFIX + _toHex(new Uint8Array(buf));
+}
+
 async function verifyPassword(plain, stored) {
   if (!stored) return false;
   try {
+    if (stored.startsWith(PBKDF2_PREFIX)) {
+      // pbkdf2:<iter>:<salt_hex>:<hash_hex>
+      const parts = stored.split(':');
+      if (parts.length !== 4) return false;
+      const iter    = parseInt(parts[1], 10);
+      const salt    = new Uint8Array(parts[2].match(/.{2}/g).map(h => parseInt(h,16)));
+      const storedH = parts[3];
+      const enc     = new TextEncoder();
+      const keyMat  = await crypto.subtle.importKey('raw', enc.encode(plain), 'PBKDF2', false, ['deriveBits']);
+      const bits    = await crypto.subtle.deriveBits(
+        { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: iter }, keyMat, 256
+      );
+      const computed = _toHex(new Uint8Array(bits));
+      return computed === storedH;
+    }
     if (stored.startsWith(HASH_PREFIX)) {
-      const h = await hashPassword(plain);
+      // legacy sha256 — verify เพื่อ migrate ต่อ
+      const h = await _sha256Hash(plain);
       return h === stored;
     }
-    // plain text เก่า: ตรง = true แล้ว migrate ต่อ
+    // plain text เก่าสุด
     return plain === stored;
   } catch(e) {
-    // SECURITY FIX (audit #2): ไม่ fallback plain compare — ถ้า WebCrypto ล้มเหลวให้ปฏิเสธ login
     console.error('[verifyPassword] WebCrypto error — login rejected for security:', e.message);
     return false;
   }
 }
 
-// migrate plain text → SHA-256 โดยอัตโนมัติหลัง login สำเร็จ
+// migrate plain text หรือ sha256 → PBKDF2 โดยอัตโนมัติหลัง login สำเร็จ
 async function migratePasswordIfNeeded(user, plainPass) {
-  if (!user.password || user.password.startsWith(HASH_PREFIX)) return;
+  if (!user.password || user.password.startsWith(PBKDF2_PREFIX)) return; // ใหม่อยู่แล้ว
   try {
-    user.password = await hashPassword(plainPass);
+    user.password = await hashPassword(plainPass); // PBKDF2 ใหม่
     saveDB();
+    console.info('[Auth] migrated password to PBKDF2 for user:', user.username);
   } catch(e) {
-    console.warn('[migratePassword] WebCrypto error, keeping plain text:', e.message);
-    // ไม่ migrate — ปล่อย plain text ไว้ก่อน ดีกว่า lock user ออก
+    console.warn('[migratePassword] WebCrypto error, keeping existing hash:', e.message);
   }
 }
 
@@ -284,11 +326,21 @@ let CU = null;
 let fStatus = '', fSearch = '', fPriority = '', fMachineId = '';
 let tkPage = 1;
 
-// ── Login Brute Force Protection ──
+// ── F-10: Login Brute Force Protection — เก็บใน sessionStorage (reload ไม่ bypass) ──
 const _LOGIN_MAX_ATTEMPTS = 5;
 const _LOGIN_LOCKOUT_MS   = 5 * 60 * 1000; // 5 นาที
-let _loginAttempts = 0;
-let _loginLockedUntil = 0;
+const _LOCKOUT_SS_KEY     = 'aircon_lockout';
+
+function _getLockoutState() {
+  try {
+    const raw = sessionStorage.getItem(_LOCKOUT_SS_KEY);
+    return raw ? JSON.parse(raw) : { attempts: 0, lockedUntil: 0 };
+  } catch(e) { return { attempts: 0, lockedUntil: 0 }; }
+}
+function _setLockoutState(state) {
+  try { sessionStorage.setItem(_LOCKOUT_SS_KEY, JSON.stringify(state)); } catch(e) {}
+}
+function _resetLockout() { _setLockoutState({ attempts: 0, lockedUntil: 0 }); }
 const TK_PER_PAGE = 10;
 
 // (demo login removed)
@@ -393,9 +445,10 @@ function showRegisterSuccess(name, callback) {
 }
 
 async function doLogin() {
-  // ── Brute Force Check ──
-  if (Date.now() < _loginLockedUntil) {
-    const remaining = Math.ceil((_loginLockedUntil - Date.now()) / 1000 / 60);
+  // ── F-10: Brute Force Check — อ่านจาก sessionStorage (reload ไม่ bypass) ──
+  const _ls = _getLockoutState();
+  if (Date.now() < _ls.lockedUntil) {
+    const remaining = Math.ceil((_ls.lockedUntil - Date.now()) / 1000 / 60);
     showLoginErr(`🔒 Login ถูกล็อค กรุณารอ ${remaining} นาที`);
     shakeLoginInput('lu');
     return;
@@ -430,19 +483,23 @@ async function doLogin() {
     if (!valid) {
       shakeLoginInput('lu'); shakeLoginInput('lp');
       document.getElementById('lp').value = '';
-      _loginAttempts++;
-      if (_loginAttempts >= _LOGIN_MAX_ATTEMPTS) {
-        _loginLockedUntil = Date.now() + _LOGIN_LOCKOUT_MS;
-        _loginAttempts = 0;
+      _loginAttempts++; // unused legacy — replaced below
+      const _ls2 = _getLockoutState();
+      _ls2.attempts++;
+      if (_ls2.attempts >= _LOGIN_MAX_ATTEMPTS) {
+        _ls2.lockedUntil = Date.now() + _LOGIN_LOCKOUT_MS;
+        _ls2.attempts = 0;
+        _setLockoutState(_ls2);
         showLoginErr(`🔒 Login ผิดเกิน ${_LOGIN_MAX_ATTEMPTS} ครั้ง — ถูกล็อค 5 นาที`);
       } else {
-        showLoginErr(`Username หรือ Password ไม่ถูกต้อง (${_loginAttempts}/${_LOGIN_MAX_ATTEMPTS})`);
+        _setLockoutState(_ls2);
+        showLoginErr(`Username หรือ Password ไม่ถูกต้อง (${_ls2.attempts}/${_LOGIN_MAX_ATTEMPTS})`);
       }
       return;
     }
     clearLoginErr();
     await migratePasswordIfNeeded(candidate, p);
-    _loginAttempts = 0; // reset หลัง login สำเร็จ
+    _resetLockout(); // F-10: reset sessionStorage lockout หลัง login สำเร็จ
     CU = candidate;
     const sessionData = { uid: candidate.id, uname: candidate.username, exp: Date.now() + 8*60*60*1000 }; // 8h — ป้องกัน shared device
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
@@ -504,13 +561,20 @@ function renderSettingsPage() {
   if(!CU) return;
   const ri = {admin:['👑 แอดมิน','#7c3aed'],tech:['🔧 ช่างซ่อม','#059669'],reporter:['📢 ผู้แจ้งงาน','#0891b2'],executive:['📊 ผู้บริหาร','#0e7490']};
 
-  // Avatar
+  // F-11: Avatar — ใช้ createElement แทน innerHTML ป้องกัน XSS
   const inner = document.getElementById('sp-avatar-inner');
   if(inner) {
+    inner.textContent = '';
     if(CU.avatar) {
-      inner.innerHTML = '<img src="'+CU.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+      const img = document.createElement('img');
+      img.src = CU.avatar;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+      inner.appendChild(img);
     } else {
-      inner.innerHTML = '<span style="font-size:1.6rem;font-weight:900;color:#fff">'+getAvatarInitials(CU.name)+'</span>';
+      const span = document.createElement('span');
+      span.style.cssText = 'font-size:1.6rem;font-weight:900;color:#fff';
+      span.textContent = getAvatarInitials(CU.name);
+      inner.appendChild(span);
       const ring = document.getElementById('sp-avatar-ring');
       if(ring) ring.style.background = getAvatarColor(CU.id);
     }
@@ -695,11 +759,16 @@ async function spTestLinePush() {
 function renderAcctInfo() { renderSettingsPage(); }
 function renderTopbarAvatar() {
   const el = document.getElementById('tb-avatar'); if(!el) return;
+  el.textContent = '';
+  // F-11: ใช้ createElement แทน innerHTML ป้องกัน XSS (CU.avatar/CU.name)
   if(CU && CU.avatar) {
-    el.innerHTML = '<img src="'+CU.avatar+'" style="width:100%;height:100%;object-fit:cover"/>';
+    const img = document.createElement('img');
+    img.src = CU.avatar;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    el.appendChild(img);
     el.style.background = 'transparent';
   } else if(CU) {
-    el.innerHTML = getAvatarInitials(CU.name);
+    el.textContent = getAvatarInitials(CU.name);
     el.style.background = getAvatarColor(CU.id);
   }
 }function previewAvatar(input) { spPreviewAvatar(input); }
@@ -1126,16 +1195,17 @@ async function viewQuotationFull(tid) {
   ov.appendChild(tb);
 
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'flex:1;overflow-y:scroll;overflow-x:hidden;background:#888;-webkit-overflow-scrolling:touch;min-height:0;overscroll-behavior:contain;';
+  wrap.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;background:#555;-webkit-overflow-scrolling:touch;min-height:0;overscroll-behavior:contain;';
   const iframe = document.createElement('iframe');
   iframe.id = '_vq_iframe';
-  iframe.style.cssText = 'width:100%;border:none;background:transparent;display:block;min-height:600px;height:auto;';
+  // Fix 4: เต็มหน้าจอ ไม่มีขอบ — ความสูงจะถูก set อีกครั้งหลัง load
+  iframe.style.cssText = 'width:100%;border:none;background:white;display:block;height:100%;min-height:100%;';
   iframe.setAttribute('sandbox','allow-same-origin allow-scripts allow-modals');
   wrap.appendChild(iframe);
   ov.appendChild(wrap);
   document.body.appendChild(ov);
 
-  // ── applyPDFScale: scale เนื้อหาพอดีจอทุกขนาด ──
+  // ── applyPDFScale: scale A4 เต็มความกว้างหน้าจอ ไม่มีขอบเทา ──
   var applyScale = function(){
     try {
       var doc = iframe.contentDocument;
@@ -1143,28 +1213,32 @@ async function viewQuotationFull(tid) {
       var page = doc.querySelector('.page');
       if(!page) return;
       var viewW = wrap.clientWidth || window.innerWidth;
-      var pageW = 794; // A4 px at 96dpi = 210mm
-      var scale = Math.min(1, (viewW - 8) / pageW);
-      page.style.transformOrigin = 'top center';
+      var pageW = 794; // A4 at 96dpi
+      // Fix 4: scale เต็ม viewW ไม่มีขอบ
+      var scale = viewW / pageW;
+      page.style.transformOrigin = 'top left';
       page.style.transform = 'scale('+scale+')';
-      page.style.marginTop = '8px';
-      page.style.marginBottom = (scale < 1 ? -(pageW * (1-scale) * 0.5) : 8) + 'px';
-      // ปรับความสูง iframe: ใช้ความสูงจริงของเนื้อหาหลัง scale
-      var rawH = doc.documentElement.scrollHeight || doc.body.scrollHeight || 1200;
-      var scaledH = rawH * scale;
-      // marginBottom: ชดเชย whitespace ที่เกิดจาก transform scale (ต้องลบออก ไม่ใช่บวก)
-      page.style.marginBottom = (scale < 1 ? Math.ceil(rawH * (1 - scale) * -1) + 8 : 8) + 'px';
-      iframe.style.height = Math.max(scaledH + 80, wrap.clientHeight || 400) + 'px';
+      page.style.margin = '0';
+      page.style.borderRadius = '0';
+      page.style.boxShadow = 'none';
+      // ปรับ body background ให้ขาวเหมือน page
+      doc.body.style.background = 'white';
+      doc.body.style.margin = '0';
+      doc.body.style.padding = '0';
+      // คำนวณความสูงจริงหลัง scale
+      var rawH = page.offsetHeight || doc.documentElement.scrollHeight || 1122;
+      var scaledH = Math.ceil(rawH * scale);
+      iframe.style.height = scaledH + 'px';
+      wrap.style.background = 'white';
     } catch(e){}
   };
 
   requestAnimationFrame(function(){
     // ใช้ srcdoc แทน blob URL — รองรับ LINE WebView ที่บล็อก blob:
     iframe.onload = function(){
-      setTimeout(applyScale, 100);
-      setTimeout(applyScale, 350);
-      setTimeout(applyScale, 800);
-      setTimeout(applyScale, 1500);
+      setTimeout(applyScale, 80);
+      setTimeout(applyScale, 300);
+      setTimeout(applyScale, 700);
     };
     window.removeEventListener('resize', applyScale);
     window.addEventListener('resize', applyScale);
@@ -2048,9 +2122,15 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     const reader = new FileReader();
     reader.onload = (e) => {
       DS.logoData = e.target.result;
-      // update preview thumbnail
+      // F-11: update preview — ใช้ createElement แทน innerHTML (DS.logoData เป็น base64 url)
       const prev = document.getElementById('_ds_logo_preview');
-      if(prev) prev.innerHTML = `<img src="${DS.logoData}" style="width:100%;height:100%;object-fit:contain"/>`;
+      if(prev) {
+        prev.textContent = '';
+        const img = document.createElement('img');
+        img.src = DS.logoData;
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain';
+        prev.appendChild(img);
+      }
       // ── FIX: persist logo ด้วย ──
       savePDFConfig(Object.assign(getPDFConfig(), { logo: DS.logoData }));
       renderPreview();

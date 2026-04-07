@@ -1656,6 +1656,7 @@ function renderTrackingInline(container) {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div style="font-size:0.72rem;color:var(--muted)">🔧 ${t.assignee||'ยังไม่จ่ายงาน'}</div>
         <div style="display:flex;gap:5px;flex-shrink:0">
+          ${CU&&CU.role==='admin' ? `
           <button onclick="event.stopPropagation();notifyTechToResubmit('${t.id}')"
             style="padding:5px 9px;border-radius:8px;border:1.5px solid #7c3aed;background:white;color:#7c3aed;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit">
             🔔 แจ้งช่างกรอกใหม่
@@ -1670,6 +1671,7 @@ function renderTrackingInline(container) {
                 📦 ของมาแล้ว
                </button>`
             : `<button disabled style="padding:5px 9px;border-radius:8px;border:none;background:#e2e8f0;color:#94a3b8;font-size:0.62rem;cursor:not-allowed;font-family:inherit">📦 ของมาแล้ว</button>`}
+          ` : ''}
         </div>
       </div>
     </div>`;

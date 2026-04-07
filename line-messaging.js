@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════
 
 const LINE_LIFF_URL      = 'https://liff.line.me/2009699254-TXIz4KN1';
-const LINE_ADMIN_USER_ID = 'U06dd3c0d1756f7497ecf67c6fccf3e52';
+// F-13: ลบ hardcode LINE_ADMIN_USER_ID ออก — ใช้ admin list จาก db.users เท่านั้น
 
 // ── helper: ดึง gsUrl จาก db หรือ localStorage ──
 function _getGsUrl() {
@@ -52,8 +52,13 @@ async function linePushAdmin(messages) {
     .filter(u => u.role === 'admin' && u.lineUserId)
     .map(u => u.lineUserId);
 
-  // รวม hardcode fallback เสมอ — ป้องกัน race condition ที่ db.users ยังโหลดไม่ครบ
-  const targets = [...new Set([...adminIds, LINE_ADMIN_USER_ID])];
+  // F-13: ลบ hardcode fallback userId ออก — ใช้ adminIds จาก db.users เท่านั้น
+  // หาก adminIds ว่าง แจ้งเตือนใน console แทนการ fallback หา hardcode id
+  if (adminIds.length === 0) {
+    console.warn('[LINE Push Admin] ไม่พบ admin ที่มี lineUserId ใน db.users — ไม่ส่ง notification');
+    return;
+  }
+  const targets = [...new Set(adminIds)];
 
   console.info('[LINE Push Admin] targets:', targets, '| gsUrl:', gsUrl.slice(0,40)+'...');
 

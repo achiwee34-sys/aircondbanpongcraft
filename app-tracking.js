@@ -1623,7 +1623,7 @@ function openRepairPicker() {
 
       // Group section container
       const section = document.createElement('div');
-      section.style.cssText = 'margin:0 10px 14px;background:white;border-radius:18px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1.5px solid '+grpColor+'22';
+      section.style.cssText = 'margin:0 6px 12px;background:white;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1.5px solid '+grpColor+'22';
 
       // Group header — sticky สีหมวด
       const selCnt = items.filter(it=>selectedMap[it.name]).length;
@@ -1640,7 +1640,7 @@ function openRepairPicker() {
 
       // Items — 2-col grid redesign: card ใหญ่ขึ้น icon ชัด กดง่าย
       const grid = document.createElement('div');
-      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f1f5f9';
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f1f5f9';
       items.forEach((it, idx) => {
         const qty = selectedMap[it.name]||0;
         const price = it.price||REPAIR_PRICE[it.name]||0;
@@ -3392,6 +3392,7 @@ function renderTracking() {
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <div style="font-size:0.72rem;color:var(--muted)">🔧 ${t.assignee||'ยังไม่จ่ายงาน'}</div>
           <div style="display:flex;gap:6px;flex-shrink:0">
+            ${CU&&CU.role==='admin' ? `
             <button onclick="event.stopPropagation();closeSheet('detail');setTimeout(()=>openPOForm('${t.id}'),200)"
               style="padding:5px 10px;border-radius:8px;border:1.5px solid #e65100;background:white;color:#e65100;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit">
               ✏️ ${hasPO?'แก้ PR':'กรอก PR'}
@@ -3407,6 +3408,7 @@ function renderTracking() {
                   📦 ของมาแล้ว
                 </button>`
             }
+            ` : ''}
           </div>
         </div>
       </div>`;

@@ -256,7 +256,9 @@ function _doOpenUserSheet(id, defaultRole) {
   var pv  = document.getElementById('u-pass-val');
   if (pcb && pv) {
     if (CU&&CU.role==='admin'&&u&&u.password) {
-      pv.textContent  = u.password.startsWith('sha256:') ? '•••••••• (hashed)' : '(plain)';
+      // F-15: ซ่อน format prefix (sha256:/pbkdf2:) ไม่ให้แสดงใน UI — แสดงเพียง "ตั้งรหัสแล้ว"
+      const isSet = u.password && u.password !== '__SETUP_REQUIRED__' && u.password.length > 0;
+      pv.textContent = isSet ? '•••••••• (ตั้งรหัสแล้ว)' : '(ยังไม่ตั้งรหัส)';
       pcb.style.display = 'flex';
     } else { pcb.style.display = 'none'; }
   }
