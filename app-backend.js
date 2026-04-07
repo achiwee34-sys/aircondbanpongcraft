@@ -363,7 +363,7 @@ function exportBkLog(format) {
   }
 
   // Excel via SheetJS
-  if (typeof XLSX === 'undefined') { showToast('⚠️ SheetJS ยังไม่โหลด'); return; }
+  if (typeof XLSX === 'undefined') { waitForXLSX(() => exportBkLog(format)); return; }
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, isAudit ? 'Audit' : 'Log');

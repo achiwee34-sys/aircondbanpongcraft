@@ -770,7 +770,7 @@ function openPOForm(tid) {
             <span style="font-size:1rem">✅</span>
             <div>
               <div style="font-size:0.78rem;font-weight:800;color:#166534">รายการจากช่างครบถ้วน</div>
-              <div style="font-size:0.65rem;color:#15803d">กรอกเฉพาะ MO/PR/PO Number แล้วบันทึก — ชื่อ/จำนวน/ราคาแก้ไขไม่ได้</div>
+              <div style="font-size:0.65rem;color:#15803d">กรอก MO/PR/PO Number แล้วบันทึก — แก้ไขรายการได้เมื่อต้องการ</div>
             </div>
           </div>`;
         warnEl.style.display = 'block';
@@ -3272,8 +3272,13 @@ function openDetail(tid) {
     const _po = t.purchaseOrder;
     const _tr = t.techRequest;
     const _arrived = _po?.receiveStatus === 'received';
+    // ปุ่ม กรอก/แก้ไข PO — Admin แก้ได้เสมอตราบที่ยังไม่ received
     if (!_arrived && (_po || (_tr && _tr.rows && _tr.rows.some(r=>r.name)))) {
       acts.push(`<button class="btn btn-full" style="background:#e65100;color:white" onclick="closeSheet('detail');setTimeout(()=>openPOForm('${t.id}'),200)">${_po ? '✏️ แก้ไขใบสั่งซื้อ' : '📋 กรอกใบสั่งซื้อ'}</button>`);
+    }
+    // ปุ่ม "ของมาถึงแล้ว" — แสดงเมื่อมี PO และยังไม่ received
+    if (_po && !_arrived) {
+      acts.push(`<button class="btn btn-full" style="background:linear-gradient(135deg,#16a34a,#15803d);color:white;-webkit-tap-highlight-color:transparent" ontouchstart="this.style.opacity='0.8'" ontouchend="this.style.opacity='1'" onclick="closeSheet('detail');setTimeout(()=>markPartsArrivedAndNotify('${t.id}'),200)">📦 ของมาถึงแล้ว — ยืนยันรับอะไหล่</button>`);
     }
     if (t.status==='waiting_part' && t.assigneeId) {
       acts.push(`<button class="btn btn-ghost btn-full" style="color:#0369a1;border-color:#bae6fd;background:#f0f9ff" onclick="closeSheet('detail');openChat('${t.id}','${t.assigneeId}')">💬 แชทกับช่าง — ${t.assignee||'ช่าง'}</button>`);

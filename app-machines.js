@@ -563,7 +563,7 @@ function openMachineExportMenu(btn) {
 
 // ── Export: รายการเครื่องแอร์ทั้งหมด ──
 function exportMachineList() {
-  if (typeof XLSX === 'undefined') { showAlert({ icon:'⏳', title:'กำลังโหลด', msg:'SheetJS ยังไม่พร้อม กรุณารอสักครู่', color:'#d97706', btnOk:'ตกลง' }); return; }
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportMachines); return; }
 
   const list = window._macFilteredList?.length ? window._macFilteredList : (db.machines || []);
   const today = new Date();
@@ -677,7 +677,7 @@ function exportMachineList() {
 
 // ── Export: เครื่องเพิ่มใหม่ 2 เดือน ──
 function exportNewMachines() {
-  if (typeof XLSX === 'undefined') { showAlert({ icon:'⏳', title:'กำลังโหลด', msg:'SheetJS ยังไม่พร้อม', color:'#d97706', btnOk:'ตกลง' }); return; }
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportNewMachines); return; }
   const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 2);
   const list = (db.machines||[]).filter(m => m.addedAt && new Date(m.addedAt) >= cutoff)
     .sort((a,b) => (b.addedAt||'').localeCompare(a.addedAt||''));
@@ -713,10 +713,7 @@ function exportNewMachines() {
 }
 
 function exportMachineHistory() {
-  if(typeof XLSX === 'undefined') {
-    showAlert({ icon:'⏳', title:'กำลังโหลด', msg:'SheetJS ยังไม่พร้อม<br>กรุณารอสักครู่แล้วลองใหม่', color:'#d97706', btnOk:'ตกลง' });
-    return;
-  }
+  if(typeof XLSX === 'undefined') { waitForXLSX(exportMachineHistory); return; }
 
   const wb = XLSX.utils.book_new();
   const today = new Date().toLocaleDateString('th-TH');
@@ -1677,10 +1674,7 @@ function showDupEqPopup() {
 
 // ── Export: Equipment ซ้ำ → Excel ──
 function exportDupEqExcel() {
-  if (typeof XLSX === 'undefined') {
-    showAlert({ icon:'⏳', title:'กำลังโหลด', msg:'SheetJS ยังไม่พร้อม<br>กรุณารอสักครู่แล้วลองใหม่', color:'#d97706', btnOk:'ตกลง' });
-    return;
-  }
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportDupEqExcel); return; }
   const list = window._macFilteredList || db.machines || [];
   const eqMap = {};
   list.forEach(m => {
@@ -1782,10 +1776,7 @@ function _showCardPopup({ icon, iconBg, title, subtitle, accentColor, body, extr
 }
 
 function exportNoFuncLocExcel() {
-  if (typeof XLSX === 'undefined') {
-    showAlert({ icon:'⏳', title:'กำลังโหลด', msg:'SheetJS ยังไม่พร้อม<br>กรุณารอสักครู่แล้วลองใหม่', color:'#d97706', btnOk:'ตกลง' });
-    return;
-  }
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportNoFuncLocExcel); return; }
   const list = window._macFilteredList || db.machines || [];
   const noFL = list.filter(m => !getMachineEqStatus(m).isComplete);
   if (!noFL.length) {

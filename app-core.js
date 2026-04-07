@@ -2769,6 +2769,19 @@ function setupBottomNav() {
 // PAGES
 // ============================================================
 let _activePage = 'home'; // sync กับ HTML ที่ pg-home มี class active ตอนแรก
+
+// ── SheetJS readiness helper (audit v15) ──
+// รอ XLSX โหลดเสร็จก่อน export — retry สูงสุด 20 ครั้ง (6 วินาที)
+function waitForXLSX(cb, retries=20) {
+  if (typeof XLSX !== 'undefined') { cb(); return; }
+  if (retries <= 0) {
+    showAlert({ icon:'❌', title:'โหลดไม่สำเร็จ', msg:'ไม่สามารถโหลด SheetJS<br>ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต', color:'#dc2626', btnOk:'ตกลง' });
+    return;
+  }
+  showToast('⏳ กำลังโหลด Excel library...');
+  setTimeout(() => waitForXLSX(cb, retries - 1), 300);
+}
+
 function goPage(name) {
   if (_activePage === name) return; // กดหน้าเดิม ไม่ต้องทำอะไร
 

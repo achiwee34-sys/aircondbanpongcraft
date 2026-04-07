@@ -1977,98 +1977,92 @@ function renderPurchaseAdmin() {
     const poRows = (po?.rows||[]).filter(r=>r.name);
     const trRows = (t.techRequest?.rows||[]).filter(r=>r.name);
 
-    // Status strip color
+    // ── Status config ──
     const stripe = isRecv?'#22c55e':isPurchasing?'#f59e0b':hasPO?'#a78bfa':hasReq?'#f97316':'#cbd5e1';
-    const statusLabel = isRecv?'📦 รับแล้ว':isPurchasing?'🛒 กำลังสั่งซื้อ':hasPO?'📋 ออก PO แล้ว':hasReq?'⏳ รอออก PO':'🆕 รอแจ้งรายการ';
-    const statusBg = isRecv?'#dcfce7':isPurchasing?'#fef3c7':hasPO?'#ede9fe':hasReq?'#ffedd5':'#f1f5f9';
+    const statusLabel = isRecv?'รับแล้ว':isPurchasing?'กำลังสั่งซื้อ':hasPO?'ออก PO แล้ว':hasReq?'รอออก PO':'รอแจ้งรายการ';
+    const statusBg    = isRecv?'#dcfce7':isPurchasing?'#fef3c7':hasPO?'#ede9fe':hasReq?'#ffedd5':'#f1f5f9';
     const statusColor = isRecv?'#166534':isPurchasing?'#92400e':hasPO?'#6d28d9':hasReq?'#c2410c':'#64748b';
+    const statusIcon  = isRecv?'📦':isPurchasing?'🛒':hasPO?'📋':hasReq?'⏳':'🆕';
 
-    // Doc badges (compact)
+    // ── Doc badges ──
     const docs = [
-      po?.mowr?`<span style="background:#fef3c7;color:#92400e;border-radius:5px;padding:1px 6px;font-size:0.6rem;font-weight:700">MO:${po.mowr}</span>`:'',
-      po?.pr?`<span style="background:#fff1f2;color:#be123c;border-radius:5px;padding:1px 6px;font-size:0.6rem;font-weight:700">PR:${po.pr}</span>`:'',
-      po?.po?`<span style="background:#f5f3ff;color:#6d28d9;border-radius:5px;padding:1px 6px;font-size:0.6rem;font-weight:700">PO:${po.po}</span>`:'',
+      po?.mowr?`<span style="background:#fef3c7;color:#92400e;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:700">MO:${po.mowr}</span>`:'',
+      po?.pr?`<span style="background:#fff1f2;color:#be123c;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:700">PR:${po.pr}</span>`:'',
+      po?.po?`<span style="background:#f5f3ff;color:#6d28d9;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:700">PO:${po.po}</span>`:'',
     ].filter(Boolean).join('');
 
-    // Parts — compact list (max 3)
+    // ── Parts preview (max 2 items inline) ──
     const displayRows = poRows.length ? poRows : trRows;
     const isPORows = poRows.length > 0;
-    const partsHtml = displayRows.length ? `
-      <div style="border-top:1px solid #f8fafc;padding:6px 10px 4px">
-        ${displayRows.slice(0,3).map((r,i)=>`
-          <div style="display:flex;align-items:center;gap:6px;padding:3px 0;${i>0?'border-top:1px solid #fafafa':''}">
-            <div style="width:16px;height:16px;border-radius:4px;background:${isPORows?'#e65100':'#e2e8f0'};color:${isPORows?'white':'#64748b'};font-size:0.5rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
-            <div style="flex:1;font-size:0.72rem;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</div>
-            ${isPORows&&r.price?`<div style="font-size:0.68rem;font-weight:700;color:#e65100;flex-shrink:0">฿${((r.qty||1)*(r.price||0)).toLocaleString()}</div>`:''}
-            ${!isPORows?`<div style="font-size:0.6rem;color:#94a3b8;flex-shrink:0">×${r.qty||1}</div>`:''}
-          </div>`).join('')}
-        ${displayRows.length>3?`<div style="font-size:0.6rem;color:#94a3b8;padding:3px 0">+${displayRows.length-3} รายการ</div>`:''}
-        ${isPORows&&po?.total?`<div style="text-align:right;padding-top:4px;border-top:1px dashed #f0f0f0;font-size:0.7rem;font-weight:800;color:#e65100">รวม ฿${Number(po.total).toLocaleString()}</div>`:''}
-      </div>` : '';
+    const partPreview = displayRows.slice(0,2).map(r =>
+      `<span style="font-size:0.62rem;color:#475569;background:#f8fafc;border-radius:4px;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">${escapeHtml(r.name)}${r.qty>1?` ×${r.qty}`:''}</span>`
+    ).join('') + (displayRows.length>2?`<span style="font-size:0.6rem;color:#94a3b8">+${displayRows.length-2}</span>`:'');
 
-    // Received banner (compact)
-    const recvBanner = isRecv ? `
-      <div style="margin:4px 8px 6px;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:8px;border:1px solid #86efac">
-        <span style="font-size:1rem">📦</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:0.72rem;font-weight:800;color:#065f46">อะไหล่มาถึงแล้ว! พร้อมซ่อม</div>
-          <div style="font-size:0.6rem;color:#16a34a">${(po.receivedAt||'').slice(0,10)} · ${po.receivedBy||'Admin'}</div>
-        </div>
-      </div>` : '';
-
-    // Action buttons — ซ่อน "แก้ไข PO" เมื่อของมาถึงแล้วหรือ purchasing=true
-    const isPurchasingDone = !!(po?.purchasing);
-    const btnPO = !isRecv && !isPurchasingDone ? `
-      <button onclick="openPOForm('${t.id}')" style="display:flex;align-items:center;gap:3px;padding:6px 11px;background:${hasPO?'#f8fafc':'#e65100'};color:${hasPO?'#475569':'white'};border:${hasPO?'1.5px solid #e2e8f0':'none'};border-radius:8px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit;${hasPO?'':'box-shadow:0 2px 6px rgba(230,81,0,0.3)'}">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    // ── Action buttons ──
+    // Admin แก้ PO ได้เสมอตราบที่ยังไม่ received
+    const btnPO = !isRecv ? `
+      <button onclick="openPOForm('${t.id}')" style="display:flex;align-items:center;gap:4px;padding:7px 13px;background:${hasPO?'white':'linear-gradient(135deg,#e65100,#c2410c)'};color:${hasPO?'#475569':'white'};border:${hasPO?'1.5px solid #e2e8f0':'none'};border-radius:9px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;${hasPO?'':'box-shadow:0 2px 8px rgba(230,81,0,0.25)'}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         ${hasPO?'แก้ไข PO':'กรอก PO'}
       </button>` : '';
 
+    // "ของมาถึงแล้ว" แสดงเมื่อมี PO และยังไม่ received
     const btnArrived = hasPO && !isRecv ? `
-      <button onclick="markPartsArrivedAndNotify('${t.id}')" style="display:flex;align-items:center;gap:3px;padding:6px 11px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(22,163,74,0.3)">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>
+      <button onclick="markPartsArrivedAndNotify('${t.id}')" style="display:flex;align-items:center;gap:4px;padding:7px 13px;background:linear-gradient(135deg,#16a34a,#15803d);color:white;border:none;border-radius:9px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(22,163,74,0.25);-webkit-tap-highlight-color:transparent" ontouchstart="this.style.opacity=0.8" ontouchend="this.style.opacity=1">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
         ของมาถึงแล้ว
       </button>` : '';
 
-    const btnDetail = `<button onclick="openDetail('${t.id}')" style="padding:6px 10px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">ดูงาน</button>`;
+    const btnDetail = `<button onclick="openDetail('${t.id}')" style="padding:7px 11px;background:#f1f5f9;color:#64748b;border:none;border-radius:9px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">ดูงาน</button>`;
+
+    // ── Received date line (แทน banner ใหญ่) ──
+    const recvLine = isRecv ? `<span style="font-size:0.6rem;color:#16a34a;font-weight:600">รับแล้ว ${(po.receivedAt||'').slice(0,10)}</span>` : '';
 
     return `
-    <div style="background:white;border-radius:14px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1.5px solid ${stripe}33;position:relative">
+    <div style="background:white;border-radius:14px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.07);border:1.5px solid ${stripe}30;position:relative">
       <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${stripe};border-radius:3px 0 0 3px"></div>
 
-      <!-- Header (compact) -->
-      <div style="padding:9px 10px 7px 14px">
-        <div style="display:flex;align-items:center;gap:7px">
+      <!-- ── Main row ── -->
+      <div style="padding:10px 12px 8px 16px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
           <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;flex-wrap:wrap">
+            <!-- TK + Status -->
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
               <span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:#94a3b8;font-weight:700">${t.id}</span>
-              <span style="background:${statusBg};color:${statusColor};border-radius:99px;padding:0px 7px;font-size:0.58rem;font-weight:800;white-space:nowrap">${statusLabel}</span>
+              <span style="background:${statusBg};color:${statusColor};border-radius:99px;padding:1px 8px;font-size:0.6rem;font-weight:800;white-space:nowrap">${statusIcon} ${statusLabel}</span>
+              ${recvLine}
             </div>
-            <div style="font-size:0.82rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)}</div>
-            <div style="display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap">
-              ${serial?`<span style="font-family:'JetBrains Mono',monospace;background:#e0f2fe;color:#0369a1;padding:0px 5px;border-radius:3px;font-size:0.58rem;font-weight:700">${serial}</span>`:''}
-              <span style="font-size:0.62rem;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${t.machine||''}</span>
+            <!-- Problem -->
+            <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${escapeHtml(t.problem)}</div>
+            <!-- Machine info -->
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+              ${serial?`<span style="font-family:'JetBrains Mono',monospace;background:#e0f2fe;color:#0369a1;padding:0 5px;border-radius:4px;font-size:0.58rem;font-weight:700">${serial}</span>`:''}
+              <span style="font-size:0.62rem;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">${t.machine||''}</span>
               <span style="font-size:0.6rem;color:#94a3b8">· ${techName}</span>
             </div>
           </div>
-          ${po?.total?`<div style="text-align:right;flex-shrink:0">
-            <div style="font-size:0.88rem;font-weight:900;color:#e65100">฿${Number(po.total).toLocaleString()}</div>
+          ${po?.total?`<div style="flex-shrink:0;text-align:right">
+            <div style="font-size:0.92rem;font-weight:900;color:#e65100">฿${Number(po.total).toLocaleString()}</div>
           </div>`:''}
         </div>
-        ${docs?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">${docs}</div>`:''}
+
+        <!-- Doc badges -->
+        ${docs?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${docs}</div>`:''}
+
+        <!-- Parts preview -->
+        ${partPreview?`<div style="display:flex;align-items:center;gap:4px;margin-top:5px;flex-wrap:wrap">${partPreview}</div>`:''}
       </div>
 
-      ${partsHtml}
-      ${recvBanner}
-
-      <!-- Actions (compact) -->
-      <div style="padding:6px 10px 8px 14px;display:flex;gap:5px;align-items:center;border-top:1px solid #f8fafc;background:#fafbff">
-        ${btnPO}${btnArrived}${btnDetail}
+      <!-- ── Action bar ── -->
+      <div style="padding:6px 12px 8px 16px;display:flex;gap:5px;align-items:center;border-top:1px solid #f1f5f9;background:#fafbff">
+        ${btnPO}${btnArrived}
+        <div style="flex:1"></div>
+        ${btnDetail}
       </div>
     </div>`;
   };
 
-  // ── Render sections ──
+    // ── Render sections ──
   let html = '';
 
   const mkSection = (title, icon, color, items, emptyMsg) => {
@@ -2709,7 +2703,7 @@ function markPOReceived(tid) {
 }
 
 function exportPurchaseExcel() {
-  if (typeof XLSX === 'undefined') { showToast('⚠️ กรุณารอโหลด SheetJS'); return; }
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportPurchaseExcel); return; }
   const wb = XLSX.utils.book_new();
   const today = new Date().toLocaleDateString('th-TH');
 
@@ -2785,7 +2779,7 @@ function exportPurchaseExcel() {
 
 // Excel export สำหรับ Tech (เฉพาะงานของตัวเอง)
 function exportTechReqExcel() {
-  if (typeof XLSX === 'undefined') { showToast('⚠️ กรุณารอโหลด SheetJS'); return; }
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportTechReqExcel); return; }
   const wb = XLSX.utils.book_new();
   const today = new Date().toLocaleDateString('th-TH');
   const myTickets = db.tickets.filter(t =>
@@ -2838,7 +2832,7 @@ function histDateClear()  {
 
 // ── Export Report Summary Excel ─────────────────────────────
 function exportSummaryExcel() {
-  if (typeof XLSX === 'undefined') { showToast('⚠️ กรุณารอโหลด SheetJS'); return; }
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportSummaryExcel); return; }
 
   const monthLabel = MONTH_TH[rptMonth] + ' ' + (rptYear + 543);
   const today = new Date().toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
