@@ -174,7 +174,7 @@ async function lineMessagingEvent(event, t) {
   if (event === 'new') {
     const flex = buildFlex(EVENT_COLORS.new, '🆕', 'งานใหม่เข้าระบบ!',
       [['เลขงาน', t.id], ['ปัญหา', t.problem], ['เครื่อง', t.machine],
-       ['ผู้แจ้ง', t.reporter], ['ความด่วน', priority], ['เวลา', time]],
+       ['ผู้แจ้ง', t.reporter], ['แผนก', t.reporterDept||'—'], ['ความด่วน', priority], ['เวลา', time]],
       '📋 ดูรายละเอียดงาน', ticketUrl(t.id));
     // ส่ง admin + ช่าง พร้อมกันใน request เดียว (batch)
     await linePushAdmin([flex]);

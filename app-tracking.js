@@ -360,7 +360,7 @@ async function _doSubmitTicket(mid, prob) {
       showToast('⚠️ upload รูปไม่สำเร็จ — บันทึกงานต่อโดยไม่มีรูป');
     }
   }
-  const t = {id:tid,machineId:mid,machine:m.name,problem:prob,detail:document.getElementById('nt-detail').value.trim(),priority:document.getElementById('nt-pri').value,status:'new',reporterId:CU.id,reporter:CU.name,assigneeId:null,assignee:null,createdAt:now,updatedAt:now,cost:0,summary:'',parts:'',note:document.getElementById('nt-note').value.trim(),contact:document.getElementById('nt-tel').value.trim(),photosBefore:[...pendingPhotos.before],photosAfter:[],history:[{act:'📢 แจ้งงาน',by:CU.name,at:now}]};
+  const t = {id:tid,machineId:mid,machine:m.name,problem:prob,detail:document.getElementById('nt-detail').value.trim(),priority:document.getElementById('nt-pri').value,status:'new',reporterId:CU.id,reporter:CU.name,reporterDept:CU.dept||'',assigneeId:null,assignee:null,createdAt:now,updatedAt:now,cost:0,summary:'',parts:'',note:document.getElementById('nt-note').value.trim(),contact:document.getElementById('nt-tel').value.trim(),photosBefore:[...pendingPhotos.before],photosAfter:[],history:[{act:'📢 แจ้งงาน',by:CU.name,at:now}]};
   db.tickets.push(t);
   notifyRole('admin','📢 แจ้งงานใหม่ ['+tid+']',CU.name+' แจ้ง: "'+prob+'" ที่ '+m.name,tid);
   showAdminCard('📢 แจ้งงานใหม่ ['+tid+']', CU.name+' แจ้ง: "'+prob+'"', tid, '📢');
@@ -3285,7 +3285,7 @@ function openDetail(tid) {
       acts.push(`<button class="btn btn-ghost btn-full" style="color:#0369a1;border-color:#bae6fd;background:#f0f9ff" onclick="closeSheet('detail');openChat('${t.id}','${adminUser.id}')">💬 แชทกับ Admin</button>`);
     }
   }
-  if (CU.role==='admin') {
+  if (CU.role==='admin' && !t.assigneeId) {
     acts.push(`<button class="btn btn-full" style="background:#fff5f5;color:#dc2626;border:1.5px solid #fecaca" onclick="deleteTicket('${t.id}')">🗑️ ลบงานนี้</button>`);
   }
   document.getElementById('detail-actions').innerHTML = acts.join('');

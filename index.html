@@ -308,19 +308,20 @@ function liffMenu(action) {
     return;
   }
   // ตรวจ session
+  let _sessionOk = false;
   try {
     const s = JSON.parse(localStorage.getItem(typeof SESSION_KEY!=='undefined'?SESSION_KEY:'aircon_session') || '{}');
-    if (!s.exp || s.exp < Date.now()) {
-      // ยังไม่ login → ลอง LINE login
-      if (typeof _liffProfile !== 'undefined' && _liffProfile) {
-        liffGoLogin();
-        // หลัง login จะ initApp เอง
-      } else {
-        if (typeof showToast === 'function') showToast('⚠️ กรุณาเข้าสู่ระบบก่อน');
-      }
-      return;
-    }
+    if (s.exp && s.exp >= Date.now()) _sessionOk = true;
   } catch(e) {}
+  if (!_sessionOk) {
+    // ยังไม่ login → ลอง LINE login
+    if (typeof _liffProfile !== 'undefined' && _liffProfile) {
+      liffGoLogin();
+    } else {
+      if (typeof showToast === 'function') showToast('⚠️ กรุณาเข้าสู่ระบบก่อน');
+    }
+    return;
+  }
 
   // ซ่อน login screen
   const ls = document.getElementById('login-screen');

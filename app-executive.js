@@ -188,8 +188,8 @@ function _renderExecDashboard(d) {
       {label:'รอดำเนินการ', count:monthT.filter(t=>['pending','open','new','assigned','accepted'].includes(t.status)).length, color:'#f59e0b'},
       {label:'รอชิ้นส่วน',  count:monthT.filter(t=>t.status==='waiting_part').length, color:'#a855f7'},
     ].filter(s=>s.count>0);
-    const tot = monthT.length||1; let cum=0;
-    const segs = statuses.map(s=>{const pct=s.count/tot*100;const sg={...s,pct,offset:cum};cum+=pct;return sg;});
+    const tot = (monthT&&monthT.length>0) ? monthT.length : 1; let cum=0;
+    const segs = statuses.map(s=>{const pct=isFinite(s.count/tot)?s.count/tot*100:0;const sg={...s,pct,offset:cum};cum+=pct;return sg;});
     const r=38,cx=50,cy=50,circ=2*Math.PI*r;
     statusEl.innerHTML=`<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
       <div style="width:28px;height:28px;border-radius:9px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:.85rem">📊</div>

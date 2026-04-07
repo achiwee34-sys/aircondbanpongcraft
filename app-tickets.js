@@ -1070,8 +1070,10 @@ function doBulkAccept() {
   });
   if (count === 0) { showToast('⚠️ ไม่มีงานที่รับได้ (ต้องเป็นงานที่จ่ายให้คุณแล้ว)'); return; }
   saveDB();
+  if(typeof invalidateTkCache==='function') invalidateTkCache();
   exitMultiSelect();
   refreshPage();
+  updateOpenBadge();
   showToast(`✅ รับงานแล้ว ${count} รายการ`);
   if (navigator.vibrate) navigator.vibrate([100,30,100]);
 }
@@ -1094,8 +1096,10 @@ function doBulkVerify() {
   });
   if (count === 0) { showToast('⚠️ ไม่มีงานที่ตรวจรับได้ (ต้องเป็นงานเสร็จแล้วที่คุณเป็นผู้แจ้ง)'); return; }
   saveDB();
+  if(typeof invalidateTkCache==='function') invalidateTkCache();
   exitMultiSelect();
   refreshPage();
+  updateOpenBadge();
   showToast(`✅ ตรวจรับงานแล้ว ${count} รายการ`);
   if (navigator.vibrate) navigator.vibrate([100,30,100]);
 }

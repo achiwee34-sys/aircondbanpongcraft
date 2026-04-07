@@ -1126,10 +1126,10 @@ async function viewQuotationFull(tid) {
   ov.appendChild(tb);
 
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;background:#888;-webkit-overflow-scrolling:touch;min-height:0;';
+  wrap.style.cssText = 'flex:1;overflow-y:scroll;overflow-x:hidden;background:#888;-webkit-overflow-scrolling:touch;min-height:0;overscroll-behavior:contain;';
   const iframe = document.createElement('iframe');
   iframe.id = '_vq_iframe';
-  iframe.style.cssText = 'width:100%;border:none;background:transparent;display:block;min-height:100%;';
+  iframe.style.cssText = 'width:100%;border:none;background:transparent;display:block;min-height:600px;height:auto;';
   iframe.setAttribute('sandbox','allow-same-origin allow-scripts allow-modals');
   wrap.appendChild(iframe);
   ov.appendChild(wrap);
@@ -1159,10 +1159,7 @@ async function viewQuotationFull(tid) {
   };
 
   requestAnimationFrame(function(){
-    // iOS Safari freezes on contentDocument.write — use blob URL instead
-    var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    var blob = new Blob([html], {type:'text/html;charset=utf-8'});
-    // เรียก applyScale หลายครั้งเพื่อรอ font/image load ครบ
+    // ใช้ srcdoc แทน blob URL — รองรับ LINE WebView ที่บล็อก blob:
     iframe.onload = function(){
       setTimeout(applyScale, 100);
       setTimeout(applyScale, 350);
@@ -1171,7 +1168,12 @@ async function viewQuotationFull(tid) {
     };
     window.removeEventListener('resize', applyScale);
     window.addEventListener('resize', applyScale);
-    iframe.src = URL.createObjectURL(blob);
+    try {
+      iframe.srcdoc = html;
+    } catch(e) {
+      var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+      iframe.src = URL.createObjectURL(blob);
+    }
   });
   showToast('📄 ใบเสนอราคา '+t.id);
 
@@ -1954,13 +1956,19 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
         fr.style.minHeight = '';
       } catch(e){}
     };
-    const blob = new Blob([h],{type:'text/html;charset=utf-8'});
+    // ใช้ srcdoc แทน blob URL — รองรับ LINE WebView ที่บล็อก blob:
     fr.onload = function(){
       setTimeout(applyScale, 80);
       setTimeout(applyScale, 400);
       setTimeout(applyScale, 900);
     };
-    fr.src = URL.createObjectURL(blob);
+    try {
+      fr.srcdoc = h;
+    } catch(e) {
+      // fallback blob URL สำหรับ browser เก่า
+      const blob = new Blob([h],{type:'text/html;charset=utf-8'});
+      fr.src = URL.createObjectURL(blob);
+    }
   };
 
   // ── Row helpers ──
@@ -2597,7 +2605,16 @@ async function initApp() {
         const loaded = await fsLoad();
         if (loaded) {
           const fresh = db.users.find(u => u.id === CU.id);
-          if (fresh) { CU = fresh; renderSettingsPage(); renderTopbarAvatar(); }
+          if (fresh) {
+            const roleChanged = CU.role !== fresh.role;
+            CU = fresh;
+            renderSettingsPage();
+            renderTopbarAvatar();
+            if (roleChanged) {
+              setupBottomNav();
+              goPage(CU.role === 'executive' ? 'executive' : 'home');
+            }
+          }
           refreshPage();
           updateOpenBadge();
           updateNBadge();
@@ -2863,7 +2880,7 @@ function goPage(name) {
         }
       }
       // reset multi-select ถ้าออกจาก tickets แล้วกลับมา
-      if (_multiSelectMode) exitMultiSelect(); else renderTickets();
+      if (_multiSelectMode) exitMultiSelect(); else { if(typeof invalidateTkCache==='function') invalidateTkCache(); renderTickets(); }
     }
     else if (name === 'mywork') renderMyWork();
     else if (name === 'tracking') {
