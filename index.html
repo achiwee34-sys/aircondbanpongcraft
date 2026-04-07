@@ -3045,7 +3045,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
   <!-- Footer -->
   <div style="padding:10px 14px calc(var(--safe-bot,0px) + 24px);border-top:1px solid #e5e7eb;background:#f8fafc;flex-shrink:0;display:flex;gap:8px;position:relative;z-index:10">
     <button type="button" onclick="closeCompleteSheet()" style="flex:1;padding:14px;background:white;border:1.5px solid #e5e7eb;color:#374151;border-radius:14px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation">ยกเลิก</button>
-    <button type="button" onclick="doComplete()" style="flex:3;padding:14px;background:linear-gradient(135deg,#0f172a,#1e293b);color:white;border:none;border-radius:14px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+    <button type="button" id="btn-do-complete" onclick="this.disabled=true;this.style.opacity='0.6';this.innerHTML='⏳ กำลังบันทึก...';doComplete().catch(()=>{}).finally(()=>{if(this)this.disabled=false;if(this){this.style.opacity='';this.innerHTML='💾 ส่งผลการซ่อม';}})" style="flex:3;padding:14px;background:linear-gradient(135deg,#0f172a,#1e293b);color:white;border:none;border-radius:14px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
       💾 ส่งผลการซ่อม
     </button>
   </div>
@@ -3061,8 +3061,8 @@ window._liffLandingUpdateCard = liffUpdateCard;
     <input type="hidden" id="cc-tid"/>
     <div id="cc-info" style="background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:14px"></div>
     <div style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;text-align:center">ต้องการออกรายงานสรุปงานซ่อม PDF ด้วยไหม?</div>
-    <button class="btn btn-ok btn-full" style="font-weight:800" onclick="doCloseConfirm(true)">📄 ปิดงาน + ออก PDF สรุปงาน</button>
-    <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="doCloseConfirm(false)">🔒 ปิดงานอย่างเดียว</button>
+    <button class="btn btn-ok btn-full" style="font-weight:800" onclick="this.disabled=true;this.style.opacity='0.6';this.textContent='⏳ กำลังบันทึก...';doCloseConfirm(true);setTimeout(()=>{if(this){this.disabled=false;this.style.opacity='';this.textContent='📄 ปิดงาน + ออก PDF สรุปงาน';}},3000)">📄 ปิดงาน + ออก PDF สรุปงาน</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="this.disabled=true;this.style.opacity='0.6';this.textContent='⏳ กำลังบันทึก...';doCloseConfirm(false);setTimeout(()=>{if(this){this.disabled=false;this.style.opacity='';this.textContent='🔒 ปิดงานอย่างเดียว';}},3000)">🔒 ปิดงานอย่างเดียว</button>
     <button class="btn btn-ghost btn-full" style="margin-top:6px;color:#9ca3af;font-size:0.78rem" onclick="closeSheet('closeconfirm')">ยกเลิก</button>
   </div>
 </div>
@@ -3145,7 +3145,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
 
   <!-- ── Actions ── -->
   <div style="padding:12px 14px calc(var(--safe-bot,0px) + 16px);display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:white;border-top:1px solid #f1f5f9">
-    <button id="v-confirm-btn" onclick="doVerify()"
+    <button id="v-confirm-btn" onclick="this.disabled=true;this.style.opacity='0.6';this.textContent='⏳ กำลังบันทึก...';doVerify();setTimeout(()=>{if(this){this.disabled=false;this.style.opacity='';this.textContent='✅ ยืนยันรับงาน';}},3000)"
       style="width:100%;padding:15px;border:none;border-radius:14px;font-size:0.95rem;font-weight:900;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#15803d,#16a34a);color:white;box-shadow:0 4px 14px rgba(21,128,61,0.3);letter-spacing:0.02em">
       ✅ ยืนยันรับงาน
     </button>

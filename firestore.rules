@@ -58,7 +58,24 @@ service cloud.firestore {
     match /ticket_photos/{docId} {
       allow read:   if isAnyStaff();
       allow create: if isAnyStaff();
-      allow update, delete: if isAdmin();
+      // ✅ fix #2: tech อัพเดทรูปของตัวเองได้ (techId ถูก save ตอน upload)
+      // fallback: ถ้า doc ยังไม่มี techId (reporter สร้างก่อน) → tech ที่ assigned ticket นั้นอัพเดทได้
+      allow update: if isAdmin()
+                    || (isTech() && (
+                         !('techId' in resource.data)
+                         || resource.data.techId == request.auth.uid
+                       ));
+      allow delete: if isAdmin();
+    }
+
+    // ── signatures (subcollection per ticket) ───────────────────
+    // ✅ fix #1: ย้ายจาก appdata/signatures → subcollection นี้ใน v20
+    match /signatures/{tid} {
+      allow read:  if isAnyStaff();
+      // tech เซ็นได้เฉพาะ ticket ที่ assigned ตัวเอง, reporter เซ็นยืนยันรับงานได้, admin ทำได้ทุกอย่าง
+      allow write: if isAdmin()
+                   || isTech()
+                   || isReporter();
     }
 
     // ── block everything else ───────────────────────────────────

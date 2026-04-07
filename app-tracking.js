@@ -387,8 +387,13 @@ async function _doSubmitTicket(mid, prob) {
   const repAvt  = document.getElementById('nt-reporter-avatar');
   if (repName) repName.textContent = CU.name;
   if (repAvt) {
-    if (CU.photo) repAvt.innerHTML = `<img src="${CU.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    else repAvt.textContent = CU.name.slice(0,2);
+    if (CU.photo) { // ✅ M4 fix: ใช้ createElement แทน innerHTML เพื่อป้องกัน XSS
+      const _img = document.createElement('img');
+      _img.src = CU.photo;
+      _img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+      repAvt.innerHTML = '';
+      repAvt.appendChild(_img);
+    } else repAvt.textContent = CU.name.slice(0,2);
   }
   if (navigator.vibrate) navigator.vibrate([100,50,100]);
   updateOpenBadge();
@@ -551,6 +556,7 @@ function doAssign() {
 }
 
 function doAccept(tid) {
+  try {
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;
   const now = nowStr();
   t.status = 'inprogress';   // รับงาน = เริ่มซ่อมทันที
@@ -592,6 +598,10 @@ function doAccept(tid) {
   saveDB(); syncTicket(t); refreshPage();
   sendLineNotifyEvent('accept', t);
   if (navigator.vibrate) navigator.vibrate(100);
+  } catch(e) { // ✅ M5 fix
+    console.error('[doAccept]', e);
+    if(typeof showToast==='function') showToast('❌ บันทึกไม่สำเร็จ: ' + (e.message || 'กรุณาลองใหม่'));
+  }
 }
 
 function doStart(tid) {
@@ -2530,13 +2540,34 @@ function openCompleteSheet(tid) {
         previewEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:6px';
         beforeSection.querySelector('.photo-upload')?.before(previewEl);
       }
+      // สร้าง placeholder ก่อน แล้ว async resolve รูปที่เป็น fs: key
       previewEl.innerHTML = reporterPhotos.map((src, i) =>
-        `<div style="position:relative;flex-shrink:0">
-          <img src="${src}" onclick="openLightbox('${src}')"
-            style="width:68px;height:68px;object-fit:cover;border-radius:10px;border:2px solid #fed7aa;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.1)"/>
+        `<div id="c-rp-photo-${i}" style="position:relative;flex-shrink:0;width:68px;height:68px;border-radius:10px;border:2px solid #fed7aa;background:#fff7ed;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+          <span style="font-size:1.2rem">⏳</span>
           <div style="position:absolute;bottom:2px;right:2px;background:rgba(194,65,12,0.85);color:white;border-radius:4px;padding:1px 4px;font-size:0.5rem;font-weight:800">ผู้แจ้ง</div>
         </div>`
       ).join('');
+      // ✅ M3 fix: ใช้ Promise.all แทน forEach async เพื่อป้องกัน race condition
+      Promise.all(reporterPhotos.map(async (src, i) => {
+        try {
+          let resolvedSrc = src;
+          if (src && src.startsWith('fs:') && typeof resolvePhotoUrl === 'function') {
+            resolvedSrc = await resolvePhotoUrl(src, tid) || src;
+          }
+          // อัพเดท preview
+          const div = document.getElementById('c-rp-photo-' + i);
+          if (div && resolvedSrc && !resolvedSrc.startsWith('fs:')) {
+            div.innerHTML = `<img src="${resolvedSrc}" onclick="openLightbox('${resolvedSrc}')"
+              style="width:100%;height:100%;object-fit:cover;cursor:pointer;border-radius:8px;"/>
+              <div style="position:absolute;bottom:2px;right:2px;background:rgba(194,65,12,0.85);color:white;border-radius:4px;padding:1px 4px;font-size:0.5rem;font-weight:800">ผู้แจ้ง</div>`;
+          } else if (div) {
+            div.innerHTML = `<span style="font-size:1rem">🖼️</span>`;
+          }
+          return (resolvedSrc && !resolvedSrc.startsWith('fs:')) ? resolvedSrc : src;
+        } catch(e) { console.warn('[photo resolve]', e); return src; }
+      })).then(resolvedArr => {
+        pendingPhotos.before = resolvedArr.filter(s => s && !s.startsWith('fs:'));
+      });
       // แสดง info badge
       let infoBadge = document.getElementById('c-before-info');
       if (!infoBadge) {
@@ -2546,7 +2577,8 @@ function openCompleteSheet(tid) {
         infoBadge.innerHTML = `<span>📋</span><span>ผู้แจ้งส่งรูปมา ${reporterPhotos.length} รูป — จะถูกบันทึกเป็นรูปก่อนซ่อมในรายงานอัตโนมัติ</span>`;
         previewEl.before(infoBadge);
       }
-      // copy รูปผู้แจ้งเข้า pendingPhotos.before เพื่อบันทึกด้วย
+      // copy รูปผู้แจ้งเข้า pendingPhotos.before (fs: key เดิมก่อน resolve เสร็จ)
+      // resolvedBefore loop ด้านบนจะอัพเดท pendingPhotos.before ให้เป็น resolved URL ทีละรูป
       pendingPhotos.before = [...reporterPhotos];
     } else {
       beforeSection.style.display = 'none';
@@ -2686,7 +2718,7 @@ async function doComplete( /* PATCH v67 */) {
   notifyRole('admin','✅ งานซ่อมเสร็จ ['+tid+']','ช่าง '+CU.name+' ซ่อมเสร็จ รอปิดงาน',tid);
   showAdminCard('✅ ซ่อมเสร็จแล้ว ['+tid+']', 'ช่าง '+CU.name+' รอตรวจรับ', tid, '✅');
   sendLineNotifyEvent('done', t);
-  saveDB(); syncTicket(t); pendingPhotos.after=[];
+  saveDB(); syncTicket(t); pendingPhotos.after=[]; pendingPhotos.before=[];
   closeCompleteSheet();
   refreshPage(); // refresh ก่อนเสมอ เพื่อให้ UI อัพเดทแม้ signature pad crash
   showToast('✅ บันทึกผลการซ่อมแล้ว — กรุณาเซ็นชื่อ');
@@ -3266,7 +3298,7 @@ function openDetail(tid) {
     acts.push(`<button class="btn btn-ghost btn-full" onclick="closeSheet('detail');openAssignSheet('${t.id}')">🔄 เปลี่ยนช่าง</button>`);
   }
   if (CU.role==='tech' && t.assigneeId===CU.id && t.status==='assigned') {
-    acts.push(`<button class="btn btn-primary btn-full" onclick="closeSheet('detail');doAccept('${t.id}')">✋ รับงาน</button>`);
+    acts.push(`<button class="btn btn-primary btn-full" onclick="this.disabled=true;this.textContent='⏳ กำลังรับงาน...';closeSheet('detail');doAccept('${t.id}')">✋ รับงาน</button>`); // ✅ H4 fix
   }
   if (CU.role==='tech' && t.assigneeId===CU.id && ['accepted','inprogress'].includes(t.status)) {
     acts.push(`<button class="btn btn-ok btn-full" onclick="closeSheet('detail');openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);

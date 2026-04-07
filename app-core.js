@@ -112,7 +112,7 @@ if (db && Array.isArray(db.tickets) && db.tickets.length > 0) {
     if (!existing) { db.users.push(du); changed = true; }
     else if (existing.role !== du.role) { existing.role = du.role; changed = true; }
   });
-  if (changed) try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch(e) {}
+  if (changed) try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch(e) { if(e&&e.name==='QuotaExceededError'&&typeof showToast==='function') showToast('❌ พื้นที่เต็ม! กรุณา Backup'); } // ✅ M2 fix
 })();
 
 
@@ -206,9 +206,6 @@ function initDB() {
   };
 }
 function saveDB() {
-  invalidateMacCache();
-  invalidateTkCache();
-  setTimeout(() => {
     try {
       // strip signatures ออกก่อน save localStorage
       const dbForLocal = {...db, tickets: (db.tickets||[]).map(t=>{
@@ -234,6 +231,9 @@ function saveDB() {
   }, 0);
   if (typeof fsSave === 'function') fsSave();
 }
+// ✅ L1 fix: debounced saveDB สำหรับ oninput ที่เรียกบ่อย
+function _debounce(fn, ms) { let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a),ms); }; }
+var saveDBDebounced = _debounce(saveDB, 300);
 // ============================================================
 // SECURITY — Password Hashing (SHA-256 via WebCrypto)
 // ============================================================
@@ -395,7 +395,7 @@ async function doRegister() {  // PATCH: async เพื่อ await hashPasswor
     };
     db.users.push(newUser);
     // บันทึก localStorage ทันที
-    try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch(e) {}
+    try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch(e) { if(e&&e.name==='QuotaExceededError'&&typeof showToast==='function') showToast('❌ พื้นที่เต็ม! กรุณา Backup'); } // ✅ M2 fix
 
     // แสดง loading ระหว่าง sync
     const submitBtn = document.querySelector('#reg-wrap .rg-btn, #register-screen .rg-btn');
@@ -806,7 +806,6 @@ function getPrice2(name, macBTU) {
   macBTU = macBTU || 0;
   const g = (db.repairGroups||[]);
   for(const grp of g){ const it=grp.items?.find(i=>i.name===name); if(it) return {price:it.price||0,unit:it.unit||'JOB'}; }
-  if(typeof REPAIR_PRICE !== 'undefined' && REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
   if(macBTU > 0){
     // ลอง strip "ขนาด X,XXX BTU" และ K-range notation
     const baseNoSuffix = name.replace(/\s*ขนาด\s*[\d,]+\s*BTU\s*/gi,'').trim();
@@ -872,14 +871,13 @@ function getRepairKeyByBTU(baseName, btu) {
   var dashVariants = ['\u2013','\u2014','-'];
   for(var i=0;i<tiers.length;i++){
     if(btu <= tiers[i].max){
-      // ลองหา key ใน REPAIR_PRICE หรือ repairGroups ด้วย dash variants
+      // ลองหา key ใน repairGroups ด้วย dash variants
       for(var d=0;d<dashVariants.length;d++){
         var k = baseName + ' 9K' + (i===0?dashVariants[d]+'48K':i===1?dashVariants[d]+'150K':i===2?dashVariants[d]+'240K':dashVariants[d]+'400K') + (i===0?'':i===1?'':i===2?'':'');
         // rebuild key properly
         var suffixes = ['9K'+dashVariants[d]+'48K','48K'+dashVariants[d]+'150K','150K'+dashVariants[d]+'240K','240K'+dashVariants[d]+'400K'];
         k = baseName + ' ' + suffixes[i];
-        const _rp = (typeof REPAIR_PRICE !== 'undefined') ? REPAIR_PRICE : {};
-        if(_rp[k]) return {key:k, price:_rp[k]};
+        // ✅ L2 fix: REPAIR_PRICE global removed — use repairGroups only
         // check repairGroups
         for(var g=0;g<(db.repairGroups||[]).length;g++){
           var it = (db.repairGroups[g].items||[]).find(function(x){return x.name===k;});
@@ -904,11 +902,9 @@ async function viewQuotationFull(tid) {
   } catch(e) {}
   if (_firebaseReady && FSdb) {
     try {
-      const sigSnap = await FSdb.collection('appdata').doc('signatures').get();
-      if (sigSnap.exists) {
-        const allSigs = sigSnap.data() || {};
-        if (allSigs[tid]) Object.assign(t.signatures, allSigs[tid]);
-      }
+      // ✅ H1 fix: อ่านจาก subcollection signatures/{tid} แทน doc เดียว
+      const sigSnap = await FSdb.collection('signatures').doc(tid).get();
+      if (sigSnap.exists) Object.assign(t.signatures, sigSnap.data() || {});
     } catch(e) {}
   }
 
@@ -988,7 +984,6 @@ async function viewQuotationFull(tid) {
       const _g = (db.repairGroups||[]);
       let price=0, unit='JOB';
       for(const grp of _g){ const it=grp.items?.find(i=>i.name===r.name); if(it){price=it.price||0;unit=it.unit||'JOB';break;} }
-      if(!price && (typeof REPAIR_PRICE !== 'undefined') && REPAIR_PRICE[r.name]) { price=REPAIR_PRICE[r.name]; unit='JOB'; }
       if(!price && _macBTU>0){
         // ลอง strip "ขนาด X,XXX BTU" suffix ออก แล้วหาจาก tier
         const baseNoSuffix = r.name.replace(/\s*ขนาด\s*[\d,]+\s*BTU\s*/gi,'').trim();
@@ -1199,7 +1194,7 @@ async function viewQuotationFull(tid) {
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✕';
   closeBtn.style.cssText = 'width:30px;height:30px;background:rgba(255,255,255,.12);color:white;border:1px solid rgba(255,255,255,.2);border-radius:7px;font-size:1rem;cursor:pointer;flex-shrink:0';
-  closeBtn.onclick = function(){ ov.remove(); };
+  closeBtn.onclick = function(){ window.removeEventListener('resize', applyScale); ov.remove(); }; // ✅ M1 fix
 
   tb.appendChild(printBtn); tb.appendChild(closeBtn);
   ov.appendChild(tb);
@@ -1279,11 +1274,9 @@ async function generateRepairPDF(tid) {
   } catch(e) {}
   if (_firebaseReady && FSdb) {
     try {
-      const sigSnap = await FSdb.collection('appdata').doc('signatures').get();
-      if (sigSnap.exists) {
-        const allSigs = sigSnap.data() || {};
-        if (allSigs[tid]) Object.assign(t.signatures, allSigs[tid]);
-      }
+      // ✅ H1 fix: อ่านจาก subcollection signatures/{tid} แทน doc เดียว
+      const sigSnap = await FSdb.collection('signatures').doc(tid).get();
+      if (sigSnap.exists) Object.assign(t.signatures, sigSnap.data() || {});
     } catch(e) {}
   }
 
@@ -1385,7 +1378,6 @@ async function generateRepairPDF(tid) {
   const getPrice = (name) => {
     const g = (db.repairGroups||[]);
     for(const grp of g){ const it=grp.items?.find(i=>i.name===name); if(it) return {price:it.price||0,unit:it.unit||'JOB'}; }
-    if((typeof REPAIR_PRICE !== 'undefined') && REPAIR_PRICE[name]) return {price:REPAIR_PRICE[name], unit:'JOB'};
     // BTU-tier
     if(macBTU > 0){
       const base = name.replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi,'').replace(/\s*\d+(?:\.\d+)?K/gi,'').trim();
@@ -1879,11 +1871,14 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
   // ── build print HTML ──
    var buildHTML = function() {
     // แสดงเฉพาะรายการที่มีค่าใช้จ่าย (price > 0)
-    var paidRows = DS.rows.filter(function(r){ return (r.price||0) > 0; });
+    // แสดงเฉพาะรายการที่มีชื่อ และราคา > 0
+    var paidRows = DS.rows.filter(function(r){ return r.name && r.name.trim() !== '' && (r.price||0) > 0; });
+    // แสดงทุกรายการที่มีชื่อใน designer (ให้ user ใส่ราคาเองได้) แต่คำนวณยอดจาก paidRows เท่านั้น
+    var displayRows = DS.rows.filter(function(r){ return r.name && r.name.trim() !== ''; });
     var sub   = paidRows.reduce(function(s,r){return s+(r.qty*r.price);},0);
     var vat   = Math.round(sub*0.07*100)/100;
     var grand = sub+vat;
-    var empty = Math.max(0,8-paidRows.length);
+    var empty = Math.max(0,8-displayRows.length);
     var nilSVG = function(w,h){ return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="46" fill="none" stroke="#1a5276" stroke-width="3"/><circle cx="50" cy="50" r="36" fill="none" stroke="#1a5276" stroke-width="1.5"/><circle cx="50" cy="50" r="11" fill="none" stroke="#1a5276" stroke-width="2"/><line x1="50" y1="4" x2="50" y2="39" stroke="#1a5276" stroke-width="2"/><line x1="50" y1="61" x2="50" y2="96" stroke="#1a5276" stroke-width="2"/><line x1="4" y1="50" x2="39" y2="50" stroke="#1a5276" stroke-width="2"/><line x1="61" y1="50" x2="96" y2="50" stroke="#1a5276" stroke-width="2"/><line x1="18" y1="18" x2="42" y2="42" stroke="#1a5276" stroke-width="1.5"/><line x1="58" y1="58" x2="82" y2="82" stroke="#1a5276" stroke-width="1.5"/><line x1="82" y1="18" x2="58" y2="42" stroke="#1a5276" stroke-width="1.5"/><line x1="42" y1="58" x2="18" y2="82" stroke="#1a5276" stroke-width="1.5"/><text x="50" y="54" text-anchor="middle" font-size="11" font-weight="900" fill="#1a5276" font-family="Arial">NIL</text><text x="50" y="76" text-anchor="middle" font-size="5.5" font-weight="700" fill="#1a5276" font-family="Arial">NIL ENGINEERING 2005</text><text x="50" y="83" text-anchor="middle" font-size="4.5" font-weight="600" fill="#1a5276" font-family="Arial">LIMITED PARTNERSHIP</text></svg>'; };
     var logoCell  = DS.logoData ? '<img src="'+DS.logoData+'" style="width:68px;height:68px;object-fit:contain"/>' : nilSVG(68,68);
     var stampCell = DS.logoData ? '<img src="'+DS.logoData+'" style="width:80px;height:80px;object-fit:contain"/>' : nilSVG(80,80);
@@ -1892,14 +1887,15 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
       + (DS.logoData ? '<img src="'+DS.logoData+'" style="width:80px;height:80px;object-fit:contain"/>' : nilSVG(80,80))
       + '<div style="font-size:6pt;font-weight:800;color:#1a5276;text-align:center;line-height:1.5;white-space:pre-line">'+E(DS.logoSubLine||DS.company||'')+'</div>'
       + '</div>';
-    var rowsHtml = paidRows.map(function(r,i){
+    // ใช้ displayRows แสดงในตาราง (มีชื่อทุกรายการ) แต่ยอดรวมคำนวณจาก paidRows เท่านั้น
+    var rowsHtml = displayRows.map(function(r,i){
       return '<tr>'
         +'<td style="padding:7px 4px;border-right:1px solid #ccc;text-align:center;font-size:9pt">'+(i+1)+'</td>'
         +'<td style="padding:7px 8px;border-right:1px solid #ccc;text-align:center;font-size:8pt;color:#444">'+E(r.code||'—')+'</td>'
         +'<td style="padding:7px 10px;border-right:1px solid #ccc;font-size:9pt">'+E(formatItemName(r.name, DS.rawBTU||0))+'</td>'
         +'<td style="padding:7px 4px;border-right:1px solid #ccc;text-align:center;font-size:9pt">'+(r.qty>0?Number(r.qty).toFixed(2):'—')+'</td>'
         +'<td style="padding:7px 4px;border-right:1px solid #ccc;text-align:center;font-size:8.5pt">'+E(r.unit||'JOB')+'</td>'
-        +'<td style="padding:7px 7px;border-right:1px solid #ccc;text-align:right;font-size:9pt">'+Number(r.price).toLocaleString('en-US',{minimumFractionDigits:2})+'</td>'
+        +'<td style="padding:7px 7px;border-right:1px solid #ccc;text-align:right;font-size:9pt">'+(r.price>0?Number(r.price).toLocaleString('en-US',{minimumFractionDigits:2}):'—')+'</td>'
         +'<td style="padding:7px 7px;text-align:right;font-size:9pt">'+(r.qty*r.price>0?(r.qty*r.price).toLocaleString('en-US',{minimumFractionDigits:2}):'—')+'</td>'
         +'</tr>';
     }).join('');
@@ -2199,10 +2195,11 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     if (DS.formCollapsed) {
       if (isMob) {
         panel.style.position = '';
-        panel.style.width = '0'; panel.style.opacity = '0'; panel.style.overflow = 'hidden';
-      } else {
-        panel.style.width = '0'; panel.style.opacity = '0'; panel.style.overflow = 'hidden';
+        panel.style.boxShadow = '';
+        panel.style.zIndex = '';
       }
+      panel.style.width = '0'; panel.style.opacity = '0';
+      panel.style.overflowY = 'hidden'; panel.style.overflowX = 'hidden';
       if (btn) btn.textContent = isMob ? '✏️ แก้' : '▶ ขยาย';
     } else {
       if (isMob) {
@@ -2212,11 +2209,14 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
         panel.style.zIndex = '10';
         panel.style.boxShadow = '4px 0 24px rgba(0,0,0,0.35)';
         panel.style.width = 'min(320px, 92vw)';
-        panel.style.opacity = '1'; panel.style.overflow = '';
       } else {
         panel.style.position = '';
-        panel.style.width = '320px'; panel.style.opacity = '1'; panel.style.overflow = '';
+        panel.style.width = '320px';
       }
+      panel.style.opacity = '1';
+      panel.style.overflowY = 'auto';   // ← scroll ได้แน่นอน
+      panel.style.overflowX = 'hidden';
+      panel.style.webkitOverflowScrolling = 'touch'; // ← iOS smooth scroll
       if (btn) btn.textContent = isMob ? '✕ ปิด' : '◀ ย่อ';
     }
     setTimeout(renderPreview, 300);
@@ -2264,7 +2264,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
   <div style="display:flex;flex:1;overflow:hidden;position:relative">
 
     <!-- FORM PANEL -->
-    <div style="width:${_isMobile?'0':'320px'};flex-shrink:0;background:white;overflow-y:auto;overflow-x:hidden;border-right:1px solid #dde3ea;transition:width 0.25s ease,opacity 0.2s ease;${_isMobile?'opacity:0;':'opacity:1;'}" id="_ds_form_panel">
+    <div style="width:${_isMobile?'0':'320px'};flex-shrink:0;background:white;overflow-y:${_isMobile?'hidden':'auto'};overflow-x:hidden;-webkit-overflow-scrolling:touch;border-right:1px solid #dde3ea;transition:width 0.25s ease,opacity 0.2s ease;${_isMobile?'opacity:0;':'opacity:1;'}" id="_ds_form_panel">
 
       <!-- Company -->
       <div style="padding:12px 14px;border-bottom:1px solid #f1f5f9">
@@ -3725,6 +3725,10 @@ async function confirmSignature() {
   const hasStroke = px.some((v,i) => i%4===3 && v>10);
   if (!hasStroke) { showToast('⚠️ กรุณาวาดลายเซ็นก่อน'); return; }
 
+  // ── Disable ปุ่มทันที ป้องกันกดซ้ำ ──
+  const confirmBtn = document.querySelector('#sig-overlay button[onclick="confirmSignature()"]');
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = '⏳ กำลังบันทึก...'; confirmBtn.style.opacity = '0.6'; }
+
   const dataUrl = _sigCanvas.toDataURL('image/png');
   const tid     = _sigTid;
   const type    = _sigType;
@@ -3733,7 +3737,7 @@ async function confirmSignature() {
   const keyMap = { tech_done:'tech', reporter_verify:'reporter', admin_close:'admin' };
   const sigKey = keyMap[type] || type;
 
-  // บันทึกใน ticket object
+  // บันทึกใน ticket object (sync — ทำก่อน await เพื่อให้ UI อัพเดทเร็ว)
   const t = db.tickets.find(x=>x.id===tid);
   if (t) {
     if (!t.signatures) t.signatures = {};
@@ -3749,19 +3753,20 @@ async function confirmSignature() {
     localStorage.setItem(SIGS_KEY, JSON.stringify(cache));
   } catch(e) {}
 
-  // บันทึกขึ้น Firebase
-  if (_firebaseReady && FSdb) {
-    try {
-      const sigSnap = await FSdb.collection('appdata').doc('signatures').get();
-      const allSigs = sigSnap.exists ? (sigSnap.data()||{}) : {};
-      if (!allSigs[tid]) allSigs[tid] = {};
-      allSigs[tid][sigKey] = { data: dataUrl, by: CU.name, at: nowStr() };
-      await FSdb.collection('appdata').doc('signatures').set(allSigs);
-    } catch(e) { console.warn('sig firebase save error', e); }
-  }
-
+  // ปิด overlay ทันที ไม่รอ Firebase
   closeSignaturePad();
   showToast('✅ บันทึกลายเซ็นเรียบร้อย');
+
+  // บันทึกขึ้น Firebase ใน background (ไม่ block UI)
+  // ✅ H1 fix: ใช้ subcollection signatures/{tid} แทน doc เดียว เพื่อป้องกัน 1MB limit
+  if (_firebaseReady && FSdb) {
+    try {
+      await FSdb.collection('signatures').doc(tid).set(
+        { [sigKey]: { data: dataUrl, by: CU.name, at: nowStr() } },
+        { merge: true }
+      );
+    } catch(e) { console.warn('sig firebase save error', e); }
+  }
 }
 
 // _fmt (number formatter) ย้ายมาจาก app-executive.js
