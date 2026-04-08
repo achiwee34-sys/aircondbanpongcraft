@@ -34,19 +34,24 @@ function initFirebase() {
     if (firebase.auth) {
       firebase.auth().onAuthStateChanged(user => {
         if (user) {
-          // F-02: ยืนยัน sign_in_provider ไม่ใช่ anonymous
-          if (user.isAnonymous) {
-            console.warn('[Firebase] Anonymous auth ไม่อนุญาต — กรุณา sign in ด้วย LIFF/Custom Token');
-            firebase.auth().signOut();
-            _firebaseAuthReady = false;
-            return;
-          }
+          // รับทั้ง custom token (LIFF) และ anonymous (PC fallback)
           _firebaseAuthReady = true;
+          console.info('[Firebase] auth ready | anonymous:', user.isAnonymous);
         } else {
           _firebaseAuthReady = false;
-          // F-02: ลบ signInAnonymously() ออก — auth ทำผ่าน LIFF Custom Token เท่านั้น
-          // เรียก signInWithCustomToken(token) จาก liff-auth.js หลัง LIFF login สำเร็จ
-          console.info('[Firebase] ยังไม่ได้ auth — รอ LIFF sign in');
+          // ── BUG FIX B: PC ไม่มี LIFF → ไม่มี user → _firebaseAuthReady = false ตลอด
+          // Fallback signInAnonymously สำหรับ non-LIFF (PC, browser ทั่วไป)
+          // LIFF จะ signInWithCustomToken ทับทีหลังอยู่แล้ว ──
+          const isInLiff = (typeof liff !== 'undefined' &&
+            typeof liff.isInClient === 'function' && liff.isInClient());
+          if (!isInLiff) {
+            console.info('[Firebase] ไม่ใช่ LIFF — fallback signInAnonymously');
+            firebase.auth().signInAnonymously().catch(e => {
+              console.warn('[Firebase] signInAnonymously failed:', e.message);
+            });
+          } else {
+            console.info('[Firebase] รอ LIFF sign in...');
+          }
         }
       });
     } else {

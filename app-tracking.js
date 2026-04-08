@@ -2856,7 +2856,7 @@ function openVerifySheet(tid) {
         <span class="lbl-dot" style="background:#22c55e"></span>✅ รูปหลังซ่อม
         <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
       </div>
-      <div class="photo-grid">${t.photosAfter.map(p=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" onclick="_resolveAndLightbox(this)"><img src="${p}"/></div>`).join('')}</div>
+      <div class="photo-grid">${t.photosAfter.map(p=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" data-photo-key="${p}" onclick="_resolveAndLightbox(this)"><img src="${p}" style="width:100%;height:100%;object-fit:cover"/></div>`).join('')}</div>
     </div>` : ''}
   `;
   openSheet('verify');
@@ -3355,11 +3355,15 @@ function openDetail(tid) {
   document.getElementById('detail-actions').innerHTML = acts.join('');
   openSheet('detail');
   // ── Async photo resolver: load fs: placeholder photos after sheet opens ──
-  setTimeout(() => _resolveDetailPhotos(t.id), 100);
+  // ใช้ requestAnimationFrame + 300ms เพื่อให้ sheet render เสร็จก่อน
+  requestAnimationFrame(() => setTimeout(() => _resolveDetailPhotos(t.id, 0), 300));
 }
 
 // ── Async photo resolver for detail sheet ──────────────────────────
-async function _resolveDetailPhotos(ticketId) {
+async function _resolveDetailPhotos(ticketId, attempt = 0) {
+  const MAX_RETRY = 3;
+  const RETRY_DELAY_MS = [0, 800, 2000]; // ms ก่อน retry แต่ละรอบ
+
   const items = document.querySelectorAll('[data-photo-key]');
   if (!items.length) return;
 
@@ -3370,15 +3374,21 @@ async function _resolveDetailPhotos(ticketId) {
     try { photoData = await loadPhotosFromFirestore(ticketId); } catch(e) {}
   }
 
+  let pendingRetry = false;
+
   for (const div of items) {
     const key = div.dataset.photoKey || '';
     const img = div.querySelector('img');
     const spin = div.querySelector('._ph-spin');
     if (!img) continue;
 
+    // ถ้า resolve สำเร็จแล้ว (src ไม่ใช่ empty และ img ไม่ broken) ข้ามไป
+    if (img.src && img.src !== window.location.href &&
+        !img.src.endsWith('/') && img.style.opacity === '1') continue;
+
     let src = null;
     try {
-      if (key.startsWith('data:') || key.startsWith('https://')) {
+      if (key.startsWith('data:') || key.startsWith('https://') || key.startsWith('http://')) {
         src = key;
       } else if (key.startsWith('fs:') && photoData) {
         const parts = key.split(':');
@@ -3389,27 +3399,54 @@ async function _resolveDetailPhotos(ticketId) {
       } else if (typeof resolvePhotoUrl === 'function') {
         src = await resolvePhotoUrl(key, ticketId);
       }
-    } catch(e) { console.warn('[photo resolve]', e); }
+    } catch(e) { console.warn('[photo resolve]', key, e); }
 
     if (src) {
-      img.src = src;
-      img.style.opacity = '1';
-      // set onclick for lightbox
-      div.onclick = () => openLightbox(src);
-      if (spin) spin.remove();
+      // ตรวจสอบว่า URL โหลดได้จริง
+      await new Promise(resolve => {
+        const tester = new Image();
+        tester.onload = () => {
+          img.src = src;
+          img.style.opacity = '1';
+          div.onclick = () => openLightbox(src);
+          if (spin) spin.remove();
+          resolve();
+        };
+        tester.onerror = () => {
+          // URL ใช้ไม่ได้ → แสดง broken placeholder และ mark retry
+          if (spin) spin.innerHTML = '🖼️';
+          pendingRetry = true;
+          resolve();
+        };
+        tester.src = src;
+      });
     } else {
-      // show broken image placeholder
-      if (spin) spin.innerHTML = '🖼️';
+      // resolve ล้มเหลว
+      if (spin) spin.innerHTML = attempt < MAX_RETRY ? '⏳' : '🖼️';
+      pendingRetry = true;
     }
+  }
+
+  // retry ถ้ายังมี item ที่ resolve ไม่สำเร็จ
+  if (pendingRetry && attempt < MAX_RETRY) {
+    const delay = RETRY_DELAY_MS[attempt + 1] ?? 2000;
+    console.log(`[photo resolve] retry ${attempt + 1}/${MAX_RETRY} in ${delay}ms`);
+    setTimeout(() => _resolveDetailPhotos(ticketId, attempt + 1), delay);
   }
 }
 
 // ── Lightbox helper called from photo divs (fallback) ──
 function _resolveAndLightbox(el) {
-  const key = el.dataset.photoKey || '';
-  const img = el.querySelector('img');
+  // el อาจเป็น <div> หรือ <img> ก็ได้
+  const div = el.tagName === 'IMG' ? el.parentElement : el;
+  const img = div.querySelector('img') || (el.tagName === 'IMG' ? el : null);
+  const key = div.dataset?.photoKey || img?.dataset?.photoKey || '';
   const src = img?.src || key;
-  if (src && src.startsWith('data:')) openLightbox(src);
+  if (src && (src.startsWith('data:') || src.startsWith('https://') || src.startsWith('http://'))) {
+    openLightbox(src);
+  } else if (key && (key.startsWith('data:') || key.startsWith('https://'))) {
+    openLightbox(key);
+  }
 }
 
 function refreshPage() {

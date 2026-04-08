@@ -45,34 +45,48 @@ async function executeClearFS() {
 
 async function clearFirestoreData(type) {
   showToast('⏳ กำลังล้างข้อมูล...');
+
+  // ── BUG FIX A: Block fsSave ระหว่าง clear — ป้องกัน race condition กับ conflict-guard ──
+  // saveDB() เดิม trigger fsSave() → fsSaveNowSafe() วิ่ง async พร้อมกับ FSdb.set()
+  // ทำให้ fsSaveNow เขียนข้อมูลเก่ากลับทับ หรือ transaction conflict → reload → ข้อมูลที่ clear กลับมา
+  const _wasSaving = (typeof _fsSaving !== 'undefined') ? _fsSaving : false;
+  if (typeof _fsSaving !== 'undefined') _fsSaving = true;
+
   try {
     if (type === 'reset' || type === 'tickets') {
       db.tickets = [];
       db.notifications = [];
     }
     if (type === 'reset' || type === 'users') {
-      // เพิ่ม id ที่ถูกล้างลง deletedUserIds blacklist — กัน onSnapshot merge กลับมา
       if (!db.deletedUserIds) db.deletedUserIds = [];
       (db.users || []).forEach(u => {
         if (u.id !== CU.id && db.deletedUserIds.indexOf(u.id) === -1) {
           db.deletedUserIds.push(u.id);
         }
       });
-      // เก็บเฉพาะ user ที่ login อยู่
       db.users = db.users.filter(u => u.id === CU.id);
     }
-    // machines ไม่แตะเลย — เก็บไว้ทุกกรณี
+    // machines ไม่แตะเลย
 
-    // เพิ่ม _seq ให้สูงกว่า remote → onSnapshot ที่ยิงกลับมาจะถูก skip
     db._seq = (db._seq || 0) + 100;
 
-    saveDB();
+    // ── BUG FIX A: save localStorage ตรงๆ ไม่ผ่าน saveDB() เพื่อไม่ trigger fsSave ──
+    try {
+      const _dbKey = (typeof DB_KEY !== 'undefined') ? DB_KEY : 'aircon_db';
+      const dbForLocal = {...db, tickets: (db.tickets||[]).map(t => {
+        if (!t.signatures) return t;
+        const {signatures: _s, ...rest} = t; return rest;
+      })};
+      localStorage.setItem(_dbKey, JSON.stringify(dbForLocal));
+    } catch(lsErr) { console.warn('[clearFirestoreData] localStorage error:', lsErr); }
+
     if (_firebaseReady && FSdb) {
-      // ✅ เขียน Firestore ถูก format (field ตรงๆ เหมือน fsSaveNow)
       const ticketsNoSig = (db.tickets || []).map(t => {
         if (!t.signatures) return t;
         const { signatures, ...rest } = t; return rest;
       });
+      // ── BUG FIX A: ใส่ _docVersion ที่ถูกต้องและ sync _localDocVersion หลัง set สำเร็จ ──
+      const newDocVersion = (typeof _localDocVersion !== 'undefined' ? _localDocVersion : 0) + 1;
       await FSdb.collection('appdata').doc('main').set({
         users:          db.users           || [],
         machines:       db.machines        || [],
@@ -82,17 +96,26 @@ async function clearFirestoreData(type) {
         machineRequests:db.machineRequests || [],
         deletedUserIds: db.deletedUserIds  || [],
         _seq:           db._seq,
+        _docVersion:    newDocVersion,
         gsUrl:          db.gsUrl           || '',
         updatedAt:      new Date().toISOString()
       });
+      if (typeof _localDocVersion !== 'undefined') _localDocVersion = newDocVersion;
       showToast('✅ ล้างข้อมูลใน Firestore เรียบร้อย — เครื่องแอร์ยังอยู่ครบ');
     } else {
       showToast('✅ ล้างข้อมูล Local เรียบร้อย (Firestore ไม่ได้เชื่อมต่อ)');
     }
+    if (typeof invalidateMacCache === 'function') invalidateMacCache();
+    if (typeof invalidateTkCache  === 'function') invalidateTkCache();
     refreshPage(); updateOpenBadge(); updateNBadge();
   } catch(e) {
     showToast('❌ ผิดพลาด: ' + e.message);
     console.error('clearFirestoreData error:', e);
+  } finally {
+    // ── BUG FIX A: คืน flag เสมอ แม้ error ──
+    if (typeof _fsSaving !== 'undefined') {
+      setTimeout(() => { _fsSaving = _wasSaving; }, 1000);
+    }
   }
 }
 // syncUser, syncTicket, syncMachine, _showSyncDot, _hideSyncDot ย้ายไปอยู่ใน app-core.js แล้ว
