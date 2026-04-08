@@ -2236,6 +2236,13 @@ function onNtSearch(q) {
   const kw = q.trim().toLowerCase();
   if (!kw) { resBox.style.display = 'none'; return; }
 
+  // ── BUG FIX #3: Firebase อาจยังโหลดไม่เสร็จ — แจ้งผู้ใช้แทนการแสดง "ไม่พบ" ──
+  if (!db.machines || db.machines.length === 0) {
+    resBox.style.display = '';
+    resBox.innerHTML = '<div style="padding:14px 16px;font-size:0.82rem;color:#f97316;text-align:center">⏳ กำลังโหลดข้อมูลเครื่อง กรุณารอสักครู่...</div>';
+    return;
+  }
+
   const matches = db.machines.filter(m =>
     (m.name||'').toLowerCase().includes(kw) ||
     (m.serial||'').toLowerCase().includes(kw) ||

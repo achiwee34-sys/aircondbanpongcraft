@@ -98,7 +98,19 @@ async function fsLoad() {
         }
       }
 
-      if (Array.isArray(data.machines) && data.machines.length) db.machines = data.machines;
+      if (Array.isArray(data.machines) && data.machines.length) {
+        db.machines = data.machines;
+        // ── BUG FIX: trigger populateMachineSelect ทันทีหลัง fsLoad โหลด machines สำเร็จ
+        // ป้องกัน race condition ที่อุปกรณ์ใหม่ไม่มี localStorage cache แล้ว
+        // populateMachineSelect() retry หมดก่อน Firebase ตอบกลับ ──
+        setTimeout(() => {
+          if (typeof populateMachineSelect === 'function') {
+            populateMachineSelect._retryCount = 0;
+            clearTimeout(populateMachineSelect._retryTimer);
+            populateMachineSelect();
+          }
+        }, 0);
+      }
       if (Array.isArray(data.tickets))                          db.tickets  = data.tickets;
       if (Array.isArray(data.calEvents))                        db.calEvents = data.calEvents;
       if (data.chats)                                           db.chats    = data.chats;
@@ -226,6 +238,12 @@ async function forceReloadFromFS() {
       refreshPage();
       updateOpenBadge();
       updateNBadge();
+      // ── BUG FIX: populate เครื่อง/แผนกหลัง force reload ด้วย ──
+      if (typeof populateMachineSelect === 'function') {
+        populateMachineSelect._retryCount = 0;
+        clearTimeout(populateMachineSelect._retryTimer);
+        populateMachineSelect();
+      }
       showToast('✅ โหลดข้อมูลล่าสุดแล้ว');
     } else {
       showToast('⚠️ ไม่สามารถเชื่อมต่อ Firebase');

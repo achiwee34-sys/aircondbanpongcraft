@@ -2736,7 +2736,12 @@ async function initApp() {
           refreshPage();
           updateOpenBadge();
           updateNBadge();
-          if (typeof populateMachineSelect === 'function') populateMachineSelect();
+          // ── BUG FIX: reset retry counter แล้ว populate — ป้องกัน retry timer ค้าง ──
+          if (typeof populateMachineSelect === 'function') {
+            populateMachineSelect._retryCount = 0;
+            clearTimeout(populateMachineSelect._retryTimer);
+            populateMachineSelect();
+          }
         }
         fsListen();
       }
@@ -3040,9 +3045,12 @@ function goPage(name) {
     else if (name === 'new') {
       populateMachineSelect();
       if (!db.machines || db.machines.length === 0) {
+        // ── BUG FIX: เพิ่ม timer ยาวขึ้น ครอบคลุม Firebase ที่ช้า > 11 วินาที ──
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 600);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 1800);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 4000);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 8000);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 15000);
       }
       setTimeout(()=>{ const priField=document.getElementById('nt-priority-field'); if(priField) priField.style.display='none'; },50);
     }
