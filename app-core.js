@@ -703,8 +703,13 @@ function spSave() {
 
 // ── บันทึก Google Apps Script URL ──────────────────────────────
 function spSaveGsUrl() {
-  const url = document.getElementById('sp-gs-url')?.value.trim();
+  const urlEl = document.getElementById('sp-gs-url');
+  const url = urlEl?.value.trim();
   if (!url) { showToast('⚠️ กรุณากรอก Google Apps Script URL'); return; }
+  // ตรวจ format ด้วย JS แทน browser (type=url อาจ block บน mobile)
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    showToast('⚠️ URL ต้องขึ้นต้นด้วย https://'); return;
+  }
   db.gsUrl = url;
   saveDB();
   // sync ขึ้น Firestore — device อื่นจะได้ gsUrl ผ่าน onSnapshot
