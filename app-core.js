@@ -3047,12 +3047,15 @@ function goPage(name) {
     else if (name === 'new') {
       populateMachineSelect();
       if (!db.machines || db.machines.length === 0) {
-        // ── BUG FIX: เพิ่ม timer ยาวขึ้น ครอบคลุม Firebase ที่ช้า > 11 วินาที ──
+        // ── BUG FIX: timer สำรองครอบ Firebase ที่ช้า 40+ วินาที ──
+        // (populateMachineSelect ก็มี retry ของตัวเองอีก 20 รอบ ทำงานซ้อนกัน)
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 600);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 1800);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 4000);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 8000);
         setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 15000);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 25000);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 40000);
       }
       setTimeout(()=>{ const priField=document.getElementById('nt-priority-field'); if(priField) priField.style.display='none'; },50);
     }

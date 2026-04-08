@@ -994,7 +994,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
         <div class="nt-step-badge"><div class="nt-step-num">2</div><div><div class="nt-step-title">รายละเอียดปัญหา</div><div class="nt-step-sub">เลือกอาการและอธิบายเพิ่มเติม</div></div></div>
         <div class="fg">
           <div class="nt-fl"><span><span class="icon">⚠️</span>อาการ / ปัญหา *</span></div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px"><button type="button" class="prob-chip" onclick="setProblem('แอร์ไม่เย็น')">แอร์ไม่เย็น</button><button type="button" class="prob-chip" onclick="setProblem('น้ำหยดในบ้าน')">น้ำหยดในบ้าน</button><button type="button" class="prob-chip" onclick="setProblem('เสียงดังผิดปกติ')">เสียงดังผิดปกติ</button><button type="button" class="prob-chip" onclick="setProblem('แอร์ไม่ทำงาน')">แอร์ไม่ทำงาน</button><button type="button" class="prob-chip" onclick="setProblem('รีโมทไม่ตอบสนอง')">รีโมทไม่ตอบสนอง</button><button type="button" class="prob-chip" onclick="setProblem('กลิ่นผิดปกติ')">กลิ่นผิดปกติ</button><button type="button" class="prob-chip" onclick="setProblem('น้ำแข็งเกาะคอยล์')">น้ำแข็งเกาะคอยล์</button><button type="button" class="prob-chip" onclick="setProblem('แอร์ฟ้องError')">แอร์ฟ้องError</button></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"><button type="button" class="prob-chip" onclick="setProblem('แอร์ไม่เย็น')">แอร์ไม่เย็น</button><button type="button" class="prob-chip" onclick="setProblem('น้ำหยดในบ้าน')">น้ำหยดในบ้าน</button><button type="button" class="prob-chip" onclick="setProblem('เสียงดังผิดปกติ')">เสียงดังผิดปกติ</button><button type="button" class="prob-chip" onclick="setProblem('แอร์ไม่ทำงาน')">แอร์ไม่ทำงาน</button><button type="button" class="prob-chip" onclick="setProblem('รีโมทไม่ตอบสนอง')">รีโมทไม่ตอบสนอง</button><button type="button" class="prob-chip" onclick="setProblem('กลิ่นผิดปกติ')">กลิ่นผิดปกติ</button><button type="button" class="prob-chip" onclick="setProblem('น้ำแข็งเกาะคอยล์')">น้ำแข็งเกาะคอยล์</button><button type="button" class="prob-chip" onclick="setProblem('แอร์ฟ้องError')">แอร์ฟ้องError</button></div>
           <input type="text" id="nt-prob" placeholder="เช่น แอร์ไม่เย็น, น้ำหยด หรือเลือกด้านบน"/>
         </div>
 
@@ -3161,17 +3161,17 @@ window._liffLandingUpdateCard = liffUpdateCard;
 <!-- ═══ Dept Picker Bottom Sheet ═══ -->
 <div id="nt-dept-bs-overlay" onclick="closeDeptPickerSheet()"
   style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:8900;backdrop-filter:blur(2px);touch-action:none"></div>
-<div id="nt-dept-picker" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:8901;background:white;border-radius:20px 20px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.18);max-height:75vh;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior:contain;touch-action:pan-y">
-  <div style="width:40px;height:4px;border-radius:2px;background:#e2e8f0;margin:10px auto 4px"></div>
-  <div style="padding:10px 16px 8px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
-    <span style="font-size:0.9rem;font-weight:800;color:#0f172a">เลือกแผนก</span>
-    <button onclick="closeDeptPickerSheet()" style="width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;color:#64748b">×</button>
+<div id="nt-dept-picker" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:8901;background:white;border-radius:24px 24px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,0.18);max-height:80vh;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior:contain;touch-action:pan-y">
+  <div style="width:44px;height:5px;border-radius:3px;background:#e2e8f0;margin:12px auto 6px"></div>
+  <div style="padding:12px 18px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:1rem;font-weight:800;color:#0f172a">เลือกแผนก</span>
+    <button onclick="closeDeptPickerSheet()" style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;color:#64748b">×</button>
   </div>
-  <div style="padding:8px 12px;border-bottom:1px solid #f1f5f9;position:relative">
-    <svg style="position:absolute;left:22px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;position:relative">
+    <svg style="position:absolute;left:24px;top:50%;transform:translateY(-50%);pointer-events:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="nt-dept-search" type="text" placeholder="ค้นหาแผนก..."
       oninput="filterDeptPicker(this.value)"
-      style="width:100%;padding:9px 10px 9px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.85rem;font-family:inherit;outline:none;box-sizing:border-box;background:#f8fafc"
+      style="width:100%;padding:11px 12px 11px 36px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:0.95rem;font-family:inherit;outline:none;box-sizing:border-box;background:#f8fafc"
       onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e2e8f0'"/>
   </div>
   <div id="nt-dept-grid" style="display:flex;flex-direction:column;gap:0;overflow-y:auto;flex:1"></div>
@@ -3657,26 +3657,29 @@ window._liffLandingUpdateCard = liffUpdateCard;
   <img id="lb-img" src="" alt=""/>
 </div>
 
-<!-- SheetJS 0.20.3 (v15: async load + fallback CDN) -->
-<!-- F-09: เพิ่ม integrity SRI hash + crossorigin ป้องกัน supply-chain attack -->
+<!-- SheetJS 0.20.3 (v16: สลับ primary → jsdelivr, cdnjs เป็น fallback) -->
 <script>
 (function(){
-  function loadXLSX(src, integrity, fallbackSrc, fallbackIntegrity) {
+  function loadXLSX(src, fallbackSrc) {
     var s = document.createElement('script');
     s.src = src;
     s.crossOrigin = 'anonymous';
-    if (integrity) s.integrity = integrity;
     s.onerror = function() {
-      if (fallbackSrc) loadXLSX(fallbackSrc, fallbackIntegrity, null, null);
+      console.warn('[SheetJS] โหลดจาก ' + src + ' ไม่สำเร็จ');
+      if (fallbackSrc) {
+        var s2 = document.createElement('script');
+        s2.src = fallbackSrc;
+        s2.crossOrigin = 'anonymous';
+        s2.onerror = function() { console.error('[SheetJS] โหลดล้มเหลวทุก CDN'); };
+        document.head.appendChild(s2);
+      }
     };
     document.head.appendChild(s);
   }
-  // Bug 1 fix: ลบ SRI hash ที่ผิด — browser จะไม่ block script
+  // ── Primary: jsdelivr (เสถียรกว่า cdnjs ในหลายประเทศ) ──
   loadXLSX(
-    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.3/xlsx.full.min.js',
-    null,
     'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js',
-    null
+    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.3/xlsx.full.min.js'
   );
 })();
 </script>

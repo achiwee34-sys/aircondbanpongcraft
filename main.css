@@ -1580,8 +1580,8 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 
 @keyframes scanLine { 0%{top:16px} 100%{top:calc(100% - 16px)} }
 
-.prob-chip { font-size:0.72rem; padding:5px 10px; border-radius:99px; border:1px solid rgba(192,18,44,0.25); background:#fff0f2; color:var(--accent); cursor:pointer; font-weight:600; transition:all 0.15s; font-family:inherit; }
-.prob-chip:active, .prob-chip.selected { background:var(--accent); color:white; border-color:var(--accent); }
+.prob-chip { font-size:0.82rem; padding:8px 14px; border-radius:99px; border:1.5px solid rgba(192,18,44,0.3); background:#fff0f2; color:var(--accent); cursor:pointer; font-weight:700; transition:all 0.15s; font-family:inherit; line-height:1.2; -webkit-tap-highlight-color:transparent; }
+.prob-chip:active, .prob-chip.selected { background:var(--accent); color:white; border-color:var(--accent); transform:scale(0.97); }
 /* ======= GS SETUP ======= */
 .gs-code { background: #fff8f8; border: 1px solid #fecaca; border-radius: 10px; padding: 10px; font-size: 0.68rem; color: #b91c1c; overflow-x: auto; white-space: pre; max-height: 160px; overflow-y: auto; cursor: pointer; font-family: 'IBM Plex Mono', monospace; }
 .step-box { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; margin-bottom: 8px; }

@@ -1872,17 +1872,17 @@ function renderDeptPickerGrid(depts) {
     const cnt = (db.machines||[]).filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === d).length;
     return `<div class="dept-picker-item" data-dept="${d}"
       onclick="selectDeptPickerItem('${d.replace(/'/g,"\\'")}','${col}')"
-      style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.12s;-webkit-tap-highlight-color:transparent"
+      style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.12s;-webkit-tap-highlight-color:transparent"
       onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background=''"
       ontouchstart="this.style.background='#f8fafc'" ontouchend="this.style.background=''">
-      <div style="width:34px;height:34px;border-radius:10px;background:${col}1a;border:1.5px solid ${col}33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>
+      <div style="width:40px;height:40px;border-radius:12px;background:${col}1a;border:1.5px solid ${col}33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d}</div>
-        ${cnt ? `<div style="font-size:0.62rem;color:#94a3b8;margin-top:1px">${cnt} เครื่อง</div>` : ''}
+        <div style="font-size:0.95rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d}</div>
+        ${cnt ? `<div style="font-size:0.72rem;color:#94a3b8;margin-top:2px">${cnt} เครื่อง</div>` : ''}
       </div>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`;
   }).join('');
 }
@@ -2108,9 +2108,14 @@ function populateMachineSelect() {
   if (depts.length === 0) {
     deptSel.innerHTML = '<option value="">⏳ กำลังโหลดข้อมูลแผนก...</option>';
     if (!populateMachineSelect._retryCount) populateMachineSelect._retryCount = 0;
-    if (populateMachineSelect._retryCount < 8) {
+    // ── BUG FIX: เพิ่ม retry สูงสุด 20 ครั้ง ครอบคลุม Firebase ที่ช้า 40+ วินาที ──
+    // delay schedule: 3 ครั้งแรก 600ms, ครั้งที่ 4-8 = 2s, ครั้งที่ 9-20 = 3s
+    // รวมสูงสุด ~3×0.6 + 5×2 + 12×3 = 1.8+10+36 = ~48 วินาที
+    if (populateMachineSelect._retryCount < 20) {
       populateMachineSelect._retryCount++;
-      const delay = populateMachineSelect._retryCount <= 3 ? 600 : 2000;
+      const delay = populateMachineSelect._retryCount <= 3 ? 600
+                  : populateMachineSelect._retryCount <= 8 ? 2000
+                  : 3000;
       clearTimeout(populateMachineSelect._retryTimer);
       populateMachineSelect._retryTimer = setTimeout(() => populateMachineSelect(), delay);
     } else {
