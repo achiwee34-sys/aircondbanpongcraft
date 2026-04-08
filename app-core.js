@@ -1241,7 +1241,8 @@ async function viewQuotationFull(tid) {
       // คำนวณความสูงจริงหลัง scale
       var rawH = page.offsetHeight || doc.documentElement.scrollHeight || 1122;
       var scaledH = Math.ceil(rawH * scale);
-      iframe.style.height = scaledH + 'px';
+      // Bug 5 fix: ความสูง iframe ต้องไม่ต่ำกว่า viewport
+      iframe.style.height = Math.max(scaledH, window.innerHeight - 60) + 'px';
       wrap.style.background = 'white';
     } catch(e){}
   };
@@ -1252,6 +1253,7 @@ async function viewQuotationFull(tid) {
       setTimeout(applyScale, 80);
       setTimeout(applyScale, 300);
       setTimeout(applyScale, 700);
+      setTimeout(applyScale, 1500); // Bug 5 fix: retry ครั้งที่ 4 สำหรับ iframe ที่โหลดช้า
     };
     window.removeEventListener('resize', applyScale);
     window.addEventListener('resize', applyScale);

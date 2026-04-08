@@ -52,6 +52,12 @@ async function clearFirestoreData(type) {
   const _wasSaving = (typeof _fsSaving !== 'undefined') ? _fsSaving : false;
   if (typeof _fsSaving !== 'undefined') _fsSaving = true;
 
+  // ── BUG FIX B: Detach onSnapshot ก่อน clear ──
+  // ป้องกัน snapshot ของข้อมูลเก่า (ก่อน clear) ยิงกลับมาก่อน write ใหม่จะสำเร็จ
+  // → race condition: clear → old snapshot fires → restore ข้อมูลที่เพิ่งลบ
+  const _hadListener = (typeof _fsListener !== 'undefined' && _fsListener);
+  if (_hadListener) { _fsListener(); _fsListener = null; }
+
   try {
     if (type === 'reset' || type === 'tickets') {
       db.tickets = [];
@@ -94,6 +100,7 @@ async function clearFirestoreData(type) {
         calEvents:      db.calEvents       || [],
         chats:          db.chats           || {},
         machineRequests:db.machineRequests || [],
+        notifications:  db.notifications   || [],   // ← BUG FIX: ขาดไป
         deletedUserIds: db.deletedUserIds  || [],
         _seq:           db._seq,
         _docVersion:    newDocVersion,
@@ -112,9 +119,16 @@ async function clearFirestoreData(type) {
     showToast('❌ ผิดพลาด: ' + e.message);
     console.error('clearFirestoreData error:', e);
   } finally {
-    // ── BUG FIX A: คืน flag เสมอ แม้ error ──
+    // ── BUG FIX A+B: คืน flag เสมอ แม้ error + re-attach listener ──
     if (typeof _fsSaving !== 'undefined') {
-      setTimeout(() => { _fsSaving = _wasSaving; }, 1000);
+      setTimeout(() => {
+        _fsSaving = _wasSaving;
+        // Re-attach onSnapshot listener หลัง clear + write เสร็จสมบูรณ์
+        // รอ 1500ms ให้ Firestore write propagate ก่อน → ป้องกัน snapshot เก่ายิงกลับมา
+        if (_hadListener && typeof fsListen === 'function') {
+          setTimeout(fsListen, 500);
+        }
+      }, 1500);
     }
   }
 }

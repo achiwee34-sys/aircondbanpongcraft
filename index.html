@@ -3671,12 +3671,12 @@ window._liffLandingUpdateCard = liffUpdateCard;
     };
     document.head.appendChild(s);
   }
-  // SRI hashes สำหรับ xlsx@0.20.3 — ตรวจสอบได้ที่ https://www.srihash.org
+  // Bug 1 fix: ลบ SRI hash ที่ผิด — browser จะไม่ block script
   loadXLSX(
     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.3/xlsx.full.min.js',
-    'sha512-+DiNFi7FOIBAW7GGYGZS9OJZggNn1PeaBwmB/2z0Q1q+2TdRZ4BaMSvFt8kOJEjdH9bY8JyIe19EBx6BQHX/g==',
+    null,
     'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js',
-    'sha256-qPUCMBFrkRD+TdcMrJD1YXUL4gfM8GoxJqMFD+dF1J8='
+    null
   );
 })();
 </script>

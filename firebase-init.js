@@ -198,6 +198,7 @@ async function fsSaveNow() {
       calEvents:       db.calEvents       || [],
       chats:           db.chats           || {},
       machineRequests: db.machineRequests || [],
+      notifications:   db.notifications   || [],   // ← BUG FIX: ขาดไปเหมือน conflict-guard.js
       deletedUserIds:  db.deletedUserIds  || [],
       _seq:            db._seq,
       gsUrl:           db.gsUrl           || '',

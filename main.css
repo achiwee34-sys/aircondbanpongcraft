@@ -1487,7 +1487,9 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 #pg-calendar #cal-grid { overflow:visible; }
 
 #pg-purchase { padding:0 !important; overflow-y:hidden !important; display:none; flex-direction:column; }
-#pg-purchase.active { display:flex !important; }
+#pg-purchase.active { display:flex !important; flex-direction:column; overflow:hidden; }
+/* Bug 4 fix: pur-list-panel ต้องไม่ overflow บนจอเล็ก (iPhone SE 375px) */
+#pg-purchase.active #pur-list-panel { height:100%; max-height:100%; }
 #pg-chat.active { display:block !important; }
 #pg-chatroom.active { display:flex !important; flex-direction:column; }
 #pg-chatroom > #cr-container { height:100%; }

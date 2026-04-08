@@ -117,12 +117,14 @@ async function linePushRole(role, messages) {
 
 // ── สีตาม event ──────────────────────────────────────────────
 const EVENT_COLORS = {
-  new:     '#c8102e',
-  assign:  '#1d4ed8',
-  accept:  '#d97706',
-  start:   '#7c3aed',
-  done:    '#16a34a',
-  newUser: '#0891b2'
+  new:      '#c8102e',
+  assign:   '#1d4ed8',
+  accept:   '#d97706',
+  start:    '#7c3aed',
+  done:     '#16a34a',
+  newUser:  '#0891b2',
+  purchase: '#b45309',  // Bug 6: สีสำหรับ event สั่งซื้อ
+  record:   '#0f766e'   // Bug 6: สีสำหรับ event บันทึกผล
 };
 
 function ticketUrl(tid) {
@@ -226,5 +228,35 @@ async function lineMessagingEvent(event, t) {
        ['เบอร์', t.tel || '—'], ['เวลา', time]],
       '👥 จัดการผู้ใช้', LINE_LIFF_URL + '?page=users');
     await linePushAdmin([flex]);
+
+  // ── Bug 6 fix: event สั่งซื้อ (purchase) ────────────────────
+  } else if (event === 'purchase') {
+    const flex = buildFlex(EVENT_COLORS.purchase, '🛒', 'สั่งซื้ออะไหล่แล้ว (PO)',
+      [['เลข PO',   t.poNumber  || '—'],
+       ['เลขงาน',   t.ticketId  || '—'],
+       ['รายการ',   t.itemName  || '—'],
+       ['จำนวน',    t.qty       || '—'],
+       ['ผู้สั่ง',  t.orderedBy || '—'],
+       ['เวลา',     time]],
+      '📋 ดูรายละเอียด PO', ticketUrl(t.ticketId));
+    await linePushAdmin([flex]);
+    await linePushRole('tech', [flex]);
+    await linePushRole('reporter', [flex]);
+
+  // ── Bug 6 fix: event บันทึกผล (record) แจ้ง reporter ────────
+  } else if (event === 'record') {
+    const reporter = ((typeof db !== 'undefined' ? db.users : window.db?.users) || [])
+      .find(u => u.name === t.reporter || u.id === t.reporterId);
+    const flex = buildFlex(EVENT_COLORS.record, '📝', 'บันทึกผลการซ่อมแล้ว',
+      [['เลขงาน',  t.id          || '—'],
+       ['ปัญหา',   t.problem     || '—'],
+       ['เครื่อง', t.machine     || '—'],
+       ['ช่าง',    t.assignee    || '—'],
+       ['ผลการซ่อม', t.result    || '—'],
+       ['เวลา',    time]],
+      '📋 ดูสรุปงาน', ticketUrl(t.id));
+    await linePushAdmin([flex]);
+    await linePushRole('tech', [flex]);
+    if (reporter?.lineUserId) await linePush(reporter.lineUserId, [flex]);
   }
 }

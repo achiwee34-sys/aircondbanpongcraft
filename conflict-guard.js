@@ -135,6 +135,11 @@ async function fsSaveNowSafe() {
       calEvents:       db.calEvents       || [],
       chats:           db.chats           || {},
       machineRequests: db.machineRequests || [],
+      // ── BUG FIX: fields เหล่านี้ต้องอยู่ใน payload เสมอ ──
+      // ถ้าขาด → .set() จะลบออกจาก Firestore ทุกครั้งที่ save ปกติ
+      notifications:   db.notifications   || [],        // ← แจ้งเตือนหาย
+      deletedUserIds:  db.deletedUserIds  || [],        // ← blacklist หาย → user ที่ลบกลับมา
+      gsUrl:           db.gsUrl           || '',        // ← Google Sheet URL หาย
       _seq:            db._seq = (db._seq || 0) + 1,   // increment ก่อน write เสมอ
       updatedAt:       new Date().toISOString(),
     };

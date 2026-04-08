@@ -1850,7 +1850,9 @@ function renderPurchaseReporter() {
 // ════════════════════════════════════════════════
 function renderPurchaseAdmin() {
   const hb = document.getElementById('pur-header-bar');
-  if (hb && !document.getElementById('pur-search')) {
+  // Bug 2 fix: force re-render เมื่อ pur-list ว่าง (หน้าเพิ่งเปิดหรือ switch กลับมา)
+  const listEmpty = !document.getElementById('pur-list')?.innerHTML?.trim();
+  if (hb && (!document.getElementById('pur-search') || listEmpty)) {
     hb.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 0 10px">
         <div>
