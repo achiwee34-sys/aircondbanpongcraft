@@ -52,12 +52,10 @@
 // ============================================================
 // MACHINE HISTORY
 // ============================================================
-let _mhistCurrentMid = null;
-
 function openMachineHistory(mid) {
-  _mhistCurrentMid = mid;
   const m = db.machines.find(x => x.id === mid);
   if (!m) return;
+  _mhistCurrentMid = mid; // track สำหรับ Export Excel
   const tickets = db.tickets.filter(t => t.machineId === mid || t.machine === m.name)
     .sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
   // XSS FIX (audit #6): escape m.serial and m.name before innerHTML
@@ -156,101 +154,197 @@ function openMachineHistory(mid) {
   openSheet('mhist');
 }
 
-// ── Export ประวัติเครื่องที่กำลังดู (mhist sheet) ──────────────
+// ── Export Excel ประวัติการซ่อมของเครื่องนี้ ──────────────────
+let _mhistExportId = null; // เก็บ machine ID ที่กำลัง open อยู่
+
+function exportMachineHistorySheet() {
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportMachineHistorySheet); return; }
+
+  // ใช้ _mhistCurrentMid ที่ set ตอน openMachineHistory
+  const m = _mhistCurrentMid ? db.machines.find(x => x.id === _mhistCurrentMid) : null;
+  if (!m) { showToast('⚠️ ไม่พบข้อมูลเครื่อง'); return; }
+
+  const tickets = db.tickets
+    .filter(t => t.machineId === m.id || t.machine === m.name)
+    .sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+
+  if (!tickets.length) { showToast('⚠️ ไม่มีประวัติการซ่อมสำหรับเครื่องนี้'); return; }
+
+  const STATUS_TH = {new:'ใหม่',assigned:'จ่ายงาน',working:'กำลังซ่อม',
+    waiting_part:'รออะไหล่',done:'เสร็จแล้ว',verified:'ตรวจรับแล้ว',closed:'ปิดงาน'};
+
+  // ── Sheet 1: สรุปรายการซ่อม ──
+  const rows = tickets.map(t => ({
+    'รหัสงาน':       t.id,
+    'วันแจ้ง':        (t.createdAt||'').slice(0,10),
+    'วันอัปเดต':      (t.updatedAt||'').slice(0,10),
+    'อาการ/ปัญหา':    t.problem || '',
+    'รายละเอียด':     t.detail  || '',
+    'ผู้แจ้ง':        t.reporter || '',
+    'ช่างซ่อม':       t.assignee || '',
+    'สถานะ':          STATUS_TH[t.status] || t.status || '',
+    'สรุปผลซ่อม':     t.summary  || '',
+    'อะไหล่':         t.parts    || '',
+    'ค่าซ่อม (฿)':    parseFloat(t.repairCost)||0,
+    'ราคาซื้อของ (฿)': parseFloat(t.partsCost)||0,
+    'รวมค่าใช้จ่าย (฿)': parseFloat(t.cost)||0,
+    'PR No.':         t.purchaseOrder?.pr || '',
+    'PO No.':         t.purchaseOrder?.po || '',
+    'หมายเหตุ':       t.note || '',
+  }));
+
+  // ── Sheet 2: รายการอะไหล่ที่สั่งซื้อ ──
+  const partRows = [];
+  tickets.forEach(t => {
+    const poRows = (t.purchaseOrder?.rows||[]).filter(r => r.name);
+    poRows.forEach(r => {
+      partRows.push({
+        'รหัสงาน':     t.id,
+        'วันแจ้ง':      (t.createdAt||'').slice(0,10),
+        'ชื่ออะไหล่':   r.name   || '',
+        'จำนวน':        r.qty    || 1,
+        'ราคาต่อชิ้น (฿)': parseFloat(r.price)||0,
+        'รวม (฿)':      (r.qty||1) * (parseFloat(r.price)||0),
+        'PR No.':       t.purchaseOrder?.pr || '',
+        'PO No.':       t.purchaseOrder?.po || '',
+      });
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1
+  const ws1 = XLSX.utils.json_to_sheet(rows);
+  // กำหนดความกว้างคอลัมน์
+  ws1['!cols'] = [
+    {wch:12},{wch:12},{wch:12},{wch:30},{wch:30},{wch:14},{wch:14},
+    {wch:12},{wch:30},{wch:20},{wch:14},{wch:16},{wch:18},{wch:12},{wch:12},{wch:20}
+  ];
+  XLSX.utils.book_append_sheet(wb, ws1, 'ประวัติการซ่อม');
+
+  // Sheet 2 (ถ้ามีอะไหล่)
+  if (partRows.length) {
+    const ws2 = XLSX.utils.json_to_sheet(partRows);
+    ws2['!cols'] = [{wch:12},{wch:12},{wch:30},{wch:8},{wch:16},{wch:14},{wch:12},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws2, 'รายการอะไหล่');
+  }
+
+  // ชื่อไฟล์
+  const serial = (m.serial || m.id.replace('csv_','')).replace(/[^a-zA-Z0-9ก-๙_-]/g,'_');
+  const today  = new Date().toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
+  const fname  = `RepairHistory_${serial}_${today}.xlsx`;
+
+  XLSX.writeFile(wb, fname);
+  showToast(`✅ Export ${tickets.length} รายการ → ${fname}`);
+}
+
+// ── Export Excel ประวัติการซ่อมของเครื่องที่เปิดอยู่ ─────────
+let _mhistCurrentMid = null; // track machine id ที่เปิด mhist ล่าสุด
+
 function exportMachineHistorySheet() {
   if (typeof XLSX === 'undefined') { waitForXLSX(exportMachineHistorySheet); return; }
   const mid = _mhistCurrentMid;
-  if (!mid) return;
-  const m = db.machines.find(x => x.id === mid);
-  if (!m) return;
-  const tickets = db.tickets.filter(t => t.machineId === mid || t.machine === m.name)
-    .sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));
+  const m   = mid ? db.machines.find(x => x.id === mid) : null;
+  if (!m) { showToast('⚠️ ไม่พบข้อมูลเครื่อง'); return; }
+
+  const tickets = db.tickets
+    .filter(t => t.machineId === mid || t.machine === m.name)
+    .sort((a, b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+
+  if (!tickets.length) { showToast('⚠️ ไม่มีประวัติการซ่อม'); return; }
+
+  const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
+  const macLabel = (m.serial||m.id.replace('csv_','')) + '_' + (m.name||'').replace(/[/\\?%*:|"<>]/g,'_').slice(0,20);
+
+  // ── Summary row ──
+  const totalCost   = tickets.reduce((s,t)=>s+(parseFloat(t.cost)||0), 0);
+  const totalRepair = tickets.reduce((s,t)=>s+(parseFloat(t.repairCost)||0), 0);
+  const totalParts  = tickets.reduce((s,t)=>s+(parseFloat(t.partsCost)||0), 0);
+  const doneCnt     = tickets.filter(t=>['done','verified','closed'].includes(t.status)).length;
+
+  // ── Header info sheet ──
+  const infoRows = [
+    ['ข้อมูลเครื่องแอร์', ''],
+    ['Serial / Air ID', m.serial || m.id.replace('csv_','')],
+    ['ชื่อเครื่อง',       m.name  || '—'],
+    ['แผนก',              m.dept  || '—'],
+    ['Location',          m.location || '—'],
+    ['BTU',               m.btu   || '—'],
+    ['ยี่ห้อ CDU',         m.mfrCDU || m.brandCDU || '—'],
+    ['Model CDU',         m.modelCDU || '—'],
+    ['ยี่ห้อ FCU',         m.mfrFCU || m.brandFCU || '—'],
+    ['Model FCU',         m.modelFCU || '—'],
+    ['วันติดตั้ง',         m.install || '—'],
+    [''],
+    ['สรุปประวัติซ่อม', ''],
+    ['จำนวนครั้งทั้งหมด',  tickets.length],
+    ['เสร็จสิ้น',          doneCnt],
+    ['ค่าซ่อมรวม (฿)',     totalRepair],
+    ['ค่าอะไหล่รวม (฿)',   totalParts],
+    ['ค่าใช้จ่ายรวม (฿)',  totalCost],
+    ['Export เมื่อ',       today],
+  ];
+
+  // ── Ticket detail rows ──
+  const headers = [
+    'Ticket ID','วันที่แจ้ง','วันที่อัพเดต','ปัญหา','รายละเอียด',
+    'ช่างผู้รับผิดชอบ','สถานะ','ความเร่งด่วน',
+    'ค่าซ่อม (฿)','ค่าอะไหล่ (฿)','รวม (฿)',
+    'สรุปการซ่อม','อะไหล่','PR No.','PO No.',
+    'ผู้แจ้ง','แผนกผู้แจ้ง'
+  ];
+
+  const STATUS_TH = {new:'ใหม่',assigned:'จ่ายงาน',working:'กำลังซ่อม',
+    waiting_part:'รออะไหล่',done:'เสร็จแล้ว',verified:'ยืนยัน',closed:'ปิดงาน'};
+  const PRI_TH = {low:'ต่ำ',normal:'ปกติ',high:'สูง',urgent:'เร่งด่วน'};
+
+  const dataRows = tickets.map(t => {
+    const poRows = (t.purchaseOrder?.rows||[]).filter(r=>r.name);
+    const partsList = poRows.length
+      ? poRows.map(r=>`${r.name} ${r.qty||1}×฿${r.price||0}`).join(', ')
+      : (t.parts||'');
+    return [
+      t.id,
+      (t.createdAt||'').slice(0,10),
+      (t.updatedAt||'').slice(0,10),
+      t.problem||'',
+      t.detail||'',
+      t.assignee||'—',
+      STATUS_TH[t.status]||t.status||'',
+      PRI_TH[t.priority]||t.priority||'',
+      parseFloat(t.repairCost)||0,
+      parseFloat(t.partsCost)||0,
+      parseFloat(t.cost)||0,
+      t.summary||'',
+      partsList,
+      t.purchaseOrder?.pr||'',
+      t.purchaseOrder?.po||'',
+      t.reporter||'',
+      t.reporterDept||'',
+    ];
+  });
 
   const wb = XLSX.utils.book_new();
-  const stTH = {new:'ใหม่',assigned:'จ่ายงานแล้ว',accepted:'รับงานแล้ว',inprogress:'กำลังซ่อม',
-    waiting_part:'รออะไหล่',done:'เสร็จแล้ว',verified:'ตรวจรับแล้ว',closed:'ปิดงานแล้ว'};
 
-  // ─── Sheet 1: ประวัติการซ่อม ───
-  const histHeaders = ['ลำดับ','เลขที่ใบงาน','วันที่แจ้ง','ปัญหา','ผู้แจ้ง','ช่าง',
-    'สถานะ','ประเภทงาน','สรุปการซ่อม','อะไหล่ที่ใช้',
-    'เวลาที่ใช้ (ชม.)','ค่าซ่อม (บาท)','ราคาซื้อของ (บาท)','ค่าใช้จ่ายรวม (บาท)'];
-  const histRows = [histHeaders];
-  tickets.forEach((t, i) => {
-    histRows.push([
-      i + 1, t.id,
-      (t.createdAt||'').substring(0,10),
-      t.problem||'', t.reporter||'', t.assignee||'',
-      stTH[t.status]||t.status, t.jobTypes||'',
-      t.summary||'', t.parts||'',
-      t.repairHours||'',
-      Number(t.repairCost||0), Number(t.partsCost||0), Number(t.cost||0)
-    ]);
-  });
-  // แถวรวม
-  if (tickets.length > 0) {
-    const lastRow = tickets.length + 1;
-    histRows.push(['','','','','','','','','','','',
-      `=SUM(L2:L${lastRow})`,`=SUM(M2:M${lastRow})`,`=SUM(N2:N${lastRow})`]);
-  }
+  // Sheet 1: ข้อมูลเครื่อง
+  const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
+  wsInfo['!cols'] = [{wch:22},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, wsInfo, 'ข้อมูลเครื่อง');
 
-  const ws1 = XLSX.utils.aoa_to_sheet(histRows);
-  ws1['!cols'] = [
-    {wch:6},{wch:12},{wch:12},{wch:28},{wch:14},{wch:14},
-    {wch:14},{wch:16},{wch:32},{wch:20},{wch:14},{wch:16},{wch:18},{wch:18}
+  // Sheet 2: ประวัติการซ่อม
+  const wsData = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+  wsData['!cols'] = [
+    {wch:14},{wch:12},{wch:12},{wch:24},{wch:28},
+    {wch:16},{wch:12},{wch:10},
+    {wch:12},{wch:12},{wch:12},
+    {wch:30},{wch:24},{wch:12},{wch:12},
+    {wch:16},{wch:14}
   ];
-  ws1['!freeze'] = {xSplit:0, ySplit:1};
-  XLSX.utils.book_append_sheet(wb, ws1, 'ประวัติการซ่อม');
+  XLSX.utils.book_append_sheet(wb, wsData, 'ประวัติซ่อม');
 
-  // ─── Sheet 2: ข้อมูลเครื่องและสรุปค่าใช้จ่าย ───
-  const totalCost   = tickets.reduce((s,t) => s + Number(t.cost||0), 0);
-  const totalRepair = tickets.reduce((s,t) => s + Number(t.repairCost||0), 0);
-  const totalParts  = tickets.reduce((s,t) => s + Number(t.partsCost||0), 0);
-  const doneCnt     = tickets.filter(t => ['done','verified','closed'].includes(t.status)).length;
-  const lastDone    = tickets.filter(t => ['done','verified','closed'].includes(t.status))
-    .sort((a,b) => (b.updatedAt||'').localeCompare(a.updatedAt||''))[0];
-  const lastRepairDate = lastDone ? (lastDone.updatedAt||'').substring(0,10) : '—';
-
-  const infoRows = [
-    ['ข้อมูลเครื่อง', ''],
-    ['รหัส Air', m.serial||m.id.replace('csv_','')],
-    ['ชื่อเครื่อง', m.name||'—'],
-    ['ยี่ห้อ/รุ่น', m.brand||'—'],
-    ['แผนก/พื้นที่', m.dept||m.location||'—'],
-    ['Serial No.', m.serial||'—'],
-    ['BTU', m.btu||'—'],
-    ['สารทำความเย็น', m.refrigerant||'—'],
-    ['วันติดตั้ง', m.install||'—'],
-    ['PM ทุก (เดือน)', m.interval||'—'],
-    ['', ''],
-    ['สรุปค่าใช้จ่าย', ''],
-    ['จำนวนครั้งซ่อมทั้งหมด', tickets.length],
-    ['ซ่อมสำเร็จ', doneCnt],
-    ['ซ่อมล่าสุด', lastRepairDate],
-    ['ค่าซ่อมรวม (บาท)', totalRepair],
-    ['ราคาซื้อของรวม (บาท)', totalParts],
-    ['ค่าใช้จ่ายรวมสุทธิ (บาท)', totalCost],
-    ['VAT 7% (บาท)', Math.round(totalCost * 0.07)],
-    ['ยอดสุทธิรวม VAT (บาท)', Math.round(totalCost * 1.07)],
-  ];
-
-  const ws2 = XLSX.utils.aoa_to_sheet(infoRows);
-  ws2['!cols'] = [{wch:26},{wch:30}];
-  XLSX.utils.book_append_sheet(wb, ws2, 'ข้อมูลเครื่องและสรุป');
-
-  // ─── Export ───
-  const serial = (m.serial||m.id).replace(/[^a-zA-Z0-9ก-ฮ_-]/g, '_');
-  const fname = `SCG-AIRCON-${serial}-${new Date().toISOString().substring(0,10)}.xlsx`;
-  XLSX.writeFile(wb, fname);
-  showAlert({
-    icon: '📊',
-    title: 'Export สำเร็จ!',
-    msg: `ส่งออกประวัติการซ่อม<br><b>${m.serial||m.id}</b> — ${m.name}<br><b>${tickets.length} ใบงาน · 2 Sheets</b><br><span style="font-size:0.78rem;color:#94a3b8;font-family:'JetBrains Mono',monospace">${fname}</span>`,
-    color: '#059669',
-    btn: 'ตกลง'
-  });
+  XLSX.writeFile(wb, `History_${macLabel}_${today}.xlsx`);
+  showToast('✅ Export เรียบร้อย');
 }
-
-// ── AIR ID Search ──────────────────────────────────────────────
 function openAirIdSearch() {
   const inp = document.getElementById('airsearch-input');
   if (inp) { inp.value = ''; }

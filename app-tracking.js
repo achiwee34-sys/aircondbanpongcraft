@@ -3370,17 +3370,38 @@ function openDetail(tid) {
 
 // ── Async photo resolver for detail sheet ──────────────────────────
 async function _resolveDetailPhotos(ticketId, attempt = 0) {
-  const MAX_RETRY = 3;
-  const RETRY_DELAY_MS = [0, 800, 2000]; // ms ก่อน retry แต่ละรอบ
+  const MAX_RETRY = 5;
+  const RETRY_DELAY_MS = [0, 1000, 2500, 4000, 6000];
 
   const items = document.querySelectorAll('[data-photo-key]');
   if (!items.length) return;
+
+  // BUG FIX (Bug 2): รอ Firebase auth พร้อมก่อน load รูป
+  // anonymous user (PC) ต้องได้รับ signInAnonymously ก่อนถึงจะอ่าน ticket_photos ได้
+  if (typeof _waitForAuth === 'function') {
+    const authed = await _waitForAuth(6000);
+    if (!authed && attempt === 0) {
+      // auth ยังไม่พร้อม retry ใน 1 วินาที
+      setTimeout(() => _resolveDetailPhotos(ticketId, attempt), 1000);
+      return;
+    }
+  }
 
   // load all photos from Firestore (one batch call per ticket)
   let photoData = null;
   const hasFsKey = [...items].some(el => (el.dataset.photoKey||'').startsWith('fs:'));
   if (hasFsKey && typeof loadPhotosFromFirestore === 'function') {
-    try { photoData = await loadPhotosFromFirestore(ticketId); } catch(e) {}
+    try {
+      // BUG FIX (Bug 2): clear cache ก่อน retry เพื่อ force reload จาก Firestore
+      if (attempt > 0 && typeof _photoCache !== 'undefined') {
+        delete _photoCache[ticketId];
+        const idx = (typeof _photoCacheKeys !== 'undefined') ? _photoCacheKeys.indexOf(ticketId) : -1;
+        if (idx !== -1) _photoCacheKeys.splice(idx, 1);
+      }
+      photoData = await loadPhotosFromFirestore(ticketId);
+    } catch(e) {
+      console.warn('[photo resolve] loadPhotosFromFirestore failed:', e.message);
+    }
   }
 
   let pendingRetry = false;
@@ -3422,15 +3443,15 @@ async function _resolveDetailPhotos(ticketId, attempt = 0) {
           resolve();
         };
         tester.onerror = () => {
-          // URL ใช้ไม่ได้ → แสดง broken placeholder และ mark retry
-          if (spin) spin.innerHTML = '🖼️';
+          if (spin) spin.innerHTML = attempt < MAX_RETRY ? '⏳' : '🖼️';
           pendingRetry = true;
           resolve();
         };
+        // BUG FIX (Bug 2): timeout กัน URL ที่ค้างนาน
+        setTimeout(() => { if (img.style.opacity !== '1') { pendingRetry = true; resolve(); } }, 8000);
         tester.src = src;
       });
     } else {
-      // resolve ล้มเหลว
       if (spin) spin.innerHTML = attempt < MAX_RETRY ? '⏳' : '🖼️';
       pendingRetry = true;
     }
@@ -3438,7 +3459,7 @@ async function _resolveDetailPhotos(ticketId, attempt = 0) {
 
   // retry ถ้ายังมี item ที่ resolve ไม่สำเร็จ
   if (pendingRetry && attempt < MAX_RETRY) {
-    const delay = RETRY_DELAY_MS[attempt + 1] ?? 2000;
+    const delay = RETRY_DELAY_MS[attempt + 1] ?? 3000;
     console.log(`[photo resolve] retry ${attempt + 1}/${MAX_RETRY} in ${delay}ms`);
     setTimeout(() => _resolveDetailPhotos(ticketId, attempt + 1), delay);
   }

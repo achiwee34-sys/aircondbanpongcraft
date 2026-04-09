@@ -315,9 +315,18 @@ async function fsListen() {
     if (!snap.exists || !CU) return;
     const data = snap.data();
     if (_fsSaving && !_fsChatSaving) return;
-    // ── ถ้า local _seq ใหม่กว่าหรือเท่ากับ remote → remote เป็นข้อมูลเก่า ข้ามทั้งหมด ──
-    // (ป้องกัน onSnapshot ที่ยิงกลับมาหลัง delete restore ข้อมูลที่เพิ่งลบ)
-    if (data._seq && db._seq && db._seq >= data._seq) return;
+    // ── BUG FIX (Bug 1 cross-device sync): ปรับ _seq check ──
+    // เดิม: db._seq >= data._seq → skip ทั้งหมด
+    // ปัญหา: อุปกรณ์ที่มี localStorage เก่า (_seq สูง) จะไม่รับ update จากอุปกรณ์อื่นเลย
+    // แก้: skip เฉพาะเมื่อ _seq เท่ากัน (same write) หรือ local สูงกว่า remote มากเกิน 50
+    //      ถ้า remote สูงกว่าหรือใกล้เคียง → ยังคง sync ปกติ
+    const localSeq  = db._seq  || 0;
+    const remoteSeq = data._seq || 0;
+    // กัน onSnapshot ที่ยิงกลับมาจาก write ของตัวเอง (seq เท่ากัน)
+    if (remoteSeq > 0 && localSeq > 0 && localSeq === remoteSeq) return;
+    // กัน localStorage cache เก่ามากๆ ที่ _seq พุ่งสูงผิดปกติ (เช่น หลัง clear +100)
+    // แต่ยังคง sync ถ้า remote ใหม่กว่า
+    if (localSeq > remoteSeq && (localSeq - remoteSeq) > 50) return;
     const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
     const DEMO_IDS       = ['u2','u3','u4','u5'];
     const check = (key) => {
