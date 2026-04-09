@@ -39,334 +39,131 @@
 <!-- ========== LIFF LANDING PAGE ========== -->
 <div id="login-screen" style="transition:opacity 0.25s,transform 0.25s">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;800;900&display=swap');
 
+/* ── override body for landing ── */
 #login-screen {
   position:fixed;inset:0;z-index:100;overflow-y:auto;
-  background:#0d0e14;
+  background:#0a0a0f;
   font-family:'Kanit',sans-serif;
   color:#fff;
 }
+/* BG */
+#liff-bg-wrap { position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none }
+.lbg { position:absolute;border-radius:50%;filter:blur(80px); }
+.lbg-1{width:500px;height:500px;top:-150px;left:-100px;background:radial-gradient(circle,#c8102e,#7f000000 70%);opacity:0.35;animation:lbg-pulse 6s ease-in-out infinite alternate}
+.lbg-2{width:400px;height:400px;bottom:-100px;right:-80px;background:radial-gradient(circle,#1a3a6e,#0d1f4000 70%);opacity:0.3;animation:lbg-pulse 6s 2s ease-in-out infinite alternate}
+@keyframes lbg-pulse{0%{transform:scale(1);opacity:0.3}100%{transform:scale(1.15) translate(10px,-10px);opacity:0.45}}
+.lbg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(200,16,46,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(200,16,46,.05) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:1}
 
-/* ── Background Grid ── */
-#ls-bg {
-  position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
-}
-#ls-bg-grid {
-  position:absolute;inset:0;
-  background-image:
-    linear-gradient(rgba(0,180,255,.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,180,255,.07) 1px, transparent 1px);
-  background-size:48px 48px;
-}
-#ls-bg-glow1 {
-  position:absolute;top:-140px;right:-80px;
-  width:380px;height:380px;border-radius:50%;
-  background:radial-gradient(circle, rgba(0,160,255,.18) 0%, transparent 70%);
-  animation:ls-glow-pulse 7s ease-in-out infinite alternate;
-}
-#ls-bg-glow2 {
-  position:absolute;bottom:-120px;left:-60px;
-  width:320px;height:320px;border-radius:50%;
-  background:radial-gradient(circle, rgba(0,220,140,.12) 0%, transparent 70%);
-  animation:ls-glow-pulse 9s 2s ease-in-out infinite alternate;
-}
-@keyframes ls-glow-pulse {
-  0%{transform:scale(1);opacity:.7}
-  100%{transform:scale(1.2) translate(15px,-10px);opacity:1}
-}
-
-/* ── Fan SVG ── */
-#ls-fan-wrap {
-  position:fixed;top:-20px;right:-20px;z-index:1;pointer-events:none;opacity:.22;
-  animation:ls-fan-spin 18s linear infinite;
-}
-@keyframes ls-fan-spin { to{transform:rotate(360deg)} }
-
-/* ── Page wrapper ── */
-.ls-page {
+/* ── Page content ── */
+.liff-page {
   position:relative;z-index:10;
   min-height:100dvh;
   display:flex;flex-direction:column;
-  padding: calc(env(safe-area-inset-top,0px) + 20px) 20px calc(env(safe-area-inset-bottom,0px) + 32px);
-  max-width:480px;margin:0 auto;
+  padding:calc(env(safe-area-inset-top,0px) + 24px) 20px calc(env(safe-area-inset-bottom,0px) + 32px);
 }
 
-/* ── Header ── */
-.ls-header {
-  display:flex;align-items:center;gap:12px;
-  margin-bottom:20px;
-  animation:ls-slide-down .5s ease both;
-}
-.ls-logo {
-  width:50px;height:50px;border-radius:13px;
-  background:linear-gradient(145deg,#1a1a2e,#0d0d1a);
-  border:1px solid rgba(0,180,255,.35);
-  box-shadow:0 0 18px rgba(0,180,255,.25),inset 0 1px 0 rgba(255,255,255,.08);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;
-}
-.ls-brand-main {
-  font-family:'Share Tech Mono',monospace;font-size:1.05rem;font-weight:700;
-  letter-spacing:.08em;color:#fff;line-height:1;
-}
-.ls-brand-sub {
-  font-size:.6rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
-  color:#00b4ff;margin-top:4px;
-}
+/* Header */
+.liff-header{display:flex;align-items:center;gap:14px;margin-bottom:28px;animation:sl-down .5s ease both}
+.liff-logo{width:54px;height:54px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 8px 32px rgba(200,16,46,.4),0 0 0 1px rgba(255,255,255,.1);overflow:hidden}
+.liff-brand-main{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:800;letter-spacing:.06em;line-height:1;color:#fff}
+.liff-brand-sub{font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#ff2d4e;margin-top:4px}
 
-/* ── Hero ── */
-.ls-hero {
-  margin-bottom:24px;
-  animation:ls-slide-down .6s .08s ease both;
-}
-.ls-hero-tag {
-  font-size:.72rem;font-weight:600;color:rgba(255,255,255,.45);
-  letter-spacing:.06em;margin-bottom:6px;
-}
-.ls-hero-title {
-  font-size:2rem;font-weight:900;line-height:1.15;
-  text-shadow:0 0 40px rgba(0,180,255,.3);
-}
-.ls-hero-sub {
-  font-size:.82rem;color:rgba(255,255,255,.45);margin-top:6px;
-}
+/* Hero */
+.liff-hero{margin-bottom:28px;animation:sl-down .6s .08s ease both}
+.liff-hero-tag{font-size:.72rem;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.liff-hero-title{font-size:1.85rem;font-weight:900;line-height:1.15;letter-spacing:-.01em}
+.liff-hero-title b{color:#ff2d4e}
+.liff-hero-sub{font-size:.82rem;color:rgba(255,255,255,.5);margin-top:8px;line-height:1.5}
 
-/* ── LINE Card ── */
-.ls-line-card {
-  background:linear-gradient(135deg,rgba(6,199,85,.18),rgba(6,199,85,.06));
-  border:1px solid rgba(6,199,85,.35);border-radius:14px;
-  padding:13px 16px;display:flex;align-items:center;gap:12px;
-  margin-bottom:20px;cursor:pointer;transition:transform .15s,box-shadow .15s;
-  animation:ls-slide-up .5s .1s ease both;
-}
-.ls-line-card:active{transform:scale(.98)}
-.ls-line-card:hover{box-shadow:0 4px 20px rgba(6,199,85,.2)}
-.ls-line-card-avatar {
-  width:42px;height:42px;border-radius:50%;
-  border:2px solid rgba(6,199,85,.5);object-fit:cover;flex-shrink:0;
-}
-.ls-line-card-label {
-  font-size:.62rem;font-weight:600;color:rgba(6,199,85,.7);
-  letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px;
-}
-.ls-line-card-name { font-size:.92rem;font-weight:700; }
+/* LINE card */
+.liff-line-card{background:linear-gradient(135deg,rgba(6,199,85,.18),rgba(6,199,85,.06));border:1px solid rgba(6,199,85,.3);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:24px;cursor:pointer;transition:transform .15s;animation:sl-up .5s .15s ease both}
+.liff-line-card:active{transform:scale(.98)}
+.liff-line-card-avatar{width:44px;height:44px;border-radius:50%;border:2px solid rgba(6,199,85,.5);object-fit:cover;flex-shrink:0}
+.liff-line-card-label{font-size:.65rem;font-weight:600;color:rgba(6,199,85,.7);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+.liff-line-card-name{font-size:.95rem;font-weight:700}
 
-/* ── Section Label ── */
-.ls-section-lbl {
-  font-size:.66rem;font-weight:700;color:rgba(255,255,255,.3);
-  letter-spacing:.14em;text-transform:uppercase;margin-bottom:14px;
-  animation:ls-slide-up .5s .15s ease both;
-}
+/* Section label */
+.liff-section-lbl{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;animation:sl-up .5s .18s ease both}
 
-/* ── Menu Grid ── */
-.ls-menu-grid {
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:16px;margin-bottom:24px;
-}
-.ls-btn {
-  display:flex;flex-direction:column;align-items:center;gap:9px;
-  cursor:pointer;background:none;border:none;
-  font-family:'Kanit',sans-serif;-webkit-tap-highlight-color:transparent;
-  animation:ls-pop-in .4s ease both;
-}
-.ls-btn:nth-child(1){animation-delay:.18s}
-.ls-btn:nth-child(2){animation-delay:.24s}
-.ls-btn:nth-child(3){animation-delay:.30s}
-.ls-btn:nth-child(4){animation-delay:.36s}
-.ls-btn:nth-child(5){animation-delay:.42s}
-.ls-btn:nth-child(6){animation-delay:.48s}
+/* Menu Grid */
+.liff-menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.liff-btn{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;background:none;border:none;font-family:'Kanit',sans-serif;-webkit-tap-highlight-color:transparent;animation:pop-in .4s ease both}
+.liff-btn:nth-child(1){animation-delay:.20s}
+.liff-btn:nth-child(2){animation-delay:.26s}
+.liff-btn:nth-child(3){animation-delay:.32s}
+.liff-btn:nth-child(4){animation-delay:.38s}
+.liff-btn:nth-child(5){animation-delay:.44s}
+.liff-btn:nth-child(6){animation-delay:.50s}
+.liff-circle{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s;overflow:hidden}
+.liff-circle::before{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.15)}
+.liff-circle::after{content:'';position:absolute;top:12%;left:18%;right:30%;height:28%;background:rgba(255,255,255,.2);border-radius:50%;filter:blur(5px);transform:rotate(-20deg)}
+.liff-btn:active .liff-circle{transform:scale(.9)}
+.liff-btn:hover .liff-circle{transform:scale(1.06)}
+.liff-icon{font-size:1.85rem;position:relative;z-index:2;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+.liff-lbl{font-size:.73rem;font-weight:700;color:#fff;text-align:center;line-height:1.2}
+.liff-badge{position:absolute;top:-3px;right:-3px;width:20px;height:20px;background:#ff2d4e;border-radius:50%;font-size:.6rem;font-weight:900;color:#fff;display:flex;align-items:center;justify-content:center;z-index:3;border:2px solid #0a0a0f;animation:b-pulse 2s ease-in-out infinite}
+@keyframes b-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.lc-red   {background:linear-gradient(145deg,#ff2d4e,#b0001f);box-shadow:0 8px 28px rgba(200,16,46,.55),0 2px 8px rgba(0,0,0,.3)}
+.lc-blue  {background:linear-gradient(145deg,#2d8fff,#0050cc);box-shadow:0 8px 28px rgba(45,143,255,.45),0 2px 8px rgba(0,0,0,.3)}
+.lc-green {background:linear-gradient(145deg,#0fcc60,#06842f);box-shadow:0 8px 28px rgba(6,199,85,.45),0 2px 8px rgba(0,0,0,.3)}
+.lc-orange{background:linear-gradient(145deg,#ff8c2d,#cc5500);box-shadow:0 8px 28px rgba(255,140,45,.45),0 2px 8px rgba(0,0,0,.3)}
+.lc-purple{background:linear-gradient(145deg,#a64dff,#6200cc);box-shadow:0 8px 28px rgba(166,77,255,.45),0 2px 8px rgba(0,0,0,.3)}
+.lc-teal  {background:linear-gradient(145deg,#00d4cc,#007a75);box-shadow:0 8px 28px rgba(0,212,204,.4),0 2px 8px rgba(0,0,0,.3)}
+.liff-svg{width:2rem;height:2rem;position:relative;z-index:2;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.liff-lock{position:absolute;bottom:4px;right:4px;width:16px;height:16px;background:rgba(0,0,0,.45);border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:3;backdrop-filter:blur(2px)}
+.liff-btn-auth .liff-circle{opacity:1}
 
-/* Icon box — square rounded, matches reference */
-.ls-icon-box {
-  width:80px;height:80px;border-radius:20px;
-  display:flex;align-items:center;justify-content:center;
-  position:relative;transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s;
-  overflow:hidden;
-}
-/* Glossy highlight */
-.ls-icon-box::after {
-  content:'';position:absolute;top:6%;left:10%;right:35%;height:35%;
-  background:rgba(255,255,255,.18);border-radius:50%;
-  filter:blur(4px);transform:rotate(-20deg);pointer-events:none;
-}
-.ls-btn:active .ls-icon-box{transform:scale(.88)}
-.ls-btn:hover  .ls-icon-box{transform:scale(1.07)}
+/* Divider */
+.liff-divider{display:flex;align-items:center;gap:10px;margin:16px 0;animation:sl-up .5s .5s ease both}
+.liff-divider::before,.liff-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)}
+.liff-divider span{font-size:.68rem;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:.06em;white-space:nowrap}
 
-/* Color variants — matching reference neon tones */
-.lsb-red    {background:linear-gradient(145deg,#d42a3a,#8c0019);box-shadow:0 8px 24px rgba(200,0,40,.5),inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(255,60,80,.2)}
-.lsb-blue   {background:linear-gradient(145deg,#1a6fdd,#0040aa);box-shadow:0 8px 24px rgba(30,100,220,.5),inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(60,140,255,.2)}
-.lsb-green  {background:linear-gradient(145deg,#0ab54e,#057530);box-shadow:0 8px 24px rgba(6,180,70,.5),inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(10,200,80,.2)}
-.lsb-orange {background:linear-gradient(145deg,#d97a00,#8f4800);box-shadow:0 8px 24px rgba(200,110,0,.5),inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(255,150,30,.2)}
-.lsb-purple {background:linear-gradient(145deg,#8833ee,#5500bb);box-shadow:0 8px 24px rgba(140,50,220,.5),inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(170,80,255,.2)}
-.lsb-teal   {background:linear-gradient(145deg,#00aebb,#006e75);box-shadow:0 8px 24px rgba(0,170,190,.45),inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(0,210,220,.2)}
+/* Manual form */
+.liff-form-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:18px;animation:sl-up .5s .55s ease both}
+.liff-input{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:13px 16px;font-size:.9rem;font-weight:600;color:#fff;font-family:'Kanit',sans-serif;outline:none;margin-bottom:10px;transition:border-color .2s,background .2s}
+.liff-input::placeholder{color:rgba(255,255,255,.3)}
+.liff-input:focus{border-color:rgba(200,16,46,.5);background:rgba(255,255,255,.1)}
+.liff-submit{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#ff2d4e,#c8102e);color:#fff;font-size:.95rem;font-weight:800;font-family:'Kanit',sans-serif;cursor:pointer;box-shadow:0 6px 24px rgba(200,16,46,.4);transition:transform .15s}
+.liff-submit:active{transform:scale(.97)}
+.liff-err{font-size:.8rem;color:#ff6b6b;text-align:center;margin-top:10px;min-height:18px;font-weight:600}
+.liff-register-row{text-align:center;margin-top:14px;font-size:.78rem;color:rgba(255,255,255,.5);animation:sl-up .5s .6s ease both}
+.liff-register-row button{background:none;border:none;color:#ff2d4e;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Kanit',sans-serif;text-decoration:underline}
 
-.ls-icon-svg {
-  width:2.1rem;height:2.1rem;
-  filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));
-  position:relative;z-index:2;
-}
-.ls-lock {
-  position:absolute;bottom:5px;right:5px;
-  width:17px;height:17px;background:rgba(0,0,0,.5);
-  border-radius:50%;display:flex;align-items:center;justify-content:center;
-  z-index:3;backdrop-filter:blur(2px);
-}
-.ls-badge {
-  position:absolute;top:-4px;right:-4px;
-  width:20px;height:20px;background:#ff2d4e;
-  border-radius:50%;font-size:.58rem;font-weight:900;color:#fff;
-  display:flex;align-items:center;justify-content:center;z-index:3;
-  border:2px solid #0d0e14;animation:ls-badge-pulse 2s ease-in-out infinite;
-}
-@keyframes ls-badge-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+/* Animations */
+@keyframes sl-down{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+@keyframes sl-up  {from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pop-in {from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
 
-.ls-lbl {
-  font-size:.72rem;font-weight:700;color:#fff;
-  text-align:center;line-height:1.2;
-}
-
-/* ── Divider ── */
-.ls-divider {
-  display:flex;align-items:center;gap:10px;margin:4px 0 16px;
-  animation:ls-slide-up .5s .46s ease both;
-}
-.ls-divider::before,.ls-divider::after {
-  content:'';flex:1;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
-}
-.ls-divider span {
-  font-size:.67rem;color:rgba(255,255,255,.4);font-weight:600;
-  letter-spacing:.06em;white-space:nowrap;
-}
-
-/* ── Login Form Box ── */
-.ls-form-box {
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:16px;padding:18px;
-  animation:ls-slide-up .5s .50s ease both;
-}
-.ls-input {
-  width:100%;box-sizing:border-box;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:10px;padding:13px 16px;
-  font-size:.9rem;font-weight:600;color:#fff;
-  font-family:'Kanit',sans-serif;outline:none;
-  margin-bottom:10px;transition:border-color .2s,background .2s,box-shadow .2s;
-}
-.ls-input::placeholder{color:rgba(255,255,255,.28)}
-.ls-input:focus {
-  border-color:rgba(0,180,255,.5);background:rgba(0,180,255,.07);
-  box-shadow:0 0 0 3px rgba(0,180,255,.12);
-}
-.ls-submit {
-  width:100%;padding:14px;border-radius:10px;border:none;
-  background:linear-gradient(135deg,#c8102e,#8c0019);
-  color:#fff;font-size:.95rem;font-weight:800;
-  font-family:'Kanit',sans-serif;cursor:pointer;
-  box-shadow:0 6px 22px rgba(200,16,46,.45),0 0 0 1px rgba(255,60,80,.25);
-  transition:transform .15s,box-shadow .15s;letter-spacing:.04em;
-}
-.ls-submit:hover{box-shadow:0 8px 28px rgba(200,16,46,.6)}
-.ls-submit:active{transform:scale(.97)}
-.ls-err {
-  font-size:.8rem;color:#ff6b6b;text-align:center;
-  margin-top:10px;min-height:18px;font-weight:600;
-}
-.ls-register-row {
-  text-align:center;margin-top:14px;
-  font-size:.78rem;color:rgba(255,255,255,.45);
-  animation:ls-slide-up .5s .56s ease both;
-}
-.ls-register-row button {
-  background:none;border:none;color:#00b4ff;
-  font-size:.78rem;font-weight:700;cursor:pointer;
-  font-family:'Kanit',sans-serif;text-decoration:underline;
-}
-
-/* ── LINE login button inject target ── */
-#ls-line-login-divider {
-  display:none;align-items:center;gap:10px;margin:14px 0;
-}
-#ls-line-login-divider::before,#ls-line-login-divider::after{
-  content:'';flex:1;height:1px;background:rgba(255,255,255,.12);
-}
-#ls-line-login-divider span{font-size:.72rem;color:rgba(255,255,255,.38);font-weight:600;white-space:nowrap}
-
-/* ── Animations ── */
-@keyframes ls-slide-down{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
-@keyframes ls-slide-up  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@keyframes ls-pop-in    {from{opacity:0;transform:scale(.65)}to{opacity:1;transform:none}}
-
-/* ── Ripple ── */
-.ls-ripple{
-  position:absolute;border-radius:50%;
-  background:rgba(255,255,255,.35);width:10px;height:10px;
-  animation:ls-rip .5s ease-out forwards;pointer-events:none;z-index:10;
-}
-@keyframes ls-rip{to{transform:scale(5);opacity:0}}
+/* Ripple */
+.liff-ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.3);width:10px;height:10px;animation:lrip .5s ease-out forwards;pointer-events:none;z-index:10}
+@keyframes lrip{to{transform:scale(4);opacity:0}}
 </style>
 
-<!-- BG -->
-<div id="ls-bg">
-  <div id="ls-bg-grid"></div>
-  <div id="ls-bg-glow1"></div>
-  <div id="ls-bg-glow2"></div>
+<!-- BG layers -->
+<div id="liff-bg-wrap">
+  <div class="lbg lbg-1"></div>
+  <div class="lbg lbg-2"></div>
 </div>
-
-<!-- Fan decoration (top-right) -->
-<svg id="ls-fan-wrap" width="260" height="260" viewBox="0 0 260 260" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Outer frame square -->
-  <rect x="4" y="4" width="252" height="252" rx="22" stroke="rgba(0,180,255,0.6)" stroke-width="2" fill="none"/>
-  <rect x="14" y="14" width="232" height="232" rx="16" stroke="rgba(0,180,255,0.35)" stroke-width="1" fill="none"/>
-  <!-- Corner bolts -->
-  <circle cx="28" cy="28" r="6" stroke="rgba(0,180,255,0.7)" stroke-width="1.5" fill="rgba(0,180,255,0.12)"/>
-  <circle cx="232" cy="28" r="6" stroke="rgba(0,180,255,0.7)" stroke-width="1.5" fill="rgba(0,180,255,0.12)"/>
-  <circle cx="28" cy="232" r="6" stroke="rgba(0,180,255,0.7)" stroke-width="1.5" fill="rgba(0,180,255,0.12)"/>
-  <circle cx="232" cy="232" r="6" stroke="rgba(0,180,255,0.7)" stroke-width="1.5" fill="rgba(0,180,255,0.12)"/>
-  <!-- Cross hairs -->
-  <line x1="130" y1="22" x2="130" y2="42" stroke="rgba(0,180,255,0.4)" stroke-width="1"/>
-  <line x1="130" y1="218" x2="130" y2="238" stroke="rgba(0,180,255,0.4)" stroke-width="1"/>
-  <line x1="22" y1="130" x2="42" y2="130" stroke="rgba(0,180,255,0.4)" stroke-width="1"/>
-  <line x1="218" y1="130" x2="238" y2="130" stroke="rgba(0,180,255,0.4)" stroke-width="1"/>
-  <!-- Fan blade rings -->
-  <circle cx="130" cy="130" r="100" stroke="rgba(0,180,255,0.4)" stroke-width="1.5" fill="none"/>
-  <circle cx="130" cy="130" r="80" stroke="rgba(0,180,255,0.25)" stroke-width="1" fill="none"/>
-  <circle cx="130" cy="130" r="58" stroke="rgba(0,180,255,0.3)" stroke-width="1.5" fill="none"/>
-  <circle cx="130" cy="130" r="35" stroke="rgba(0,180,255,0.4)" stroke-width="1.5" fill="none"/>
-  <circle cx="130" cy="130" r="14" stroke="rgba(0,180,255,0.6)" stroke-width="2" fill="rgba(0,180,255,0.12)"/>
-  <!-- Fan blades (8 spokes with curved lines) -->
-  <g stroke="rgba(0,180,255,0.45)" stroke-width="1.2" fill="none">
-    <line x1="130" y1="30" x2="130" y2="116"/>
-    <line x1="130" y1="144" x2="130" y2="230"/>
-    <line x1="30" y1="130" x2="116" y2="130"/>
-    <line x1="144" y1="130" x2="230" y2="130"/>
-    <line x1="59" y1="59" x2="121" y2="121"/>
-    <line x1="139" y1="139" x2="201" y2="201"/>
-    <line x1="201" y1="59" x2="139" y2="121"/>
-    <line x1="121" y1="139" x2="59" y2="201"/>
-  </g>
-  <!-- Arrow indicators -->
-  <path d="M120 24 L130 14 L140 24" stroke="rgba(0,180,255,0.6)" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
-</svg>
+<div class="lbg-grid"></div>
 
 <!-- Content -->
-<div class="ls-page">
+<div class="liff-page">
 
   <!-- Header -->
-  <div class="ls-header">
-    <div class="ls-logo">
-      <svg width="46" height="46" viewBox="0 0 88 88" fill="none">
+  <div class="liff-header">
+    <div class="liff-logo">
+      <svg width="48" height="48" viewBox="0 0 88 88" fill="none">
         <defs>
-          <clipPath id="lsc"><rect width="88" height="88" rx="20"/></clipPath>
-          <radialGradient id="lsg" cx="25%" cy="25%" r="75%">
+          <clipPath id="llc"><rect width="88" height="88" rx="20"/></clipPath>
+          <radialGradient id="llg" cx="25%" cy="25%" r="75%">
             <stop offset="0%" stop-color="#1e0505"/>
             <stop offset="100%" stop-color="#050505"/>
           </radialGradient>
         </defs>
-        <g clip-path="url(#lsc)">
-          <rect width="88" height="88" fill="url(#lsg)"/>
+        <g clip-path="url(#llc)">
+          <rect width="88" height="88" fill="url(#llg)"/>
           <line x1="0" y1="44" x2="88" y2="44" stroke="#D0021B" stroke-width="0.9" opacity="0.28"/>
           <line x1="44" y1="0" x2="44" y2="88" stroke="#D0021B" stroke-width="0.9" opacity="0.28"/>
           <rect x="7" y="7" width="13" height="13" fill="#D0021B" rx="2"/>
@@ -376,172 +173,230 @@
       </svg>
     </div>
     <div>
-      <div class="ls-brand-main">AIRCONDITION</div>
-      <div class="ls-brand-sub">BP PROCESS</div>
+      <div class="liff-brand-main">AIRCONDITION</div>
+      <div class="liff-brand-sub">BP PROCESS</div>
     </div>
   </div>
 
   <!-- Hero -->
-  <div class="ls-hero">
-    <div class="ls-hero-tag">ยินดีต้อนรับ</div>
-    <div class="ls-hero-title">แจ้งซ่อม<span style="color:#fff">แอร์</span><br>ได้ทันที</div>
-    <div class="ls-hero-sub" id="ls-hero-sub">สวัสดี 👋</div>
+  <div class="liff-hero">
+    <div class="liff-hero-tag">ยินดีต้อนรับ</div>
+    <div class="liff-hero-title">แจ้งซ่อม<b>แอร์</b><br>ได้ทันที</div>
+    <div class="liff-hero-sub" id="liff-hero-sub">กดปุ่มด้านล่างเพื่อเริ่มใช้งาน</div>
   </div>
 
   <!-- LINE Profile Card -->
-  <div class="ls-line-card" id="liff-line-card" style="display:none" onclick="liffGoLogin()">
-    <img class="ls-line-card-avatar" id="liff-lc-avatar" src="" alt="" onerror="this.style.display='none'">
+  <div class="liff-line-card" id="liff-line-card" style="display:none" onclick="liffGoLogin()">
+    <img class="liff-line-card-avatar" id="liff-lc-avatar" src="" alt="" onerror="this.style.display='none'">
     <div style="flex:1">
-      <div class="ls-line-card-label">เข้าสู่ระบบในฐานะ</div>
-      <div class="ls-line-card-name" id="liff-lc-name">...</div>
+      <div class="liff-line-card-label">เข้าสู่ระบบในฐานะ</div>
+      <div class="liff-line-card-name" id="liff-lc-name">...</div>
     </div>
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(6,199,85,0.6)" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>
   </div>
 
   <!-- Menu Section -->
-  <div class="ls-section-lbl">เมนูหลัก</div>
-  <div class="ls-menu-grid">
+  <div class="liff-section-lbl">เมนูหลัก</div>
+  <div class="liff-menu-grid">
 
-    <!-- แจ้งซ่อม -->
-    <button class="ls-btn liff-btn-auth" onclick="liffMenu('new-ticket')">
-      <div class="ls-icon-box lsb-red">
-        <svg class="ls-icon-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- แจ้งซ่อม — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('new-ticket')">
+      <div class="liff-circle lc-red">
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
         </svg>
-        <div class="ls-lock">
+        <div class="liff-lock">
           <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
         </div>
       </div>
-      <div class="ls-lbl">แจ้งซ่อม</div>
+      <div class="liff-lbl">แจ้งซ่อม</div>
     </button>
 
-    <!-- งานของฉัน -->
-    <button class="ls-btn liff-btn-auth" onclick="liffMenu('my-tickets')">
-      <div class="ls-icon-box lsb-blue">
-        <svg class="ls-icon-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- งานของฉัน — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('my-tickets')">
+      <div class="liff-circle lc-blue">
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
           <rect x="9" y="3" width="6" height="4" rx="1"/>
           <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
         </svg>
-        <div class="ls-badge" id="liff-badge" style="display:none">0</div>
-        <div class="ls-lock">
+        <div class="liff-badge" id="liff-badge" style="display:none">0</div>
+        <div class="liff-lock">
           <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
         </div>
       </div>
-      <div class="ls-lbl">งานของฉัน</div>
+      <div class="liff-lbl">งานของฉัน</div>
     </button>
 
-    <!-- ตรวจรับงาน -->
-    <button class="ls-btn liff-btn-auth" onclick="liffMenu('verify')">
-      <div class="ls-icon-box lsb-green">
-        <svg class="ls-icon-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- ตรวจรับงาน — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('verify')">
+      <div class="liff-circle lc-green">
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
-        <div class="ls-lock">
+        <div class="liff-lock">
           <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
         </div>
       </div>
-      <div class="ls-lbl">ตรวจรับงาน</div>
+      <div class="liff-lbl">ตรวจรับงาน</div>
     </button>
 
-    <!-- ค้นหาเครื่อง -->
-    <button class="ls-btn liff-btn-auth" onclick="liffMenu('search')">
-      <div class="ls-icon-box lsb-orange">
-        <svg class="ls-icon-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- ค้นหาเครื่อง — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('search')">
+      <div class="liff-circle lc-orange">
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <div class="ls-lock">
+        <div class="liff-lock">
           <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
         </div>
       </div>
-      <div class="ls-lbl">ค้นหาเครื่อง</div>
+      <div class="liff-lbl">ค้นหาเครื่อง</div>
     </button>
 
-    <!-- ประวัติซ่อม -->
-    <button class="ls-btn liff-btn-auth" onclick="liffMenu('history')">
-      <div class="ls-icon-box lsb-purple">
-        <svg class="ls-icon-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- ประวัติซ่อม — ต้อง login -->
+    <button class="liff-btn liff-btn-auth" onclick="liffMenu('history')">
+      <div class="liff-circle lc-purple">
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
-        <div class="ls-lock">
+        <div class="liff-lock">
           <svg viewBox="0 0 24 24" fill="white" width="10" height="10"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" stroke-width="2" fill="none"/></svg>
         </div>
       </div>
-      <div class="ls-lbl">ประวัติซ่อม</div>
+      <div class="liff-lbl">ประวัติซ่อม</div>
     </button>
 
-    <!-- สมัครใช้งาน -->
-    <button class="ls-btn" onclick="liffMenu('register')">
-      <div class="ls-icon-box lsb-teal">
-        <svg class="ls-icon-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- สมัครใช้งาน — ไม่ต้อง login (ไม่มี lock) -->
+    <button class="liff-btn" onclick="liffMenu('register')">
+      <div class="liff-circle lc-teal">
+        <svg class="liff-svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
           <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
         </svg>
       </div>
-      <div class="ls-lbl">สมัครใช้งาน</div>
+      <div class="liff-lbl">สมัครใช้งาน</div>
     </button>
 
   </div>
 
-  <!-- Manual Login Form -->
-  <div class="ls-divider"><span>หรือเข้าสู่ระบบด้วย Username</span></div>
-  <div class="ls-form-box">
-    <input class="ls-input" type="text" id="lu" placeholder="Username"
-      autocomplete="username" autocapitalize="none"
+  <!-- Manual Login -->
+  <div class="liff-divider"><span>หรือเข้าสู่ระบบด้วย Username</span></div>
+  <div class="liff-form-box">
+    <input class="liff-input" type="text" id="lu" placeholder="Username" autocomplete="username" autocapitalize="none"
       oninput="if(typeof clearLoginErr==='function')clearLoginErr()"/>
-    <input class="ls-input" type="password" id="lp" placeholder="Password"
-      autocomplete="current-password"
+    <input class="liff-input" type="password" id="lp" placeholder="Password" autocomplete="current-password"
       oninput="if(typeof clearLoginErr==='function')clearLoginErr()"
       onkeydown="if(event.key==='Enter'){if(typeof doLogin==='function')doLogin();else document.getElementById('lerr').textContent='กำลังโหลด...';}"/>
-    <button class="ls-submit" onclick="if(typeof doLogin==='function')doLogin();else document.getElementById('lerr').textContent='กำลังโหลด...'">
+    <button class="liff-submit" onclick="if(typeof doLogin==='function')doLogin();else document.getElementById('lerr').textContent='กำลังโหลด...'">
       เข้าสู่ระบบ
     </button>
-    <div class="ls-err" id="lerr"></div>
+    <div class="liff-err" id="lerr"></div>
 
-    <!-- LINE login button inject -->
+    <!-- LINE login button จาก liff-auth.js inject ที่นี่ -->
     <div id="login-divider" style="display:none;align-items:center;gap:10px;margin:14px 0">
       <div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>
-      <span style="font-size:.72rem;color:rgba(255,255,255,.38);font-weight:600;white-space:nowrap">Log in with LINE</span>
+      <span style="font-size:.72rem;color:rgba(255,255,255,.4);font-weight:600;white-space:nowrap">หรือเข้าสู่ระบบด้วย</span>
       <div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>
     </div>
     <div id="line-login-btn-wrap" style="display:none"></div>
   </div>
 
-  <div class="ls-register-row">
+  <div class="liff-register-row">
     <span>ยังไม่มีบัญชี? </span>
     <button onclick="if(typeof showRegister==='function')showRegister()">สมัครใช้งาน</button>
   </div>
 
-</div><!-- /ls-page -->
+</div><!-- /liff-page -->
 
 <script>
-// Ripple on icon boxes
+// ── Ripple on circle buttons ──
 document.addEventListener('click', function(e) {
-  const b = e.target.closest('.ls-icon-box');
-  if (!b) return;
+  const c = e.target.closest('.liff-circle');
+  if (!c) return;
   const r = document.createElement('div');
-  r.className = 'ls-ripple';
-  const rect = b.getBoundingClientRect();
+  r.className = 'liff-ripple';
+  const rect = c.getBoundingClientRect();
   r.style.left = (e.clientX - rect.left - 5) + 'px';
   r.style.top  = (e.clientY - rect.top  - 5) + 'px';
-  b.appendChild(r);
-  setTimeout(() => r.remove(), 600);
+  c.appendChild(r);
+  setTimeout(() => r.remove(), 500);
 });
 
-// Sync hero sub with LINE user name if available
-(function() {
-  const sub = document.getElementById('ls-hero-sub');
-  const namEl = document.getElementById('liff-lc-name');
-  if (sub && namEl) {
-    const obs = new MutationObserver(() => {
-      const n = namEl.textContent.trim();
-      if (n && n !== '...') sub.textContent = 'สวัสดี ' + n + ' 👋';
-    });
-    obs.observe(namEl, {childList:true, characterData:true, subtree:true});
+// ── Update LINE card ──
+function liffUpdateCard(profile) {
+  if (!profile) return;
+  const card = document.getElementById('liff-line-card');
+  const avt  = document.getElementById('liff-lc-avatar');
+  const nm   = document.getElementById('liff-lc-name');
+  const sub  = document.getElementById('liff-hero-sub');
+  if (avt) avt.src = profile.pictureUrl || '';
+  if (nm)  nm.textContent = profile.displayName || '';
+  if (card) card.style.display = 'flex';
+  if (sub)  sub.textContent = 'สวัสดี ' + (profile.displayName || '') + ' 👋';
+}
+
+function liffGoLogin() {
+  if (typeof doLoginWithLine === 'function') doLoginWithLine();
+}
+
+// ── Menu Action ──
+function liffMenu(action) {
+  if (action === 'register') {
+    if (typeof showRegister === 'function') showRegister();
+    return;
   }
-})();
+  // ตรวจ session
+  let _sessionOk = false;
+  try {
+    const s = JSON.parse(localStorage.getItem(typeof SESSION_KEY!=='undefined'?SESSION_KEY:'aircon_session') || '{}');
+    if (s.exp && s.exp >= Date.now()) _sessionOk = true;
+  } catch(e) {}
+  if (!_sessionOk) {
+    // ยังไม่ login → ลอง LINE login
+    if (typeof _liffProfile !== 'undefined' && _liffProfile) {
+      liffGoLogin();
+    } else {
+      if (typeof showToast === 'function') showToast('⚠️ กรุณาเข้าสู่ระบบก่อน');
+    }
+    return;
+  }
+
+  // ซ่อน login screen
+  const ls = document.getElementById('login-screen');
+  if (ls) ls.style.display = 'none';
+  const app = document.getElementById('app');
+  if (app) app.classList.add('visible');
+
+  // navigate
+  const map = {
+    'new-ticket': () => typeof goPage==='function' && goPage('new'),
+    'my-tickets': () => typeof goPage==='function' && goPage('tickets'),
+    'verify':     () => { if(typeof goPage==='function'){goPage('tickets');setTimeout(()=>typeof setFilter==='function'&&setFilter('status','done'),250);} },
+    'search':     () => typeof goPage==='function' && goPage('search'),
+    'history':    () => typeof goPage==='function' && goPage('tickets'),
+  };
+  const fn = map[action];
+  if (fn) setTimeout(fn, 100);
+}
+
+// ── Update badge after app loads ──
+window.addEventListener('appReady', function() {
+  try {
+    if (typeof db==='undefined'||!db.tickets||typeof CU==='undefined'||!CU) return;
+    const n = db.tickets.filter(t=>t.reporterId===CU.id&&['new','assigned','accepted','inprogress','waiting_part'].includes(t.status)).length;
+    const b = document.getElementById('liff-badge');
+    if (b) { b.textContent=n; b.style.display=n>0?'flex':'none'; }
+  } catch(e){}
+});
+
+// ── Expose for liff-auth.js to call ──
+// liff-auth.js เรียก renderLinLoginButton() ซึ่ง inject ลง #line-login-btn-wrap
+// และ liffUpdateCard จะอัพเดต profile card ด้วย
+window._liffLandingUpdateCard = liffUpdateCard;
 </script>
+
 </div><!-- /login-screen -->
 
 
