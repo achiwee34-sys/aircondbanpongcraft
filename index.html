@@ -2555,8 +2555,9 @@ window._liffLandingUpdateCard = liffUpdateCard;
   <div class="sheet-handle"></div>
   <div class="sheet-title" id="mhist-title" style="display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/><circle cx="7" cy="17" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="21" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="17" r="1" fill="currentColor" stroke="none"/></svg> ประวัติการซ่อม</div>
   <div class="sheet-body" id="mhist-body" style="overflow-y:auto;max-height:60vh"></div>
-  <div class="sheet-actions">
-    <button class="btn btn-ghost btn-full" onclick="closeSheet('mhist')">ปิด</button>
+  <div class="sheet-actions" style="display:flex;gap:8px">
+    <button class="btn btn-ghost" style="flex:1" onclick="closeSheet('mhist')">ปิด</button>
+    <button class="btn btn-primary" style="flex:1;background:#059669;border-color:#059669" onclick="exportMachineHistorySheet()">📊 Export Excel</button>
   </div>
 </div>
 

@@ -3243,21 +3243,42 @@ function openDetail(tid) {
         <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📷 รูปภาพ</span>
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
       </div>
+      ${hasBefore&&hasAfter?`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;padding:3px 8px;background:#fff7ed;border-radius:6px;border:1px solid #fed7aa">
+            <span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block"></span>
+            <span style="font-size:0.6rem;font-weight:800;color:#b45309;letter-spacing:.05em">ก่อนซ่อม</span>
+            <span style="font-size:0.52rem;color:#9ca3af;margin-left:auto">${t.photosBefore.length} รูป</span>
+          </div>
+          <div class="photo-grid photo-grid-split">${t.photosBefore.map((p,i)=>`<div class="photo-grid-item${t.photosBefore.length===1?\' photo-wide\':\'\'}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join(\'\')}</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;padding:3px 8px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0">
+            <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;display:inline-block"></span>
+            <span style="font-size:0.6rem;font-weight:800;color:#15803d;letter-spacing:.05em">หลังซ่อม</span>
+            <span style="font-size:0.52rem;color:#9ca3af;margin-left:auto">${t.photosAfter.length} รูป</span>
+          </div>
+          <div class="photo-grid photo-grid-split">${t.photosAfter.map((p,i)=>`<div class="photo-grid-item${t.photosAfter.length===1?\' photo-wide\':\'\'}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join(\'\')}</div>
+        </div>
+      </div>
+      `:`
       ${hasBefore?`<div style="margin-bottom:8px">
         <div class="photo-section-label" style="color:#b45309">
           <span class="lbl-dot" style="background:#f59e0b"></span>ก่อนซ่อม
           <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosBefore.length} รูป)</span>
         </div>
-        <div class="photo-grid">${t.photosBefore.map((p,i)=>`<div class="photo-grid-item${t.photosBefore.length===1?' photo-wide':''}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join('')}</div>
-      </div>`:''}
+        <div class="photo-grid">${t.photosBefore.map((p,i)=>`<div class="photo-grid-item${t.photosBefore.length===1?\' photo-wide\':\'\'}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join(\'\')}</div>
+      </div>`:\'\'}
       ${hasAfter?`<div>
         <div class="photo-section-label" style="color:#15803d">
           <span class="lbl-dot" style="background:#22c55e"></span>หลังซ่อม
           <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
         </div>
-        <div class="photo-grid">${t.photosAfter.map((p,i)=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join('')}</div>
-      </div>`:''}
-    </div>`:''}\
+        <div class="photo-grid">${t.photosAfter.map((p,i)=>`<div class="photo-grid-item${t.photosAfter.length===1?\' photo-wide\':\'\'}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join(\'\')}</div>
+      </div>`:\'\'}
+      `}
+    </div>`:\'\'}\
 
     <!-- Timeline -->
     <div style="margin-bottom:6px">

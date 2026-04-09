@@ -1102,6 +1102,17 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
   grid-column: 1 / -1;
   aspect-ratio: 16/9;
 }
+/* Split view: ใช้ใน side-by-side before/after — 1 column แทน 2 เพื่อให้พอดีกับครึ่งหน้าจอ */
+.photo-grid-split {
+  grid-template-columns: 1fr;
+}
+.photo-grid-split .photo-grid-item {
+  aspect-ratio: 3/4;
+}
+.photo-grid-split .photo-grid-item.photo-wide {
+  grid-column: 1;
+  aspect-ratio: 3/4;
+}
 .photo-section-label {
   font-size: 0.62rem;
   font-weight: 800;

@@ -52,7 +52,10 @@
 // ============================================================
 // MACHINE HISTORY
 // ============================================================
+let _mhistCurrentMid = null;
+
 function openMachineHistory(mid) {
+  _mhistCurrentMid = mid;
   const m = db.machines.find(x => x.id === mid);
   if (!m) return;
   const tickets = db.tickets.filter(t => t.machineId === mid || t.machine === m.name)
@@ -151,6 +154,100 @@ function openMachineHistory(mid) {
       }).join('')}`;
   }
   openSheet('mhist');
+}
+
+// ── Export ประวัติเครื่องที่กำลังดู (mhist sheet) ──────────────
+function exportMachineHistorySheet() {
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportMachineHistorySheet); return; }
+  const mid = _mhistCurrentMid;
+  if (!mid) return;
+  const m = db.machines.find(x => x.id === mid);
+  if (!m) return;
+  const tickets = db.tickets.filter(t => t.machineId === mid || t.machine === m.name)
+    .sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));
+
+  const wb = XLSX.utils.book_new();
+  const stTH = {new:'ใหม่',assigned:'จ่ายงานแล้ว',accepted:'รับงานแล้ว',inprogress:'กำลังซ่อม',
+    waiting_part:'รออะไหล่',done:'เสร็จแล้ว',verified:'ตรวจรับแล้ว',closed:'ปิดงานแล้ว'};
+
+  // ─── Sheet 1: ประวัติการซ่อม ───
+  const histHeaders = ['ลำดับ','เลขที่ใบงาน','วันที่แจ้ง','ปัญหา','ผู้แจ้ง','ช่าง',
+    'สถานะ','ประเภทงาน','สรุปการซ่อม','อะไหล่ที่ใช้',
+    'เวลาที่ใช้ (ชม.)','ค่าซ่อม (บาท)','ราคาซื้อของ (บาท)','ค่าใช้จ่ายรวม (บาท)'];
+  const histRows = [histHeaders];
+  tickets.forEach((t, i) => {
+    histRows.push([
+      i + 1, t.id,
+      (t.createdAt||'').substring(0,10),
+      t.problem||'', t.reporter||'', t.assignee||'',
+      stTH[t.status]||t.status, t.jobTypes||'',
+      t.summary||'', t.parts||'',
+      t.repairHours||'',
+      Number(t.repairCost||0), Number(t.partsCost||0), Number(t.cost||0)
+    ]);
+  });
+  // แถวรวม
+  if (tickets.length > 0) {
+    const lastRow = tickets.length + 1;
+    histRows.push(['','','','','','','','','','','',
+      `=SUM(L2:L${lastRow})`,`=SUM(M2:M${lastRow})`,`=SUM(N2:N${lastRow})`]);
+  }
+
+  const ws1 = XLSX.utils.aoa_to_sheet(histRows);
+  ws1['!cols'] = [
+    {wch:6},{wch:12},{wch:12},{wch:28},{wch:14},{wch:14},
+    {wch:14},{wch:16},{wch:32},{wch:20},{wch:14},{wch:16},{wch:18},{wch:18}
+  ];
+  ws1['!freeze'] = {xSplit:0, ySplit:1};
+  XLSX.utils.book_append_sheet(wb, ws1, 'ประวัติการซ่อม');
+
+  // ─── Sheet 2: ข้อมูลเครื่องและสรุปค่าใช้จ่าย ───
+  const totalCost   = tickets.reduce((s,t) => s + Number(t.cost||0), 0);
+  const totalRepair = tickets.reduce((s,t) => s + Number(t.repairCost||0), 0);
+  const totalParts  = tickets.reduce((s,t) => s + Number(t.partsCost||0), 0);
+  const doneCnt     = tickets.filter(t => ['done','verified','closed'].includes(t.status)).length;
+  const lastDone    = tickets.filter(t => ['done','verified','closed'].includes(t.status))
+    .sort((a,b) => (b.updatedAt||'').localeCompare(a.updatedAt||''))[0];
+  const lastRepairDate = lastDone ? (lastDone.updatedAt||'').substring(0,10) : '—';
+
+  const infoRows = [
+    ['ข้อมูลเครื่อง', ''],
+    ['รหัส Air', m.serial||m.id.replace('csv_','')],
+    ['ชื่อเครื่อง', m.name||'—'],
+    ['ยี่ห้อ/รุ่น', m.brand||'—'],
+    ['แผนก/พื้นที่', m.dept||m.location||'—'],
+    ['Serial No.', m.serial||'—'],
+    ['BTU', m.btu||'—'],
+    ['สารทำความเย็น', m.refrigerant||'—'],
+    ['วันติดตั้ง', m.install||'—'],
+    ['PM ทุก (เดือน)', m.interval||'—'],
+    ['', ''],
+    ['สรุปค่าใช้จ่าย', ''],
+    ['จำนวนครั้งซ่อมทั้งหมด', tickets.length],
+    ['ซ่อมสำเร็จ', doneCnt],
+    ['ซ่อมล่าสุด', lastRepairDate],
+    ['ค่าซ่อมรวม (บาท)', totalRepair],
+    ['ราคาซื้อของรวม (บาท)', totalParts],
+    ['ค่าใช้จ่ายรวมสุทธิ (บาท)', totalCost],
+    ['VAT 7% (บาท)', Math.round(totalCost * 0.07)],
+    ['ยอดสุทธิรวม VAT (บาท)', Math.round(totalCost * 1.07)],
+  ];
+
+  const ws2 = XLSX.utils.aoa_to_sheet(infoRows);
+  ws2['!cols'] = [{wch:26},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'ข้อมูลเครื่องและสรุป');
+
+  // ─── Export ───
+  const serial = (m.serial||m.id).replace(/[^a-zA-Z0-9ก-ฮ_-]/g, '_');
+  const fname = `SCG-AIRCON-${serial}-${new Date().toISOString().substring(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showAlert({
+    icon: '📊',
+    title: 'Export สำเร็จ!',
+    msg: `ส่งออกประวัติการซ่อม<br><b>${m.serial||m.id}</b> — ${m.name}<br><b>${tickets.length} ใบงาน · 2 Sheets</b><br><span style="font-size:0.78rem;color:#94a3b8;font-family:'JetBrains Mono',monospace">${fname}</span>`,
+    color: '#059669',
+    btn: 'ตกลง'
+  });
 }
 
 // ── AIR ID Search ──────────────────────────────────────────────
@@ -1893,18 +1990,17 @@ function filterDeptPicker(q) {
 }
 
 function _lockBodyScroll() {
+  // ใช้ overflow:hidden บน <html> แทน body fixed — stable กว่าบน Android Chrome
+  // เพราะไม่ทำให้ fixed-position elements (picker sheet) คำนวณ viewport ผิด
   const y = window.scrollY;
-  document.body.style.cssText += ';position:fixed;top:-'+y+'px;left:0;right:0;overflow:hidden';
-  document.body.dataset.scrollY = y;
+  document.documentElement.dataset.scrollLockY = y;
+  document.documentElement.style.overflow = 'hidden';
 }
 function _unlockBodyScroll() {
-  const y = parseInt(document.body.dataset.scrollY || '0');
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.overflow = '';
-  window.scrollTo({ top: y, behavior: 'instant' });
+  const y = parseInt(document.documentElement.dataset.scrollLockY || '0');
+  document.documentElement.style.overflow = '';
+  delete document.documentElement.dataset.scrollLockY;
+  if (y) window.scrollTo({ top: y, behavior: 'instant' });
 }
 
 function toggleDeptPicker() {
@@ -2064,7 +2160,6 @@ function toggleMacPicker() {
   if (overlay) overlay.style.display = _macPickerOpen ? 'block' : 'none';
   if (chevron) chevron.style.transform = _macPickerOpen ? 'rotate(180deg)' : '';
   if (display) display.style.borderColor = _macPickerOpen ? '#0369a1' : '#e2e8f0';
-  document.body.style.overflow = _macPickerOpen ? 'hidden' : '';
   if (_macPickerOpen) { _lockBodyScroll(); } else { _unlockBodyScroll(); }
   }
 function closeMacPickerSheet() {
