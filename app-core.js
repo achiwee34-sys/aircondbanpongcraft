@@ -2895,21 +2895,31 @@ function setupBottomNav() {
 // ============================================================
 let _activePage = 'home'; // sync กับ HTML ที่ pg-home มี class active ตอนแรก
 
-// ── SheetJS readiness helper ──
-// retry สูงสุด 60 ครั้ง × 500ms = 30 วินาที
-function waitForXLSX(cb, retries=60) {
+// ── SheetJS readiness helper (audit v15) ──
+// รอ XLSX โหลดเสร็จก่อน export — retry สูงสุด 20 ครั้ง (6 วินาที)
+function waitForXLSX(cb, retries=30) {
   if (typeof XLSX !== 'undefined') { cb(); return; }
   if (retries <= 0) {
-    // ── พยายามโหลด SheetJS ใหม่อีกรอบก่อน error ──
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js';
-    s.onload = () => { if (typeof XLSX !== 'undefined') cb(); else showAlert({ icon:'❌', title:'โหลดไม่สำเร็จ', msg:'ไม่สามารถโหลด SheetJS<br>กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่', color:'#dc2626', btnOk:'ตกลง' }); };
-    s.onerror = () => showAlert({ icon:'❌', title:'โหลดไม่สำเร็จ', msg:'ไม่สามารถโหลด SheetJS<br>กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่', color:'#dc2626', btnOk:'ตกลง' });
-    document.head.appendChild(s);
+    // BUG FIX: เพิ่มปุ่ม Retry และลิงก์ช่วยเหลือ
+    showAlert({
+      icon:'❌',
+      title:'โหลดไม่สำเร็จ',
+      msg:'ไม่สามารถโหลด SheetJS<br><span style="font-size:0.8rem;color:#6b7280">ตรวจสอบอินเทอร์เน็ต แล้วกด Retry<br>หรือรีเฟรชหน้าเว็บ</span>',
+      color:'#dc2626',
+      btnOk:'🔄 Retry',
+      onOk: () => {
+        // reset และลองใหม่โดยโหลด SheetJS ซ้ำ
+        const s = document.createElement('script');
+        s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js?t='+Date.now();
+        s.onload = () => { showToast('✅ โหลด SheetJS สำเร็จ'); setTimeout(() => cb(), 100); };
+        s.onerror = () => showToast('❌ ยังโหลดไม่ได้ กรุณารีเฟรชหน้า');
+        document.head.appendChild(s);
+      }
+    });
     return;
   }
-  if (retries % 10 === 0) showToast('⏳ กำลังโหลด Excel library...');
-  setTimeout(() => waitForXLSX(cb, retries - 1), 500);
+  if (retries % 5 === 0) showToast('⏳ กำลังโหลด Excel library...');
+  setTimeout(() => waitForXLSX(cb, retries - 1), 300);
 }
 
 function goPage(name) {
@@ -3051,21 +3061,16 @@ function goPage(name) {
     }
     else if (name === 'new') {
       populateMachineSelect();
-      // ── BUG FIX: เสมอ schedule retry ไม่ว่า db.machines จะมีหรือไม่
-      // กรณี machines โหลดจาก cache แต่ Firebase ยังไม่ sync → dept picker อาจล้าสมัย
-      // กรณีอุปกรณ์ใหม่ไม่มี cache → ต้องรอ Firebase (40+ วินาที)
-      if (!populateMachineSelect._newPageTimer) {
-        populateMachineSelect._newPageTimer = true;
-        [600, 1800, 4000, 8000, 15000, 25000, 40000].forEach(ms => {
-          setTimeout(() => {
-            populateMachineSelect._newPageTimer = false;
-            if (typeof populateMachineSelect === 'function') {
-              // เรียกเฉพาะถ้ายังอยู่หน้า new
-              const pgNew = document.getElementById('pg-new');
-              if (pgNew && pgNew.classList.contains('active')) populateMachineSelect();
-            }
-          }, ms);
-        });
+      if (!db.machines || db.machines.length === 0) {
+        // ── BUG FIX: เพิ่ม timer ยาวขึ้น ครอบคลุม Firebase ที่ช้า > 11 วินาที ──
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 600);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 1800);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 4000);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 8000);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 15000);
+        // BUG FIX: เพิ่ม timer ยาวขึ้นสำหรับ mobile 3G / Firebase ช้า
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') { populateMachineSelect._retryCount = 0; populateMachineSelect(); } }, 25000);
+        setTimeout(() => { if (typeof populateMachineSelect === 'function') { populateMachineSelect._retryCount = 0; populateMachineSelect(); } }, 40000);
       }
       setTimeout(()=>{ const priField=document.getElementById('nt-priority-field'); if(priField) priField.style.display='none'; },50);
     }

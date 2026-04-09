@@ -1862,27 +1862,27 @@ function renderDeptPickerGrid(depts) {
   const grid = document.getElementById('nt-dept-grid');
   if (!grid) return;
   if (!depts.length) {
-    grid.innerHTML = `<div style="padding:20px;text-align:center;color:#94a3b8;font-size:0.8rem">ไม่พบแผนก</div>`;
+    grid.innerHTML = `<div style="padding:30px 20px;text-align:center;color:#94a3b8;font-size:0.85rem">ไม่พบแผนก</div>`;
     return;
   }
-  // สีแต่ละแผนกตาม index
   const palette = ['#c8102e','#e65100','#0369a1','#059669','#7c3aed','#d97706'];
   grid.innerHTML = depts.map((d, i) => {
     const col = palette[i % palette.length];
     const cnt = (db.machines||[]).filter(m => (m.dept||m.location||'ไม่ระบุแผนก') === d).length;
-    return `<div class="dept-picker-item" data-dept="${d}"
-      onclick="selectDeptPickerItem('${d.replace(/'/g,"\\'")}','${col}')"
-      style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.12s;-webkit-tap-highlight-color:transparent"
-      onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background=''"
-      ontouchstart="this.style.background='#f8fafc'" ontouchend="this.style.background=''">
-      <div style="width:40px;height:40px;border-radius:12px;background:${col}1a;border:1.5px solid ${col}33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    const safeD = d.replace(/'/g, "\\'");
+    return `<div class="dept-picker-item" data-dept="${d}" title="${d}"
+      onclick="selectDeptPickerItem('${safeD}','${col}')"
+      style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background 0.1s;-webkit-tap-highlight-color:transparent;min-height:60px"
+      onmousedown="this.style.background='#fef2f4'" onmouseup="this.style.background=''"
+      ontouchstart="this.style.background='#fef2f4'" ontouchend="this.style.background=''">
+      <div style="width:40px;height:40px;border-radius:12px;background:${col}18;border:1.5px solid ${col}30;display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:0.95rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d}</div>
-        ${cnt ? `<div style="font-size:0.72rem;color:#94a3b8;margin-top:2px">${cnt} เครื่อง</div>` : ''}
+      <div style="flex:1;min-width:0;overflow:hidden">
+        <div style="font-size:0.95rem;font-weight:700;color:#0f172a;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d}</div>
+        <div style="font-size:0.72rem;color:#94a3b8;margin-top:3px">${cnt} เครื่องแอร์</div>
       </div>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`;
   }).join('');
 }
@@ -1919,8 +1919,31 @@ function toggleDeptPicker() {
   if (chevron) chevron.style.transform = _deptPickerOpen ? 'rotate(180deg)' : '';
   if (display) display.style.borderColor = _deptPickerOpen ? '#c8102e' : '#e2e8f0';
   // lock/unlock body scroll
-  if (_deptPickerOpen) { _lockBodyScroll(); } else { _unlockBodyScroll(); }
-  }
+  if (_deptPickerOpen) {
+    _lockBodyScroll();
+    // ถ้า depts ยังว่าง → แสดง skeleton + trigger Firebase reload
+    if (!_deptPickerDepts || _deptPickerDepts.length === 0) {
+      const grid = document.getElementById('nt-dept-grid');
+      if (grid) {
+        grid.innerHTML = [1,2,3,4].map(() =>
+          `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f1f5f9">
+            <div style="width:40px;height:40px;border-radius:12px;background:#f1f5f9;flex-shrink:0;animation:pulse 1.4s ease-in-out infinite"></div>
+            <div style="flex:1">
+              <div style="height:14px;background:#f1f5f9;border-radius:6px;margin-bottom:6px;width:60%;animation:pulse 1.4s ease-in-out infinite"></div>
+              <div style="height:10px;background:#f1f5f9;border-radius:4px;width:35%;animation:pulse 1.4s ease-in-out infinite"></div>
+            </div>
+          </div>`
+        ).join('') + '<style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}</style>';
+      }
+      // force retry populate
+      if (typeof populateMachineSelect === 'function') {
+        populateMachineSelect._retryCount = 0;
+        clearTimeout(populateMachineSelect._retryTimer);
+        populateMachineSelect();
+      }
+    }
+  } else { _unlockBodyScroll(); }
+}
 function closeDeptPickerSheet() {
   _deptPickerOpen = false;
   const picker = document.getElementById('nt-dept-picker');
@@ -1992,29 +2015,31 @@ function renderMacPickerGrid(machines) {
   const grid = document.getElementById('nt-mac-grid');
   if (!grid) return;
   if (!machines.length) {
-    grid.innerHTML = `<div style="padding:20px;text-align:center;color:#94a3b8;font-size:0.8rem">ไม่พบเครื่องแอร์</div>`;
+    grid.innerHTML = `<div style="padding:30px 20px;text-align:center;color:#94a3b8;font-size:0.85rem">ไม่พบเครื่องแอร์</div>`;
     return;
   }
-  const accentColor = '#0369a1';
   grid.innerHTML = machines.map(m => {
     const lbl = `[${m.serial||m.id}] ${m.name}`;
     const sub = [m.btu ? Number(m.btu).toLocaleString()+' BTU' : '', m.refrigerant || ''].filter(Boolean).join(' · ');
+    const safeId = m.id.replace(/'/g, "\'");
+    const safeLbl = lbl.replace(/'/g, "\'").replace(/`/g, '\`');
     return `<div class="mac-picker-item" data-mid="${m.id}"
-      onclick="selectMacPickerItem('${m.id.replace(/'/g,"\\'")}','${lbl.replace(/'/g,"\\'").replace(/`/g,'\\`')}')"
-      style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.12s;-webkit-tap-highlight-color:transparent"
+      onclick="selectMacPickerItem('${safeId}','${safeLbl}')"
+      style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background 0.1s;-webkit-tap-highlight-color:transparent;min-height:60px"
       onmousedown="this.style.background='#f0f9ff'" onmouseup="this.style.background=''"
       ontouchstart="this.style.background='#f0f9ff'" ontouchend="this.style.background=''">
-      <div style="width:34px;height:34px;border-radius:10px;background:#c8102e1a;border:1.5px solid #c8102e33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
+      <div style="width:40px;height:40px;border-radius:12px;background:#c8102e18;border:1.5px solid #c8102e30;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(lbl)}</div>
-        ${sub ? `<div style="font-size:0.62rem;color:#94a3b8;margin-top:1px">${escapeHtml(sub)}</div>` : ''}
+      <div style="flex:1;min-width:0;overflow:hidden">
+        <div style="font-size:0.92rem;font-weight:700;color:#0f172a;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(lbl)}</div>
+        ${sub ? `<div style="font-size:0.72rem;color:#94a3b8;margin-top:3px">${escapeHtml(sub)}</div>` : ''}
       </div>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`;
   }).join('');
 }
+
 
 function filterMacPicker(q) {
   const filtered = q
@@ -2102,29 +2127,27 @@ function resetMacPicker() {
 
 function populateMachineSelect() {
   // Populate dept dropdown
-  const deptSel = document.getElementById('nt-dept');
-  if (!deptSel) {
-    // ── DOM ยังไม่พร้อม (ไม่ได้อยู่หน้า new) แต่ถ้ามี machines แล้ว → retry เมื่อหน้า new เปิด
-    // ไม่ต้อง retry ถ้า machines ยังว่าง (จะ retry จาก retry loop ปกติ)
-    return;
-  }
+  const deptSel = document.getElementById('nt-dept'); if(!deptSel) return;
   const depts = [...new Set(db.machines.map(m => m.dept||m.location||'ไม่ระบุแผนก').filter(Boolean))].sort();
 
   if (depts.length === 0) {
     deptSel.innerHTML = '<option value="">⏳ กำลังโหลดข้อมูลแผนก...</option>';
+    // แสดง loading state ใน custom picker grid ด้วย
+    const grid = document.getElementById('nt-dept-grid');
+    if (grid && !grid.querySelector('.dept-loading-msg')) {
+      grid.innerHTML = '<div class="dept-loading-msg" style="padding:24px 16px;text-align:center;color:#64748b;font-size:0.82rem"><div style="font-size:1.6rem;margin-bottom:8px">⏳</div><div style="font-weight:700;margin-bottom:4px">กำลังโหลดข้อมูล...</div><div style="font-size:0.72rem;color:#94a3b8">กรุณารอสักครู่ ระบบกำลังเชื่อมต่อ Firebase</div></div>';
+    }
     if (!populateMachineSelect._retryCount) populateMachineSelect._retryCount = 0;
-    // ── BUG FIX: เพิ่ม retry สูงสุด 20 ครั้ง ครอบคลุม Firebase ที่ช้า 40+ วินาที ──
-    // delay schedule: 3 ครั้งแรก 600ms, ครั้งที่ 4-8 = 2s, ครั้งที่ 9-20 = 3s
-    // รวมสูงสุด ~3×0.6 + 5×2 + 12×3 = 1.8+10+36 = ~48 วินาที
+    // เพิ่ม retry สูงสุด 20 ครั้ง ครอบคลุม Firebase ช้า > 30 วินาที
     if (populateMachineSelect._retryCount < 20) {
       populateMachineSelect._retryCount++;
       const delay = populateMachineSelect._retryCount <= 3 ? 600
-                  : populateMachineSelect._retryCount <= 8 ? 2000
-                  : 3000;
+                  : populateMachineSelect._retryCount <= 8 ? 2000 : 4000;
       clearTimeout(populateMachineSelect._retryTimer);
       populateMachineSelect._retryTimer = setTimeout(() => populateMachineSelect(), delay);
     } else {
       deptSel.innerHTML = '<option value="">— เลือกแผนก — (ไม่พบข้อมูล)</option>';
+      if (grid) grid.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444;font-size:0.8rem"><div style="font-size:1.4rem;margin-bottom:6px">❌</div><div style="font-weight:700">ไม่พบข้อมูลแผนก</div><div style="font-size:0.72rem;margin-top:4px;color:#94a3b8">ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต<br>แล้วรีเฟรชหน้า</div></div>';
       populateMachineSelect._retryCount = 0;
     }
     return;
@@ -2982,7 +3005,7 @@ function openMachineRequestsPage() {
   document.getElementById('_mac-req-page')?.remove();
   const page = document.createElement('div');
   page.id = '_mac-req-page';
-  page.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,0px));left:0;right:0;bottom:0;z-index:9500;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
+  page.style.cssText = 'position:fixed;inset:0;z-index:9500;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
 
   const renderContent = () => {
     const pending = (db.machineRequests||[]).filter(r => r.status === 'pending');
@@ -2992,7 +3015,7 @@ function openMachineRequestsPage() {
 
     page.innerHTML = `
       <!-- Header -->
-      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:16px;flex-shrink:0">
+      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
           <button onclick="document.getElementById('_mac-req-page').remove()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">‹</button>
           <div style="flex:1">
@@ -3258,7 +3281,7 @@ function openNewMachinesTable() {
   document.getElementById('_nmtable')?.remove();
   const pg = document.createElement('div');
   pg.id = '_nmtable';
-  pg.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,0px));left:0;right:0;bottom:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.22s cubic-bezier(0.32,0.72,0,1)';
+  pg.style.cssText = 'position:fixed;inset:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.22s cubic-bezier(0.32,0.72,0,1)';
 
   const totalPages = () => Math.ceil(list.length / PAGE_SIZE);
 
@@ -3396,7 +3419,7 @@ function openNewMachinesTable() {
 
   pg.innerHTML = `
     <!-- ── Header ── -->
-    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:14px 14px 0;flex-shrink:0">
+    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 14px 0;flex-shrink:0">
       <!-- top bar -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <button onclick="document.getElementById('_nmtable').remove()"

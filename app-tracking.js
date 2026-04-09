@@ -4,8 +4,8 @@
 let pendingPhotos = {before:[], after:[]};
 let _photoLoading = 0;
 const MAX_PHOTOS_PER_TYPE = 3;   // สูงสุด 3 รูปต่อประเภท
-const PHOTO_MAX_PX = 640;        // resize ไม่เกิน 640px — เล็กที่สุดที่เปิดชัดบนมือถือ
-const PHOTO_QUALITY = 0.50;      // JPEG quality 50% — ลดขนาดไฟล์สูงสุด
+const PHOTO_MAX_PX = 1024;       // resize ไม่เกิน 1024px — ชัดพอบน screen ใหญ่ (เพิ่มจาก 640)
+const PHOTO_QUALITY = 0.72;      // JPEG quality 72% — balance ระหว่างขนาดและความชัด (เพิ่มจาก 0.50)
 
 // ── Phone number auto-format: 091-234-5678 ──
 function fmtPhone(el) {
@@ -412,7 +412,16 @@ async function _doSubmitTicket(mid, prob) {
   } catch(e) {
     console.error('[_doSubmitTicket] error:', e);
     db._seq--;
-    showToast('❌ เกิดข้อผิดพลาด: ' + (e.message || 'กรุณาลองใหม่'));
+    // ถ้า ticket ถูก push ไปแล้วก่อน error → rollback ออก
+    const badIdx = db.tickets.findIndex(t2 => t2.id === tid);
+    if (badIdx !== -1) db.tickets.splice(badIdx, 1);
+    showAlert({
+      icon: '❌',
+      title: 'ส่งงานไม่สำเร็จ',
+      color: '#dc2626',
+      msg: 'เกิดข้อผิดพลาดระหว่างบันทึกงาน<br><span style="font-size:0.78rem;color:#64748b">' + (e.message || 'กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่') + '</span>',
+      btnOk: 'ตกลง'
+    });
   }
 }
 
@@ -1348,7 +1357,7 @@ function openRepairPicker() {
   document.getElementById('_rp_ov')?.remove();
   const ov = document.createElement('div');
   ov.id = '_rp_ov';
-  ov.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,0px));left:0;right:0;bottom:0;z-index:10000;background:#f0f2f5;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1);font-family:inherit';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#f0f2f5;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1);font-family:inherit';
 
   const groups = _getRepairGroups();
   const selectedMap = {};
@@ -1381,7 +1390,7 @@ function openRepairPicker() {
 
   ov.innerHTML = `
     <!-- Header compact -->
-    <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 45%,#c8102e 100%);flex-shrink:0;padding:0">
+    <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 45%,#c8102e 100%);flex-shrink:0;padding:calc(var(--head-h,56px) + var(--safe-top,0px)) 0 0">
       <!-- Top bar — single row -->
       <div style="padding:0 12px 6px;display:flex;align-items:center;gap:8px">
         <button id="rp-close" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:white;font-size:1.2rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
@@ -1918,7 +1927,7 @@ function openRepairManager() {
   document.getElementById('_rm_page')?.remove();
   const page = document.createElement('div');
   page.id = '_rm_page';
-  page.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,0px));left:0;right:0;bottom:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
+  page.style.cssText = 'position:fixed;inset:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
 
   // init db.repairGroups จาก REPAIR_GROUPS ถ้ายังไม่มี
   if (!db.repairGroups || !db.repairGroups.length) {
@@ -1948,7 +1957,7 @@ function openRepairManager() {
   const renderGroupList = () => {
     const totalItems = db.repairGroups.reduce((s,g)=>s+(g.items?.length||0),0);
     page.innerHTML = `
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:16px;flex-shrink:0">
+      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:12px 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
           <button onclick="document.getElementById('_rm_page').remove()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
@@ -2006,7 +2015,7 @@ function openRepairManager() {
     const c = _rmColors[gi % _rmColors.length];
     page.innerHTML = `
       <!-- Header gradient แดง เหมือน list page -->
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:16px;flex-shrink:0">
+      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:12px 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
           <button onclick="window._rmBackToList()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">

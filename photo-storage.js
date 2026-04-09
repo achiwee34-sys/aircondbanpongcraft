@@ -66,6 +66,8 @@ var _photoCache = {};
 var _photoCacheKeys = [];
 var _PHOTO_CACHE_MAX = 20;
 
+const _PHOTO_CACHE_TTL_MS = 5 * 60 * 1000; // 5 นาที — หลังจากนี้ reload จาก Firestore
+
 function _photoCacheSet(key, val) {
   if (_photoCacheKeys.includes(key)) {
     _photoCacheKeys.splice(_photoCacheKeys.indexOf(key), 1);
@@ -73,12 +75,25 @@ function _photoCacheSet(key, val) {
     delete _photoCache[_photoCacheKeys.shift()];
   }
   _photoCacheKeys.push(key);
-  _photoCache[key] = val;
+  _photoCache[key] = { data: val, ts: Date.now() }; // เก็บ timestamp ด้วย
+}
+
+function _photoCacheGet(key) {
+  const entry = _photoCache[key];
+  if (!entry) return null;
+  if (Date.now() - entry.ts > _PHOTO_CACHE_TTL_MS) {
+    // หมดอายุ — ลบออก
+    delete _photoCache[key];
+    const idx = _photoCacheKeys.indexOf(key);
+    if (idx !== -1) _photoCacheKeys.splice(idx, 1);
+    return null;
+  }
+  return entry.data;
 }
 
 async function loadPhotosFromFirestore(ticketId) {
   if (!ticketId) return { before: [], after: [] };
-  if (_photoCache[ticketId]) return _photoCache[ticketId];
+  const _cached = _photoCacheGet(ticketId); if (_cached) return _cached;
   if (typeof FSdb === 'undefined' || !FSdb) return { before: [], after: [] };
   try {
     const snap = await _withTimeout(
@@ -87,7 +102,7 @@ async function loadPhotosFromFirestore(ticketId) {
     );
     if (snap.exists) {
       const data = { before: snap.data().before||[], after: snap.data().after||[] };
-      _photoCacheSet(ticketId, data); // ✅ H2 fix: LRU eviction
+      _photoCacheSet(ticketId, data); // LRU + TTL eviction
       return data;
     }
   } catch(e) {

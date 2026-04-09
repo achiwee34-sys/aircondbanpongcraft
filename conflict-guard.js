@@ -144,12 +144,26 @@ async function fsSaveNowSafe() {
       updatedAt:       new Date().toISOString(),
     };
 
-    // ตรวจขนาด payload — warn ถ้าใกล้ 1MB
+    // ตรวจขนาด payload — Firestore limit = 1MB (1,048,576 bytes)
     const payloadSize = JSON.stringify(payload).length;
-    if (payloadSize > 800_000) {
+    if (payloadSize > 950_000) {
+      // ใกล้ limit มาก — block save เพื่อป้องกัน Firestore error เงียบ
+      console.error('[ConflictGuard] Payload TOO LARGE:', (payloadSize/1024).toFixed(0)+'KB — BLOCKED');
+      if (typeof showAlert === 'function') {
+        showAlert({
+          icon: '❌',
+          title: 'ข้อมูลเกินขนาด',
+          color: '#dc2626',
+          msg: `ขนาดข้อมูล <strong>${(payloadSize/1024).toFixed(0)} KB</strong> เกินกว่าที่ Firestore รองรับได้<br>
+            <span style="font-size:0.78rem;color:#64748b">กรุณากด Backup แล้วลบข้อมูลเก่าก่อนบันทึกใหม่</span>`,
+          btnOk: 'ตกลง'
+        });
+      }
+      return; // block save
+    } else if (payloadSize > 700_000) {
       console.warn('[ConflictGuard] Firestore payload large:', (payloadSize/1024).toFixed(0)+'KB');
       if (typeof showToast === 'function') {
-        showToast('⚠️ ข้อมูลมีขนาดใหญ่ (' + (payloadSize/1024).toFixed(0) + 'KB) ควร migrate รูปไป Storage');
+        showToast('⚠️ ข้อมูลใหญ่ขึ้น (' + (payloadSize/1024).toFixed(0) + 'KB) ควร Backup และล้างข้อมูลเก่า');
       }
     }
 

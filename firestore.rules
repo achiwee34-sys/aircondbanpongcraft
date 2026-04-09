@@ -25,9 +25,11 @@ service cloud.firestore {
     function isTech()     { return hasRole('tech'); }
     function isReporter() { return hasRole('reporter'); }
     function isAnyStaff() { return isRealUser() && request.auth.token.role in ['admin','tech','reporter']; }
-    // ── BUG FIX B: PC anonymous users อ่านได้ เขียนได้เฉพาะ staff จริง ──
-    function canRead()  { return isAnyStaff() || isAnonymous(); }
+    // ── SECURITY FIX: Anonymous อ่านได้เฉพาะ machines (populate dept dropdown) เท่านั้น
+    // ไม่ให้ anonymous อ่าน tickets/users/signatures ซึ่งเป็นข้อมูล sensitive
+    function canRead()  { return isAnyStaff(); }
     function canWrite() { return isAnyStaff(); }
+    function canReadMachines() { return isAnyStaff() || isAnonymous(); }
 
     // ── aircon_data ─────────────────────────────────────────────
     match /aircon_data/{docId} {
@@ -36,6 +38,16 @@ service cloud.firestore {
     }
 
     // ── appdata: main + signatures ──────────────────────────────
+    // anonymous อ่าน appdata/main ได้ (เพื่อ fsLoad → ดึง machines)
+    // แต่อ่าน appdata/signatures ไม่ได้
+    match /appdata/main {
+      allow read:  if canRead() || isAnonymous();
+      allow write: if canWrite();
+    }
+    match /appdata/signatures {
+      allow read:  if canRead();
+      allow write: if canWrite();
+    }
     match /appdata/{doc} {
       allow read:  if canRead();
       allow write: if canWrite();
@@ -43,14 +55,14 @@ service cloud.firestore {
 
     // ── machines ────────────────────────────────────────────────
     match /machines/{docId} {
-      allow read:  if canRead();
+      allow read:  if canReadMachines(); // anonymous อ่านได้ — populate dept picker
       allow create, update: if isAdmin() || isTech();
       allow delete: if isAdmin();
     }
 
     // ── users ────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read:  if isAdmin() || (isRealUser() && request.auth.uid == userId) || isAnonymous();
+      allow read:  if isAdmin() || (isRealUser() && request.auth.uid == userId);
       allow write: if isAdmin();
     }
 
