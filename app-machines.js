@@ -2982,7 +2982,7 @@ function openMachineRequestsPage() {
   document.getElementById('_mac-req-page')?.remove();
   const page = document.createElement('div');
   page.id = '_mac-req-page';
-  page.style.cssText = 'position:fixed;inset:0;z-index:9500;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
+  page.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,0px));left:0;right:0;bottom:0;z-index:9500;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
 
   const renderContent = () => {
     const pending = (db.machineRequests||[]).filter(r => r.status === 'pending');
@@ -2992,7 +2992,7 @@ function openMachineRequestsPage() {
 
     page.innerHTML = `
       <!-- Header -->
-      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 16px 16px;flex-shrink:0">
+      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
           <button onclick="document.getElementById('_mac-req-page').remove()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">‹</button>
           <div style="flex:1">
@@ -3258,7 +3258,7 @@ function openNewMachinesTable() {
   document.getElementById('_nmtable')?.remove();
   const pg = document.createElement('div');
   pg.id = '_nmtable';
-  pg.style.cssText = 'position:fixed;inset:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.22s cubic-bezier(0.32,0.72,0,1)';
+  pg.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,0px));left:0;right:0;bottom:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.22s cubic-bezier(0.32,0.72,0,1)';
 
   const totalPages = () => Math.ceil(list.length / PAGE_SIZE);
 
@@ -3396,7 +3396,7 @@ function openNewMachinesTable() {
 
   pg.innerHTML = `
     <!-- ── Header ── -->
-    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 14px 0;flex-shrink:0">
+    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:14px 14px 0;flex-shrink:0">
       <!-- top bar -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <button onclick="document.getElementById('_nmtable').remove()"
