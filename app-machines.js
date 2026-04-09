@@ -2102,7 +2102,12 @@ function resetMacPicker() {
 
 function populateMachineSelect() {
   // Populate dept dropdown
-  const deptSel = document.getElementById('nt-dept'); if(!deptSel) return;
+  const deptSel = document.getElementById('nt-dept');
+  if (!deptSel) {
+    // ── DOM ยังไม่พร้อม (ไม่ได้อยู่หน้า new) แต่ถ้ามี machines แล้ว → retry เมื่อหน้า new เปิด
+    // ไม่ต้อง retry ถ้า machines ยังว่าง (จะ retry จาก retry loop ปกติ)
+    return;
+  }
   const depts = [...new Set(db.machines.map(m => m.dept||m.location||'ไม่ระบุแผนก').filter(Boolean))].sort();
 
   if (depts.length === 0) {

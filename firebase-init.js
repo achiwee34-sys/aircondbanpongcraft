@@ -105,14 +105,19 @@ async function fsLoad() {
 
       if (Array.isArray(data.machines) && data.machines.length) {
         db.machines = data.machines;
-        // ── BUG FIX: trigger populateMachineSelect ทันทีหลัง fsLoad โหลด machines สำเร็จ
-        // ป้องกัน race condition ที่อุปกรณ์ใหม่ไม่มี localStorage cache แล้ว
-        // populateMachineSelect() retry หมดก่อน Firebase ตอบกลับ ──
+        // ── BUG FIX ROOT CAUSE: บันทึก machines ลง localStorage ทันที
+        // เพื่อให้ retry loop ของ populateMachineSelect อ่านได้แม้ DOM ยังไม่ถูก refresh ──
+        try { localStorage.setItem('airtrack_pwa', JSON.stringify(db)); } catch(e) {}
         setTimeout(() => {
           if (typeof populateMachineSelect === 'function') {
             populateMachineSelect._retryCount = 0;
             clearTimeout(populateMachineSelect._retryTimer);
             populateMachineSelect();
+          }
+          // ── ถ้าอยู่หน้า 'new' ให้ force re-populate dept picker ──
+          const pgNew = document.getElementById('pg-new');
+          if (pgNew && pgNew.classList.contains('active')) {
+            if (typeof populateMachineSelect === 'function') populateMachineSelect();
           }
         }, 0);
       }

@@ -2895,16 +2895,21 @@ function setupBottomNav() {
 // ============================================================
 let _activePage = 'home'; // sync กับ HTML ที่ pg-home มี class active ตอนแรก
 
-// ── SheetJS readiness helper (audit v15) ──
-// รอ XLSX โหลดเสร็จก่อน export — retry สูงสุด 20 ครั้ง (6 วินาที)
-function waitForXLSX(cb, retries=20) {
+// ── SheetJS readiness helper ──
+// retry สูงสุด 60 ครั้ง × 500ms = 30 วินาที
+function waitForXLSX(cb, retries=60) {
   if (typeof XLSX !== 'undefined') { cb(); return; }
   if (retries <= 0) {
-    showAlert({ icon:'❌', title:'โหลดไม่สำเร็จ', msg:'ไม่สามารถโหลด SheetJS<br>ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต', color:'#dc2626', btnOk:'ตกลง' });
+    // ── พยายามโหลด SheetJS ใหม่อีกรอบก่อน error ──
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js';
+    s.onload = () => { if (typeof XLSX !== 'undefined') cb(); else showAlert({ icon:'❌', title:'โหลดไม่สำเร็จ', msg:'ไม่สามารถโหลด SheetJS<br>กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่', color:'#dc2626', btnOk:'ตกลง' }); };
+    s.onerror = () => showAlert({ icon:'❌', title:'โหลดไม่สำเร็จ', msg:'ไม่สามารถโหลด SheetJS<br>กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่', color:'#dc2626', btnOk:'ตกลง' });
+    document.head.appendChild(s);
     return;
   }
-  showToast('⏳ กำลังโหลด Excel library...');
-  setTimeout(() => waitForXLSX(cb, retries - 1), 300);
+  if (retries % 10 === 0) showToast('⏳ กำลังโหลด Excel library...');
+  setTimeout(() => waitForXLSX(cb, retries - 1), 500);
 }
 
 function goPage(name) {
@@ -3046,16 +3051,21 @@ function goPage(name) {
     }
     else if (name === 'new') {
       populateMachineSelect();
-      if (!db.machines || db.machines.length === 0) {
-        // ── BUG FIX: timer สำรองครอบ Firebase ที่ช้า 40+ วินาที ──
-        // (populateMachineSelect ก็มี retry ของตัวเองอีก 20 รอบ ทำงานซ้อนกัน)
-        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 600);
-        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 1800);
-        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 4000);
-        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 8000);
-        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 15000);
-        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 25000);
-        setTimeout(() => { if (typeof populateMachineSelect === 'function') populateMachineSelect(); }, 40000);
+      // ── BUG FIX: เสมอ schedule retry ไม่ว่า db.machines จะมีหรือไม่
+      // กรณี machines โหลดจาก cache แต่ Firebase ยังไม่ sync → dept picker อาจล้าสมัย
+      // กรณีอุปกรณ์ใหม่ไม่มี cache → ต้องรอ Firebase (40+ วินาที)
+      if (!populateMachineSelect._newPageTimer) {
+        populateMachineSelect._newPageTimer = true;
+        [600, 1800, 4000, 8000, 15000, 25000, 40000].forEach(ms => {
+          setTimeout(() => {
+            populateMachineSelect._newPageTimer = false;
+            if (typeof populateMachineSelect === 'function') {
+              // เรียกเฉพาะถ้ายังอยู่หน้า new
+              const pgNew = document.getElementById('pg-new');
+              if (pgNew && pgNew.classList.contains('active')) populateMachineSelect();
+            }
+          }, ms);
+        });
       }
       setTimeout(()=>{ const priField=document.getElementById('nt-priority-field'); if(priField) priField.style.display='none'; },50);
     }

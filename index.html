@@ -3657,30 +3657,27 @@ window._liffLandingUpdateCard = liffUpdateCard;
   <img id="lb-img" src="" alt=""/>
 </div>
 
-<!-- SheetJS 0.20.3 (v16: สลับ primary → jsdelivr, cdnjs เป็น fallback) -->
+<!-- SheetJS 0.20.3 (v17: 3 CDN fallback chain + onload confirm) -->
 <script>
 (function(){
-  function loadXLSX(src, fallbackSrc) {
+  var CDN_LIST = [
+    'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.3/xlsx.full.min.js',
+    'https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js'
+  ];
+  function tryLoad(idx) {
+    if (idx >= CDN_LIST.length) { console.error('[SheetJS] โหลดล้มเหลวทุก CDN'); return; }
     var s = document.createElement('script');
-    s.src = src;
+    s.src = CDN_LIST[idx];
     s.crossOrigin = 'anonymous';
+    s.onload = function() { console.info('[SheetJS] โหลดสำเร็จจาก', CDN_LIST[idx]); };
     s.onerror = function() {
-      console.warn('[SheetJS] โหลดจาก ' + src + ' ไม่สำเร็จ');
-      if (fallbackSrc) {
-        var s2 = document.createElement('script');
-        s2.src = fallbackSrc;
-        s2.crossOrigin = 'anonymous';
-        s2.onerror = function() { console.error('[SheetJS] โหลดล้มเหลวทุก CDN'); };
-        document.head.appendChild(s2);
-      }
+      console.warn('[SheetJS] CDN[' + idx + '] ล้มเหลว ลอง fallback...');
+      tryLoad(idx + 1);
     };
     document.head.appendChild(s);
   }
-  // ── Primary: jsdelivr (เสถียรกว่า cdnjs ในหลายประเทศ) ──
-  loadXLSX(
-    'https://cdn.jsdelivr.net/npm/xlsx@0.20.3/dist/xlsx.full.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.3/xlsx.full.min.js'
-  );
+  tryLoad(0);
 })();
 </script>
 <!-- jsQR 1.4.0 — SRI hash ตรวจสอบได้ที่ https://www.srihash.org -->
