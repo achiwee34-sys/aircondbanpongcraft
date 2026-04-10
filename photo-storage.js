@@ -38,12 +38,28 @@ async function savePhotosToFirestore(ticketId, photosBefore, photosAfter) {
   if (!authed) return { before: [], after: [] };
 
   try {
-    // ✅ fix #2: เพิ่ม techId (จาก CU) เพื่อให้ Firestore rule resource.data.techId ทำงานได้
-    // ✅ fix #2: ใช้ merge:true เพื่อไม่ทับรูปเก่าที่มีอยู่แล้ว
+    // FIX: อ่านข้อมูลเดิมก่อน แล้ว merge array แทนการ overwrite
+    // merge:true ของ Firestore ทับ array field ทั้งก้อน — ต้อง merge เองก่อน set
+    let existingBefore = [];
+    let existingAfter  = [];
+    try {
+      const snap = await _withTimeout(
+        FSdb.collection('ticket_photos').doc(ticketId).get(),
+        10000, 'readBeforeSave'
+      );
+      if (snap.exists) {
+        existingBefore = snap.data().before || [];
+        existingAfter  = snap.data().after  || [];
+      }
+    } catch(readErr) { /* ถ้าอ่านไม่ได้ ใช้ empty แล้ว overwrite เหมือนเดิม */ }
+
+    const mergedBefore = existingBefore.concat(photosBefore || []);
+    const mergedAfter  = existingAfter.concat(photosAfter  || []);
+
     const payload = {
       ticketId,
-      before:  photosBefore || [],
-      after:   photosAfter  || [],
+      before:  mergedBefore,
+      after:   mergedAfter,
       savedAt: new Date().toISOString(),
     };
     if (typeof CU !== 'undefined' && CU && CU.id) payload.techId = CU.id;
@@ -51,8 +67,20 @@ async function savePhotosToFirestore(ticketId, photosBefore, photosAfter) {
       FSdb.collection('ticket_photos').doc(ticketId).set(payload, { merge: true }),
       30000, 'savePhotos'
     );
-    const beforeKeys = (photosBefore||[]).map(function(_, i) { return 'fs:' + ticketId + ':b' + i; });
-    const afterKeys  = (photosAfter||[]).map(function(_, i)  { return 'fs:' + ticketId + ':a' + i; });
+
+    // key ของรูปใหม่ใช้ index ต่อจากของเดิม
+    const bOffset = existingBefore.length;
+    const aOffset = existingAfter.length;
+    const beforeKeys = (photosBefore||[]).map(function(_, i) { return 'fs:' + ticketId + ':b' + (bOffset + i); });
+    const afterKeys  = (photosAfter||[]).map(function(_, i)  { return 'fs:' + ticketId + ':a' + (aOffset + i); });
+
+    // invalidate cache ให้ load ใหม่ครั้งหน้า
+    if (typeof _photoCache !== 'undefined') delete _photoCache[ticketId];
+    if (typeof _photoCacheKeys !== 'undefined') {
+      var idx = _photoCacheKeys.indexOf(ticketId);
+      if (idx !== -1) _photoCacheKeys.splice(idx, 1);
+    }
+
     return { before: beforeKeys, after: afterKeys };
   } catch(e) {
     console.warn('[Photo] savePhotosToFirestore failed:', e.message);

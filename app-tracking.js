@@ -1167,20 +1167,20 @@ function buildPORow(i) {
 
   // ── PR / PO doc row — Admin กรอกได้เสมอ ──
   const docRow = document.createElement('div');
-  docRow.style.cssText = 'display:flex;gap:6px;padding-left:30px';
+  docRow.style.cssText = 'display:flex;gap:6px;padding-left:30px;margin-top:8px;min-height:56px';
 
   const mkDocInput = (label, val, color, bgFocus, cbFn) => {
     const box = document.createElement('div');
     box.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:2px';
     const lbl = document.createElement('div');
-    lbl.style.cssText = `font-size:0.58rem;font-weight:800;color:${isAdmin?color:'#94a3b8'};letter-spacing:0.05em;text-transform:uppercase`;
+    lbl.style.cssText = `font-size:0.58rem;font-weight:800;color:${color};letter-spacing:0.05em;text-transform:uppercase`;
     lbl.textContent = label+' Number';
     const inp = document.createElement('input');
     inp.type='text'; inp.value=val||'';
     inp.placeholder = label+'-';
-    inp.disabled = !isAdmin; // Admin เท่านั้นที่กรอก PR/PO
+    inp.readOnly = !isAdmin; // Admin เท่านั้นที่กรอก PR/PO
     const hasVal = !!(val&&val.trim());
-    inp.style.cssText = `width:100%;box-sizing:border-box;border:1.5px solid ${hasVal?color+'55':'#e5e7eb'};border-radius:9px;padding:7px 9px;font-size:0.75rem;font-family:inherit;font-weight:700;color:${isAdmin?color:'#c4c9d4'};outline:none;background:${isAdmin?(hasVal?bgFocus:'white'):'#f8fafc'};transition:all 0.2s`;
+    inp.style.cssText = `width:100%;box-sizing:border-box;border:1.5px solid ${hasVal?color+'55':'#e5e7eb'};border-radius:9px;padding:7px 9px;font-size:0.75rem;font-family:inherit;font-weight:700;color:${isAdmin?color:'#94a3b8'};outline:none;background:${isAdmin?(hasVal?bgFocus:'white'):'#f8fafc'};transition:all 0.2s`;
     inp.addEventListener('input', e => {
       cbFn(e.target.value);
       const hv = !!(e.target.value.trim());
@@ -1358,7 +1358,7 @@ function openRepairPicker() {
   document.getElementById('_rp_ov')?.remove();
   const ov = document.createElement('div');
   ov.id = '_rp_ov';
-  ov.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)));left:0;right:0;z-index:10000;background:#f0f2f5;display:flex;flex-direction:column;animation:slideDown 0.25s cubic-bezier(0.32,0.72,0,1);font-family:inherit';
+  ov.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:0;left:0;right:0;z-index:10000;background:#f0f2f5;display:flex;flex-direction:column;animation:slideDown 0.25s cubic-bezier(0.32,0.72,0,1);font-family:inherit';
 
   const groups = _getRepairGroups();
   const selectedMap = {};
@@ -1391,7 +1391,7 @@ function openRepairPicker() {
 
   ov.innerHTML = `
     <!-- Header compact -->
-    <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 45%,#c8102e 100%);flex-shrink:0;padding:calc(var(--head-h,56px) + var(--safe-top,0px)) 0 0">
+    <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 45%,#c8102e 100%);flex-shrink:0;padding:8px 0 0">
       <!-- Top bar — single row -->
       <div style="padding:0 12px 6px;display:flex;align-items:center;gap:8px">
         <button id="rp-close" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:white;font-size:1.2rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
@@ -1448,7 +1448,7 @@ function openRepairPicker() {
     <div id="rp-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:8px 0 16px"></div>
 
     <!-- Footer -->
-    <div style="padding:14px 20px calc(env(safe-area-inset-bottom,0px)+16px);background:white;border-top:2px solid #f1f5f9;flex-shrink:0;display:flex;gap:14px;align-items:center;box-shadow:0 -6px 24px rgba(0,0,0,0.08)">
+    <div style="padding:14px 20px calc(var(--nav-h,56px) + env(safe-area-inset-bottom,0px) + 8px);background:white;border-top:2px solid #f1f5f9;flex-shrink:0;display:flex;gap:14px;align-items:center;box-shadow:0 -6px 24px rgba(0,0,0,0.08)">
       <div id="rp-footer-summary" style="flex:1;min-width:0;padding-left:4px">
         <div id="rp-footer-count" style="font-size:0.82rem;font-weight:800;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
         <div id="rp-footer-price" style="font-size:1.05rem;font-weight:900;color:#047857;margin-top:1px"></div>
@@ -1678,7 +1678,7 @@ function openRepairPicker() {
           'cursor:pointer;touch-action:manipulation;',
           'transition:background 0.12s;',
           'position:relative;',
-          'min-height:52px;',
+          'min-height:64px;',
           'user-select:none;-webkit-user-select:none;'
         ].join('');
 
@@ -1707,7 +1707,7 @@ function openRepairPicker() {
           <div style="display:flex;align-items:flex-start;gap:9px;flex:1">
             <div style="width:22px;height:22px;border-radius:6px;background:${isSelected ? grpColor : isBtuMatch ? '#0369a1' : grpColor+'22'};display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0;transition:background 0.12s">${grpIcon}</div>
             <div style="flex:1;min-width:0;padding-right:${(isBtuMatch||isSelected)?'24px':'0'}">
-              <div style="font-size:0.7rem;font-weight:800;color:${isSelected ? '#c8102e' : '#1e293b'};line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
+              <div style="font-size:0.68rem;font-weight:800;color:${isSelected ? '#c8102e' : '#1e293b'};line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word">${it.name}</div>
               <div style="font-size:0.6rem;font-weight:700;color:${isSelected ? '#be123c' : price > 0 ? grpColor : '#94a3b8'};margin-top:2px">
                 ${price > 0 ? `฿${price.toLocaleString()}` : 'ตามจริง'}
               </div>
@@ -2716,10 +2716,13 @@ async function doComplete( /* PATCH v67 */) {
     showToast('⏳ กำลัง upload รูปภาพ...');
     await uploadPendingPhotosToStorage(t.id);
   }
-  t.photosAfter = [...pendingPhotos.after];
-  // pendingPhotos.before มีรูปผู้แจ้ง + รูปที่ช่างเพิ่มเอง (ถ้ามี)
-  // ใช้ Set เพื่อกัน duplicate ในกรณี merge
-  if (pendingPhotos.before.length) {
+  // FIX: รูปหลังซ่อม — ใช้ pendingPhotos.after หลัง upload (จะเป็น fs: keys)
+  // ถ้า array ว่าง (upload ล้มเหลว / ไม่ได้ถ่ายรูป) เก็บ array เดิมไว้
+  if (pendingPhotos.after.length > 0) {
+    t.photosAfter = [...pendingPhotos.after];
+  }
+  // FIX: รูปก่อนซ่อม — merge เฉพาะถ้ามีของใหม่ ไม่ทับของเดิม
+  if (pendingPhotos.before.length > 0) {
     const existing = new Set(t.photosBefore||[]);
     const merged = [...(t.photosBefore||[])];
     pendingPhotos.before.forEach(p => { if (!existing.has(p)) merged.push(p); });
@@ -3384,7 +3387,10 @@ function openDetail(tid) {
   openSheet('detail');
   // ── Async photo resolver: load fs: placeholder photos after sheet opens ──
   // ใช้ requestAnimationFrame + 300ms เพื่อให้ sheet render เสร็จก่อน
+  // รอ sheet animate เสร็จก่อน (300ms) แล้วเริ่ม resolve รูป
+  // FIX: เพิ่ม second trigger ที่ 800ms กัน race condition กับ sheet animation
   requestAnimationFrame(() => setTimeout(() => _resolveDetailPhotos(t.id, 0), 300));
+  setTimeout(() => _resolveDetailPhotos(t.id, 0), 800);
 }
 
 // ── Async photo resolver for detail sheet ──────────────────────────
@@ -3392,8 +3398,14 @@ async function _resolveDetailPhotos(ticketId, attempt = 0) {
   const MAX_RETRY = 5;
   const RETRY_DELAY_MS = [0, 1000, 2500, 4000, 6000];
 
-  const items = document.querySelectorAll('[data-photo-key]');
-  if (!items.length) return;
+  // Scope to detail-body only — ป้องกัน stale elements จาก sheet อื่น
+  const _detailContainer = document.getElementById('detail-body') || document;
+  const items = _detailContainer.querySelectorAll('[data-photo-key]');
+  if (!items.length) {
+    // ถ้า detail-body ยังไม่มี elements ให้ retry อีกครั้ง
+    if (attempt < 3) setTimeout(() => _resolveDetailPhotos(ticketId, attempt + 1), 500);
+    return;
+  }
 
   // BUG FIX (Bug 2): รอ Firebase auth พร้อมก่อน load รูป
   // anonymous user (PC) ต้องได้รับ signInAnonymously ก่อนถึงจะอ่าน ticket_photos ได้

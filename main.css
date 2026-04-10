@@ -1234,9 +1234,9 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 [style*="overflow-y:auto"], [style*="overflow-y: auto"] { -webkit-overflow-scrolling: touch; }
 /* ── Purchase page iOS fixes ── */
 #pg-purchase { -webkit-overflow-scrolling: touch; }
-#pur-list { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; overflow-y: auto; }
-/* Bug-fix: pur-list-panel ต้องมี overflow-y: auto ให้ scroll ได้ */
-#pg-purchase #pur-list-panel { overflow-y: auto !important; }
+#pur-list { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; overflow-y: auto; flex: 1; min-height: 0; }
+/* pur-list-panel เป็น flex column — scroll อยู่ที่ pur-list ข้างใน */
+#pg-purchase #pur-list-panel { overflow: hidden !important; display: flex; flex-direction: column; }
 #pur-track-content { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 #po-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
@@ -1488,10 +1488,10 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 #pg-calendar.active { display:flex !important; }
 #pg-calendar #cal-grid { overflow:visible; }
 
-#pg-purchase { padding:0 !important; overflow-y:hidden !important; display:none; flex-direction:column; }
+#pg-purchase { padding:0 !important; overflow:hidden !important; display:none; flex-direction:column; }
 #pg-purchase.active { display:flex !important; flex-direction:column; overflow:hidden; }
-/* Bug 4 fix: pur-list-panel ต้องไม่ overflow บนจอเล็ก (iPhone SE 375px) */
-#pg-purchase.active #pur-list-panel { height:100%; max-height:100%; }
+/* pur-list-panel เต็มพื้นที่ — flex column ให้ pur-list scroll ข้างใน */
+#pg-purchase.active #pur-list-panel { height:100%; max-height:100%; display:flex; flex-direction:column; overflow:hidden; }
 #pg-chat.active { display:block !important; }
 #pg-chatroom.active { display:flex !important; flex-direction:column; }
 #pg-chatroom > #cr-container { height:100%; }
