@@ -248,7 +248,7 @@ async function fsSaveNow() {
       if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('signatures').set(allSigs);
     }
   } catch(e) { console.warn('fsSaveNow error:', e); }
-  finally { setTimeout(() => { _fsSaving = false; }, 3000); }
+  finally { setTimeout(() => { _fsSaving = false; }, 800); } // FIX v23-track2: ลดจาก 3000→800ms ป้องกัน onSnapshot block นานเกิน
 }
 
 // fire-and-forget save
@@ -314,7 +314,10 @@ async function fsListen() {
   _fsListener = FSdb.collection('appdata').doc('main').onSnapshot(snap => {
     if (!snap.exists || !CU) return;
     const data = snap.data();
-    if (_fsSaving && !_fsChatSaving) return;
+    // FIX v23-track3: ถ้าอยู่หน้า tracking → อย่า skip แม้ _fsSaving = true
+    // เพราะ admin เพิ่งกด "ของมาแล้ว" แล้ว tracking ต้องอัปเดตทันที
+    const _onTrackingPage = document.querySelector('.page.active')?.id === 'pg-tracking';
+    if (_fsSaving && !_fsChatSaving && !_onTrackingPage) return;
     // ── BUG FIX (Bug 1 cross-device sync): ปรับ _seq check ──
     // เดิม: db._seq >= data._seq → skip ทั้งหมด
     // ปัญหา: อุปกรณ์ที่มี localStorage เก่า (_seq สูง) จะไม่รับ update จากอุปกรณ์อื่นเลย
@@ -323,7 +326,15 @@ async function fsListen() {
     const localSeq  = db._seq  || 0;
     const remoteSeq = data._seq || 0;
     // กัน onSnapshot ที่ยิงกลับมาจาก write ของตัวเอง (seq เท่ากัน)
-    if (remoteSeq > 0 && localSeq > 0 && localSeq === remoteSeq) return;
+    // FIX v23-track4: ถ้าอยู่หน้า tracking → refresh เสมอ แม้ seq เท่ากัน
+    // เพราะ admin action (markPartArrived ฯลฯ) save เสร็จแล้วต้องเห็นผลทันที
+    const _activePageId = document.querySelector('.page.active')?.id;
+    if (remoteSeq > 0 && localSeq > 0 && localSeq === remoteSeq) {
+      if (_activePageId === 'pg-tracking' && typeof renderTracking === 'function') {
+        renderTracking();
+      }
+      return;
+    }
     // กัน localStorage cache เก่ามากๆ ที่ _seq พุ่งสูงผิดปกติ (เช่น หลัง clear +100)
     // แต่ยังคง sync ถ้า remote ใหม่กว่า
     if (localSeq > remoteSeq && (localSeq - remoteSeq) > 50) return;

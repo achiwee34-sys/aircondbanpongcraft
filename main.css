@@ -908,6 +908,8 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
   display: flex; align-items: center; padding-left: 16px; padding-right: 16px;
   flex-shrink: 0; position: relative;
   box-shadow: 0 1px 0 var(--border);
+  /* FIX v23-ui1: ยก z-index ขึ้นเหนือ overlay pages (9500-9600) */
+  z-index: 9800;
 }
 .tb-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; overflow: hidden; }
 .tb-logo { font-family: 'IBM Plex Mono', monospace; font-size: 1.05rem; color: #0f172a; font-weight: 700; }

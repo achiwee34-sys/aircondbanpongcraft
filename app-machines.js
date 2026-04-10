@@ -155,89 +155,6 @@ function openMachineHistory(mid) {
 }
 
 // ── Export Excel ประวัติการซ่อมของเครื่องนี้ ──────────────────
-let _mhistExportId = null; // เก็บ machine ID ที่กำลัง open อยู่
-
-function exportMachineHistorySheet() {
-  if (typeof XLSX === 'undefined') { waitForXLSX(exportMachineHistorySheet); return; }
-
-  // ใช้ _mhistCurrentMid ที่ set ตอน openMachineHistory
-  const m = _mhistCurrentMid ? db.machines.find(x => x.id === _mhistCurrentMid) : null;
-  if (!m) { showToast('⚠️ ไม่พบข้อมูลเครื่อง'); return; }
-
-  const tickets = db.tickets
-    .filter(t => t.machineId === m.id || t.machine === m.name)
-    .sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
-
-  if (!tickets.length) { showToast('⚠️ ไม่มีประวัติการซ่อมสำหรับเครื่องนี้'); return; }
-
-  const STATUS_TH = {new:'ใหม่',assigned:'จ่ายงาน',working:'กำลังซ่อม',
-    waiting_part:'รออะไหล่',done:'เสร็จแล้ว',verified:'ตรวจรับแล้ว',closed:'ปิดงาน'};
-
-  // ── Sheet 1: สรุปรายการซ่อม ──
-  const rows = tickets.map(t => ({
-    'รหัสงาน':       t.id,
-    'วันแจ้ง':        (t.createdAt||'').slice(0,10),
-    'วันอัปเดต':      (t.updatedAt||'').slice(0,10),
-    'อาการ/ปัญหา':    t.problem || '',
-    'รายละเอียด':     t.detail  || '',
-    'ผู้แจ้ง':        t.reporter || '',
-    'ช่างซ่อม':       t.assignee || '',
-    'สถานะ':          STATUS_TH[t.status] || t.status || '',
-    'สรุปผลซ่อม':     t.summary  || '',
-    'อะไหล่':         t.parts    || '',
-    'ค่าซ่อม (฿)':    parseFloat(t.repairCost)||0,
-    'ราคาซื้อของ (฿)': parseFloat(t.partsCost)||0,
-    'รวมค่าใช้จ่าย (฿)': parseFloat(t.cost)||0,
-    'PR No.':         t.purchaseOrder?.pr || '',
-    'PO No.':         t.purchaseOrder?.po || '',
-    'หมายเหตุ':       t.note || '',
-  }));
-
-  // ── Sheet 2: รายการอะไหล่ที่สั่งซื้อ ──
-  const partRows = [];
-  tickets.forEach(t => {
-    const poRows = (t.purchaseOrder?.rows||[]).filter(r => r.name);
-    poRows.forEach(r => {
-      partRows.push({
-        'รหัสงาน':     t.id,
-        'วันแจ้ง':      (t.createdAt||'').slice(0,10),
-        'ชื่ออะไหล่':   r.name   || '',
-        'จำนวน':        r.qty    || 1,
-        'ราคาต่อชิ้น (฿)': parseFloat(r.price)||0,
-        'รวม (฿)':      (r.qty||1) * (parseFloat(r.price)||0),
-        'PR No.':       t.purchaseOrder?.pr || '',
-        'PO No.':       t.purchaseOrder?.po || '',
-      });
-    });
-  });
-
-  const wb = XLSX.utils.book_new();
-
-  // Sheet 1
-  const ws1 = XLSX.utils.json_to_sheet(rows);
-  // กำหนดความกว้างคอลัมน์
-  ws1['!cols'] = [
-    {wch:12},{wch:12},{wch:12},{wch:30},{wch:30},{wch:14},{wch:14},
-    {wch:12},{wch:30},{wch:20},{wch:14},{wch:16},{wch:18},{wch:12},{wch:12},{wch:20}
-  ];
-  XLSX.utils.book_append_sheet(wb, ws1, 'ประวัติการซ่อม');
-
-  // Sheet 2 (ถ้ามีอะไหล่)
-  if (partRows.length) {
-    const ws2 = XLSX.utils.json_to_sheet(partRows);
-    ws2['!cols'] = [{wch:12},{wch:12},{wch:30},{wch:8},{wch:16},{wch:14},{wch:12},{wch:12}];
-    XLSX.utils.book_append_sheet(wb, ws2, 'รายการอะไหล่');
-  }
-
-  // ชื่อไฟล์
-  const serial = (m.serial || m.id.replace('csv_','')).replace(/[^a-zA-Z0-9ก-๙_-]/g,'_');
-  const today  = new Date().toLocaleDateString('th-TH',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
-  const fname  = `RepairHistory_${serial}_${today}.xlsx`;
-
-  XLSX.writeFile(wb, fname);
-  showToast(`✅ Export ${tickets.length} รายการ → ${fname}`);
-}
-
 // ── Export Excel ประวัติการซ่อมของเครื่องที่เปิดอยู่ ─────────
 let _mhistCurrentMid = null; // track machine id ที่เปิด mhist ล่าสุด
 
@@ -3218,7 +3135,7 @@ function openMachineRequestsPage() {
       <!-- Header -->
       <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
-          <button onclick="document.getElementById('_mac-req-page').remove()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">‹</button>
+          <button onclick="document.getElementById('_mac-req-page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">‹</button>
           <div style="flex:1">
             <div style="color:white;font-size:1.05rem;font-weight:900;letter-spacing:-0.01em">คำขอเพิ่มเครื่องแอร์</div>
             <div style="color:rgba(255,255,255,0.45);font-size:0.7rem;margin-top:2px">Admin อนุมัติ / ปฏิเสธ</div>
@@ -3383,6 +3300,7 @@ function openMachineRequestsPage() {
 
   renderContent();
   document.body.appendChild(page);
+  if (typeof updateTopbarTitle === 'function') updateTopbarTitle('machine-requests');
 }
 
 // Keep old name as alias
@@ -3623,7 +3541,7 @@ function openNewMachinesTable() {
     <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 14px 0;flex-shrink:0">
       <!-- top bar -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <button onclick="document.getElementById('_nmtable').remove()"
+        <button onclick="document.getElementById('_nmtable').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')"
           style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s"
           onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">‹</button>
         <div style="flex:1;min-width:0">
@@ -3679,6 +3597,7 @@ function openNewMachinesTable() {
     </div>`;
 
   document.body.appendChild(pg);
+  if (typeof updateTopbarTitle === 'function') updateTopbarTitle('new-machines');
 
   // render pagination
   const pagiEl = document.getElementById('_nmtable_pagi');

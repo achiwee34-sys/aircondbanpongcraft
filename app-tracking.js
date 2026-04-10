@@ -263,6 +263,7 @@ async function submitTicket() { // PATCH v67
   if (!prob)         { showFormError('nt-prob', 'กรุณาระบุอาการที่พบ'); hasError = true; }
 
   // ถ้ารูปยังโหลดไม่เสร็จ → รอแล้ว retry อัตโนมัติ (ไม่ blocking ผู้ใช้)
+  // FIX v23-sec3: guard _isSubmitting ก่อน retry เพื่อป้องกัน double-submit
   if (_photoLoading > 0) {
     const btn = document.getElementById('nt-submit-btn');
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ กำลังโหลดรูป...'; }
@@ -274,7 +275,7 @@ async function submitTicket() { // PATCH v67
         _photoLoading = 0; // force reset
         if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" style="margin-right:6px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>ส่งงานแจ้งซ่อม`; }
         if (timedOut) { showToast('⚠️ โหลดรูปช้า — ส่งงานโดยไม่รอรูปบางรูป'); }
-        submitTicket();
+        if (!_isSubmitting) submitTicket(); // guard: ป้องกัน double-submit ถ้า user กดซ้ำระหว่างรอ
       }
     }, 200);
     return;
@@ -914,7 +915,7 @@ function confirmSavePOForm() {
     <div style="background:#fff7ed;border-bottom:1px solid #fed7aa;padding:10px 18px;display:flex;align-items:center;gap:8px">
       <span style="font-size:0.95rem">❄️</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.75rem;font-weight:700;color:#92400e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.machine||'—'}</div>
+        <div style="font-size:0.75rem;font-weight:700;color:#92400e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.machine||'—')}</div>
         ${serial?`<div style="font-size:0.65rem;color:#c2410c;font-family:'JetBrains Mono',monospace;font-weight:700">${serial}</div>`:''}
       </div>
       <div style="font-size:0.65rem;color:#94a3b8">${nowStr().slice(0,10)}</div>
@@ -1957,9 +1958,9 @@ function openRepairManager() {
   const renderGroupList = () => {
     const totalItems = db.repairGroups.reduce((s,g)=>s+(g.items?.length||0),0);
     page.innerHTML = `
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:12px 16px 16px;flex-shrink:0">
+      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:14px 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-          <button onclick="document.getElementById('_rm_page').remove()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
+          <button onclick="document.getElementById('_rm_page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
             <div style="color:white;font-size:1rem;font-weight:900;letter-spacing:-0.01em">จัดการรายการงาน</div>
             <div style="color:rgba(255,255,255,.5);font-size:0.65rem;margin-top:3px">${db.repairGroups.length} หมวด · ${totalItems} รายการ</div>
@@ -2165,6 +2166,7 @@ function openRepairManager() {
 
   render();
   document.body.appendChild(page);
+  if (typeof updateTopbarTitle === 'function') updateTopbarTitle('repair-manager');
 }
 function addRepairItem(sel) {
   const val = sel.value; if(!val) return;
@@ -2431,7 +2433,7 @@ function openCompleteSheet(tid) {
         <div style="flex:1;min-width:0">
           <div style="font-size:0.82rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
           <div style="font-size:0.65rem;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            ❄️ ${t.machine||'—'}${_csBtu?' · 🌡️ '+_csBtu:''}${_csDept?' · 🏢 '+_csDept:''}
+            ❄️ ${escapeHtml(t.machine||'—')}${_csBtu?' · 🌡️ '+_csBtu:''}${_csDept?' · 🏢 '+_csDept:''}
           </div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
@@ -2576,6 +2578,9 @@ function openCompleteSheet(tid) {
         } catch(e) { console.warn('[photo resolve]', e); return src; }
       })).then(resolvedArr => {
         pendingPhotos.before = resolvedArr.filter(s => s && !s.startsWith('fs:'));
+      }).catch(err => {
+        console.warn('[openCompleteSheet] resolve reporter photos failed:', err);
+        pendingPhotos.before = [...reporterPhotos]; // fallback: ใช้ fs: key เดิม
       });
       // แสดง info badge
       let infoBadge = document.getElementById('c-before-info');
@@ -2839,7 +2844,7 @@ function openVerifySheet(tid) {
       </tr>
       <tr style="border-bottom:1px solid #f1f5f9">
         <td style="padding:6px 0;color:#94a3b8;font-weight:600">ช่างผู้ซ่อม</td>
-        <td style="padding:6px 0;color:#0f172a;font-weight:700">${t.assignee||'—'}</td>
+        <td style="padding:6px 0;color:#0f172a;font-weight:700">${escapeHtml(t.assignee||'—')}</td>
       </tr>
       ${t.cost ? `<tr style="border-bottom:1px solid #f1f5f9">
         <td style="padding:6px 0;color:#94a3b8;font-weight:600">ค่าใช้จ่าย</td>
@@ -2906,7 +2911,7 @@ function openCloseConfirmSheet(tid) {
   document.getElementById('cc-tid').value = tid;
   document.getElementById('cc-info').innerHTML = `
     <div style="font-weight:700;font-size:0.95rem;color:var(--text)">${t.id} — ${escapeHtml(t.problem)}</div>
-    <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">❄️ ${t.machine} &nbsp;·&nbsp; 🔧 ${t.assignee||'—'}</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">❄️ ${escapeHtml(t.machine||'—')} &nbsp;·&nbsp; 🔧 ${escapeHtml(t.assignee||'—')}</div>
     ${t.cost?`<div style="color:var(--ok);font-weight:700;margin-top:4px">฿${Number(t.cost).toLocaleString()}</div>`:''}
   `;
   openSheet('closeconfirm');
@@ -3163,7 +3168,7 @@ function openDetail(tid) {
         <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">👤 ผู้แจ้ง</div>
         <div style="font-size:0.8rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.reporter||'—')}</div>
         <div style="font-size:0.62rem;color:#64748b;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(_dept)}</div>
-        ${t.contact?`<a href="tel:${t.contact}" style="font-size:0.62rem;color:#3b82f6;font-weight:600;text-decoration:none;display:block;margin-top:1px">📞 ${t.contact}</a>`:''}
+        ${t.contact?`<a href="tel:${escapeHtml(t.contact)}" style="font-size:0.62rem;color:#3b82f6;font-weight:600;text-decoration:none;display:block;margin-top:1px">📞 ${escapeHtml(t.contact)}</a>`:''}
       </div>
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px">
         <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">🔧 ช่าง</div>
@@ -3235,28 +3240,42 @@ function openDetail(tid) {
       </div>
     </div>`:''}\
 
-    <!-- Photos -->
+    <!-- Photos — side-by-side compare -->
     ${hasBefore||hasAfter?`
     <div style="margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
-        <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📷 รูปภาพ</span>
+        <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📷 รูปภาพเปรียบเทียบ</span>
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
       </div>
-      ${hasBefore?`<div style="margin-bottom:8px">
-        <div class="photo-section-label" style="color:#b45309">
-          <span class="lbl-dot" style="background:#f59e0b"></span>ก่อนซ่อม
-          <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosBefore.length} รูป)</span>
-        </div>
-        <div class="photo-grid">${t.photosBefore.map((p,i)=>`<div class="photo-grid-item${t.photosBefore.length===1?' photo-wide':''}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join('')}</div>
-      </div>`:''}
-      ${hasAfter?`<div>
-        <div class="photo-section-label" style="color:#15803d">
-          <span class="lbl-dot" style="background:#22c55e"></span>หลังซ่อม
-          <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
-        </div>
-        <div class="photo-grid">${t.photosAfter.map((p,i)=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" style="position:relative" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div></div>`).join('')}</div>
-      </div>`:''}
+      <div style="display:grid;grid-template-columns:${hasBefore&&hasAfter?'1fr 1fr':'1fr'};gap:8px;align-items:start">
+        ${hasBefore?`
+        <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:6px 10px;display:flex;align-items:center;gap:5px">
+            <span style="font-size:0.7rem">🔴</span>
+            <span style="font-size:0.65rem;font-weight:800;color:white;letter-spacing:.04em">ก่อนซ่อม</span>
+            <span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:1px 6px;font-size:0.55rem;font-weight:700;margin-left:auto">${t.photosBefore.length} รูป</span>
+          </div>
+          <div style="padding:6px">
+            <div style="display:grid;grid-template-columns:${t.photosBefore.length===1?'1fr':'1fr 1fr'};gap:4px">
+              ${t.photosBefore.map((p,i)=>`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div></div>`).join('')}
+            </div>
+          </div>
+        </div>`:''}
+        ${hasAfter?`
+        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:6px 10px;display:flex;align-items:center;gap:5px">
+            <span style="font-size:0.7rem">🟢</span>
+            <span style="font-size:0.65rem;font-weight:800;color:white;letter-spacing:.04em">หลังซ่อม</span>
+            <span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:1px 6px;font-size:0.55rem;font-weight:700;margin-left:auto">${t.photosAfter.length} รูป</span>
+          </div>
+          <div style="padding:6px">
+            <div style="display:grid;grid-template-columns:${t.photosAfter.length===1?'1fr':'1fr 1fr'};gap:4px">
+              ${t.photosAfter.map((p,i)=>`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div></div>`).join('')}
+            </div>
+          </div>
+        </div>`:''}
+      </div>
     </div>`:''}\
 
     <!-- Timeline -->
@@ -3349,7 +3368,7 @@ function openDetail(tid) {
       acts.push(`<button class="btn btn-full" style="background:linear-gradient(135deg,#16a34a,#15803d);color:white;-webkit-tap-highlight-color:transparent" ontouchstart="this.style.opacity='0.8'" ontouchend="this.style.opacity='1'" onclick="closeSheet('detail');setTimeout(()=>markPartsArrivedAndNotify('${t.id}'),200)">📦 ของมาถึงแล้ว — ยืนยันรับอะไหล่</button>`);
     }
     if (t.status==='waiting_part' && t.assigneeId) {
-      acts.push(`<button class="btn btn-ghost btn-full" style="color:#0369a1;border-color:#bae6fd;background:#f0f9ff" onclick="closeSheet('detail');openChat('${t.id}','${t.assigneeId}')">💬 แชทกับช่าง — ${t.assignee||'ช่าง'}</button>`);
+      acts.push(`<button class="btn btn-ghost btn-full" style="color:#0369a1;border-color:#bae6fd;background:#f0f9ff" onclick="closeSheet('detail');openChat('${t.id}','${t.assigneeId}')">💬 แชทกับช่าง — ${escapeHtml(t.assignee||'ช่าง')}</button>`);
     }
   }
   if (CU.role==='tech' && t.assigneeId===CU.id && t.status==='waiting_part') {
@@ -3505,7 +3524,19 @@ function refreshPage() {
 // ADMIN TRACKING DASHBOARD
 // ============================================================
 function renderTracking() {
-  const T = db.tickets;
+  // FIX v23-track1: ถ้า Firebase ยังไม่พร้อม → แสดง loading + retry อัตโนมัติ
+  const _el = document.getElementById('tracking-content');
+  if (typeof _firebaseReady !== 'undefined' && !_firebaseReady && _el) {
+    _el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#94a3b8">
+      <div style="font-size:2rem;margin-bottom:10px">&#9203;</div>
+      <div style="font-size:0.85rem;font-weight:600">กำลังเชื่อมต่อ Firebase...</div>
+      <div style="font-size:0.72rem;margin-top:4px">ข้อมูลจะโหลดอัตโนมัติ</div>
+    </div>`;
+    setTimeout(() => { if (typeof renderTracking === 'function') renderTracking(); }, 1500);
+    setTimeout(() => { if (typeof renderTracking === 'function') renderTracking(); }, 4000);
+    return;
+  }
+  const T = db.tickets || [];
   const daysSince = (d) => {
     if (!d) return 0;
     return Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
@@ -3560,7 +3591,7 @@ function renderTracking() {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
-            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">❄️ ${t.machine}</div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">❄️ ${escapeHtml(t.machine||'—')}</div>
             <div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
               ${prBadge}${poBadge}
             </div>
@@ -3568,11 +3599,11 @@ function renderTracking() {
           ${ageBadge(ds)}
         </div>
         ${t.waitPart ? `<div style="background:#fff3e0;border-radius:8px;padding:8px;font-size:0.78rem;color:var(--text);margin-bottom:8px">
-          <span style="color:#e65100;font-weight:600">อะไหล่:</span> ${t.waitPart.items}
+          <span style="color:#e65100;font-weight:600">อะไหล่:</span> ${escapeHtml(t.waitPart.items||'')}
           ${t.waitPart.price ? `<span style="color:#e65100;font-family:'JetBrains Mono',monospace;margin-left:8px">฿${Number(t.waitPart.price).toLocaleString()}</span>` : ''}
         </div>` : ''}
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <div style="font-size:0.72rem;color:var(--muted)">🔧 ${t.assignee||'ยังไม่จ่ายงาน'}</div>
+          <div style="font-size:0.72rem;color:var(--muted)">🔧 ${escapeHtml(t.assignee||'ยังไม่จ่ายงาน')}</div>
           <div style="display:flex;gap:6px;flex-shrink:0">
             ${CU&&CU.role==='admin' ? `
             <button onclick="event.stopPropagation();closeSheet('detail');setTimeout(()=>openPOForm('${t.id}'),200)"
@@ -3611,8 +3642,8 @@ function renderTracking() {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
           <div style="flex:1;overflow:hidden">
             <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">❄️ ${t.machine}</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">🔧 ${t.assignee||'ยังไม่จ่ายงาน'}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">❄️ ${escapeHtml(t.machine||'—')}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">🔧 ${escapeHtml(t.assignee||'ยังไม่จ่ายงาน')}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
             ${ageBadge(ds)}
@@ -3635,7 +3666,7 @@ function renderTracking() {
       <div style="display:flex;align-items:center;gap:8px">
         <div style="flex:1;overflow:hidden">
           <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
-          <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">❄️ ${t.machine} • 🔧 ${t.assignee||''}</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">❄️ ${escapeHtml(t.machine||'—')} • 🔧 ${escapeHtml(t.assignee||'')}</div>
           ${t.summary?`<div style="font-size:0.78rem;color:#2e7d32;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml((t.summary||"").split("\n")[0].replace(/^[-–]\s*/,""))}</div>`:''}
         </div>
         <button class="btn btn-ok btn-xs" onclick="event.stopPropagation();doAdminClose('${t.id}')">🔒 ปิดงาน</button>
@@ -3870,7 +3901,7 @@ function renderCalDayPanel(dateStr) {
       <div style="display:flex;align-items:center;gap:8px;background:white;border-radius:10px;padding:8px 10px;margin-bottom:6px;border-left:3px solid ${stColor[t.status]||'#ccc'};cursor:pointer" onclick="openTicketSheet('${t.id}')">
         <div style="flex:1;min-width:0">
           <div style="font-size:0.8rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(t.problem)}</div>
-          <div style="font-size:0.68rem;color:var(--muted)">${t.machine||''}</div>
+          <div style="font-size:0.68rem;color:var(--muted)">${escapeHtml(t.machine||'')}</div>
         </div>
         <span style="font-size:0.65rem;font-weight:700;color:${stColor[t.status]};white-space:nowrap">${stTH[t.status]||t.status}</span>
       </div>`).join('');

@@ -2736,6 +2736,10 @@ async function initApp() {
             }
           }
           refreshPage();
+          // FIX v23-track6: ถ้า admin อยู่หน้า tracking อยู่แล้วตอน fsLoad เสร็จ → re-render ทันที
+          if (CU?.role === 'admin' && document.querySelector('.page.active')?.id === 'pg-tracking') {
+            if (typeof renderTracking === 'function') renderTracking();
+          }
           updateOpenBadge();
           updateNBadge();
           // ── BUG FIX: reset retry counter แล้ว populate — ป้องกัน retry timer ค้าง ──
@@ -2765,6 +2769,9 @@ const _PAGE_LABELS = {
     'settings': {title:'ตั้งค่า', sub:'โปรไฟล์และระบบ'},
     'chatroom': {title:'แชทรวม', sub:'ข้อความทุก TK'},
     'executive': {title:'Executive Dashboard', sub:'ภาพรวมผู้บริหาร'},
+    'repair-manager': {title:'จัดการรายการงาน', sub:'หมวดหมู่และราคา'},
+    'machine-requests': {title:'คำขอเพิ่มเครื่องแอร์', sub:'Admin อนุมัติ / ปฏิเสธ'},
+    'new-machines': {title:'เครื่องแอร์เพิ่มใหม่', sub:'2 เดือนล่าสุด'},
   };
 
 function updateTopbarTitle(page) {
@@ -3056,7 +3063,14 @@ function goPage(name) {
     }
     else if (name === 'mywork') renderMyWork();
     else if (name === 'tracking') {
-      if (CU?.role === 'admin') renderTracking();
+      if (CU?.role === 'admin') {
+        renderTracking();
+        // FIX v23-track5: retry ถ้า Firebase ยังไม่พร้อม (เหมือน users/new)
+        if (typeof _firebaseReady !== 'undefined' && !_firebaseReady) {
+          setTimeout(() => { if (document.querySelector('.page.active')?.id === 'pg-tracking') renderTracking(); }, 1500);
+          setTimeout(() => { if (document.querySelector('.page.active')?.id === 'pg-tracking') renderTracking(); }, 4000);
+        }
+      }
       else renderMyWork();
     }
     else if (name === 'purchase') { renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order'); }
