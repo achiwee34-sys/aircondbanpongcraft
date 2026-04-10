@@ -809,10 +809,27 @@ function openPOForm(tid) {
   const purPage = document.getElementById('pg-purchase');
   const purActive = purPage && purPage.classList.contains('active');
   if (purActive) {
-    showPOPanel();
+    // อยู่หน้า purchase อยู่แล้ว — ตรวจว่า renderPurchaseAdmin วิ่งแล้วหรือยัง
+    const lp = document.getElementById('pur-list-panel');
+    const pp = document.getElementById('pur-po-panel');
+    if (lp && pp) {
+      showPOPanel();
+    } else {
+      setTimeout(showPOPanel, 150);
+    }
   } else {
     goPage('purchase');
-    setTimeout(showPOPanel, 80); // รอให้ page switch เสร็จก่อน
+    // รอ page switch + renderPurchaseAdmin() เสร็จก่อน (เพิ่มจาก 80ms → 300ms)
+    setTimeout(() => {
+      const lp = document.getElementById('pur-list-panel');
+      const pp = document.getElementById('pur-po-panel');
+      if (lp && pp) {
+        showPOPanel();
+      } else {
+        // retry อีกครั้งถ้า DOM ยังไม่พร้อม
+        setTimeout(showPOPanel, 200);
+      }
+    }, 300);
   }
 }
 function savePODraft() {
