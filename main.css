@@ -1604,9 +1604,46 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 .pmplan-tab-btn { flex-shrink: 0; padding: 7px 14px; border: 1.5px solid #e2e8f0; background: white; font-family: inherit; font-size: 0.72rem; font-weight: 700; color: #64748b; border-radius: 10px; cursor: pointer; transition: all 0.18s; }
 .pmplan-tab-btn.active { background: #0369a1; color: white; border-color: #0369a1; }
 
-/* ── Safe area fixes ── */
-#machine-sheet { max-height: calc(min(94dvh, 94vh) - env(safe-area-inset-top, 0px)); }
-#machine-sheet > .sheet-handle { margin-top: calc(env(safe-area-inset-top, 0px) + 10px); }
+/* ── machine-sheet: full-screen overlay ใต้ topbar (แทน bottom sheet) ── */
+#machine-overlay.open {
+  display: block;
+  top: calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));
+  bottom: calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)));
+  z-index: 9200;
+}
+#machine-sheet {
+  position: fixed !important;
+  top: calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px))) !important;
+  bottom: calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px))) !important;
+  left: 0 !important;
+  right: 0 !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  width: 100% !important;
+  border-radius: 0 !important;
+  transform: none !important;
+  z-index: 9201 !important;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+  animation: none;
+}
+#machine-sheet.open {
+  display: flex !important;
+  transform: none !important;
+}
+#machine-sheet > .sheet-handle { display: none; }
+#machine-sheet #ms-title { border-radius: 0 !important; }
+@media (min-width: 768px) {
+  #machine-sheet {
+    max-width: 640px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+  #machine-sheet.open { transform: translateX(-50%) !important; }
+}
 /* #pg-users button / #users-list rules consolidated above — ดู Bug1-fix section */
 
 /* ── Redesigned sheets: scrollable body ── */

@@ -3017,6 +3017,25 @@ function goPage(name) {
     return;
   }
 
+  // ── Login guard: หน้าที่ต้อง Login ──
+  const _PUBLIC_PAGES = ['home', 'login'];
+  if (!CU && !_PUBLIC_PAGES.includes(name)) {
+    // ย้อนกลับหน้าเก่า
+    const revert = document.getElementById('pg-' + name);
+    if (revert) revert.classList.remove('active');
+    _activePage = 'home';
+    const homePg = document.getElementById('pg-home');
+    if (homePg) homePg.classList.add('active');
+    const pageLabels = {
+      tickets:'งาน / Ticket', new:'แจ้งงานใหม่', tracking:'ติดตามงาน',
+      mywork:'งานของฉัน', purchase:'สั่งซื้อ', report:'รายงาน',
+      users:'ผู้ใช้งาน', machines:'เครื่อง', calendar:'ปฏิทิน',
+      chatroom:'แชท', settings:'ตั้งค่า', executive:'สรุปผู้บริหาร'
+    };
+    showLoginRequired(pageLabels[name] || name);
+    return;
+  }
+
   // หน้าอื่น: render ใน rAF
   requestAnimationFrame(() => {
     if (name === 'home') renderHome();
@@ -3363,6 +3382,65 @@ function showToast(msg, type) {
     el.style.opacity = '0';
     el.style.transform = 'translateX(16px)';
   }, 2500);
+}
+
+// ── showLoginRequired — popup dialog เมื่อกดปุ่มโดยยังไม่ได้ login ──
+function showLoginRequired(actionLabel) {
+  const existing = document.getElementById('_login_required_modal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = '_login_required_modal';
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:99999;
+    background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    animation:_lrFadeIn 0.18s ease;
+  `;
+
+  const actionText = actionLabel ? `<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;background:#f8fafc;border-radius:8px;padding:8px 12px;border-left:3px solid #c8102e">
+      กำลังจะ: <strong style="color:#0f172a">${actionLabel}</strong>
+    </div>` : '';
+
+  overlay.innerHTML = `
+    <style>@keyframes _lrFadeIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}</style>
+    <div style="background:white;border-radius:20px;padding:28px 24px 20px;max-width:320px;width:100%;
+      box-shadow:0 20px 60px rgba(0,0,0,0.25);text-align:center;position:relative;">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#c8102e,#991b1b);border-radius:16px;
+        display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 6px 16px rgba(200,16,46,0.3)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div style="font-size:1.1rem;font-weight:900;color:#0f172a;margin-bottom:6px">ต้องเข้าสู่ระบบก่อน</div>
+      <div style="font-size:0.82rem;color:#64748b;line-height:1.5;margin-bottom:16px">
+        กรุณา Login ด้วยบัญชีของคุณเพื่อใช้งานระบบ
+      </div>
+      ${actionText}
+      <div style="display:flex;gap:8px">
+        <button onclick="document.getElementById('_login_required_modal').remove()"
+          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;
+            font-size:0.85rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit;transition:all 0.15s"
+          onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+          ยกเลิก
+        </button>
+        <button onclick="document.getElementById('_login_required_modal').remove();document.getElementById('login-screen').style.display='flex';"
+          style="flex:1;padding:11px;border-radius:12px;border:none;
+            background:linear-gradient(135deg,#c8102e,#991b1b);
+            font-size:0.85rem;font-weight:700;color:white;cursor:pointer;font-family:inherit;
+            box-shadow:0 4px 12px rgba(200,16,46,0.35);transition:all 0.15s"
+          onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          🔑 เข้าสู่ระบบ
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Close on backdrop click
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+  document.body.appendChild(overlay);
 }
 
 // ── showAlert — confirmation modal กลางจอ (ใช้แทน alert()) ──

@@ -1556,13 +1556,13 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
           : ''}
         ${canVerify?`<button class="btn btn-xs" style="background:#2e7d32;color:white;font-size:0.63rem" onclick="openVerifySheet('${t.id}')">ตรวจรับ</button>`:''}
         ${canClose?`<button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="doClose('${t.id}')">ปิดงาน</button>`:''}
-        ${['done','verified','closed'].includes(t.status) && CU.role !== 'tech'
-          ?`<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 รายงาน</button>`
+        ${['done','verified','closed'].includes(t.status)
+          ?`<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem;display:flex;align-items:center;gap:3px" onclick="openQuotationByRole('${t.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>📄 รายงาน</button>`
           : ''}
       </div>`:`<div class="tk-actions" style="padding:6px 12px 10px">
         <button class="btn btn-ghost btn-xs" style="font-size:0.63rem" onclick="safeOpenDetail('${t.id}')">ดูรายละเอียด</button>
-        ${CU.role==='reporter' && ['done','verified','closed'].includes(t.status)
-          ? `<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem" onclick="openQuotationByRole('${t.id}')">📄 รายงาน</button>`
+        ${['done','verified','closed'].includes(t.status)
+          ? `<button class="btn btn-ghost btn-xs" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-size:0.63rem;display:flex;align-items:center;gap:3px" onclick="openQuotationByRole('${t.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>📄 รายงาน</button>`
           : ''}
       </div>`}
     </div>

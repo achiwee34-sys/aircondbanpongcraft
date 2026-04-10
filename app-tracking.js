@@ -1357,7 +1357,7 @@ function openRepairPicker() {
   document.getElementById('_rp_ov')?.remove();
   const ov = document.createElement('div');
   ov.id = '_rp_ov';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#f0f2f5;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1);font-family:inherit';
+  ov.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)));left:0;right:0;z-index:10000;background:#f0f2f5;display:flex;flex-direction:column;animation:slideDown 0.25s cubic-bezier(0.32,0.72,0,1);font-family:inherit';
 
   const groups = _getRepairGroups();
   const selectedMap = {};
@@ -1927,7 +1927,7 @@ function openRepairManager() {
   document.getElementById('_rm_page')?.remove();
   const page = document.createElement('div');
   page.id = '_rm_page';
-  page.style.cssText = 'position:fixed;inset:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
+  page.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)));left:0;right:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideDown 0.25s cubic-bezier(0.32,0.72,0,1)';
 
   // init db.repairGroups จาก REPAIR_GROUPS ถ้ายังไม่มี
   if (!db.repairGroups || !db.repairGroups.length) {

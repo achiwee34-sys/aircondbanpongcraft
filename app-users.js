@@ -497,13 +497,77 @@ function downloadMachineQR(){var m=db.machines.find(function(x){return x.id===_m
 function drawQR(text,canvas){var size=canvas.width;var ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,size,size);var img=new Image();img.crossOrigin='anonymous';img.onload=function(){ctx.fillStyle='white';ctx.fillRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);};img.onerror=function(){ctx.fillStyle='#f3f4f6';ctx.fillRect(0,0,size,size);ctx.fillStyle='#374151';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.fillText('QR: '+text,size/2,size/2);};img.src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(text)+'&margin=0';}
 
 // ── QR Scanner ──
-var _qrStream=null,_qrInterval=null;
-function openQRScanner(){var modal=document.getElementById('qr-modal');modal.style.display='flex';var se=document.getElementById('qr-status');se.textContent='กำลังเริ่มกล้อง...';var prev=document.getElementById('qr-preview-img');if(prev)prev.style.display='none';var video=document.getElementById('qr-video');video.style.display='';if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){se.textContent='📷 ไม่มีกล้อง — กด "เลือกรูป"';return;}navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}}).then(function(s){_qrStream=s;video.srcObject=s;video.setAttribute('playsinline',true);video.play();se.textContent='ชี้กล้องไปที่ QR Code';_qrInterval=setInterval(function(){scanQRFrame(video,se);},300);}).catch(function(){se.textContent='📷 ไม่ได้รับสิทธิ์กล้อง';});}
+var _qrStream=null,_qrInterval=null,_qrDimRetry=0,_qrJsQRWait=0;
+function openQRScanner(){
+  if(typeof CU==='undefined'||!CU){if(typeof showLoginRequired==='function')showLoginRequired('สแกน QR Code');return;}
+  var modal=document.getElementById('qr-modal');modal.style.display='flex';
+  var se=document.getElementById('qr-status');se.textContent='กำลังเริ่มกล้อง...';
+  var prev=document.getElementById('qr-preview-img');if(prev)prev.style.display='none';
+  var video=document.getElementById('qr-video');video.style.display='';
+  _qrDimRetry=0;_qrJsQRWait=0;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    se.textContent='📷 ไม่มีกล้อง — กด "เลือกรูป"';return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
+    .then(function(s){
+      _qrStream=s;video.srcObject=s;video.setAttribute('playsinline',true);
+      video.onloadedmetadata=function(){
+        video.play();
+        se.textContent='ชี้กล้องไปที่ QR Code';
+        _qrInterval=setInterval(function(){scanQRFrame(video,se);},300);
+      };
+      setTimeout(function(){
+        if(!_qrInterval&&_qrStream){
+          video.play().catch(function(){});
+          se.textContent='ชี้กล้องไปที่ QR Code';
+          _qrInterval=setInterval(function(){scanQRFrame(video,se);},300);
+        }
+      },2000);
+    })
+    .catch(function(){se.textContent='📷 ไม่ได้รับสิทธิ์กล้อง — กด "เลือกรูป"';});
+}
 function triggerQRFilePicker(){var fi=document.getElementById('qr-file-input');if(fi){fi.value='';fi.click();}}
 function handleQRFileInput(input){var file=input.files[0];if(!file)return;var se=document.getElementById('qr-status');se.textContent='🔍 กำลังอ่าน QR...';var reader=new FileReader();reader.onload=function(ev){var img=new Image();img.onload=function(){var prev=document.getElementById('qr-preview-img');if(prev){prev.src=ev.target.result;prev.style.display='block';}var video=document.getElementById('qr-video');if(video)video.style.display='none';var canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height;canvas.getContext('2d').drawImage(img,0,0);var id=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);if('BarcodeDetector' in window){new BarcodeDetector({formats:['qr_code']}).detect(canvas).then(function(c){if(c.length>0)handleQRResult(c[0].rawValue);else _decodeWithJsQR(id,se);}).catch(function(){_decodeWithJsQR(id,se);});}else _decodeWithJsQR(id,se);};img.onerror=function(){se.textContent='❌ โหลดรูปไม่ได้';};img.src=ev.target.result;};reader.readAsDataURL(file);}
-function _decodeWithJsQR(imageData,se){if(typeof jsQR!=='function'){se.textContent='❌ อ่าน QR ไม่ได้';return;}var c=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'attemptBoth'});if(c)handleQRResult(c.data);else se.textContent='❌ ไม่พบ QR Code — ลองใหม่';}
-function scanQRFrame(video,se){if(!video.videoWidth||!video.videoHeight)return;var size=Math.min(video.videoWidth,video.videoHeight)*0.8;var sx=(video.videoWidth-size)/2;var sy=(video.videoHeight-size)/2;var canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;canvas.getContext('2d').drawImage(video,sx,sy,size,size,0,0,size,size);if('BarcodeDetector' in window){new BarcodeDetector({formats:['qr_code']}).detect(canvas).then(function(c){if(c.length>0)handleQRResult(c[0].rawValue);}).catch(function(){_scanWithJsQR(canvas,se);});return;}_scanWithJsQR(canvas,se);}
-function _scanWithJsQR(canvas,se){if(typeof jsQR!=='function'){if(se)se.textContent='⚠️ กำลังโหลด...';return;}var d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);var c=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});if(c)handleQRResult(c.data);}
+function _decodeWithJsQR(imageData,se){
+  if(typeof jsQR!=='function'){
+    if(window._jsQRFailed){se.textContent='❌ โหลด QR library ไม่ได้ — กรุณา Reload';return;}
+    _qrJsQRWait++;
+    if(_qrJsQRWait<10){setTimeout(function(){_decodeWithJsQR(imageData,se);},500);se.textContent='⏳ โหลด QR library...';}
+    else{se.textContent='❌ อ่าน QR ไม่ได้ — กรุณา Reload';}
+    return;
+  }
+  var c=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'attemptBoth'});
+  if(c)handleQRResult(c.data);else se.textContent='❌ ไม่พบ QR Code — ลองใหม่';
+}
+function scanQRFrame(video,se){
+  if(!video.videoWidth||!video.videoHeight){
+    _qrDimRetry++;
+    if(_qrDimRetry===7&&se)se.textContent='กล้องกำลังเริ่ม... หรือกด "เลือกรูป"';
+    return;
+  }
+  _qrDimRetry=0;
+  var size=Math.min(video.videoWidth,video.videoHeight)*0.8;
+  var sx=(video.videoWidth-size)/2;var sy=(video.videoHeight-size)/2;
+  var canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
+  canvas.getContext('2d').drawImage(video,sx,sy,size,size,0,0,size,size);
+  if('BarcodeDetector' in window){
+    new BarcodeDetector({formats:['qr_code']}).detect(canvas)
+      .then(function(c){if(c.length>0)handleQRResult(c[0].rawValue);})
+      .catch(function(){_scanWithJsQR(canvas,se);});
+    return;
+  }
+  _scanWithJsQR(canvas,se);
+}
+function _scanWithJsQR(canvas,se){
+  if(typeof jsQR!=='function'){
+    if(se&&!window._jsQRFailed)se.textContent='⏳ โหลด QR library...';
+    else if(se)se.textContent='❌ โหลด library ไม่ได้';
+    return;
+  }
+  var d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
+  var c=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});
+  if(c)handleQRResult(c.data);
+}
 function handleQRResult(text){closeQRScanner();var mid=text.trim();try{var p=JSON.parse(text);mid=p.id||p.machineId||text;}catch(e){}
 // ── BUG FIX #1: case-insensitive + รองรับ prefix เช่น "AIRCON:Pm1S001" ──
 var rawUp=(mid||'').toUpperCase();var cleanId=rawUp.includes(':')?rawUp.split(':').pop():rawUp;

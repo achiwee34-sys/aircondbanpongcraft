@@ -1850,9 +1850,9 @@ function renderPurchaseReporter() {
 // ════════════════════════════════════════════════
 function renderPurchaseAdmin() {
   const hb = document.getElementById('pur-header-bar');
-  // Bug 2 fix: force re-render เมื่อ pur-list ว่าง (หน้าเพิ่งเปิดหรือ switch กลับมา)
-  const listEmpty = !document.getElementById('pur-list')?.innerHTML?.trim();
-  if (hb && (!document.getElementById('pur-search') || listEmpty)) {
+  // Fix: render header เสมอเมื่อ pur-header-bar ว่าง (ไม่มี pur-search)
+  // แยก header render ออกจาก list render — ไม่ depend กัน
+  if (hb && !document.getElementById('pur-search')) {
     hb.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 0 10px">
         <div>
@@ -1882,8 +1882,18 @@ function renderPurchaseAdmin() {
           style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:11px;padding:9px 12px 9px 32px;font-size:0.78rem;font-family:inherit;outline:none;background:white;transition:border-color 0.2s"
           onfocus="this.style.borderColor='#e65100'" onblur="this.style.borderColor='#e2e8f0'"/>
       </div>`;
-    setPurFilter(_purFilter);
   }
+  // Always update filter tab styles inline (ไม่เรียก setPurFilter เพื่อป้องกัน recursive loop)
+  ['all','wait','po','done'].forEach(x => {
+    const btn = document.getElementById('pur-filter-'+x);
+    if (!btn) return;
+    const isActive = x === _purFilter;
+    const configs = {all:{c:'#e65100'},wait:{c:'#c2410c'},po:{c:'#7c3aed'},done:{c:'#166534'}};
+    btn.style.background  = isActive ? 'white' : 'transparent';
+    btn.style.color       = isActive ? configs[x].c : '#94a3b8';
+    btn.style.fontWeight  = isActive ? '800' : '600';
+    btn.style.boxShadow   = isActive ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
+  });
 
   // ── KPI ──
   // รวม ticket ที่: waiting_part+techRequest, หรือมี purchaseOrder (รวมถึง inprogress ที่รับของแล้ว)
@@ -2106,7 +2116,7 @@ function renderPurchaseAdmin() {
 
 function renderPurchaseTech() {
   const hb = document.getElementById('pur-header-bar');
-  if (hb && !document.getElementById('pur-tech-header')) {
+  if (hb && !hb.innerHTML.trim()) {  // render header เมื่อว่างเท่านั้น
     hb.innerHTML = `
       <div id="pur-tech-header" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <div style="flex:1">
