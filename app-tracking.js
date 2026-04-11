@@ -1987,13 +1987,13 @@ function openRepairManager() {
           </button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
-          <div style="background:rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;border:1px solid rgba(255,255,255,.18)">
+          <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:7px 12px;border:1px solid rgba(255,255,255,.18)">
             <div style="font-size:0.55rem;color:rgba(255,255,255,.55);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">หมวดหมู่</div>
-            <div style="font-size:1.6rem;font-weight:900;color:white;line-height:1">${db.repairGroups.length}</div>
+            <div style="font-size:1.2rem;font-weight:900;color:white;line-height:1">${db.repairGroups.length}</div>
           </div>
-          <div style="background:rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;border:1px solid rgba(255,255,255,.18)">
+          <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:7px 12px;border:1px solid rgba(255,255,255,.18)">
             <div style="font-size:0.55rem;color:rgba(255,255,255,.55);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">รายการทั้งหมด</div>
-            <div style="font-size:1.6rem;font-weight:900;color:white;line-height:1">${totalItems}</div>
+            <div style="font-size:1.2rem;font-weight:900;color:white;line-height:1">${totalItems}</div>
           </div>
         </div>
       </div>
@@ -2334,7 +2334,7 @@ function syncSummaryFromForm() {
   document.querySelectorAll('#c-refrig-list .c-refrig-row').forEach(row => {
     const type = row.querySelector('.c-ref-type')?.value;
     const kg   = row.querySelector('.c-ref-kg')?.value;
-    if (type) parts.push(`สารทำความเย็นและน้ำยาล้างระบบ ${type}${kg ? ' '+kg+'กก.' : ''}`);
+    if (type) parts.push(`น้ำยา ${type} (ต่อ กก.)${kg ? ' ×'+kg : ''}`);
   });
   if (parts.length) {
     sumEl.value = parts.map(s=>'- '+s).join('\n');
@@ -2703,8 +2703,17 @@ async function doComplete( /* PATCH v67 */) {
     return true;
   });
 
-  const repairStr = dedupedItems.join('\n');
-  const repairSet = new Set(dedupedItems.map(_normKey));
+  // น้ำยา → เพิ่มใน summary ด้วย (ไม่ใช่แค่ t.parts) เพื่อให้แสดงใน PDF quotation
+  const refrigLines = refrigPairs.map(r => {
+    // แปลง "R-410A 4กก." → "น้ำยา R-410A (ต่อ กก.) ×4"
+    const m = r.match(/^([R]-?\w+)\s*([\d.]+)?กก\.?$/i);
+    if (m) return `น้ำยา ${m[1]} (ต่อ กก.)${m[2] ? ' ×'+m[2] : ''}`;
+    return `น้ำยา ${r}`;
+  });
+  const allItems = [...dedupedItems, ...refrigLines];
+
+  const repairStr = allItems.join('\n');
+  const repairSet = new Set(allItems.map(_normKey));
 
   const sumEl = document.getElementById('c-sum');
   const wasAutoFilled = sumEl?.dataset?.autoFilled === '1';

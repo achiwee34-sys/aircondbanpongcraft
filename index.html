@@ -689,13 +689,36 @@ function liffMenu(action) {
     if (typeof _liffProfile !== 'undefined' && _liffProfile) {
       liffGoLogin();
     } else {
-      _lsToast('⚠️ กรุณาเข้าสู่ระบบก่อนใช้งาน');
-      // Highlight form
+      // Show inline error in login form
+      if (typeof showLoginErr === 'function') {
+        showLoginErr('กรุณากรอก Username และ Password ก่อนใช้งาน');
+      } else {
+        const errEl = document.getElementById('lerr');
+        if (errEl) errEl.textContent = '⚠️ กรุณากรอก Username และ Password ก่อนใช้งาน';
+      }
+      // Shake & highlight inputs
+      const luEl = document.getElementById('lu');
+      const lpEl = document.getElementById('lp');
+      if (luEl && !luEl.value.trim()) {
+        luEl.style.borderColor = '#c8102e';
+        luEl.style.boxShadow = '0 0 0 2px rgba(200,16,46,0.25)';
+        setTimeout(() => { luEl.style.borderColor = ''; luEl.style.boxShadow = ''; }, 1800);
+      }
+      if (lpEl && !lpEl.value.trim()) {
+        lpEl.style.borderColor = '#c8102e';
+        lpEl.style.boxShadow = '0 0 0 2px rgba(200,16,46,0.25)';
+        setTimeout(() => { lpEl.style.borderColor = ''; lpEl.style.boxShadow = ''; }, 1800);
+      }
+      // Highlight form box border & scroll into view
       const form = document.querySelector('.ls-form-box');
       if (form) {
         form.scrollIntoView({ behavior:'smooth', block:'center' });
         form.style.borderColor = 'rgba(200,16,46,.65)';
-        setTimeout(() => { if (form) form.style.borderColor = ''; }, 900);
+        setTimeout(() => { if (form) form.style.borderColor = ''; }, 1500);
+      }
+      if (typeof shakeLoginInput === 'function') {
+        shakeLoginInput('lu');
+        shakeLoginInput('lp');
       }
     }
     return;

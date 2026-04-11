@@ -868,6 +868,20 @@ function formatItemName(name, realBTU) {
   });
 }
 
+// PDF-safe item name formatter:
+// - น้ำยา/สารทำความเย็น → ไม่ใส่ขนาด BTU
+// - ชื่อมี "ขนาด X,XXX BTU" แล้ว → ไม่ format ซ้ำ
+// - ชื่อมี K-range → แปลงเป็น BTU จริงถ้ามี
+function fmtPDFItemName(name, realBTU) {
+  if (!name) return name;
+  // น้ำยา/สารทำความเย็น → ไม่ต้องใส่ขนาด BTU
+  if (/น้ำยา|สารทำความเย็น|R-22|R-32|R-410|R-407|R-134|R-141/i.test(name)) return name;
+  // ชื่อมี "ขนาด X,XXX BTU" อยู่แล้ว → ไม่ format ซ้ำ
+  if (/ขนาด\s*[\d,]+\s*BTU/i.test(name)) return name;
+  // มี K-range → ใช้ formatItemName ปกติ
+  return formatItemName(name, realBTU);
+}
+
 // เลือก tier ราคาตาม BTU จริง — คืนชื่อ key ที่ตรง
 function getRepairKeyByBTU(baseName, btu) {
   if(!btu || btu <= 0) return null;
@@ -971,8 +985,9 @@ async function viewQuotationFull(tid) {
   const _pdfNormKey = s => s
     .trim()
     .replace(/^[-\s•×\d]+/, '')
-    .replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi, '')
+    .replace(/\s*ขนาด\s*[\d,–\-,]+\s*BTU/gi, '')
     .replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi, '')
+    .replace(/\s*\d+(?:\.\d+)?K\b/gi, '')
     .replace(/\s*[×xX]\d+\s*$/, '')
     .replace(/\s+/g, ' ')
     .toLowerCase()
@@ -1056,7 +1071,7 @@ async function viewQuotationFull(tid) {
     return '<tr>'
       +'<td style="padding:8px 4px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:9pt">'+(i+1)+'</td>'
       +'<td style="padding:8px 8px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:8pt;color:#555">—</td>'
-      +'<td style="padding:8px 10px;border-right:1px solid #ddd;border-bottom:1px solid #eee;font-size:9pt">'+_esc(formatItemName(r.name, machine&&machine.btu?Number(machine.btu):0))+'</td>'
+      +'<td style="padding:8px 10px;border-right:1px solid #ddd;border-bottom:1px solid #eee;font-size:9pt">'+_esc(fmtPDFItemName(r.name, machine&&machine.btu?Number(machine.btu):0))+'</td>'
       +'<td style="padding:8px 4px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:9pt">'+(r.qty>0?Number(r.qty).toFixed(2):'—')+'</td>'
       +'<td style="padding:8px 4px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:8.5pt">'+_esc(r.unit)+'</td>'
       +'<td style="padding:8px 6px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:right;font-size:9pt">'+(r.price>0?Number(r.price).toLocaleString('en-US',{minimumFractionDigits:2}):'—')+'</td>'
@@ -1370,8 +1385,9 @@ async function generateRepairPDF(tid) {
   const _quotNormKey = s => s
     .trim()
     .replace(/^[-\s•×\d]+/, '')
-    .replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi, '')
-    .replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi, '')
+    .replace(/\s*ขนาด\s*[\d,–\-,]+\s*BTU/gi, '')   // ตัด "ขนาด X,XXX BTU" และ "ขนาด X,XXX–Y,YYY BTU"
+    .replace(/\s*\d+(?:\.\d+)?K\s*[-–—~]\s*\d+(?:\.\d+)?K/gi, '')  // ตัด K-range
+    .replace(/\s*\d+(?:\.\d+)?K\b/gi, '')            // ตัด single K
     .replace(/\s*[×xX]\d+\s*$/, '')
     .replace(/\s+/g, ' ')
     .toLowerCase()
@@ -1514,6 +1530,21 @@ async function generateRepairPDF(tid) {
     return txt;
   };
 
+  // ── resolve photosBefore / photosAfter FS keys → URLs before rendering ──
+  const _resolvePhotos = async (arr, tid) => {
+    if (!arr || !arr.length) return [];
+    const resolved = await Promise.all(arr.map(p => {
+      if (!p) return Promise.resolve(null);
+      if (typeof resolvePhotoUrl === 'function') return resolvePhotoUrl(p, tid).catch(()=>null);
+      return Promise.resolve(p);
+    }));
+    return resolved.filter(Boolean);
+  };
+  if ((t.photosBefore||[]).some(p=>p&&p.startsWith('fs:')))
+    t.photosBefore = await _resolvePhotos(t.photosBefore, t.id);
+  if ((t.photosAfter||[]).some(p=>p&&p.startsWith('fs:')))
+    t.photosAfter  = await _resolvePhotos(t.photosAfter,  t.id);
+
   // ── helpers for old html template ──
   var _esc = escapeHtml; // REFACTOR (audit #8): use global escapeHtml instead of local duplicate
 
@@ -1650,7 +1681,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
       <tr>
         <td style="padding:8px 6px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:9pt">${i+1}</td>
         <td style="padding:8px 8px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:8pt;color:#555">${String(i+1).padStart(2,'0')}-${String(Math.floor(Math.random()*900)+100)}</td>
-        <td style="padding:8px 10px;border-right:1px solid #ddd;border-bottom:1px solid #eee;font-size:9pt">${formatItemName(r.name, machine&&machine.btu?Number(machine.btu):0)||'—'}</td>
+        <td style="padding:8px 10px;border-right:1px solid #ddd;border-bottom:1px solid #eee;font-size:9pt">${fmtPDFItemName(r.name, machine&&machine.btu?Number(machine.btu):0)||'—'}</td>
         <td style="padding:8px 6px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:9pt">${r.qty>0?Number(r.qty).toLocaleString('en-US',{minimumFractionDigits:2}):'—'}</td>
         <td style="padding:8px 6px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:8.5pt">${r.unit||'JOB'}</td>
         <td style="padding:8px 8px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:right;font-size:9pt">${r.unitPrice>0?r.unitPrice.toLocaleString('en-US',{minimumFractionDigits:2}):'—'}</td>
@@ -1717,6 +1748,19 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
       </td>
     </tr>
   </table>
+
+  <!-- ══ PHOTOS BEFORE / AFTER ══ -->
+  ${(()=>{
+    const hasB = (t.photosBefore||[]).length > 0;
+    const hasA = (t.photosAfter||[]).length  > 0;
+    if (!hasB && !hasA) return '';
+    const mkCell = (arr, label, color) => {
+      if (!arr||!arr.length) return '<div style="flex:1;text-align:center;padding:10px;color:#9ca3af;font-size:8pt;background:#f8fafc;border-radius:8px">— ไม่มีรูป' + label + ' —</div>';
+      const imgs = arr.slice(0,3).map(p=>'<div style="flex:1;aspect-ratio:4/3;overflow:hidden;border-radius:6px;border:1.5px solid '+color+'30"><img src="'+p+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'"/></div>').join('');
+      return '<div style="flex:1"><div style="font-size:7.5pt;font-weight:800;color:'+color+';margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">'+label+'</div><div style="display:flex;gap:5px">'+imgs+'</div></div>';
+    };
+    return '<table style="width:100%;border-left:1.5px solid #333;border-right:1.5px solid #333;border-bottom:none;font-size:8.5pt" cellpadding="0" cellspacing="0"><tr><td style="padding:10px 12px"><div style="font-weight:800;font-size:9pt;margin-bottom:8px;border-bottom:1px solid #e5e7eb;padding-bottom:5px">📷 รูปถ่าย (ก่อน / หลังซ่อม)</div><div style="display:flex;gap:14px">' + mkCell(t.photosBefore,'ก่อนซ่อม','#ef4444') + mkCell(t.photosAfter,'หลังซ่อม','#22c55e') + '</div></td></tr></table>';
+  })()}
 
   <!-- ══ SIGNATURES ══ -->
   <table style="width:100%;border:1.5px solid #333;font-size:8.5pt;border-collapse:collapse" cellpadding="0" cellspacing="0">
