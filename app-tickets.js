@@ -1525,7 +1525,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
             if (!p) return '';
             const _isFsKey = p.startsWith('fs:');
             return `<div onclick="event.stopPropagation();${_isFsKey?`_resolveAndLightbox(this)`:`openLightbox('${p}')`}" data-photo-key="${p}" data-tid="${t.id}" style="position:relative;flex-shrink:0;cursor:pointer">
-              <img src="${_isFsKey?'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #e5e7eb;${_isFsKey?'opacity:0':''}"/>
+              <img src="${_isFsKey?'about:blank':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #e5e7eb;${_isFsKey?'opacity:0':''}"/>
               ${_isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1rem">⏳</div>`:''}
               <div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,0.55);color:white;border-radius:3px;padding:0 4px;font-size:0.5rem;font-weight:700">ก่อน</div>
             </div>`;
@@ -1534,7 +1534,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
             if (!p) return '';
             const _isFsKey = p.startsWith('fs:');
             return `<div onclick="event.stopPropagation();${_isFsKey?`_resolveAndLightbox(this)`:`openLightbox('${p}')`}" data-photo-key="${p}" data-tid="${t.id}" style="position:relative;flex-shrink:0;cursor:pointer">
-              <img src="${_isFsKey?'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #86efac;${_isFsKey?'opacity:0':''}"/>
+              <img src="${_isFsKey?'about:blank':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #86efac;${_isFsKey?'opacity:0':''}"/>
               ${_isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1rem">⏳</div>`:''}
               <div style="position:absolute;top:2px;left:2px;background:rgba(22,163,74,0.75);color:white;border-radius:3px;padding:0 4px;font-size:0.5rem;font-weight:700">หลัง</div>
             </div>`;

@@ -3615,7 +3615,7 @@ function delMachine(id) {
     onOk: () => {
       db.machines = db.machines.filter(x => x.id !== id);
       saveDB();
-      if (typeof fsSave === 'function') fsSave(); // FIX v23-fix22: debounce
+      if (typeof fsSaveNow === 'function') fsSaveNow().catch(()=>{});
       window._macPage = 0;
       renderMachines(); populateMachineSelect();
       showToast('🗑️ ลบเครื่องแล้ว');

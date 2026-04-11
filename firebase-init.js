@@ -135,9 +135,10 @@ async function fsLoad() {
           !deletedIds.has(u.id)    // ← กัน local ด้วย
         );
         db.users = [...remoteUsers, ...localOnlyUsers];
-        // ── FIX v23-fix21: ใช้ fsSave() แทน fsSaveNow() → ผ่าน debounce 800ms ──
+        // ── FIX v23-fix19: เพิ่ม CU guard → ไม่ save ถ้ายังไม่มี app user ──
+        // fsLoad() อาจถูกเรียกก่อน login → CU ยังไม่มี → fsSaveNow() → transaction :commit 400
         if (localOnlyUsers.length > 0 && typeof CU !== 'undefined' && CU && CU.id) {
-          fsSave();
+          fsSaveNow().catch(() => {});
         }
       }
 
@@ -222,8 +223,7 @@ async function saveChatsFast() {
       updatedAt: new Date().toISOString()
     }, { merge: true });
   } catch(e) {
-    // ── FIX v23-fix21: ใช้ fsSave() แทน fsSaveNow() → ผ่าน debounce ──
-    if (typeof fsSave === 'function') fsSave();
+    try { await fsSaveNow(); } catch(e2) {}
   } finally {
     _fsChatSaving = false;
   }
@@ -461,8 +461,7 @@ async function fsListen() {
         // ถ้า remote มี deletedUser อยู่ → force save เพื่อลบออกจาก Firestore ด้วย
         const remoteHasDeleted = d.some(u => deletedIds.has(u.id));
         // FIX v23-fix14b: save เฉพาะเมื่อมี app user (CU) เท่านั้น
-        // ── FIX v23-fix21: ใช้ fsSave() แทน fsSaveNow() → ผ่าน debounce 800ms ──
-        if ((localOnly.length > 0 || remoteHasDeleted) && typeof CU !== 'undefined' && CU && CU.id) fsSave();
+        if ((localOnly.length > 0 || remoteHasDeleted) && typeof CU !== 'undefined' && CU && CU.id) fsSaveNow().catch(()=>{});
         return true;
       }
       const localArr = db[key];

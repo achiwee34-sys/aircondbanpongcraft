@@ -45,17 +45,6 @@ function syncDocVersion(data) {
 async function fsSaveWithLock(payload) {
   if (!_firebaseReady || !FSdb) return 'error';
 
-  // ── FIX v23-fix22: ตรวจ auth ก่อน write ──
-  // ถ้า firebase.auth().currentUser เป็น null → write จะ fail 400 ทันที
-  // รอให้ auth พร้อมก่อน (max 3s) เพื่อป้องกัน spurious :commit 400
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    const currentUser = firebase.auth().currentUser;
-    if (!currentUser) {
-      console.info('[ConflictGuard] auth not ready — skip write');
-      return 'error';
-    }
-  }
-
   const ref = FSdb.collection('appdata').doc('main');
 
   try {
