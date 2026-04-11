@@ -210,19 +210,7 @@ async function fsSaveNowSafe() {
       }
     }
 
-    // ── FIX v23-fix23: sanitize payload ก่อน write ──
-    // Firestore ไม่รองรับ: undefined, NaN, Infinity, circular refs
-    // ถ้ามี field เหล่านี้ → 400 Bad Request เงียบๆ
-    const _sanitize = (obj) => JSON.parse(JSON.stringify(obj, (k, v) => {
-      if (v === undefined) return null;
-      if (typeof v === 'number' && !isFinite(v)) return null;
-      return v;
-    }));
-    let _safePayload;
-    try { _safePayload = _sanitize(payload); }
-    catch(e) { console.warn('[ConflictGuard] payload sanitize failed:', e); _safePayload = payload; }
-
-    const result = await fsSaveWithLock(_safePayload);
+    const result = await fsSaveWithLock(payload);
 
     if (result === 'conflict') {
       await handleSaveConflict();
@@ -233,7 +221,7 @@ async function fsSaveNowSafe() {
       console.warn('[ConflictGuard] save error — falling back to direct set');
       // fallback: ใช้ .set() เดิม (ไม่มี lock แต่ดีกว่า fail เงียบ)
       if(window.bkCountWrite) window.bkCountWrite(1);
-      await FSdb.collection('appdata').doc('main').set(_safePayload);
+      await FSdb.collection('appdata').doc('main').set(payload);
     }
 
     // save signatures แยก (ถ้ามี)
