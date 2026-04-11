@@ -312,34 +312,48 @@ async function fsSaveNow() {
 
 // fire-and-forget save
 let _fsSaveFailCount = 0;
+// ── FIX v23-fix20: debounce fsSave 800ms ──
+// fsSave() ถูกเรียกทุก action → batch writes ที่ยิงติดกัน
+// ลด :commit requests จาก N ครั้งต่อ action เหลือ 1 ครั้งต่อ 800ms
+let _fsSaveDebounceTimer = null;
+const _FS_SAVE_DEBOUNCE_MS = 800;
+
 function fsSave() {
   // ── Offline Queue: ถ้าไม่มีอินเทอร์เน็ต ให้เก็บใน queue ──
   if (!navigator.onLine) {
     if (typeof offlineEnqueue === 'function') offlineEnqueue('fsSave', {ts: new Date().toISOString()});
     return;
   }
-  fsSaveNow().then(() => {
-    _fsSaveFailCount = 0;
-    // ซ่อน Firebase-offline banner ถ้าแสดงอยู่
-    const _fb = document.getElementById('_fb-offline-banner');
-    if (_fb) _fb.remove();
-  }).catch(e => {
-    _fsSaveFailCount++;
-    console.warn('[fsSave] fail #' + _fsSaveFailCount, e?.message || e);
-    if (_fsSaveFailCount >= 3) {
-      if (typeof showToast === 'function')
-        showToast('⚠️ Firebase sync ล้มเหลว — ข้อมูลอยู่ใน local เท่านั้น');
-      // แสดง persistent banner (ต่างจาก offline banner ปกติ — นี่คือ Firebase unreachable)
-      if (!document.getElementById('_fb-offline-banner')) {
-        const _b = document.createElement('div');
-        _b.id = '_fb-offline-banner';
-        _b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#92400e;color:white;font-size:0.72rem;font-weight:700;text-align:center;padding:6px 12px;display:flex;align-items:center;justify-content:center;gap:8px';
-        _b.innerHTML = '⚠️ Cloud sync ขัดข้อง — ข้อมูลบันทึก local เท่านั้น <button onclick="this.parentElement.remove();if(typeof forceReloadFromFS===\'function\')forceReloadFromFS()" style="margin-left:8px;background:rgba(255,255,255,0.2);border:none;border-radius:4px;color:white;padding:2px 8px;cursor:pointer;font-size:0.7rem">🔄 ลองใหม่</button>';
-        document.body.prepend(_b);
-      }
+  // ── Debounce: ยกเลิก timer เดิม แล้วเริ่มนับใหม่ ──
+  // ถ้ามีการเรียก fsSave() ซ้ำภายใน 800ms → merge เป็น write เดียว
+  if (_fsSaveDebounceTimer) {
+    clearTimeout(_fsSaveDebounceTimer);
+  }
+  _fsSaveDebounceTimer = setTimeout(() => {
+    _fsSaveDebounceTimer = null;
+    fsSaveNow().then(() => {
       _fsSaveFailCount = 0;
-    }
-  });
+      // ซ่อน Firebase-offline banner ถ้าแสดงอยู่
+      const _fb = document.getElementById('_fb-offline-banner');
+      if (_fb) _fb.remove();
+    }).catch(e => {
+      _fsSaveFailCount++;
+      console.warn('[fsSave] fail #' + _fsSaveFailCount, e?.message || e);
+      if (_fsSaveFailCount >= 3) {
+        if (typeof showToast === 'function')
+          showToast('⚠️ Firebase sync ล้มเหลว — ข้อมูลอยู่ใน local เท่านั้น');
+        // แสดง persistent banner (ต่างจาก offline banner ปกติ — นี่คือ Firebase unreachable)
+        if (!document.getElementById('_fb-offline-banner')) {
+          const _b = document.createElement('div');
+          _b.id = '_fb-offline-banner';
+          _b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#92400e;color:white;font-size:0.72rem;font-weight:700;text-align:center;padding:6px 12px;display:flex;align-items:center;justify-content:center;gap:8px';
+          _b.innerHTML = '⚠️ Cloud sync ขัดข้อง — ข้อมูลบันทึก local เท่านั้น <button onclick="this.parentElement.remove();if(typeof forceReloadFromFS===\'function\')forceReloadFromFS()" style="margin-left:8px;background:rgba(255,255,255,0.2);border:none;border-radius:4px;color:white;padding:2px 8px;cursor:pointer;font-size:0.7rem">🔄 ลองใหม่</button>';
+          document.body.prepend(_b);
+        }
+        _fsSaveFailCount = 0;
+      }
+    });
+  }, _FS_SAVE_DEBOUNCE_MS);
 }
 
 // ── Force reload จาก Firestore (ปุ่ม 🔄) ──

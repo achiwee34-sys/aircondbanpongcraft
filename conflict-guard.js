@@ -7,12 +7,22 @@
 //
 // วิธีแก้: Optimistic Locking ด้วย _docVersion
 //   1. โหลดข้อมูล → จำ _docVersion ที่ได้มา
-//   2. ก่อน save → runTransaction() ตรวจว่า version ยังตรงไหม
+//   2. ก่อน save → ตรวจ version กับ remote (ด้วย .get() ก่อน)
 //   3. ถ้า version เปลี่ยน → มีคนอื่น save ไปก่อน → reload แล้วแจ้ง user
-//   4. ถ้า version ตรง → save พร้อม bump version + 1
+//   4. ถ้า version ตรง → save ด้วย .set() ตรงๆ (ไม่ใช้ transaction)
+//
+// ── FIX v23-fix20: ลด HTTP requests ──
+// เดิม: runTransaction() → 2 requests ทุกครั้ง (GET + POST commit)
+// ใหม่: .get() แล้ว .set() → 2 requests เหมือนกัน แต่ไม่มี Firebase
+//       transaction overhead และไม่ retry อัตโนมัติ (ไม่มี 400 ซ้ำ)
+//
+// ── FIX v23-fix20: debounce fsSaveNow ──
+// fsSave() ถูกเรียกทุก action เล็กน้อย → debounce 800ms เพื่อ batch writes
 // ============================================================
 
 let _localDocVersion = 0; // version ที่ load มาล่าสุด
+let _saveDebounceTimer = null; // debounce timer สำหรับ fsSaveNow
+const _SAVE_DEBOUNCE_MS = 800; // รอ 800ms หลังจาก action สุดท้ายก่อน write
 
 /**
  * อ่าน version จาก Firestore doc แล้วเก็บไว้ใน _localDocVersion
@@ -26,9 +36,10 @@ function syncDocVersion(data) {
 
 /**
  * บันทึกขึ้น Firestore แบบมี conflict check
- * แทน fsSaveNow() เดิม (เพิ่ม transaction layer)
+ * ใช้ .get() + .set() แทน runTransaction() — ลด HTTP requests
+ * และไม่มี Firebase auto-retry ที่ทำให้เกิด :commit 400 ซ้ำ
  *
- * @param {object} payload  - ข้อมูลที่จะ save (เหมือน fsSaveNow เดิม)
+ * @param {object} payload  - ข้อมูลที่จะ save
  * @returns {Promise<'ok'|'conflict'|'error'>}
  */
 async function fsSaveWithLock(payload) {
@@ -36,47 +47,30 @@ async function fsSaveWithLock(payload) {
 
   const ref = FSdb.collection('appdata').doc('main');
 
-  // ── BUG FIX: อย่า throw ข้างใน runTransaction callback ──
-  // เมื่อ throw ใน callback → Firebase SDK จะ RETRY transaction อัตโนมัติ (สูงสุด 5 ครั้ง)
-  // ทุก retry จะยิง POST :commit → ทำให้เกิด 400 errors จำนวนมากใน console
-  // แก้โดย: ใช้ sentinel flag แทน throw เพื่อ signal conflict โดยไม่ให้ Firebase retry
-  let _conflictDetected = false;
-
   try {
-    await FSdb.runTransaction(async (tx) => {
-      // ── reset sentinel ทุก attempt (กรณี Firebase retry จาก error อื่น) ──
-      _conflictDetected = false;
+    // ── Step 1: GET remote version (1 request) ──
+    const snap = await ref.get();
+    if(window.bkCountRead) window.bkCountRead(1);
 
-      const snap = await tx.get(ref);
+    if (snap.exists) {
+      const remoteVersion = snap.data()._docVersion || 0;
 
-      if (snap.exists) {
-        const remoteVersion = snap.data()._docVersion || 0;
-
-        // ถ้า remote version ใหม่กว่า local → มีคนอื่น save ไปก่อน
-        if (remoteVersion > _localDocVersion) {
-          // ── ไม่ throw — ให้ tx.set() ด้วย payload เดิม (noop write)
-          // แล้วตั้ง flag ไว้ตรวจสอบหลัง transaction commit ──
-          _conflictDetected = true;
-          // อัปเดต localDocVersion ให้ตรงกับ remote เพื่อไม่ให้ conflict loop
-          _localDocVersion = remoteVersion;
-          return; // ออกจาก callback โดยไม่ write — transaction จะ commit แบบ read-only
-        }
+      // ถ้า remote version ใหม่กว่า local → conflict
+      if (remoteVersion > _localDocVersion) {
+        _localDocVersion = remoteVersion;
+        return 'conflict';
       }
-
-      // version ตรง หรือ doc ใหม่ → save ได้
-      const newVersion = _localDocVersion + 1;
-      tx.set(ref, { ...payload, _docVersion: newVersion });
-      _localDocVersion = newVersion;
-    });
-
-    // ตรวจ flag หลัง transaction commit สำเร็จ
-    if (_conflictDetected) {
-      return 'conflict';
     }
+
+    // ── Step 2: SET พร้อม bump version (1 request) ──
+    const newVersion = _localDocVersion + 1;
+    if(window.bkCountWrite) window.bkCountWrite(1);
+    await ref.set({ ...payload, _docVersion: newVersion });
+    _localDocVersion = newVersion;
     return 'ok';
 
   } catch(e) {
-    console.warn('[ConflictGuard] transaction error:', e);
+    console.warn('[ConflictGuard] save error:', e);
     return 'error';
   }
 }
@@ -116,6 +110,10 @@ async function handleSaveConflict() {
 /**
  * fsSaveNowSafe — แทน fsSaveNow() เดิม ใส่ conflict check
  * ใช้ signature เดิมทุกอย่าง (async, return promise)
+ *
+ * ── FIX v23-fix20: ไม่ใช้ runTransaction แล้ว → ใช้ get+set แทน ──
+ * ลด HTTP requests จาก 2 (GET+POST commit overhead) เป็น 2 (GET+SET)
+ * แต่ไม่มี Firebase auto-retry → ไม่มี :commit 400 ซ้ำๆ
  */
 async function fsSaveNowSafe() {
   if (!_firebaseReady || !FSdb) return;
@@ -123,9 +121,7 @@ async function fsSaveNowSafe() {
     const authed = await _waitForAuth();
     if (!authed) { console.warn("[fsSaveNowSafe] auth not ready"); return; }
   }
-  // ── FIX v23-fix14b: ห้าม save เมื่อยังไม่มี app-level user (CU)
-  // ระบบนี้ใช้ username/password login → firebase.auth() = anonymous เสมอ
-  // ใช้ CU (app user) เป็นตัวตรวจสอบแทน isAnonymous
+  // ── FIX v23-fix14b: ห้าม save เมื่อยังไม่มี app-level user (CU) ──
   if (typeof CU === 'undefined' || !CU || !CU.id) {
     console.info('[fsSaveNowSafe] no app user (CU) — skip save');
     return;
@@ -174,19 +170,16 @@ async function fsSaveNowSafe() {
       calEvents:       db.calEvents       || [],
       chats:           db.chats           || {},
       machineRequests: db.machineRequests || [],
-      // ── BUG FIX: fields เหล่านี้ต้องอยู่ใน payload เสมอ ──
-      // ถ้าขาด → .set() จะลบออกจาก Firestore ทุกครั้งที่ save ปกติ
-      notifications:   db.notifications   || [],        // ← แจ้งเตือนหาย
-      deletedUserIds:  db.deletedUserIds  || [],        // ← blacklist หาย → user ที่ลบกลับมา
-      gsUrl:           db.gsUrl           || '',        // ← Google Sheet URL หาย
-      _seq:            db._seq = (db._seq || 0) + 1,   // increment ก่อน write เสมอ
+      notifications:   db.notifications   || [],
+      deletedUserIds:  db.deletedUserIds  || [],
+      gsUrl:           db.gsUrl           || '',
+      _seq:            db._seq = (db._seq || 0) + 1,
       updatedAt:       new Date().toISOString(),
     };
 
-    // ตรวจขนาด payload — Firestore limit = 1MB (1,048,576 bytes)
+    // ตรวจขนาด payload — Firestore limit = 1MB
     const payloadSize = JSON.stringify(payload).length;
     if (payloadSize > 950_000) {
-      // ใกล้ limit มาก — block save เพื่อป้องกัน Firestore error เงียบ
       console.error('[ConflictGuard] Payload TOO LARGE:', (payloadSize/1024).toFixed(0)+'KB — BLOCKED');
       if (typeof showAlert === 'function') {
         showAlert({
@@ -216,20 +209,17 @@ async function fsSaveNowSafe() {
     if (result === 'error') {
       console.warn('[ConflictGuard] save error — falling back to direct set');
       // fallback: ใช้ .set() เดิม (ไม่มี lock แต่ดีกว่า fail เงียบ)
+      if(window.bkCountWrite) window.bkCountWrite(1);
       await FSdb.collection('appdata').doc('main').set(payload);
     }
 
     // save signatures แยก (ถ้ามี)
-    // BUG FIX: appdata/signatures ต้องการ real user (role claim) เท่านั้น
-    // anonymous user (PC browser) จะได้ permission-denied → ข้าม write เงียบๆ
     if (Object.keys(allSigs).length > 0) {
       const _fbUser = firebase.auth().currentUser;
-      // ใช้ user.isAnonymous แทน providerData (custom token มี providerData = [] เหมือนกัน)
       const _isRealUser = _fbUser && _fbUser.isAnonymous === false;
       if (_isRealUser) {
         await FSdb.collection('appdata').doc('signatures').set(allSigs);
       } else {
-        // เก็บ signatures ไว้ใน localStorage — จะ sync ครั้งหน้าเมื่อ user มี role token
         try { localStorage.setItem('aircon_sigs_pending', JSON.stringify(allSigs)); } catch(e) {}
         console.info('[ConflictGuard] signatures skipped (anonymous user) — cached locally');
       }
