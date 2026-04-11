@@ -484,15 +484,12 @@ function renderLoginDivider() {
 //  ไม่มี auto-login ทุกกรณี — ผู้ใช้ต้องกดปุ่มเข้าสู่ระบบเอง
 // ══════════════════════════════════════════════════════════════
 async function autoLiffLogin() {
-  if (LIFF_ID === 'YOUR_LIFF_ID_HERE') return;
+  if (LIFF_ID === 'YOUR_LIFF_ID_HERE') {
+    // ไม่มี LIFF_ID → ซ่อนปุ่ม LINE login ทิ้ง (ใช้ username เท่านั้น)
+    return;
+  }
 
-  const ok = await initLiff();
-  if (!ok) return;
-
-  // ── Auto-login เฉพาะเมื่อ URL มี ?code= (LINE OAuth redirect จริงๆ) ──
-  // ไม่ auto-login ถ้าเป็นการเปิดหน้าปกติ หรือ logout แล้วกลับมา
-  const isOAuthRedirect = location.search.includes('code=') && location.search.includes('liffClientId=');
-
+  // ── ตรวจว่ามี session อยู่แล้วหรือเปล่า ──
   const isLoggedInApp = (function() {
     try {
       const raw = localStorage.getItem(SESSION_KEY);
@@ -502,14 +499,44 @@ async function autoLiffLogin() {
     } catch(e) { return false; }
   })();
 
+  // ถ้า login อยู่แล้ว (session restore เสร็จแล้ว) → ไม่ต้องทำอะไร
+  if (isLoggedInApp) return;
+
+  // แสดงปุ่ม LINE login ทันที (fallback ก่อน LIFF init เสร็จ)
+  _showFallbackLineButton();
+
+  const ok = await initLiff();
+
+  if (!ok) {
+    // LIFF init ล้มเหลว → ปุ่ม fallback ยังแสดงอยู่แล้ว
+    return;
+  }
+
+  // ── Auto-login เฉพาะเมื่อ URL มี ?code= (LINE OAuth redirect จริงๆ) ──
+  const isOAuthRedirect = location.search.includes('code=') && location.search.includes('liffClientId=');
+
   if (isOAuthRedirect && _liffProfile && !isLoggedInApp) {
-    // มาจาก LINE OAuth redirect จริงๆ และยังไม่ได้ login → auto-login
     console.info('[LIFF] Auto-login after OAuth redirect:', _liffProfile.displayName);
     await doLoginWithLine();
     return;
   }
 
-  // กรณีอื่น → แค่ render ปุ่ม ไม่ auto-login
+  // กรณีอื่น → render ปุ่มจริงจาก LIFF
   renderLinLoginButton();
   renderLoginDivider();
+}
+
+// ── ปุ่ม LINE fallback (แสดงก่อน LIFF init เสร็จ) ───────────
+function _showFallbackLineButton() {
+  const container = document.getElementById('line-login-btn-wrap');
+  const divider   = document.getElementById('login-divider');
+  if (!container) return;
+  if (container.innerHTML.trim()) return; // มีอยู่แล้ว
+  container.style.display = 'block';
+  container.innerHTML = `
+    <button onclick="loginWithLine()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#06C755;color:#fff;border:none;border-radius:14px;padding:13px 16px;font-size:0.92rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(6,199,85,0.3)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 5.92 2 10.72c0 3.16 1.88 5.94 4.72 7.56-.2.74-.72 2.68-.82 3.1-.12.52.19.52.4.38.17-.11 2.18-1.47 3.06-2.07.54.08 1.09.12 1.64.12 5.52 0 10-3.92 10-8.72S17.52 2 12 2z"/></svg>
+      เข้าสู่ระบบด้วย LINE
+    </button>`;
+  if (divider) divider.style.display = 'flex';
 }

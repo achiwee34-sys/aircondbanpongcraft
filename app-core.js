@@ -2660,7 +2660,56 @@ window.addEventListener('pageshow', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   _forceCloseAllSheets();
 
-  // ── LIFF: ตรวจ LINE Login อัตโนมัติ ──
+  // ══ SESSION RESTORE: ตรวจ username session ก่อน ══
+  // ถ้า session ยังไม่หมดอายุ → restore CU แล้วเข้าแอพเลย ไม่ต้อง login ใหม่
+  (function _tryRestoreSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return false;
+      const s = JSON.parse(raw);
+      if (!s.exp || s.exp < Date.now()) {
+        localStorage.removeItem(SESSION_KEY);
+        return false;
+      }
+      // session ยังใช้ได้ → หา user จาก db
+      const user = db.users.find(u => u.id === s.uid || u.username === s.uname);
+      if (!user) {
+        localStorage.removeItem(SESSION_KEY);
+        return false;
+      }
+      // Restore CU
+      CU = user;
+      // ซ่อน login screen, แสดง app
+      const ls = document.getElementById('login-screen');
+      const app = document.getElementById('app');
+      if (ls) { ls.style.opacity = '0'; ls.style.transform = 'scale(0.97)'; setTimeout(() => { ls.style.display = 'none'; }, 220); }
+      if (app) app.classList.add('visible');
+      // เรียก initApp
+      setTimeout(() => { if (typeof initApp === 'function') initApp(); }, 50);
+      console.info('[Session] restored for:', user.username);
+      return true;
+    } catch(e) {
+      console.warn('[Session] restore error:', e);
+      localStorage.removeItem(SESSION_KEY);
+      return false;
+    }
+  })();
+
+  // ── ถ้าไม่มี session valid → ตรวจสอบให้แน่ใจว่า login-screen แสดงอยู่ ──
+  (function _ensureLoginScreenVisible() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const hasValidSession = raw && JSON.parse(raw).exp > Date.now();
+      if (!hasValidSession) {
+        const ls  = document.getElementById('login-screen');
+        const app = document.getElementById('app');
+        if (ls) { ls.style.display = ''; ls.style.opacity = '1'; ls.style.transform = ''; }
+        if (app) app.classList.remove('visible');
+      }
+    } catch(e) {}
+  })();
+
+  // ── LIFF: ตรวจ LINE Login อัตโนมัติ (ถ้า session ยังไม่ restored) ──
   if (typeof autoLiffLogin === 'function') {
     // defer เล็กน้อยให้ db load ก่อน (db อยู่ใน localStorage และ load ทันที)
     setTimeout(autoLiffLogin, 200);
@@ -2716,8 +2765,16 @@ function resetAllOverlays() {
 }
 
 async function initApp() {
-  // Guard
-  if (!CU || !CU.role) { doLogout(); return; }
+  // Guard — ถ้าไม่มี CU ให้แสดง login screen แทน reload
+  if (!CU || !CU.role) {
+    const ls  = document.getElementById('login-screen');
+    const app = document.getElementById('app');
+    if (ls) { ls.style.display = ''; ls.style.opacity = '1'; ls.style.transform = ''; }
+    if (app) app.classList.remove('visible');
+    localStorage.removeItem(SESSION_KEY);
+    if (typeof autoLiffLogin === 'function') setTimeout(autoLiffLogin, 100);
+    return;
+  }
   _resetIdleTimer(); // เริ่มนับ idle หลัง login
 
   // ── Offline Indicator ──
