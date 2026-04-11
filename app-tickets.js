@@ -1516,16 +1516,24 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
         </div>
         ${prBadge||adminTechBadge?`<div style="padding:4px 0 2px;display:flex;gap:4px;flex-wrap:wrap">${prBadge}${adminTechBadge}</div>`:''}
         ${hasPics ? `<div style="display:flex;gap:4px;padding:6px 0 2px;overflow-x:auto">
-          ${[...(t.photosBefore||[]).slice(0,2).map(p=>`
-            <div onclick="event.stopPropagation();openLightbox('${p}')" style="position:relative;flex-shrink:0;cursor:pointer">
-              <img src="${p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #e5e7eb"/>
+          ${[...(t.photosBefore||[]).slice(0,2).map(p=>{
+            if (!p) return '';
+            const _isFsKey = p.startsWith('fs:');
+            return `<div onclick="event.stopPropagation();${_isFsKey?`_resolveAndLightbox(this)`:`openLightbox('${p}')`}" data-photo-key="${p}" data-tid="${t.id}" style="position:relative;flex-shrink:0;cursor:pointer">
+              <img src="${_isFsKey?'':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #e5e7eb;${_isFsKey?'opacity:0':''}"/>
+              ${_isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1rem">⏳</div>`:''}
               <div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,0.55);color:white;border-radius:3px;padding:0 4px;font-size:0.5rem;font-weight:700">ก่อน</div>
-            </div>`),
-          ...(t.photosAfter||[]).slice(0,2).map(p=>`
-            <div onclick="event.stopPropagation();openLightbox('${p}')" style="position:relative;flex-shrink:0;cursor:pointer">
-              <img src="${p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #86efac"/>
+            </div>`;
+          }),
+          ...(t.photosAfter||[]).slice(0,2).map(p=>{
+            if (!p) return '';
+            const _isFsKey = p.startsWith('fs:');
+            return `<div onclick="event.stopPropagation();${_isFsKey?`_resolveAndLightbox(this)`:`openLightbox('${p}')`}" data-photo-key="${p}" data-tid="${t.id}" style="position:relative;flex-shrink:0;cursor:pointer">
+              <img src="${_isFsKey?'':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #86efac;${_isFsKey?'opacity:0':''}"/>
+              ${_isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1rem">⏳</div>`:''}
               <div style="position:absolute;top:2px;left:2px;background:rgba(22,163,74,0.75);color:white;border-radius:3px;padding:0 4px;font-size:0.5rem;font-weight:700">หลัง</div>
-            </div>`)
+            </div>`;
+          })
           ].join('')}
           ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0) > 4 ? `<div onclick="event.stopPropagation();safeOpenDetail('${t.id}')" style="width:52px;height:40px;background:#f1f5f9;border-radius:6px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.65rem;font-weight:700;color:#6b7280;flex-shrink:0">+${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)-4}</div>` : ''}
         </div>` : ''}

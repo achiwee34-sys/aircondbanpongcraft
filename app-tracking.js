@@ -147,7 +147,17 @@ function removePic(i, gridId, type) {
   pendingPhotos[type].splice(i,1);
   renderPhotoGrid(gridId, pendingPhotos[type], type);
 }
-function openLightbox(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').classList.add('open'); }
+// FIX v23-fix15: ป้องกัน fs: key และ undefined/null เข้า lightbox โดยตรง
+function openLightbox(src) {
+  if (!src || src === 'undefined' || src === 'null') return;
+  if (src.startsWith('fs:')) {
+    // fs: key ต้อง resolve ก่อน — ไม่ set src ตรงๆ
+    console.warn('[openLightbox] fs: key passed directly — use _resolveAndLightbox instead');
+    return;
+  }
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
 
 // ── Photo action sheet — เลือก "ถ่ายรูป" หรือ "เลือกจากแกลเลอรี" ──
 function openPhotoAfterSheet() {
@@ -3565,11 +3575,39 @@ function _resolveAndLightbox(el) {
   const div = el.tagName === 'IMG' ? el.parentElement : el;
   const img = div.querySelector('img') || (el.tagName === 'IMG' ? el : null);
   const key = div.dataset?.photoKey || img?.dataset?.photoKey || '';
-  const src = img?.src || key;
+  const tid = div.dataset?.tid || img?.dataset?.tid || '';
+  const src = img?.src || '';
+
+  // ถ้ารูป resolve แล้ว (https/data) → เปิด lightbox เลย
   if (src && (src.startsWith('data:') || src.startsWith('https://') || src.startsWith('http://'))) {
     openLightbox(src);
-  } else if (key && (key.startsWith('data:') || key.startsWith('https://'))) {
+    return;
+  }
+  if (key && (key.startsWith('data:') || key.startsWith('https://') || key.startsWith('http://'))) {
     openLightbox(key);
+    return;
+  }
+
+  // fs: key → ต้อง resolve ก่อน
+  if (key && key.startsWith('fs:') && typeof resolvePhotoUrl === 'function') {
+    // แสดง spinner ใน lightbox ระหว่าง load
+    const lbImg = document.getElementById('lb-img');
+    if (lbImg) lbImg.src = '';
+    document.getElementById('lightbox')?.classList.add('open');
+    resolvePhotoUrl(key, tid).then(resolved => {
+      if (resolved && lbImg) {
+        lbImg.src = resolved;
+        // อัปเดต thumbnail ด้วยเพื่อครั้งต่อไป
+        if (img) { img.src = resolved; img.style.opacity = '1'; }
+        const spin = div.querySelector('._ph-spin');
+        if (spin) spin.remove();
+      } else {
+        document.getElementById('lightbox')?.classList.remove('open');
+      }
+    }).catch(() => {
+      document.getElementById('lightbox')?.classList.remove('open');
+    });
+    return;
   }
 }
 

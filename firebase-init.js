@@ -216,13 +216,11 @@ async function fsSaveNow() {
   if (!_firebaseReady || !FSdb) return;
   const _authed = await _waitForAuth();
   if (!_authed) { console.warn("[fsSaveNow] auth not ready"); return; }
-  // FIX v23-fix14: ห้าม anonymous user save — ไม่มีสิทธิ์เขียน appdata/signatures → 403
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    const _cu = firebase.auth().currentUser;
-    if (!_cu || _cu.isAnonymous) {
-      console.info('[fsSaveNow] anonymous/unauthenticated — skip save (read-only mode)');
-      return;
-    }
+  // FIX v23-fix14b: ใช้ CU (app user) แทน firebase.auth().isAnonymous
+  // เพราะระบบ login ด้วย username/password → firebase user = anonymous เสมอ
+  if (typeof CU === 'undefined' || !CU || !CU.id) {
+    console.info('[fsSaveNow] no app user (CU) — skip save');
+    return;
   }
   _fsSaving = true;
   // ── increment _seq ก่อน write เสมอ → ป้องกัน onSnapshot restore ข้อมูลที่เพิ่งลบ ──
@@ -348,15 +346,11 @@ async function fsListen() {
   // รอ auth ก่อน attach listener — ป้องกัน permission-denied
   const authed = await _waitForAuth(8000);
   if (!authed) { console.warn('[fsListen] Auth timeout — skip listener'); return; }
-  // FIX v23-fix14: anonymous user (PC fallback) ไม่ต้องการ realtime listener
-  // appdata/main มี tickets/users/signatures — anonymous ไม่มีสิทธิ์เขียน → 403 ถ้า onSnapshot trigger save
-  // anonymous ต้องการแค่ machines (โหลดจาก _loadMachinesForAnonymous แล้ว) เท่านั้น
-  if (typeof firebase !== 'undefined' && firebase.auth) {
-    const _cu = firebase.auth().currentUser;
-    if (_cu && _cu.isAnonymous) {
-      console.info('[fsListen] anonymous user — skip realtime listener (read-only mode)');
-      return;
-    }
+  // FIX v23-fix14b: ถ้ายังไม่ login (ไม่มี CU) → ไม่ attach listener
+  // เพราะ onSnapshot จะ trigger fsSave ซึ่งเขียน appdata/signatures ไม่ได้ → 403
+  if (typeof CU === 'undefined' || !CU || !CU.id) {
+    console.info('[fsListen] no app user yet — skip listener until login');
+    return;
   }
   if (_fsListener) _fsListener();
 
@@ -420,9 +414,8 @@ async function fsListen() {
         db.users = merged;
         // ถ้า remote มี deletedUser อยู่ → force save เพื่อลบออกจาก Firestore ด้วย
         const remoteHasDeleted = d.some(u => deletedIds.has(u.id));
-        // FIX v23-fix14: อย่าให้ anonymous user save — ไม่มีสิทธิ์เขียน Firestore
-        const _snapCU = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
-        if ((localOnly.length > 0 || remoteHasDeleted) && _snapCU && !_snapCU.isAnonymous) fsSaveNow().catch(()=>{});
+        // FIX v23-fix14b: save เฉพาะเมื่อมี app user (CU) เท่านั้น
+        if ((localOnly.length > 0 || remoteHasDeleted) && typeof CU !== 'undefined' && CU && CU.id) fsSaveNow().catch(()=>{});
         return true;
       }
       const localArr = db[key];
