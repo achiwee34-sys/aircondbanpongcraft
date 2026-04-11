@@ -1756,7 +1756,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     if (!hasB && !hasA) return '';
     const mkCell = (arr, label, color) => {
       if (!arr||!arr.length) return '<div style="flex:1;text-align:center;padding:10px;color:#9ca3af;font-size:8pt;background:#f8fafc;border-radius:8px">— ไม่มีรูป' + label + ' —</div>';
-      const imgs = arr.slice(0,3).map(p=>'<div style="flex:1;aspect-ratio:4/3;overflow:hidden;border-radius:6px;border:1.5px solid '+color+'30"><img src="'+p+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'"/></div>').join('');
+      const imgs = arr.slice(0,3).map(p=>'<div style="flex:1;aspect-ratio:4/3;overflow:hidden;border-radius:6px;border:1.5px solid '+color+'30"><img src="'+p+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display=\'none\'"/></div>').join('');
       return '<div style="flex:1"><div style="font-size:7.5pt;font-weight:800;color:'+color+';margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">'+label+'</div><div style="display:flex;gap:5px">'+imgs+'</div></div>';
     };
     return '<table style="width:100%;border-left:1.5px solid #333;border-right:1.5px solid #333;border-bottom:none;font-size:8.5pt" cellpadding="0" cellspacing="0"><tr><td style="padding:10px 12px"><div style="font-weight:800;font-size:9pt;margin-bottom:8px;border-bottom:1px solid #e5e7eb;padding-bottom:5px">📷 รูปถ่าย (ก่อน / หลังซ่อม)</div><div style="display:flex;gap:14px">' + mkCell(t.photosBefore,'ก่อนซ่อม','#ef4444') + mkCell(t.photosAfter,'หลังซ่อม','#22c55e') + '</div></td></tr></table>';
