@@ -110,6 +110,15 @@ async function fsSaveNowSafe() {
     const authed = await _waitForAuth();
     if (!authed) { console.warn("[fsSaveNowSafe] auth not ready"); return; }
   }
+  // ── FIX v23-fix14: ห้าม anonymous user save — ไม่มีสิทธิ์เขียน appdata/signatures
+  // Anonymous (PC fallback) อ่านได้ appdata/main แต่เขียน signatures ไม่ได้ → 403
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    const _cu = firebase.auth().currentUser;
+    if (!_cu || _cu.isAnonymous) {
+      console.info('[fsSaveNowSafe] anonymous/unauthenticated — skip save (read-only mode)');
+      return;
+    }
+  }
   _fsSaving = true;
 
   try {

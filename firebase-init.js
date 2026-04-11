@@ -216,6 +216,14 @@ async function fsSaveNow() {
   if (!_firebaseReady || !FSdb) return;
   const _authed = await _waitForAuth();
   if (!_authed) { console.warn("[fsSaveNow] auth not ready"); return; }
+  // FIX v23-fix14: ห้าม anonymous user save — ไม่มีสิทธิ์เขียน appdata/signatures → 403
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    const _cu = firebase.auth().currentUser;
+    if (!_cu || _cu.isAnonymous) {
+      console.info('[fsSaveNow] anonymous/unauthenticated — skip save (read-only mode)');
+      return;
+    }
+  }
   _fsSaving = true;
   // ── increment _seq ก่อน write เสมอ → ป้องกัน onSnapshot restore ข้อมูลที่เพิ่งลบ ──
   db._seq = (db._seq || 0) + 1;
@@ -340,6 +348,16 @@ async function fsListen() {
   // รอ auth ก่อน attach listener — ป้องกัน permission-denied
   const authed = await _waitForAuth(8000);
   if (!authed) { console.warn('[fsListen] Auth timeout — skip listener'); return; }
+  // FIX v23-fix14: anonymous user (PC fallback) ไม่ต้องการ realtime listener
+  // appdata/main มี tickets/users/signatures — anonymous ไม่มีสิทธิ์เขียน → 403 ถ้า onSnapshot trigger save
+  // anonymous ต้องการแค่ machines (โหลดจาก _loadMachinesForAnonymous แล้ว) เท่านั้น
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    const _cu = firebase.auth().currentUser;
+    if (_cu && _cu.isAnonymous) {
+      console.info('[fsListen] anonymous user — skip realtime listener (read-only mode)');
+      return;
+    }
+  }
   if (_fsListener) _fsListener();
 
   let _refreshTimer = null;
@@ -402,7 +420,9 @@ async function fsListen() {
         db.users = merged;
         // ถ้า remote มี deletedUser อยู่ → force save เพื่อลบออกจาก Firestore ด้วย
         const remoteHasDeleted = d.some(u => deletedIds.has(u.id));
-        if (localOnly.length > 0 || remoteHasDeleted) fsSaveNow().catch(()=>{});
+        // FIX v23-fix14: อย่าให้ anonymous user save — ไม่มีสิทธิ์เขียน Firestore
+        const _snapCU = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+        if ((localOnly.length > 0 || remoteHasDeleted) && _snapCU && !_snapCU.isAnonymous) fsSaveNow().catch(()=>{});
         return true;
       }
       const localArr = db[key];
