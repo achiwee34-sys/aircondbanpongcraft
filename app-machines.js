@@ -3133,7 +3133,7 @@ function openMachineRequestsPage() {
 
     page.innerHTML = `
       <!-- Header -->
-      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:16px 16px 16px;flex-shrink:0">
+      <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
           <button onclick="document.getElementById('_mac-req-page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">‹</button>
           <div style="flex:1">
@@ -3144,16 +3144,16 @@ function openMachineRequestsPage() {
         </div>
         <!-- Tab stats -->
         <div style="display:flex;gap:8px;margin-top:14px">
-          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:6px 8px;text-align:center">
-            <div style="font-size:1.1rem;font-weight:900;color:#fbbf24">${pending.length}</div>
+          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:8px 10px;text-align:center">
+            <div style="font-size:1.3rem;font-weight:900;color:#fbbf24">${pending.length}</div>
             <div style="font-size:0.6rem;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:.05em">รอดำเนินการ</div>
           </div>
-          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:6px 8px;text-align:center">
-            <div style="font-size:1.1rem;font-weight:900;color:#34d399">${(db.machineRequests||[]).filter(r=>r.status==='approved').length}</div>
+          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:8px 10px;text-align:center">
+            <div style="font-size:1.3rem;font-weight:900;color:#34d399">${(db.machineRequests||[]).filter(r=>r.status==='approved').length}</div>
             <div style="font-size:0.6rem;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:.05em">อนุมัติแล้ว</div>
           </div>
-          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:6px 8px;text-align:center">
-            <div style="font-size:1.1rem;font-weight:900;color:#f87171">${(db.machineRequests||[]).filter(r=>r.status==='rejected').length}</div>
+          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:8px 10px;text-align:center">
+            <div style="font-size:1.3rem;font-weight:900;color:#f87171">${(db.machineRequests||[]).filter(r=>r.status==='rejected').length}</div>
             <div style="font-size:0.6rem;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:.05em">ปฏิเสธ</div>
           </div>
         </div>
@@ -3538,7 +3538,7 @@ function openNewMachinesTable() {
 
   pg.innerHTML = `
     <!-- ── Header ── -->
-    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:16px 14px 0;flex-shrink:0">
+    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:calc(var(--head-h,56px) + var(--safe-top,0px) + 4px) 14px 0;flex-shrink:0">
       <!-- top bar -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <button onclick="document.getElementById('_nmtable').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')"
