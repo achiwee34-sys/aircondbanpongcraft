@@ -377,7 +377,7 @@ function delUser(id) {
     saveDB();
     // BUG FIX: ลบ double-save ออก — conflict-guard transaction จัดการ concurrency แล้ว
     // retry ซ้ำ 2s ทำให้เกิด extra :commit และเพิ่มโอกาส conflict โดยไม่จำเป็น
-    fsSaveNow().catch(()=>{ fsSave(); });
+    fsSave(); // FIX v23-fix22: ผ่าน debounce แทน direct fsSaveNow
     switchUserTab(currentUserTab||'tech');
     renderTickets();
     showToast('🗑️ ลบผู้ใช้ '+u.name+' แล้ว');
