@@ -2907,7 +2907,7 @@ function openVerifySheet(tid) {
         <span class="lbl-dot" style="background:#22c55e"></span>✅ รูปหลังซ่อม
         <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
       </div>
-      <div class="photo-grid">${t.photosAfter.map(p=>`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" data-photo-key="${p}" onclick="_resolveAndLightbox(this)"><img src="${p}" style="width:100%;height:100%;object-fit:cover"/></div>`).join('')}</div>
+      <div class="photo-grid">${t.photosAfter.map(p=>{const isFsKey=p&&p.startsWith('fs:');return`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${t.id}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;}).join('')}</div>
     </div>` : ''}
   `;
   openSheet('verify');
@@ -3492,6 +3492,7 @@ async function _resolveDetailPhotos(ticketId, attempt = 0) {
         if (idx !== -1) _photoCacheKeys.splice(idx, 1);
       }
       photoData = await loadPhotosFromFirestore(ticketId);
+      console.info('[photo resolve] Firestore data:', JSON.stringify(photoData));
     } catch(e) {
       console.warn('[photo resolve] loadPhotosFromFirestore failed:', e.message);
     }
