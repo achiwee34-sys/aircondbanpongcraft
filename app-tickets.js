@@ -284,6 +284,7 @@ function renderHome() {
   }
 
   hcEl.innerHTML = html;
+  requestAnimationFrame(() => _resolveListPhotos(hcEl));
 
   // ── Phase 2: defer heavy sections (tech photos + calendar) ──
   if (CU.role === 'admin') {
@@ -409,6 +410,9 @@ function _renderTicketsInner() {
     // pagination bar
     html += renderPagination(tkPage, totalPages, total, start, Math.min(start+TK_PER_PAGE,total));
     tlEl.innerHTML = html;
+    // BUG FIX: auto-resolve fs: photo thumbnails in cards after render
+    // previously cards showed ⏳ permanently — only _resolveAndLightbox() (onclick) could resolve them
+    requestAnimationFrame(() => _resolveListPhotos(tlEl));
   }
 
   const srch = document.getElementById('f-search');
@@ -786,6 +790,7 @@ function renderMyWork() {
   if (!groupHtml) groupHtml = `<div class="empty"><div class="ei">✅</div><p>ไม่มีงานค้าง</p></div>`;
 
   mwList.innerHTML = kpiHtml + groupHtml;
+  requestAnimationFrame(() => _resolveListPhotos(mwList));
 }
 
 // ══ Calendar 7 days for admin home ══
@@ -1520,7 +1525,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
             if (!p) return '';
             const _isFsKey = p.startsWith('fs:');
             return `<div onclick="event.stopPropagation();${_isFsKey?`_resolveAndLightbox(this)`:`openLightbox('${p}')`}" data-photo-key="${p}" data-tid="${t.id}" style="position:relative;flex-shrink:0;cursor:pointer">
-              <img src="${_isFsKey?'':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #e5e7eb;${_isFsKey?'opacity:0':''}"/>
+              <img src="${_isFsKey?'about:blank':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #e5e7eb;${_isFsKey?'opacity:0':''}"/>
               ${_isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1rem">⏳</div>`:''}
               <div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,0.55);color:white;border-radius:3px;padding:0 4px;font-size:0.5rem;font-weight:700">ก่อน</div>
             </div>`;
@@ -1529,7 +1534,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
             if (!p) return '';
             const _isFsKey = p.startsWith('fs:');
             return `<div onclick="event.stopPropagation();${_isFsKey?`_resolveAndLightbox(this)`:`openLightbox('${p}')`}" data-photo-key="${p}" data-tid="${t.id}" style="position:relative;flex-shrink:0;cursor:pointer">
-              <img src="${_isFsKey?'':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #86efac;${_isFsKey?'opacity:0':''}"/>
+              <img src="${_isFsKey?'about:blank':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #86efac;${_isFsKey?'opacity:0':''}"/>
               ${_isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1rem">⏳</div>`:''}
               <div style="position:absolute;top:2px;left:2px;background:rgba(22,163,74,0.75);color:white;border-radius:3px;padding:0 4px;font-size:0.5rem;font-weight:700">หลัง</div>
             </div>`;

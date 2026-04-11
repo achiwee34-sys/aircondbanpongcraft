@@ -2917,7 +2917,7 @@ function openVerifySheet(tid) {
         <span class="lbl-dot" style="background:#22c55e"></span>✅ รูปหลังซ่อม
         <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
       </div>
-      <div class="photo-grid">${t.photosAfter.map(p=>{const isFsKey=p&&p.startsWith('fs:');return`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${t.id}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;}).join('')}</div>
+      <div class="photo-grid">${t.photosAfter.map(p=>{const isFsKey=p&&p.startsWith('fs:');return`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${t.id}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'about:blank':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;}).join('')}</div>
     </div>` : ''}
   `;
   openSheet('verify');
@@ -3306,7 +3306,7 @@ function openDetail(tid) {
           <div style="padding:6px">
             ${hasBefore?`
             <div style="display:grid;grid-template-columns:${t.photosBefore.length===1?'1fr':'1fr 1fr'};gap:4px">
-              ${t.photosBefore.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}" onclick="openLightbox('${p}')"><img loading="lazy" decoding="async" src="${isUrl?p:''}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
+              ${t.photosBefore.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'about:blank'}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
             </div>`:`
             <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px">
               <div style="font-size:1.4rem;opacity:0.35">📷</div>
@@ -3329,7 +3329,7 @@ function openDetail(tid) {
           <div style="padding:6px">
             ${hasAfter?`
             <div style="display:grid;grid-template-columns:${t.photosAfter.length===1?'1fr':'1fr 1fr'};gap:4px">
-              ${t.photosAfter.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}" onclick="openLightbox('${p}')"><img loading="lazy" decoding="async" src="${isUrl?p:''}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
+              ${t.photosAfter.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'about:blank'}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
             </div>`:`
             <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px">
               <div style="font-size:1.4rem;opacity:0.35">📷</div>
@@ -3463,6 +3463,69 @@ function openDetail(tid) {
       openSheet("detail");
     } catch(e2) {}
   }
+}
+
+// ── Auto-resolver for fs: photo thumbnails in ticket card lists ────
+// BUG FIX: card list rendered with src="about:blank" + opacity:0 for fs: keys
+// This function resolves them in batches using IntersectionObserver so only
+// visible cards trigger Firestore reads (avoids loading all photos at once)
+function _resolveListPhotos(container) {
+  if (!container) return;
+  const items = container.querySelectorAll('[data-photo-key]');
+  if (!items.length) return;
+
+  // Group fs: keys by ticketId → batch 1 Firestore read per ticket
+  const byTicket = {};
+  items.forEach(div => {
+    const key = div.dataset.photoKey || '';
+    const tid = div.dataset.tid || '';
+    if (!key.startsWith('fs:') || !tid) return;
+    const img = div.querySelector('img');
+    if (!img || img.style.opacity === '1') return; // already resolved
+    if (!byTicket[tid]) byTicket[tid] = [];
+    byTicket[tid].push({ div, img, key });
+  });
+
+  if (!Object.keys(byTicket).length) return;
+
+  // Use IntersectionObserver: only load photos for cards entering the viewport
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const div = entry.target;
+      const key = div.dataset.photoKey || '';
+      const tid = div.dataset.tid || '';
+      if (!key.startsWith('fs:') || !tid) return;
+      obs.unobserve(div);
+
+      // Load all photos for this ticket in one call (cached after first read)
+      if (typeof loadPhotosFromFirestore !== 'function') return;
+      loadPhotosFromFirestore(tid).then(photoData => {
+        // Resolve all pending divs for this ticket at once
+        const pending = byTicket[tid] || [];
+        pending.forEach(({ div: d, img, key: k }) => {
+          if (img.style.opacity === '1') return;
+          const parts = k.split(':');
+          const slot = parts[2] || '';
+          const type = slot[0] === 'b' ? 'before' : 'after';
+          const idx  = parseInt(slot.slice(1)) || 0;
+          const src  = photoData[type]?.[idx];
+          if (src) {
+            img.src = src;
+            img.style.opacity = '1';
+            const spin = d.querySelector('._ph-spin');
+            if (spin) spin.remove();
+            d.onclick = () => openLightbox(src);
+          }
+        });
+      }).catch(() => {});
+    });
+  }, { rootMargin: '100px' }); // pre-load 100px before visible
+
+  // Observe only the first div per ticket (triggers batch load for whole ticket)
+  Object.values(byTicket).forEach(divs => {
+    if (divs[0]) observer.observe(divs[0].div);
+  });
 }
 
 // ── Async photo resolver for detail sheet ──────────────────────────
