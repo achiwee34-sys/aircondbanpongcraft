@@ -33,6 +33,113 @@
 <script src="conflict-guard.js?v=1775614619"></script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'><rect width='44' height='44' rx='10' fill='%230A0A0A'/><rect width='44' height='44' rx='10' fill='none' stroke='%23D0021B' stroke-width='2'/><line x1='0' y1='22' x2='44' y2='22' stroke='%23D0021B' stroke-width='0.8' opacity='0.4'/><line x1='22' y1='0' x2='22' y2='44' stroke='%23D0021B' stroke-width='0.8' opacity='0.4'/><rect x='4' y='4' width='8' height='8' fill='%23D0021B' rx='1'/><rect x='32' y='32' width='8' height='8' fill='%23D0021B' rx='1'/><text x='22' y='31' text-anchor='middle' font-size='23' font-weight='900' fill='white' font-family='Arial Black'>A</text></svg>"><rect width='32' height='32' rx='8' fill='%23c8102e'/><g stroke='white' stroke-width='2' stroke-linecap='round'><line x1='16' y1='5' x2='16' y2='27'/><line x1='5' y1='16' x2='27' y2='16'/><line x1='8.5' y1='8.5' x2='23.5' y2='23.5'/><line x1='23.5' y1='8.5' x2='8.5' y2='23.5'/><line x1='16' y1='5' x2='13' y2='8'/><line x1='16' y1='5' x2='19' y2='8'/><line x1='16' y1='27' x2='13' y2='24'/><line x1='16' y1='27' x2='19' y2='24'/><line x1='5' y1='16' x2='8' y2='13'/><line x1='5' y1='16' x2='8' y2='19'/><line x1='27' y1='16' x2='24' y2='13'/><line x1='27' y1='16' x2='24' y2='19'/></g><circle cx='16' cy='16' r='2.5' fill='white'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'>  <defs>    <clipPath id='lc'><rect width='192' height='192' rx='42'/></clipPath>    <radialGradient id='lg' cx='25%' cy='25%' r='75%'>      <stop offset='0%' stop-color='%231e0505'/>      <stop offset='60%' stop-color='%230d0d0d'/>      <stop offset='100%' stop-color='%23050505'/>    </radialGradient>  </defs>  <g clip-path='url(%23lc)'>    <rect width='192' height='192' fill='url(%23lg)'/>    <circle cx='22' cy='22' r='65' fill='%23D0021B' opacity='0.07'/>    <line x1='0' y1='96' x2='192' y2='96' stroke='%23D0021B' stroke-width='2' opacity='0.28'/>    <line x1='96' y1='0' x2='96' y2='192' stroke='%23D0021B' stroke-width='2' opacity='0.28'/>    <line x1='0' y1='48' x2='192' y2='48' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='0' y1='144' x2='192' y2='144' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='48' y1='0' x2='48' y2='192' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <line x1='144' y1='0' x2='144' y2='192' stroke='%23D0021B' stroke-width='1' opacity='0.12'/>    <rect x='15' y='15' width='28' height='28' fill='%23D0021B' rx='4'/>    <rect x='148' y='148' width='28' height='28' fill='%23D0021B' rx='4' opacity='0.6'/>    <rect x='148' y='15' width='28' height='28' fill='%23D0021B' rx='4' opacity='0.22'/>    <rect x='7' y='7' width='179' height='179' rx='35' fill='none' stroke='white' stroke-width='1' opacity='0.07'/>    <rect x='0' y='0' width='192' height='4' fill='white' opacity='0.05'/>    <text x='96' y='131' text-anchor='middle' font-size='96' font-weight='900' fill='white' font-family='Arial Black,Arial Bold,Arial'>A</text>  </g></svg>">
+<script>window._deployedFirestoreRules = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── helper functions ──────────────────────────────────────
+    // isRealUser: custom token (LIFF) หรือ anonymous (PC fallback)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    // LIFF Custom Token user (มี role claim)
+    function isRealUser() {
+      return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+    // Anonymous = PC user ที่ใช้ signInAnonymously fallback
+    function isAnonymous() {
+      return request.auth != null
+          && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    function hasRole(role) {
+      return isRealUser() && request.auth.token.role == role;
+    }
+    function isAdmin()    { return hasRole('admin'); }
+    function isTech()     { return hasRole('tech'); }
+    function isReporter() { return hasRole('reporter'); }
+    function isAnyStaff() { return isRealUser() && request.auth.token.role in ['admin','tech','reporter']; }
+    // ── SECURITY FIX: Anonymous อ่านได้เฉพาะ machines (populate dept dropdown) เท่านั้น
+    // ไม่ให้ anonymous อ่าน tickets/users/signatures ซึ่งเป็นข้อมูล sensitive
+    function canRead()  { return isAnyStaff(); }
+    function canWrite() { return isAnyStaff(); }
+    function canReadMachines() { return isAnyStaff() || isAnonymous(); }
+
+    // ── aircon_data ─────────────────────────────────────────────
+    match /aircon_data/{docId} {
+      allow read:  if canRead();
+      allow write: if isAdmin() || isTech();
+    }
+
+    // ── appdata: main + signatures ──────────────────────────────
+    // SECURITY FIX v23-sec1: ลบ isAnonymous() write ออกจาก appdata/main
+    // anonymous อ่านได้ (สำหรับ new-ticket form) แต่เขียนไม่ได้
+    // PC admin ต้องใช้ LIFF custom token แทน signInAnonymously
+    // appdata/signatures ต้องการ staff role (ป้องกัน anonymous อ่านลายเซ็น)
+    match /appdata/main {
+      allow read:  if canRead() || isAnonymous();
+      allow write: if canWrite();
+    }
+    match /appdata/signatures {
+      allow read:  if canRead();
+      allow write: if canWrite();
+    }
+    match /appdata/{doc} {
+      allow read:  if canRead();
+      allow write: if canWrite();
+    }
+
+    // ── machines ────────────────────────────────────────────────
+    match /machines/{docId} {
+      allow read:  if canReadMachines(); // anonymous อ่านได้ — populate dept picker
+      allow create, update: if isAdmin() || isTech();
+      allow delete: if isAdmin();
+    }
+
+    // ── users ────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read:  if isAdmin() || (isRealUser() && request.auth.uid == userId);
+      allow write: if isAdmin();
+    }
+
+    // ── tickets ─────────────────────────────────────────────────
+    match /tickets/{docId} {
+      allow read:   if canRead();
+      allow create: if canWrite();
+      allow update: if isAdmin()
+                    || (isTech() && resource.data.assigneeId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // ── ticket_photos ───────────────────────────────────────────
+    // SECURITY FIX v23-sec2: ลบ isAnonymous() ออกจาก create/update ticket_photos
+    // anonymous ไม่ควร create หรือ update รูปของ ticket ใดๆ ได้
+    // read: ยังให้ anonymous อ่านได้เพื่อแสดงรูปใน new-ticket preview
+    match /ticket_photos/{docId} {
+      allow read:   if canRead() || isAnonymous();
+      allow create: if canWrite();
+      allow update: if isAdmin()
+                    || (isTech() && (
+                         !('techId' in resource.data)
+                         || resource.data.techId == request.auth.uid
+                       ));
+      allow delete: if isAdmin();
+    }
+
+    // ── signatures ───────────────────────────────────────────────
+    match /signatures/{tid} {
+      allow read:  if canRead();
+      allow write: if isAdmin() || isTech() || isReporter();
+    }
+
+    // ── block everything else ────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+`;</script>
 </head>
 <body>
 
@@ -1741,8 +1848,14 @@ window._liffLandingUpdateCard = liffUpdateCard;
             <div style="font-size:0.95rem;font-weight:900;color:var(--text)">📋 ประวัติงานซ่อมเสร็จ</div>
             <div id="history-count" style="font-size:0.7rem;color:var(--muted);margin-top:1px"></div>
           </div>
-          <input id="history-search" type="search" placeholder="🔍 ค้นหา..." oninput="_histPage=0;renderHistory()"
-            style="padding:7px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:0.78rem;width:130px;background:var(--surface);color:var(--text);outline:none">
+          <div style="display:flex;align-items:center;gap:6px">
+            <input id="history-search" type="search" placeholder="🔍 ค้นหา..." oninput="_histPage=0;renderHistory()"
+              style="padding:7px 10px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:0.78rem;width:120px;background:var(--surface);color:var(--text);outline:none">
+            <button onclick="exportHistoryExcel()"
+              style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:10px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 2px 8px rgba(5,150,105,0.3)">
+              📊 Excel
+            </button>
+          </div>
         </div>
         <!-- Date range filter -->
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
@@ -2399,21 +2512,37 @@ window._liffLandingUpdateCard = liffUpdateCard;
                 <div style="font-size:0.62rem;font-weight:700;color:#fb923c;margin-top:2px">Data Size</div>
               </div>
             </div>
-            <div style="background:#f8fafc;border-radius:12px;padding:12px">
+            <!-- Firestore cost estimate -->
+            <div style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:0.65rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.04em">💵 Firestore Cost (session)</div>
+                <div style="font-size:0.6rem;color:#a16207;margin-top:2px">คำนวณจาก R/W เกิน free tier (50k/20k ต่อวัน)</div>
+              </div>
+              <div id="bk-stat-cost" style="font-size:1.1rem;font-weight:900;color:#22c55e">$0.000000</div>
+            </div>
+            <div style="background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:10px">
               <div style="font-size:0.7rem;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">Collections</div>
               <div id="bk-collections" style="font-size:0.75rem;line-height:2"></div>
+            </div>
+            <!-- Tickets by status -->
+            <div style="background:#f8fafc;border-radius:12px;padding:12px">
+              <div style="font-size:0.7rem;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">🔧 Tickets by Status</div>
+              <div id="bk-tickets-status"></div>
             </div>
           </div>
 
           <!-- ── TAB: LOG ── -->
           <div id="bk-pane-log" style="display:none;padding:14px">
             <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-              <button onclick="filterBkLog('all')" id="bk-log-f-all" style="padding:5px 10px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit">ทั้งหมด</button>
-              <button onclick="filterBkLog('login')" id="bk-log-f-login" style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🔑 Login</button>
+              <button onclick="filterBkLog('all')"    id="bk-log-f-all"    style="padding:5px 10px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit">ทั้งหมด</button>
+              <button onclick="filterBkLog('login')"  id="bk-log-f-login"  style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🔑 Login</button>
               <button onclick="filterBkLog('logout')" id="bk-log-f-logout" style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🚪 Logout</button>
-              <button onclick="filterBkLog('error')" id="bk-log-f-error" style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">❌ Error</button>
-              <button onclick="exportBkLog('json')" style="margin-left:auto;padding:5px 10px;background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">⬇️ JSON</button>
-              <button onclick="exportBkLog('excel')" style="padding:5px 10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">⬇️ Excel</button>
+              <button onclick="filterBkLog('error')"  id="bk-log-f-error"  style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">❌ Error</button>
+              <button onclick="filterBkLog('sync')"   id="bk-log-f-sync"   style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🔄 Sync</button>
+              <button onclick="filterBkLog('photo')"  id="bk-log-f-photo"  style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">📷 Photo</button>
+              <button onclick="filterBkLog('assign')" id="bk-log-f-assign" style="padding:5px 10px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">📌 Assign</button>
+              <button onclick="exportBkLog('json')"   style="margin-left:auto;padding:5px 10px;background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">⬇️ JSON</button>
+              <button onclick="exportBkLog('excel')"  style="padding:5px 10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">⬇️ Excel</button>
             </div>
             <div id="bk-log-list" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
           </div>
@@ -2434,10 +2563,13 @@ window._liffLandingUpdateCard = liffUpdateCard;
               ⚠️ แก้ไข Rules ที่นี่จะบันทึกใน localStorage เท่านั้น<br>ต้องนำไป deploy ใน Firebase Console ด้วยตัวเอง
             </div>
             <div style="font-size:0.7rem;font-weight:800;color:#475569;margin-bottom:6px">Firestore Security Rules (ปัจจุบัน)</div>
-            <textarea id="bk-rules-editor" style="width:100%;height:200px;font-family:monospace;font-size:0.68rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;resize:vertical;box-sizing:border-box;color:#1e293b;line-height:1.6;background:#f8fafc"></textarea>
+            <textarea id="bk-rules-editor" oninput="_renderRulesDiff(this.value)" style="width:100%;height:200px;font-family:monospace;font-size:0.68rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;resize:vertical;box-sizing:border-box;color:#1e293b;line-height:1.6;background:#f8fafc"></textarea>
+            <!-- Diff vs deployed -->
+            <div id="bk-rules-diff" style="margin-top:8px;background:#f8fafc;border-radius:8px;padding:8px;max-height:160px;overflow-y:auto"></div>
             <div style="display:flex;gap:6px;margin-top:8px">
-              <button onclick="saveBkRules()" style="flex:1;padding:10px;background:#1d4ed8;color:white;border:none;border-radius:10px;font-size:0.75rem;font-weight:800;cursor:pointer;font-family:inherit">💾 บันทึก Rules</button>
-              <button onclick="copyBkRules()" style="padding:10px 14px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit">📋 Copy</button>
+              <button onclick="saveBkRules()"  style="flex:1;padding:10px;background:#1d4ed8;color:white;border:none;border-radius:10px;font-size:0.75rem;font-weight:800;cursor:pointer;font-family:inherit">💾 บันทึก Rules</button>
+              <button onclick="copyBkRules()"  style="padding:10px 14px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit">📋 Copy</button>
+              <button onclick="resetBkRules()" style="padding:10px 14px;background:#fff5f5;color:#dc2626;border:none;border-radius:10px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit">↩️ Reset</button>
             </div>
             <!-- Force sync / cache -->
             <div style="margin-top:12px;background:#f8fafc;border-radius:12px;padding:12px">
@@ -4003,6 +4135,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
 <script src="app-reports.js?v=1775614619" defer></script>
 <script src="app-admin.js?v=1775614619" defer></script>
 <script src="app-backend.js?v=1775614619" defer></script>
+<script src="app-stamp.js?v=1775614619" defer></script>
 <script src="app-executive.js?v=1775614619" defer></script>
 <script src="app-backup.js?v=1775614619" defer></script>
 <style>

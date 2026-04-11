@@ -127,8 +127,8 @@ function checkBkConnection() {
       const colRef = window.db_fs;
       if (dot) dot.style.background = '#f59e0b'; // pending
       if (ping) ping.textContent = 'กำลังตรวจสอบ...';
-      // Use a simple collection list to measure latency
-      firebase.firestore().collection('aircon_data').limit(1).get().then(() => {
+      // Ping appdata/main (collection จริงที่ใช้งาน)
+      firebase.firestore().collection('appdata').doc('main').get().then(() => {
         const ms = Date.now() - t0;
         if (dot)  dot.style.background = '#22c55e';
         if (ping) ping.textContent = ms + ' ms';
@@ -157,9 +157,9 @@ function renderBkStatus() {
   const listEl = document.getElementById('bk-listeners');
   if (listEl) {
     const listeners = [
-      { name: 'aircon_data (main)',   active: !!(window._fsUnsubscribe) },
-      { name: 'Auth state',           active: !!(window.firebaseAuth) },
-      { name: 'Auto backup interval', active: !!(window._autoBackupInterval) },
+      { name: 'appdata/main (onSnapshot)',  active: !!(window._fsListener) },
+      { name: 'Auth state',                 active: !!(window.firebaseAuth) },
+      { name: 'Auto backup interval',       active: !!(window._autoBackupInterval) },
     ];
     listEl.innerHTML = listeners.map(l =>
       `<div style="display:flex;align-items:center;gap:8px">
@@ -202,7 +202,16 @@ function renderBkStats() {
   if (reads)  reads.textContent  = window._bkReads  || 0;
   if (writes) writes.textContent = window._bkWrites || 0;
 
-  // Doc counts from local db
+  // Firestore cost estimate (ราคา free tier: 50k reads/day, 20k writes/day)
+  const costEl = document.getElementById('bk-stat-cost');
+  if (costEl) {
+    const rCost = Math.max(0, ((window._bkReads  || 0) - 50000)) * 0.00000006;
+    const wCost = Math.max(0, ((window._bkWrites || 0) - 20000)) * 0.00000018;
+    const total = (rCost + wCost).toFixed(6);
+    costEl.textContent = '$' + total;
+    costEl.style.color = parseFloat(total) > 0 ? '#ef4444' : '#22c55e';
+  }
+
   const dbRef = window.db;
   if (!dbRef) return;
 
@@ -236,12 +245,46 @@ function renderBkStats() {
       </div>`
     ).join('');
   }
+
+  // Tickets by status
+  const tickets = dbRef.tickets || [];
+  const STATUS_MAP = {
+    pending:    { label: 'รอดำเนินการ', color: '#f59e0b' },
+    inprogress: { label: 'กำลังซ่อม',   color: '#3b82f6' },
+    done:       { label: 'เสร็จแล้ว',   color: '#22c55e' },
+    cancelled:  { label: 'ยกเลิก',      color: '#94a3b8' },
+  };
+  const statusCounts = {};
+  tickets.forEach(t => {
+    const s = t.status || 'pending';
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  });
+  const ticketEl = document.getElementById('bk-tickets-status');
+  if (ticketEl) {
+    if (tickets.length === 0) {
+      ticketEl.innerHTML = '<span style="color:#94a3b8;font-size:0.72rem">ไม่มี ticket</span>';
+    } else {
+      ticketEl.innerHTML = Object.entries(STATUS_MAP).map(([key, {label, color}]) => {
+        const cnt = statusCounts[key] || 0;
+        const pct = tickets.length ? Math.round(cnt / tickets.length * 100) : 0;
+        return `<div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:0.7rem;margin-bottom:2px">
+            <span style="color:#1e293b;font-weight:700">${label}</span>
+            <span style="color:${color};font-weight:800">${cnt} (${pct}%)</span>
+          </div>
+          <div style="height:5px;background:#f1f5f9;border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width 0.4s"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
 }
 
 // ── LOG tab ──────────────────────────────────────────────────
 function filterBkLog(f) {
   _bkLogFilter = f;
-  ['all','login','logout','error'].forEach(t => {
+  ['all','login','logout','error','sync','photo','assign'].forEach(t => {
     const btn = document.getElementById('bk-log-f-'+t);
     if (btn) {
       btn.style.background = t === f ? '#1d4ed8' : '#f1f5f9';
@@ -261,8 +304,14 @@ function renderBkLog() {
     return;
   }
   el.innerHTML = logs.map(l => {
-    const typeColor = { login:'#22c55e', logout:'#f59e0b', error:'#ef4444', info:'#3b82f6' }[l.type] || '#94a3b8';
-    const typeIcon  = { login:'🔑', logout:'🚪', error:'❌', info:'ℹ️' }[l.type] || '•';
+    const typeColor = {
+      login:'#22c55e', logout:'#f59e0b', error:'#ef4444',
+      info:'#3b82f6', sync:'#7c3aed', photo:'#0891b2', assign:'#ea580c'
+    }[l.type] || '#94a3b8';
+    const typeIcon  = {
+      login:'🔑', logout:'🚪', error:'❌', info:'ℹ️',
+      sync:'🔄', photo:'📷', assign:'📌'
+    }[l.type] || '•';
     return `<div style="background:#f8fafc;border-radius:8px;padding:8px 10px;border-left:3px solid ${typeColor}">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
         <span style="font-size:0.7rem">${typeIcon}</span>
@@ -304,17 +353,53 @@ function clearBkAudit() {
 }
 
 // ── RULES tab ────────────────────────────────────────────────
+// Rules ที่ deploy จริงใน firestore.rules (embed ตอน build)
+const _DEPLOYED_RULES = window._deployedFirestoreRules || DEFAULT_RULES;
+
 function renderBkRules() {
   const ta = document.getElementById('bk-rules-editor');
   if (!ta) return;
   const saved = localStorage.getItem(BK_RULES_KEY);
-  ta.value = saved || DEFAULT_RULES;
+  ta.value = saved || _DEPLOYED_RULES;
+  _renderRulesDiff(ta.value);
+}
+
+function _renderRulesDiff(current) {
+  const diffEl = document.getElementById('bk-rules-diff');
+  if (!diffEl) return;
+  const deployed = _DEPLOYED_RULES;
+  if (current.trim() === deployed.trim()) {
+    diffEl.innerHTML = '<span style="color:#22c55e;font-size:0.7rem;font-weight:700">✅ ตรงกับ Rules ที่ deploy แล้ว</span>';
+  } else {
+    // แสดง diff แบบ line-by-line
+    const aLines = deployed.split('\n');
+    const bLines = current.split('\n');
+    const maxLen = Math.max(aLines.length, bLines.length);
+    let diffHtml = '<div style="font-family:monospace;font-size:0.62rem;line-height:1.6">';
+    let changed = 0;
+    for (let i = 0; i < maxLen; i++) {
+      const a = aLines[i] ?? '';
+      const b = bLines[i] ?? '';
+      if (a !== b) {
+        changed++;
+        if (a) diffHtml += `<div style="background:#fee2e2;color:#b91c1c;padding:0 4px">- ${_esc(a)}</div>`;
+        if (b) diffHtml += `<div style="background:#dcfce7;color:#15803d;padding:0 4px">+ ${_esc(b)}</div>`;
+      }
+    }
+    diffHtml += '</div>';
+    diffEl.innerHTML = `<span style="color:#f59e0b;font-size:0.7rem;font-weight:700">⚠️ มี ${changed} บรรทัดที่เปลี่ยน (ยังไม่ได้ deploy)</span>` + diffHtml;
+  }
+}
+
+function _esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function saveBkRules() {
   const ta = document.getElementById('bk-rules-editor');
   if (!ta) return;
   localStorage.setItem(BK_RULES_KEY, ta.value);
+  _renderRulesDiff(ta.value);
   bkAudit('แก้ไข Firestore Rules', 'firestore.rules', null, { length: ta.value.length });
   showToast('💾 บันทึก Rules แล้ว (กรุณา deploy ใน Firebase Console)');
 }
@@ -323,6 +408,15 @@ function copyBkRules() {
   const ta = document.getElementById('bk-rules-editor');
   if (!ta) return;
   navigator.clipboard?.writeText(ta.value).then(() => showToast('📋 Copy แล้ว'));
+}
+
+function resetBkRules() {
+  const ta = document.getElementById('bk-rules-editor');
+  if (!ta) return;
+  ta.value = _DEPLOYED_RULES;
+  localStorage.setItem(BK_RULES_KEY, _DEPLOYED_RULES);
+  _renderRulesDiff(_DEPLOYED_RULES);
+  showToast('🔄 Reset กลับเป็น Rules ที่ deploy แล้ว');
 }
 
 // ── Cache & Sync ─────────────────────────────────────────────
@@ -444,76 +538,5 @@ window.bkCountWrite = function(n) { window._bkWrites = (window._bkWrites || 0) +
 })();
 
 // ============================================================
-(function initStampToolbar() {
-  const tb = document.createElement('div');
-  tb.id = 'stamp-toolbar';
-  tb.innerHTML = `
-    <div id="stamp-preview-ring" style="display:none;width:52px;height:52px;border-radius:50%;background:#1a5276;border:3px solid white;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.35);cursor:pointer" onclick="document.getElementById('stamp-file-input').click()">
-      <div id="stamp-preview-inner" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.2rem">🔖</div>
-    </div>
-    <button class="stamp-fab" onclick="document.getElementById('stamp-file-input').click()">
-      🔖 อัปโหลดตราประทับ
-    </button>
-    <button class="stamp-fab" id="stamp-apply-btn" style="display:none;background:linear-gradient(135deg,#15803d,#16a34a)" onclick="applyStampToQuotation()">
-      💾 บันทึก + ประทับตรา
-    </button>
-    <input type="file" id="stamp-file-input" accept="image/*" style="display:none" onchange="onStampUpload(this)">`;
-  document.body.appendChild(tb);
-
-  const savedStamp = localStorage.getItem('_aircon_stamp_img');
-  if (savedStamp) {
-    window._stampImg = savedStamp;
-    updateStampPreview(savedStamp);
-  }
-})();
-
-window.onStampUpload = function(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    window._stampImg = e.target.result;
-    localStorage.setItem('_aircon_stamp_img', window._stampImg);
-    updateStampPreview(window._stampImg);
-    const applyBtn = document.getElementById('stamp-apply-btn');
-    if (applyBtn) applyBtn.style.display = 'flex';
-    if (typeof showToast === 'function') showToast('✅ อัปโหลดตราประทับแล้ว');
-  };
-  reader.readAsDataURL(file);
-};
-
-function updateStampPreview(src) {
-  const ring = document.getElementById('stamp-preview-ring');
-  const inner = document.getElementById('stamp-preview-inner');
-  if (ring && inner) {
-    ring.style.display = 'block';
-    inner.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:contain">`;
-  }
-  const applyBtn = document.getElementById('stamp-apply-btn');
-  if (applyBtn && src) applyBtn.style.display = 'flex';
-}
-
-window.applyStampToQuotation = function() {
-  if (!window._stampImg) {
-    if (typeof showToast === 'function') showToast('⚠️ กรุณาอัปโหลดตราประทับก่อน');
-    return;
-  }
-  if (typeof getPDFConfig === 'function' && typeof savePDFConfig === 'function') {
-    const cfg = getPDFConfig();
-    cfg.stampImg = window._stampImg;
-    savePDFConfig(cfg);
-    if (typeof showToast === 'function') showToast('✅ บันทึกตราประทับแล้ว');
-    if (typeof renderPreview === 'function') renderPreview();
-  } else {
-    if (typeof showToast === 'function') showToast('✅ บันทึกตราประทับแล้ว (เปิด PDF designer เพื่อใช้งาน)');
-  }
-};
-
-const _origGoPageStamp = window.goPage;
-if (typeof _origGoPageStamp === 'function') {
-  window.goPage = function(page) {
-    _origGoPageStamp(page);
-    const tb = document.getElementById('stamp-toolbar');
-    if (tb) tb.classList.toggle('visible', page === 'report' || page === 'settings');
-  };
-}
+// Stamp toolbar ย้ายไปอยู่ใน app-stamp.js แล้ว
+// ============================================================

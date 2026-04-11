@@ -281,10 +281,10 @@ function renderRptCostMonthly() {
   const currentIdx = monthData.findIndex(m => m.year===rptYear && m.month===rptMonth);
 
   // ── SVG Chart ──
-  const SVG_W = 340, SVG_H = 120, PAD_L = 42, PAD_R = 8, PAD_T = 10, PAD_B = 28;
+  const SVG_W = 380, SVG_H = 160, PAD_L = 48, PAD_R = 10, PAD_T = 14, PAD_B = 32;
   const chartW = SVG_W - PAD_L - PAD_R;
   const chartH = SVG_H - PAD_T - PAD_B;
-  const barW2  = Math.floor(chartW / 12) - 3;
+  const barW2  = Math.floor(chartW / 12) - 4;
 
   // Y gridlines (3 lines)
   const yStep = maxTotal > 0 ? maxTotal / 3 : 1;
@@ -323,7 +323,7 @@ function renderRptCostMonthly() {
   const svgLabels = monthData.map((m, i) => {
     const x = PAD_L + i * (chartW / 12) + barW2/2 + 1;
     const isCurrent = i === currentIdx;
-    return `<text x="${x}" y="${SVG_H - 6}" text-anchor="middle" font-size="7" font-weight="${isCurrent?'800':'500'}" fill="${isCurrent?'#c8102e':'#94a3b8'}">${m.label.replace(' ','')}</text>`;
+    return `<text x="${x}" y="${SVG_H - 8}" text-anchor="middle" font-size="8.5" font-weight="${isCurrent?'800':'500'}" fill="${isCurrent?'#c8102e':'#94a3b8'}">${m.label.replace(' ','')}</text>`;
   }).join('');
 
   el.innerHTML = `
@@ -360,12 +360,12 @@ function renderRptCostMonthly() {
     </div>
 
     <!-- SVG Bar Chart -->
-    <div style="background:#f8fafc;border-radius:14px;padding:8px 6px 4px;margin-bottom:8px;overflow:hidden">
-      <svg width="100%" viewBox="0 0 ${SVG_W} ${SVG_H}" style="display:block;overflow:visible">
+    <div style="background:#f8fafc;border-radius:14px;padding:10px 6px 4px;margin-bottom:8px;overflow:hidden">
+      <svg width="100%" viewBox="0 0 ${SVG_W} ${SVG_H}" style="display:block;overflow:visible;max-height:180px">
         <!-- Y gridlines -->
         ${gridLines.map(g=>`
           <line x1="${PAD_L}" y1="${g.y}" x2="${SVG_W-PAD_R}" y2="${g.y}" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="3,3"/>
-          <text x="${PAD_L-4}" y="${g.y+3}" text-anchor="end" font-size="7" fill="#94a3b8">${g.label}</text>
+          <text x="${PAD_L-5}" y="${g.y+3}" text-anchor="end" font-size="8.5" fill="#94a3b8">${g.label}</text>
         `).join('')}
         <!-- baseline -->
         <line x1="${PAD_L}" y1="${PAD_T+chartH}" x2="${SVG_W-PAD_R}" y2="${PAD_T+chartH}" stroke="#e2e8f0" stroke-width="1"/>
@@ -2842,6 +2842,83 @@ function histDateClear()  {
   if(dt) dt.value = '';
   _histPage = 0;
   renderHistory();
+}
+
+// ── Export ประวัติงานซ่อมเสร็จ → Excel ─────────────────────
+function exportHistoryExcel() {
+  if (typeof XLSX === 'undefined') { waitForXLSX(exportHistoryExcel); return; }
+
+  const kw       = (document.getElementById('history-search')?.value||'').toLowerCase().trim();
+  const dateFrom = document.getElementById('history-date-from')?.value || '';
+  const dateTo   = document.getElementById('history-date-to')?.value   || '';
+
+  let tickets = (db.tickets||[]).filter(t => t.status === 'done');
+
+  // กรองตาม search/date เหมือน renderHistory
+  if (kw) {
+    tickets = tickets.filter(t =>
+      (t.id||'').toLowerCase().includes(kw) ||
+      (t.machine||'').toLowerCase().includes(kw) ||
+      (t.problem||'').toLowerCase().includes(kw) ||
+      (t.reporter||'').toLowerCase().includes(kw) ||
+      (t.assignee||'').toLowerCase().includes(kw)
+    );
+  }
+  if (dateFrom) tickets = tickets.filter(t => (t.updatedAt||t.createdAt||'') >= dateFrom);
+  if (dateTo)   tickets = tickets.filter(t => (t.updatedAt||t.createdAt||'') <= dateTo + 'T23:59:59');
+
+  tickets.sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+
+  if (tickets.length === 0) { showToast('⚠️ ไม่มีข้อมูลที่จะ Export'); return; }
+
+  const rows = tickets.map((t,i) => {
+    const repCost  = Number(t.repairCost || 0);
+    const partCost = Number(t.partsCost  || 0);
+    const poCost   = Number(t.purchaseOrder?.total || 0);
+    const fallback = (!repCost && !partCost) ? Number(t.cost||0) : 0;
+    const total    = repCost + partCost + poCost + fallback;
+    return {
+      'ลำดับ':         i + 1,
+      'รหัส Ticket':   t.id || '',
+      'เครื่องแอร์':   t.machine || '',
+      'ปัญหา':         t.problem || '',
+      'แผนก':          t.dept || '',
+      'ผู้แจ้ง':        t.reporter || '',
+      'ช่างผู้ซ่อม':   t.assignee || '',
+      'สรุปการซ่อม':   t.summary || '',
+      'ค่าแรงซ่อม':    repCost,
+      'ค่าอะไหล่/PO':  partCost + poCost,
+      'ค่าใช้จ่ายรวม': total || fallback,
+      'วันที่แจ้ง':    t.createdAt ? t.createdAt.slice(0,10) : '',
+      'วันที่เสร็จ':   t.updatedAt ? t.updatedAt.slice(0,10) : '',
+    };
+  });
+
+  const today = new Date().toLocaleDateString('th-TH');
+  const ws = XLSX.utils.json_to_sheet([]);
+
+  // Header row สวย
+  XLSX.utils.sheet_add_aoa(ws, [
+    ['📋 ประวัติงานซ่อมเสร็จ — SCG.AIRCON BP'],
+    ['วันที่ Export: ' + today + (kw?' | ค้นหา: '+kw:'') + (dateFrom?' | ตั้งแต่: '+dateFrom:'') + (dateTo?' | ถึง: '+dateTo:'')],
+    ['จำนวน: ' + tickets.length + ' รายการ'],
+    [],
+  ], { origin: 'A1' });
+
+  XLSX.utils.sheet_add_json(ws, rows, { origin: 'A5', skipHeader: false });
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:6},{wch:18},{wch:28},{wch:28},{wch:18},{wch:14},
+    {wch:14},{wch:32},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'ประวัติซ่อมเสร็จ');
+
+  const fname = 'history-done-' + new Date().toISOString().slice(0,10) + '.xlsx';
+  XLSX.writeFile(wb, fname);
+  showToast('📊 Export Excel สำเร็จ: ' + fname);
 }
 
 // ── Export Report Summary Excel ─────────────────────────────
