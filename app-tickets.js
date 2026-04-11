@@ -1061,9 +1061,9 @@ function doBulkAccept() {
     const t = db.tickets.find(x => x.id === tid);
     if (!t || t.assigneeId !== CU.id) return;
     if (!['assigned'].includes(t.status)) return;
-    t.status = 'accepted'; t.updatedAt = now;
-    t.history.push({act:'✋ รับงาน (Bulk)', by:CU.name, at:now});
-    notifyRole('admin','✋ ช่างรับงาน ['+tid+']',CU.name+' รับงาน "'+t.problem+'"',tid);
+    t.status = 'inprogress'; t.updatedAt = now; t.startedAt = t.startedAt || now;
+    t.history.push({act:'🔧 เริ่มซ่อม (Bulk)', by:CU.name, at:now});
+    notifyRole('admin','🔧 ช่างรับและเริ่มซ่อม ['+tid+']',CU.name+' รับงาน "'+t.problem+'"',tid);
     if (typeof sendLineNotifyEvent === 'function') sendLineNotifyEvent('accept', t);
     syncTicket(t);
     count++;

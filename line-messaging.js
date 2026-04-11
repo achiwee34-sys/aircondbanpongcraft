@@ -197,6 +197,14 @@ async function lineMessagingEvent(event, t) {
       [['เลขงาน', t.id], ['มอบให้', t.assignee || '—'], ['เวลา', time]],
       '📋 ดูงาน', ticketUrl(t.id));
     if (tech?.lineUserId) await linePush(tech.lineUserId, [flexTech]);
+    else if (tech) {
+      // ช่างไม่มี lineUserId → แจ้ง admin ด้วย Flex พิเศษ
+      const warnFlex = buildFlex('#f59e0b', '⚠️', 'ช่างยังไม่ได้ Link LINE',
+        [['ช่าง', tech.name || '—'], ['เลขงาน', t.id], ['หมายเหตุ', 'ช่างจะไม่ได้รับ LINE แจ้งเตือน']],
+        '👥 จัดการผู้ใช้', ticketUrl(t.id));
+      await linePushAdmin([warnFlex]);
+      console.warn('[LINE assign] tech has no lineUserId:', tech.name);
+    }
     await linePushAdmin([flexAdmin]);
 
   } else if (event === 'accept') {

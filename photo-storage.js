@@ -94,7 +94,7 @@ var _photoCache = {};
 var _photoCacheKeys = [];
 var _PHOTO_CACHE_MAX = 20;
 
-const _PHOTO_CACHE_TTL_MS = 5 * 60 * 1000; // 5 นาที — หลังจากนี้ reload จาก Firestore
+const _PHOTO_CACHE_TTL_MS = 20 * 60 * 1000; // 20 นาที — ลด Firestore reads (เพิ่มจาก 5 นาที)
 
 function _photoCacheSet(key, val) {
   if (_photoCacheKeys.includes(key)) {

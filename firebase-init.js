@@ -220,11 +220,32 @@ async function fsSaveNow() {
   // ── increment _seq ก่อน write เสมอ → ป้องกัน onSnapshot restore ข้อมูลที่เพิ่งลบ ──
   db._seq = (db._seq || 0) + 1;
   try {
+    // ── Strip data: URIs + signatures before Firestore save ──
+    // ป้องกัน Firestore 1MB doc limit: data: base64 ต้องไม่อยู่ใน appdata/main
+    const _stripDataUris = arr => (arr||[]).map(p =>
+      (p && p.startsWith('data:')) ? '' : p  // แทนด้วย '' — photo-storage.js จะ skip key ว่าง
+    ).filter(Boolean);
     const ticketsNoSig = (db.tickets||[]).map(t => {
-      if (!t.signatures) return t;
-      const { signatures, ...rest } = t;
-      return rest;
+      const stripped = { ...t };
+      if (stripped.signatures) { const {signatures:_s, ...rest} = stripped; return rest; }
+      // strip data: URIs ที่อาจค้างจาก upload ล้มเหลว
+      if ((stripped.photosBefore||[]).some(p=>p&&p.startsWith('data:'))) {
+        stripped.photosBefore = _stripDataUris(stripped.photosBefore);
+        console.warn('[fsSave] stripped data: from photosBefore', t.id);
+      }
+      if ((stripped.photosAfter||[]).some(p=>p&&p.startsWith('data:'))) {
+        stripped.photosAfter = _stripDataUris(stripped.photosAfter);
+        console.warn('[fsSave] stripped data: from photosAfter', t.id);
+      }
+      return stripped;
     });
+    // ── Size guard: warn ถ้า payload ใกล้ 900KB ──
+    const _payloadSize = JSON.stringify(ticketsNoSig).length;
+    if (_payloadSize > 900_000) {
+      console.warn('[fsSave] payload large:', (_payloadSize/1024).toFixed(0)+'KB — consider archiving old tickets');
+      if (typeof showToast === 'function' && _payloadSize > 950_000)
+        showToast('⚠️ ข้อมูลใกล้เต็ม กรุณา Backup แล้วล้างงานเก่า');
+    }
     const allSigs = {};
     (db.tickets||[]).forEach(t => {
       if (t.signatures && Object.keys(t.signatures).length > 0) {
@@ -260,13 +281,25 @@ function fsSave() {
     return;
   }
   fsSaveNow().then(() => {
-    _fsSaveFailCount = 0; // reset เมื่อสำเร็จ
+    _fsSaveFailCount = 0;
+    // ซ่อน Firebase-offline banner ถ้าแสดงอยู่
+    const _fb = document.getElementById('_fb-offline-banner');
+    if (_fb) _fb.remove();
   }).catch(e => {
     _fsSaveFailCount++;
     console.warn('[fsSave] fail #' + _fsSaveFailCount, e?.message || e);
-    if (_fsSaveFailCount >= 3 && typeof showToast === 'function') {
-      showToast('⚠️ Firebase sync ล้มเหลว — ข้อมูลอยู่ใน local เท่านั้น');
-      _fsSaveFailCount = 0; // reset หลังแจ้งแล้ว
+    if (_fsSaveFailCount >= 3) {
+      if (typeof showToast === 'function')
+        showToast('⚠️ Firebase sync ล้มเหลว — ข้อมูลอยู่ใน local เท่านั้น');
+      // แสดง persistent banner (ต่างจาก offline banner ปกติ — นี่คือ Firebase unreachable)
+      if (!document.getElementById('_fb-offline-banner')) {
+        const _b = document.createElement('div');
+        _b.id = '_fb-offline-banner';
+        _b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#92400e;color:white;font-size:0.72rem;font-weight:700;text-align:center;padding:6px 12px;display:flex;align-items:center;justify-content:center;gap:8px';
+        _b.innerHTML = '⚠️ Cloud sync ขัดข้อง — ข้อมูลบันทึก local เท่านั้น <button onclick="this.parentElement.remove();if(typeof forceReloadFromFS===\'function\')forceReloadFromFS()" style="margin-left:8px;background:rgba(255,255,255,0.2);border:none;border-radius:4px;color:white;padding:2px 8px;cursor:pointer;font-size:0.7rem">🔄 ลองใหม่</button>';
+        document.body.prepend(_b);
+      }
+      _fsSaveFailCount = 0;
     }
   });
 }
@@ -403,7 +436,7 @@ async function fsListen() {
       if (!Array.isArray(newNotifs)) return false;
       const myOld = (db.notifications||[]).filter(n=>n.userId===CU?.id).length;
       const myNew = newNotifs.filter(n=>n.userId===CU?.id).length;
-      if (myOld === myNew) return false;
+      const myOldUnread = (db.notifications||[]).filter(n=>n.userId===CU?.id&&!n.read).length; if (myOld === myNew && myOldUnread === newNotifs.filter(n=>n.userId===CU?.id&&!n.read).length) return false;
       db.notifications = newNotifs;
       return true;
     })();

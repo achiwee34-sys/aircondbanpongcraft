@@ -555,7 +555,7 @@ function doAssign() {
   t.history.push({act:'📋 จ่ายงาน'+schedNote,by:CU.name,at:now,detail:note||''});
   notifyUser(selTechId,'📋 มีงานมอบหมาย ['+tid+']','งาน "'+t.problem+'" ที่ '+t.machine+(schedAt?' · นัดหมาย '+schedAt:''),tid);
   notifyUser(t.reporterId,'✅ งานรับเข้าระบบ','มอบหมายให้ '+tech.name+' ดูแลแล้ว',tid);
-  sendLineNotifyEvent('new', t);
+  sendLineNotifyEvent('assign', t); // FIX: was 'new'
   saveDB(); syncTicket(t);
   closeSheet('assign');
   refreshPage();
@@ -2553,36 +2553,59 @@ function openCompleteSheet(tid) {
   pendingPhotos.before = [];
   document.getElementById('c-grid').innerHTML = '';
 
-  // ── แสดงรูปก่อนซ่อมจากผู้แจ้ง (ถ้ามี) ──
+  // ── แสดงรูปก่อนซ่อม — ทั้งจากผู้แจ้ง และให้ช่างถ่ายเองได้เสมอ ──
   const beforeSection = document.getElementById('c-before-section');
   const reporterPhotos = t.photosBefore || [];
+
+  // อัพเดท label ตามสถานการณ์
+  const beforeLabel = document.getElementById('c-before-label');
+  if (beforeLabel) {
+    beforeLabel.textContent = reporterPhotos.length > 0
+      ? `ผู้แจ้งส่งมา ${reporterPhotos.length} รูป — หรือถ่ายเพิ่มได้`
+      : 'ถ่ายรูปก่อนเริ่มซ่อม';
+  }
+
+  // clear preview + info badge เก่าก่อนเสมอ
+  const oldPreview = document.getElementById('c-reporter-photos-preview');
+  if (oldPreview) oldPreview.remove();
+  const oldBadge = document.getElementById('c-before-info');
+  if (oldBadge) oldBadge.remove();
+
   if (beforeSection) {
+    beforeSection.style.display = 'block'; // แสดงเสมอ
+
     if (reporterPhotos.length > 0) {
-      beforeSection.style.display = 'block';
       // แสดง thumbnail รูปที่ผู้แจ้งส่งมา (read-only preview)
-      const previewId = 'c-reporter-photos-preview';
-      let previewEl = document.getElementById(previewId);
-      if (!previewEl) {
-        previewEl = document.createElement('div');
-        previewEl.id = previewId;
-        previewEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:6px';
-        beforeSection.querySelector('.photo-upload')?.before(previewEl);
-      }
-      // สร้าง placeholder ก่อน แล้ว async resolve รูปที่เป็น fs: key
+      const previewEl = document.createElement('div');
+      previewEl.id = 'c-reporter-photos-preview';
+      previewEl.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:6px';
+      beforeSection.querySelector('.photo-upload')?.before(previewEl);
+
+      // สร้าง placeholder แล้ว async resolve รูปที่เป็น fs: key
       previewEl.innerHTML = reporterPhotos.map((src, i) =>
-        `<div id="c-rp-photo-${i}" style="position:relative;flex-shrink:0;width:68px;height:68px;border-radius:10px;border:2px solid #fed7aa;background:#fff7ed;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+        `<div id="c-rp-photo-${i}" style="position:relative;flex-shrink:0;width:68px;height:68px;border-radius:10px;border:2px solid #fed7aa;background:#fff7ed;display:flex;align-items:center;justify-content:center;overflow:hidden">
           <span style="font-size:1.2rem">⏳</span>
           <div style="position:absolute;bottom:2px;right:2px;background:rgba(194,65,12,0.85);color:white;border-radius:4px;padding:1px 4px;font-size:0.5rem;font-weight:800">ผู้แจ้ง</div>
         </div>`
       ).join('');
-      // ✅ M3 fix: ใช้ Promise.all แทน forEach async เพื่อป้องกัน race condition
+
+      // info badge
+      const infoBadge = document.createElement('div');
+      infoBadge.id = 'c-before-info';
+      infoBadge.style.cssText = 'background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;font-size:0.7rem;color:#92400e;font-weight:600;margin-bottom:6px';
+      infoBadge.innerHTML = `<span>📋</span><span>ผู้แจ้งส่งรูปมา ${reporterPhotos.length} รูป — ช่างถ่ายเพิ่มได้โดยกดปุ่มด้านล่าง</span>`;
+      previewEl.before(infoBadge);
+
+      // copy รูปผู้แจ้งเข้า pendingPhotos.before ก่อน (fs: key เดิม)
+      pendingPhotos.before = [...reporterPhotos];
+
+      // async resolve fs: keys → URL จริง
       Promise.all(reporterPhotos.map(async (src, i) => {
         try {
           let resolvedSrc = src;
           if (src && src.startsWith('fs:') && typeof resolvePhotoUrl === 'function') {
             resolvedSrc = await resolvePhotoUrl(src, tid) || src;
           }
-          // อัพเดท preview
           const div = document.getElementById('c-rp-photo-' + i);
           if (div && resolvedSrc && !resolvedSrc.startsWith('fs:')) {
             div.innerHTML = `<img src="${resolvedSrc}" onclick="openLightbox('${resolvedSrc}')"
@@ -2594,30 +2617,15 @@ function openCompleteSheet(tid) {
           return (resolvedSrc && !resolvedSrc.startsWith('fs:')) ? resolvedSrc : src;
         } catch(e) { console.warn('[photo resolve]', e); return src; }
       })).then(resolvedArr => {
-        pendingPhotos.before = resolvedArr.filter(s => s && !s.startsWith('fs:'));
+        // merge รูปผู้แจ้ง (resolved) กับรูปที่ช่างถ่ายเพิ่ม
+        const techAdded = pendingPhotos.before.filter(s => s && !reporterPhotos.includes(s));
+        pendingPhotos.before = [...resolvedArr.filter(s => s && !s.startsWith('fs:')), ...techAdded];
       }).catch(err => {
         console.warn('[openCompleteSheet] resolve reporter photos failed:', err);
-        pendingPhotos.before = [...reporterPhotos]; // fallback: ใช้ fs: key เดิม
+        pendingPhotos.before = [...reporterPhotos];
       });
-      // แสดง info badge
-      let infoBadge = document.getElementById('c-before-info');
-      if (!infoBadge) {
-        infoBadge = document.createElement('div');
-        infoBadge.id = 'c-before-info';
-        infoBadge.style.cssText = 'background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;font-size:0.7rem;color:#92400e;font-weight:600;margin-bottom:6px';
-        infoBadge.innerHTML = `<span>📋</span><span>ผู้แจ้งส่งรูปมา ${reporterPhotos.length} รูป — จะถูกบันทึกเป็นรูปก่อนซ่อมในรายงานอัตโนมัติ</span>`;
-        previewEl.before(infoBadge);
-      }
-      // copy รูปผู้แจ้งเข้า pendingPhotos.before (fs: key เดิมก่อน resolve เสร็จ)
-      // resolvedBefore loop ด้านบนจะอัพเดท pendingPhotos.before ให้เป็น resolved URL ทีละรูป
-      pendingPhotos.before = [...reporterPhotos];
-    } else {
-      beforeSection.style.display = 'none';
-      const previewEl = document.getElementById('c-reporter-photos-preview');
-      if (previewEl) previewEl.innerHTML = '';
-      const infoBadge = document.getElementById('c-before-info');
-      if (infoBadge) infoBadge.remove();
     }
+    // ถ้าไม่มีรูปผู้แจ้ง → pendingPhotos.before = [] รอช่างถ่ายเอง (ตั้งค่าแล้วข้างบน)
   }
 
   _showCompleteDialog();
@@ -3080,6 +3088,7 @@ function deleteTicket(tid) {
 function openDetail(tid) {
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;
   const _ser = getSerial(t);
+  try {
   const hasBefore = t.photosBefore?.length>0, hasAfter = t.photosAfter?.length>0;
   const _m = getMacMap().get(t.machineId);
   const _dept = _m?.dept || '—';
@@ -3260,43 +3269,62 @@ function openDetail(tid) {
       </div>
     </div>`:''}\
 
-    <!-- Photos — side-by-side compare -->
-    ${hasBefore||hasAfter?`
+    <!-- Photos — side-by-side compare (แสดงเสมอ) -->
     <div style="margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
         <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📷 รูปภาพเปรียบเทียบ</span>
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
       </div>
-      <div style="display:grid;grid-template-columns:${hasBefore&&hasAfter?'1fr 1fr':'1fr'};gap:8px;align-items:start">
-        ${hasBefore?`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start">
+        <!-- ก่อนซ่อม -->
         <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;overflow:hidden">
           <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:6px 10px;display:flex;align-items:center;gap:5px">
             <span style="font-size:0.7rem">🔴</span>
             <span style="font-size:0.65rem;font-weight:800;color:white;letter-spacing:.04em">ก่อนซ่อม</span>
-            <span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:1px 6px;font-size:0.55rem;font-weight:700;margin-left:auto">${t.photosBefore.length} รูป</span>
+            ${hasBefore?`<span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:1px 6px;font-size:0.55rem;font-weight:700;margin-left:auto">${t.photosBefore.length} รูป</span>`:''}
           </div>
           <div style="padding:6px">
+            ${hasBefore?`
             <div style="display:grid;grid-template-columns:${t.photosBefore.length===1?'1fr':'1fr 1fr'};gap:4px">
               ${t.photosBefore.map((p,i)=>`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div></div>`).join('')}
-            </div>
+            </div>`:`
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px">
+              <div style="font-size:1.4rem;opacity:0.35">📷</div>
+              <div style="font-size:0.6rem;color:#d97706;font-weight:600;text-align:center;line-height:1.4">ยังไม่มีรูป<br>ก่อนซ่อม</div>
+              ${['inprogress','accepted','assigned'].includes(t.status) && CU?.role==='tech' && t.assigneeId===CU?.id?`
+              <button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),300)"
+                style="margin-top:4px;font-size:0.6rem;padding:4px 8px;background:#f59e0b;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit">
+                + ถ่ายรูป
+              </button>`:''}
+            </div>`}
           </div>
-        </div>`:''}
-        ${hasAfter?`
+        </div>
+        <!-- หลังซ่อม -->
         <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;overflow:hidden">
           <div style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:6px 10px;display:flex;align-items:center;gap:5px">
             <span style="font-size:0.7rem">🟢</span>
             <span style="font-size:0.65rem;font-weight:800;color:white;letter-spacing:.04em">หลังซ่อม</span>
-            <span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:1px 6px;font-size:0.55rem;font-weight:700;margin-left:auto">${t.photosAfter.length} รูป</span>
+            ${hasAfter?`<span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:1px 6px;font-size:0.55rem;font-weight:700;margin-left:auto">${t.photosAfter.length} รูป</span>`:''}
           </div>
           <div style="padding:6px">
+            ${hasAfter?`
             <div style="display:grid;grid-template-columns:${t.photosAfter.length===1?'1fr':'1fr 1fr'};gap:4px">
               ${t.photosAfter.map((p,i)=>`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}"><img loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s"/><div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div></div>`).join('')}
-            </div>
+            </div>`:`
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px">
+              <div style="font-size:1.4rem;opacity:0.35">📷</div>
+              <div style="font-size:0.6rem;color:#16a34a;font-weight:600;text-align:center;line-height:1.4">ยังไม่มีรูป<br>หลังซ่อม</div>
+              ${['inprogress','accepted'].includes(t.status) && CU?.role==='tech' && t.assigneeId===CU?.id?`
+              <button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),300)"
+                style="margin-top:4px;font-size:0.6rem;padding:4px 8px;background:#22c55e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit">
+                + ถ่ายรูป
+              </button>`:''}
+            </div>`}
           </div>
-        </div>`:''}
+        </div>
       </div>
-    </div>`:''}\
+    </div>\
 
     <!-- Timeline -->
     <div style="margin-bottom:6px">
@@ -3408,6 +3436,14 @@ function openDetail(tid) {
   // FIX: เพิ่ม second trigger ที่ 800ms กัน race condition กับ sheet animation
   requestAnimationFrame(() => setTimeout(() => _resolveDetailPhotos(t.id, 0), 300));
   setTimeout(() => _resolveDetailPhotos(t.id, 0), 800);
+  } catch(e) {
+    console.error("[openDetail] error:", e);
+    try {
+      const body = document.getElementById("detail-body");
+      if (body) body.innerHTML = `<div style="padding:24px;text-align:center;color:#dc2626"><div style="font-size:2rem;margin-bottom:8px">⚠️</div><div style="font-weight:700">โหลดรายละเอียดไม่ได้</div><div style="font-size:0.8rem;color:#64748b;margin-top:4px">${e.message||"กรุณาปิดแล้วลองใหม่"}</div></div>`;
+      openSheet("detail");
+    } catch(e2) {}
+  }
 }
 
 // ── Async photo resolver for detail sheet ──────────────────────────

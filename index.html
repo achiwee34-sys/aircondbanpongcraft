@@ -2260,6 +2260,31 @@ window._liffLandingUpdateCard = liffUpdateCard;
             </div>
           </div>
 
+          <!-- ── Sync Sequence ── -->
+          <div style="background:white;border-radius:14px;border:1px solid #e2e8f0;overflow:hidden;margin-top:10px">
+            <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:0.82rem;font-weight:800;color:#374151">🔢 Sync Sequence (_seq)</div>
+                <div style="font-size:0.68rem;color:#94a3b8;margin-top:2px">ตัวเลข sync ระหว่าง devices — ไม่ควร reset โดยไม่จำเป็น</div>
+              </div>
+              <span id="sp-seq-val" style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;font-weight:800;color:#6d28d9;background:#f5f3ff;border-radius:6px;padding:2px 10px"
+                onclick="this.textContent = db._seq || 0">—</span>
+            </div>
+            <div style="padding:10px 14px">
+              <button onclick="(function(){
+                if(!confirm('⚠️ Reset _seq จะทำให้ Firestore sync ใหม่ทั้งหมด ทำเมื่อข้อมูลค้างเท่านั้น\nต้องการดำเนินการ?')) return;
+                db._seq = 1;
+                saveDB();
+                if(typeof fsSave==='function') fsSave();
+                document.getElementById('sp-seq-val').textContent = '1';
+                showToast('✅ Reset _seq เป็น 1 แล้ว');
+              })()"
+                style="width:100%;padding:9px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;color:#b91c1c;font-weight:700;font-size:0.75rem;cursor:pointer;font-family:inherit">
+                🔄 Reset Sync Sequence (กรณีข้อมูลค้าง)
+              </button>
+            </div>
+          </div>
+
         </div>
       
     
@@ -3273,10 +3298,10 @@ window._liffLandingUpdateCard = liffUpdateCard;
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
 
         <!-- ก่อนซ่อม — ซ่อนไว้ ผู้แจ้งส่งมาแล้ว -->
-        <div id="c-before-section" style="display:none">
+        <div id="c-before-section" style="display:block">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
             <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:2px 9px;font-size:0.7rem;font-weight:800">📸 ก่อนซ่อม</span>
-            <span style="font-size:0.65rem;color:#94a3b8">(ผู้แจ้งส่งมาแล้ว)</span>
+            <span id="c-before-label" style="font-size:0.65rem;color:#94a3b8">ถ่ายรูปก่อนเริ่มซ่อม</span>
           </div>
           <div class="photo-upload" onclick="document.getElementById('c-pics-before').click()" style="border-radius:12px;padding:10px">
             <input type="file" id="c-pics-before" accept="image/*" multiple onchange="previewPics(this,'c-grid-before','before')"/>

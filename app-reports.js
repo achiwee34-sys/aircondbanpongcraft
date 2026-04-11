@@ -1666,7 +1666,7 @@ function renderTrackingInline(container) {
             ✏️ ${hasPO?'แก้ PR':'กรอก PR'}
           </button>
           ${hasPO && !isRecv
-            ? `<button onclick="event.stopPropagation();markPartArrived('${t.id}')"
+            ? `<button onclick="event.stopPropagation();markPartsArrivedAndNotify('${t.id}')"
                 style="padding:5px 9px;border-radius:8px;border:none;background:#16a34a;color:white;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit">
                 📦 ของมาแล้ว
                </button>`

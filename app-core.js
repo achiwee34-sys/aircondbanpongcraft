@@ -629,6 +629,9 @@ function renderSettingsPage() {
   // Admin tools — show only for admin
   const adminTools = document.getElementById('sp-admin-tools');
   if (adminTools) adminTools.style.display = CU.role === 'admin' ? 'block' : 'none';
+  // populate _seq value
+  const seqEl = document.getElementById('sp-seq-val');
+  if (seqEl && CU.role === 'admin') seqEl.textContent = db._seq || 0;
 
   // LINE & GAS card — admin only + fill current URL
   const lineGasCard = document.getElementById('sp-line-gas-card');
@@ -3305,6 +3308,10 @@ function sendLineNotifyEvent(event, t) {
   const lineNotifyFn = (typeof lineNotify==='function') ? lineNotify : ()=>{};
   if (event==='new' && ln.evNew) {
     const msg = base+'🆕 งานใหม่เข้า!\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n❄️ '+t.machine+'\n📢 ผู้แจ้ง: '+t.reporter+'\n🔥 ด่วน: '+(typeof prTH==='function'?prTH(t.priority):t.priority)+'\n🕐 '+nowStr();
+    if(ln.tokenAdmin) lineNotifyFn(ln.tokenAdmin,msg);
+    if(ln.tokenTech)  lineNotifyFn(ln.tokenTech,msg);
+  } else if (event==='assign' && ln.evNew) {
+    const msg = base+'📋 จ่ายงานแล้ว!\n📋 '+t.id+ser+'\n🔧 '+t.problem+'\n❄️ '+t.machine+'\n👷 ช่าง: '+(t.assignee||'—')+'\n🕐 '+nowStr();
     if(ln.tokenAdmin) lineNotifyFn(ln.tokenAdmin,msg);
     if(ln.tokenTech)  lineNotifyFn(ln.tokenTech,msg);
   } else if (event==='accept' && ln.evAccept) {

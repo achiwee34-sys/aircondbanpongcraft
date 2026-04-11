@@ -113,12 +113,31 @@ async function fsSaveNowSafe() {
   _fsSaving = true;
 
   try {
-    // strip signatures ออกจาก tickets
+    // strip signatures + data: URIs ออกจาก tickets
+    const _stripDataUris = arr => (arr||[]).map(p =>
+      (p && p.startsWith('data:')) ? '' : p
+    ).filter(Boolean);
     const ticketsNoSig = (db.tickets||[]).map(t => {
-      if (!t.signatures) return t;
-      const { signatures, ...rest } = t;
-      return rest;
+      const stripped = { ...t };
+      if (stripped.signatures) { const {signatures:_s, ...rest} = stripped; Object.assign(stripped, rest); delete stripped.signatures; }
+      if ((stripped.photosBefore||[]).some(p=>p&&p.startsWith('data:'))) {
+        stripped.photosBefore = _stripDataUris(stripped.photosBefore);
+        console.warn('[fsSaveNowSafe] stripped data: from photosBefore', t.id);
+      }
+      if ((stripped.photosAfter||[]).some(p=>p&&p.startsWith('data:'))) {
+        stripped.photosAfter = _stripDataUris(stripped.photosAfter);
+        console.warn('[fsSaveNowSafe] stripped data: from photosAfter', t.id);
+      }
+      return stripped;
     });
+
+    // size guard
+    const _payloadSize = JSON.stringify(ticketsNoSig).length;
+    if (_payloadSize > 900_000) {
+      console.warn('[fsSaveNowSafe] payload large:', (_payloadSize/1024).toFixed(0)+'KB');
+      if (typeof showToast === 'function' && _payloadSize > 950_000)
+        showToast('⚠️ ข้อมูลใกล้เต็ม กรุณา Backup แล้วล้างงานเก่า');
+    }
 
     // รวม signatures แยก doc
     const allSigs = {};
