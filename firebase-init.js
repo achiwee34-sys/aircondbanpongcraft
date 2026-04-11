@@ -135,7 +135,9 @@ async function fsLoad() {
           !deletedIds.has(u.id)    // ← กัน local ด้วย
         );
         db.users = [...remoteUsers, ...localOnlyUsers];
-        if (localOnlyUsers.length > 0) {
+        // ── FIX v23-fix19: เพิ่ม CU guard → ไม่ save ถ้ายังไม่มี app user ──
+        // fsLoad() อาจถูกเรียกก่อน login → CU ยังไม่มี → fsSaveNow() → transaction :commit 400
+        if (localOnlyUsers.length > 0 && typeof CU !== 'undefined' && CU && CU.id) {
           fsSaveNow().catch(() => {});
         }
       }
@@ -204,12 +206,22 @@ async function saveChatsFast() {
   if (!_firebaseReady || !FSdb) return;
   const authed = await _waitForAuth();
   if (!authed) { console.warn("[saveChatsFast] auth not ready"); return; }
+  // ── FIX v23-fix19: เพิ่ม CU guard เหมือน fsSaveNowSafe ──
+  // ป้องกัน anonymous user ที่ยังไม่ login ยิง write → :commit 400
+  if (typeof CU === 'undefined' || !CU || !CU.id) {
+    console.info('[saveChatsFast] no app user (CU) — skip');
+    return;
+  }
   _fsChatSaving = true;
   try {
-    if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('main').update({
+    if(window.bkCountWrite) window.bkCountWrite(1);
+    // ── FIX v23-fix19: ใช้ set+merge แทน update ──
+    // .update() จะ fail ด้วย 400 ถ้า doc ยังไม่มี (เช่น first-time user)
+    // .set(merge:true) สร้าง doc ใหม่อัตโนมัติถ้าไม่มี → ไม่มี :commit 400
+    await FSdb.collection('appdata').doc('main').set({
       chats: db.chats || {},
       updatedAt: new Date().toISOString()
-    });
+    }, { merge: true });
   } catch(e) {
     try { await fsSaveNow(); } catch(e2) {}
   } finally {
