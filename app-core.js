@@ -4210,4 +4210,20 @@ window.addEventListener('offline', () => {
 });
 
 // Override fsSave to queue when offline
+// BUG FIX: override was declared but never completed — saves fired into Firestore
+// even when offline, failing silently and generating 28+ warnings per session
 const _origFsSave = typeof fsSave !== 'undefined' ? fsSave : null;
+// eslint-disable-next-line no-global-assign
+fsSave = function fsSave_offlineGuard() {
+  if (!navigator.onLine) {
+    if (typeof offlineEnqueue === 'function') offlineEnqueue('fsSave', { ts: new Date().toISOString() });
+    updateOfflineBadge();
+    return;
+  }
+  if (typeof _origFsSave === 'function') {
+    _origFsSave();
+  } else if (typeof fsSaveNow === 'function') {
+    // fallback if original reference was lost
+    fsSaveNow().catch(e => console.warn('[fsSave_offlineGuard] error:', e?.message));
+  }
+};

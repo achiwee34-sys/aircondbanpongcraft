@@ -163,11 +163,21 @@ async function fsLoad() {
       if (data.gsUrl)                                           db.gsUrl    = data.gsUrl;
 
       try {
-        const sigSnap = await FSdb.collection('appdata').doc('signatures').get(); if(window.bkCountRead) window.bkCountRead(1);
-        if (sigSnap.exists) {
-          const allSigs = sigSnap.data();
-          db.tickets.forEach(t => { if (allSigs[t.id]) t.signatures = allSigs[t.id]; });
-          try { localStorage.setItem('aircon_sigs', JSON.stringify(allSigs)); } catch(e) {}
+        // BUG FIX: อ่าน signatures เฉพาะ real user (custom token / LIFF) — anonymous ได้ permission-denied
+        // ใช้ user.isAnonymous แทน providerData (custom token มี providerData = [] เหมือนกัน)
+        const _fbUser = firebase.auth().currentUser;
+        const _isRealUser = _fbUser && _fbUser.isAnonymous === false;
+        if (_isRealUser) {
+          const sigSnap = await FSdb.collection('appdata').doc('signatures').get(); if(window.bkCountRead) window.bkCountRead(1);
+          if (sigSnap.exists) {
+            const allSigs = sigSnap.data();
+            db.tickets.forEach(t => { if (allSigs[t.id]) t.signatures = allSigs[t.id]; });
+            try { localStorage.setItem('aircon_sigs', JSON.stringify(allSigs)); } catch(e) {}
+          }
+        } else {
+          // anonymous → ใช้ cache จาก localStorage แทน (real user จะ sync ครั้งหน้า)
+          const sigCache = JSON.parse(localStorage.getItem('aircon_sigs') || '{}');
+          db.tickets.forEach(t => { if (sigCache[t.id]) t.signatures = sigCache[t.id]; });
         }
       } catch(e) {
         try {
@@ -272,7 +282,17 @@ async function fsSaveNow() {
       updatedAt:       new Date().toISOString()
     });
     if (Object.keys(allSigs).length > 0) {
-      if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('signatures').set(allSigs);
+      // BUG FIX: appdata/signatures ต้องการ real user (custom token / LIFF)
+      // ใช้ user.isAnonymous แทน providerData (custom token มี providerData = [] เหมือนกัน)
+      const _fbUser = firebase.auth().currentUser;
+      const _isRealUser = _fbUser && _fbUser.isAnonymous === false;
+      if (_isRealUser) {
+        if(window.bkCountWrite) window.bkCountWrite(1);
+        await FSdb.collection('appdata').doc('signatures').set(allSigs);
+      } else {
+        try { localStorage.setItem('aircon_sigs_pending', JSON.stringify(allSigs)); } catch(e) {}
+        console.info('[fsSaveNow] signatures skipped (anonymous user) — cached locally');
+      }
     }
   } catch(e) { console.warn('fsSaveNow error:', e); }
   finally { setTimeout(() => { _fsSaving = false; }, 800); } // FIX v23-track2: ลดจาก 3000→800ms ป้องกัน onSnapshot block นานเกิน

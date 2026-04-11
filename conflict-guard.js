@@ -36,8 +36,17 @@ async function fsSaveWithLock(payload) {
 
   const ref = FSdb.collection('appdata').doc('main');
 
+  // ── BUG FIX: อย่า throw ข้างใน runTransaction callback ──
+  // เมื่อ throw ใน callback → Firebase SDK จะ RETRY transaction อัตโนมัติ (สูงสุด 5 ครั้ง)
+  // ทุก retry จะยิง POST :commit → ทำให้เกิด 400 errors จำนวนมากใน console
+  // แก้โดย: ใช้ sentinel flag แทน throw เพื่อ signal conflict โดยไม่ให้ Firebase retry
+  let _conflictDetected = false;
+
   try {
     await FSdb.runTransaction(async (tx) => {
+      // ── reset sentinel ทุก attempt (กรณี Firebase retry จาก error อื่น) ──
+      _conflictDetected = false;
+
       const snap = await tx.get(ref);
 
       if (snap.exists) {
@@ -45,9 +54,12 @@ async function fsSaveWithLock(payload) {
 
         // ถ้า remote version ใหม่กว่า local → มีคนอื่น save ไปก่อน
         if (remoteVersion > _localDocVersion) {
-          const err = new Error('CONFLICT');
-          err.isConflict = true;
-          throw err;
+          // ── ไม่ throw — ให้ tx.set() ด้วย payload เดิม (noop write)
+          // แล้วตั้ง flag ไว้ตรวจสอบหลัง transaction commit ──
+          _conflictDetected = true;
+          // อัปเดต localDocVersion ให้ตรงกับ remote เพื่อไม่ให้ conflict loop
+          _localDocVersion = remoteVersion;
+          return; // ออกจาก callback โดยไม่ write — transaction จะ commit แบบ read-only
         }
       }
 
@@ -57,12 +69,13 @@ async function fsSaveWithLock(payload) {
       _localDocVersion = newVersion;
     });
 
+    // ตรวจ flag หลัง transaction commit สำเร็จ
+    if (_conflictDetected) {
+      return 'conflict';
+    }
     return 'ok';
 
   } catch(e) {
-    if (e.isConflict) {
-      return 'conflict';
-    }
     console.warn('[ConflictGuard] transaction error:', e);
     return 'error';
   }
@@ -207,8 +220,19 @@ async function fsSaveNowSafe() {
     }
 
     // save signatures แยก (ถ้ามี)
+    // BUG FIX: appdata/signatures ต้องการ real user (role claim) เท่านั้น
+    // anonymous user (PC browser) จะได้ permission-denied → ข้าม write เงียบๆ
     if (Object.keys(allSigs).length > 0) {
-      await FSdb.collection('appdata').doc('signatures').set(allSigs);
+      const _fbUser = firebase.auth().currentUser;
+      // ใช้ user.isAnonymous แทน providerData (custom token มี providerData = [] เหมือนกัน)
+      const _isRealUser = _fbUser && _fbUser.isAnonymous === false;
+      if (_isRealUser) {
+        await FSdb.collection('appdata').doc('signatures').set(allSigs);
+      } else {
+        // เก็บ signatures ไว้ใน localStorage — จะ sync ครั้งหน้าเมื่อ user มี role token
+        try { localStorage.setItem('aircon_sigs_pending', JSON.stringify(allSigs)); } catch(e) {}
+        console.info('[ConflictGuard] signatures skipped (anonymous user) — cached locally');
+      }
     }
 
   } catch(e) {

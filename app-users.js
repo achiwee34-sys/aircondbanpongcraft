@@ -375,11 +375,9 @@ function delUser(id) {
     db.notifications=(db.notifications||[]).filter(function(n){return n.userId!==id;});
     db._seq=(db._seq||1)+1;
     saveDB();
-    // force save ทันที + retry เพื่อให้ Firestore อัพเดต deletedUserIds ก่อน onSnapshot ยิงกลับ
-    fsSaveNow().then(()=>{
-      // save ซ้ำอีกครั้งหลัง 2s เพื่อกันกรณี race condition
-      setTimeout(()=>{ if(typeof fsSaveNow==='function') fsSaveNow().catch(()=>{}); }, 2000);
-    }).catch(()=>{ fsSave(); });
+    // BUG FIX: ลบ double-save ออก — conflict-guard transaction จัดการ concurrency แล้ว
+    // retry ซ้ำ 2s ทำให้เกิด extra :commit และเพิ่มโอกาส conflict โดยไม่จำเป็น
+    fsSaveNow().catch(()=>{ fsSave(); });
     switchUserTab(currentUserTab||'tech');
     renderTickets();
     showToast('🗑️ ลบผู้ใช้ '+u.name+' แล้ว');
