@@ -1652,6 +1652,9 @@ window.renderRepairHistResults = function() {
 };
 
 function renderRepairHistRow(t, statusColor, statusLabel) {
+  // XSS fix: escape user-supplied string fields before innerHTML interpolation
+  const _e = (typeof escapeHtml === 'function') ? escapeHtml : (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+  t = {...t, machine: _e(t.machine||''), problem: _e(t.problem||''), assignee: _e(t.assignee||''), summary: _e(t.summary||''), reporter: _e(t.reporter||'')};
   const cost = parseFloat(t.cost) || 0;
   const repairCost = parseFloat(t.repairCost) || 0;
   const partsCost = parseFloat(t.partsCost) || 0;
