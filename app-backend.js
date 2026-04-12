@@ -806,6 +806,75 @@ function renderBkpUsers() {
       </div>
     </div>`;
   }).join('');
+
+  // Tech Performance Table
+  const perfWrap = document.getElementById('bkp-tech-perf');
+  if (perfWrap) renderTechPerformance(perfWrap);
+}
+
+// ── TECH PERFORMANCE ─────────────────────────────────────────
+function renderTechPerformance(container) {
+  const db = window.db || {};
+  const tickets = db.tickets || [];
+  const users = (db.users || []).filter(u => u.role === 'tech');
+  if (!users.length) { container.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:16px">ไม่มีช่างในระบบ</div>'; return; }
+
+  const stats = users.map(u => {
+    const mine = tickets.filter(t => t.assigneeId === u.id);
+    const done  = mine.filter(t => ['done','verified','closed'].includes(t.status));
+    const open  = mine.filter(t => !['done','verified','closed','cancelled'].includes(t.status));
+    // avg time new→done (hours)
+    const times = done.map(t => {
+      const s = t.createdAt || t.updatedAt; const e = t.updatedAt;
+      if (!s || !e) return null;
+      return (new Date(e) - new Date(s)) / 3600000;
+    }).filter(x => x !== null && x > 0);
+    const avgH = times.length ? Math.round(times.reduce((a,b)=>a+b,0) / times.length) : null;
+    // ratings
+    const rated = done.filter(t => t.rating?.score);
+    const avgRating = rated.length ? (rated.reduce((a,t)=>a+t.rating.score,0)/rated.length).toFixed(1) : null;
+    return { u, done: done.length, open: open.length, total: mine.length, avgH, avgRating, ratedCount: rated.length };
+  }).sort((a,b) => b.done - a.done);
+
+  const stars = r => r ? '⭐'.repeat(Math.round(r)) + ' ' + r : '—';
+  const time  = h => h == null ? '—' : h < 24 ? h+'ชม.' : Math.round(h/24)+'วัน';
+
+  container.innerHTML = `
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table style="width:100%;border-collapse:collapse;font-size:0.72rem">
+        <thead>
+          <tr style="background:var(--bg)">
+            <th style="padding:8px 6px;text-align:left;color:var(--muted);font-weight:700;white-space:nowrap">ช่าง</th>
+            <th style="padding:8px 6px;text-align:center;color:var(--muted);font-weight:700">เสร็จ</th>
+            <th style="padding:8px 6px;text-align:center;color:var(--muted);font-weight:700">ค้าง</th>
+            <th style="padding:8px 6px;text-align:center;color:var(--muted);font-weight:700;white-space:nowrap">เวลาเฉลี่ย</th>
+            <th style="padding:8px 6px;text-align:center;color:var(--muted);font-weight:700">คะแนน</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stats.map((s,i) => {
+            const initials = (s.u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+            const rankBg = i===0?'#fef9c3':i===1?'#f1f5f9':i===2?'#fdf2f8':'transparent';
+            const rankIcon = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+            return `<tr style="border-top:1px solid var(--border);background:${rankBg}">
+              <td style="padding:8px 6px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(5,150,105,0.12);border:2px solid #059669;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;color:#059669;flex-shrink:0">${initials}</div>
+                  <div>
+                    <div style="font-weight:800;color:var(--text)">${rankIcon} ${s.u.name||'—'}</div>
+                    <div style="font-size:0.6rem;color:var(--muted)">${s.total} งานทั้งหมด</div>
+                  </div>
+                </div>
+              </td>
+              <td style="padding:8px 6px;text-align:center;font-weight:900;color:#16a34a;font-size:0.85rem">${s.done}</td>
+              <td style="padding:8px 6px;text-align:center;font-weight:700;color:${s.open>0?'#dc2626':'#94a3b8'}">${s.open}</td>
+              <td style="padding:8px 6px;text-align:center;color:var(--text);font-weight:700">${time(s.avgH)}</td>
+              <td style="padding:8px 6px;text-align:center;color:#f59e0b;font-weight:800;white-space:nowrap">${s.avgRating ? '⭐'+s.avgRating : '—'}${s.ratedCount?'<div style="font-size:0.58rem;color:var(--muted)">('+s.ratedCount+')':'</div>'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 // ── NOTIFY tab ────────────────────────────────────────────────

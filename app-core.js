@@ -2947,7 +2947,6 @@ function setupBottomNav() {
     history:    '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
     executive:  '<rect x="2" y="3" width="6" height="8" rx="1"/><rect x="9" y="7" width="6" height="4" rx="1"/><rect x="16" y="5" width="6" height="6" rx="1"/><line x1="5" y1="11" x2="5" y2="21"/><line x1="12" y1="11" x2="12" y2="21"/><line x1="19" y1="11" x2="19" y2="21"/>',
     airsearch:  '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
-    backend:    '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M6 8h.01M9 8h.01M12 8h5"/>',
   };
 
   const mkIcon = p => `<span class="bn-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG[p]||''}</svg></span>`;
@@ -2961,7 +2960,6 @@ function setupBottomNav() {
         {page:'report',     label:'รายงาน'},
         {page:'history',    label:'ประวัติ',    action:()=>openRepairHistoryPage()},
         {page:'settings',   label:'ตั้งค่า'},
-        {page:'backend',    label:'Backend'},
       ]
     : isExec
       ? [
@@ -3002,11 +3000,7 @@ function setupBottomNav() {
     const iconHtml = item.page === 'incomplete'
       ? `<span class="bn-icon" style="${iconColor}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG['incomplete']}</svg></span>`
       : mkIcon(item.page);
-    const isBackend = item.page === 'backend';
-    const labelStyle = item.page === 'incomplete' ? ' style="color:#d97706"'
-                     : isBackend ? ' style="color:#64748b;font-size:0.52rem;font-weight:800"' : '';
-    const btnExtraStyle = isBackend ? 'opacity:0.75;' : '';
-    if (btnExtraStyle) btn.style.cssText += btnExtraStyle;
+    const labelStyle = item.page === 'incomplete' ? ' style="color:#d97706"' : '';
     btn.innerHTML = iconHtml + `<span class="bn-label"${labelStyle}>${item.label}</span>` + (item.badge ? `<span class="bn-badge" id="${item.badge}"></span>` : '');
     nav.appendChild(btn);
   });

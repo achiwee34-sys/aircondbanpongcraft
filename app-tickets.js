@@ -1509,7 +1509,8 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
           <span style="width:1px;height:7px;background:#e2e8f0;flex-shrink:0"></span>
           <span class="tag ${stc(t.status)}" style="font-size:0.55rem;padding:1px 6px;border-radius:4px">${sTH(t.status)}</span>
           <span class="tag ${prC(t.priority)}" style="font-size:0.55rem;padding:1px 6px;border-radius:4px">${prTH(t.priority)}</span>
-          ${hasPics?`<span style="font-size:0.65rem;margin-left:auto">📷 ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)}</span>`:`<span style="flex:1"></span>`}
+          ${hasPics?`<span style="font-size:0.65rem">📷 ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)}</span>`:''}
+          ${t.rating?.score?`<span style="font-size:0.65rem;margin-left:auto;color:#f59e0b;font-weight:800">⭐${t.rating.score}</span>`:`<span style="flex:1"></span>`}
         </div>
         <div style="font-size:0.82rem;font-weight:700;color:#0f172a;line-height:1.3;margin-bottom:4px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">${escapeHtml(t.problem)}</div>
         <div style="font-size:0.6rem;color:#64748b;display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding-bottom:6px;border-bottom:1px solid #f1f5f9">

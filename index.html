@@ -2678,14 +2678,24 @@ window._liffLandingUpdateCard = liffUpdateCard;
   ====================================================== -->
   <div class="page" id="pg-backend" data-page="backend" style="padding:0;display:flex !important;flex-direction:column;background:var(--bg);overflow:hidden">
     <!-- Fixed header — ไม่ sticky ไม่ล้น -->
-    <div id="bkp-header" style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:12px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.35)">
-      <div style="display:flex;align-items:center;gap:10px">
+    <div id="bkp-header" style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:10px 12px 0;box-shadow:0 2px 12px rgba(0,0,0,0.35)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <button onclick="goPage('home')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">&#8249;</button>
-        <div style="flex:1;min-width:0">
-          <div style="color:white;font-size:0.9rem;font-weight:900;letter-spacing:-0.01em">&#128187; Backend Dashboard</div>
-          <div id="bkp-conn-badge" style="font-size:0.6rem;color:rgba(255,255,255,0.5);margin-top:1px">&#128308; กำลังตรวจสอบ...</div>
+        <div style="flex:1;min-width:0;overflow:hidden">
+          <div style="color:white;font-size:0.85rem;font-weight:900;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">&#128187; Backend Dashboard</div>
+          <div id="bkp-conn-badge" style="font-size:0.6rem;color:rgba(255,255,255,0.5);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">&#128308; กำลังตรวจสอบ...</div>
         </div>
-        <button onclick="refreshBackendPage()" style="padding:5px 10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">&#128260; รีเฟรช</button>
+        <button onclick="refreshBackendPage()" style="padding:5px 8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">&#128260; รีเฟรช</button>
+      </div>
+      <!-- Tab strip — scrollable horizontal -->
+      <div style="display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -12px;padding:0 12px">
+        <button id="bkp-tab-overview" onclick="switchBkpTab('overview')" style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid white;color:white;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Overview</button>
+        <button id="bkp-tab-data"     onclick="switchBkpTab('data')"     style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Data</button>
+        <button id="bkp-tab-users"    onclick="switchBkpTab('users')"    style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Users</button>
+        <button id="bkp-tab-notify"   onclick="switchBkpTab('notify')"   style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Notify</button>
+        <button id="bkp-tab-firebase" onclick="switchBkpTab('firebase')" style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Firebase</button>
+        <button id="bkp-tab-log"      onclick="switchBkpTab('log')"      style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Log</button>
+        <button id="bkp-tab-danger"   onclick="switchBkpTab('danger')"   style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">&#9888; Danger</button>
       </div>
     </div>
 
@@ -2820,6 +2830,12 @@ window._liffLandingUpdateCard = liffUpdateCard;
         </div>
         <button onclick="goPage('users');setTimeout(function(){if(typeof openAddUserSheet==='function')openAddUserSheet();},400)" style="width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:14px;font-size:0.85rem;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:12px">&#10133; เพิ่มผู้ใช้งานใหม่</button>
         <div id="bkp-user-list" style="display:flex;flex-direction:column;gap:8px"></div>
+
+        <!-- Tech Performance -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-top:14px">
+          <div style="font-size:0.72rem;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">📊 ผลงานช่าง (Leaderboard)</div>
+          <div id="bkp-tech-perf"></div>
+        </div>
       </div><!-- end pane-users -->
 
       <!-- TAB: NOTIFY -->
@@ -2954,12 +2970,16 @@ window._liffLandingUpdateCard = liffUpdateCard;
   <div id="page-tabbar">
     <!-- tickets: filter status -->
     <div id="ptab-tickets" style="display:none">
-      <div class="ptab-row" id="ptab-tickets-row">
+      <div class="ptab-row" id="ptab-tickets-row" style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap">
         <button class="ptab active" data-val="" onclick="setFilter('status','')">ทั้งหมด</button>
-        <button class="ptab" data-val="new" onclick="setFilter('status','new')">ใหม่</button>
-        <button class="ptab admin-only-tab" data-val="assigned" onclick="setFilter('status','assigned')">จ่ายแล้ว</button>
-        <button class="ptab" data-val="_active" onclick="setFilter('status','_active')">ดำเนินการ</button>
-        <button class="ptab" data-val="_done" onclick="setFilter('status','_done')">เสร็จแล้ว</button>
+        <button class="ptab" data-val="new" onclick="setFilter('status','new')">📩 ใหม่</button>
+        <button class="ptab admin-only-tab" data-val="assigned" onclick="setFilter('status','assigned')">👤 จ่ายแล้ว</button>
+        <button class="ptab admin-only-tab" data-val="accepted" onclick="setFilter('status','accepted')">🙋 รับแล้ว</button>
+        <button class="ptab" data-val="_active" onclick="setFilter('status','_active')">⚙️ ดำเนินการ</button>
+        <button class="ptab" data-val="waiting_part" onclick="setFilter('status','waiting_part')">⏳ รออะไหล่</button>
+        <button class="ptab" data-val="done" onclick="setFilter('status','done')">✅ เสร็จแล้ว</button>
+        <button class="ptab" data-val="rejected" onclick="setFilter('status','rejected')">↩️ ส่งซ่อมใหม่</button>
+        <button class="ptab admin-only-tab" data-val="closed" onclick="setFilter('status','closed')">🏁 ปิดแล้ว</button>
       </div>
     </div>
     <!-- users: role tabs -->
@@ -3868,6 +3888,44 @@ window._liffLandingUpdateCard = liffUpdateCard;
 </div>
 
 <!-- Close Confirm Sheet -->
+
+<!-- Rating / Feedback Sheet -->
+<div class="sheet-overlay" id="rating-overlay" onclick="closeSheet('rating')"></div>
+<div class="sheet" id="rating-sheet" style="border-radius:24px 24px 0 0;overflow:hidden">
+  <div class="sheet-handle"></div>
+  <div class="sheet-body" style="padding:20px 16px 32px">
+    <input type="hidden" id="rt-tid"/>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:2rem;margin-bottom:6px">⭐</div>
+      <div style="font-size:1rem;font-weight:900;color:var(--text)">ประเมินงานซ่อม</div>
+      <div id="rt-sub" style="font-size:0.72rem;color:var(--muted);margin-top:4px"></div>
+    </div>
+    <!-- Stars -->
+    <div id="rt-stars" style="display:flex;justify-content:center;gap:10px;margin-bottom:16px">
+      <button onclick="setRating(1)" data-star="1" style="font-size:2rem;background:none;border:none;cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent">☆</button>
+      <button onclick="setRating(2)" data-star="2" style="font-size:2rem;background:none;border:none;cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent">☆</button>
+      <button onclick="setRating(3)" data-star="3" style="font-size:2rem;background:none;border:none;cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent">☆</button>
+      <button onclick="setRating(4)" data-star="4" style="font-size:2rem;background:none;border:none;cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent">☆</button>
+      <button onclick="setRating(5)" data-star="5" style="font-size:2rem;background:none;border:none;cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent">☆</button>
+    </div>
+    <div id="rt-label" style="text-align:center;font-size:0.8rem;font-weight:700;color:#f59e0b;min-height:20px;margin-bottom:12px"></div>
+    <!-- Quick tags -->
+    <div id="rt-tags" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px">
+      <button onclick="toggleRtTag(this)" style="padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);font-size:0.72rem;font-weight:600;background:var(--card);color:var(--text);cursor:pointer;font-family:inherit">⚡ เร็ว</button>
+      <button onclick="toggleRtTag(this)" style="padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);font-size:0.72rem;font-weight:600;background:var(--card);color:var(--text);cursor:pointer;font-family:inherit">🔧 แก้ได้ตรงจุด</button>
+      <button onclick="toggleRtTag(this)" style="padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);font-size:0.72rem;font-weight:600;background:var(--card);color:var(--text);cursor:pointer;font-family:inherit">😊 สุภาพ</button>
+      <button onclick="toggleRtTag(this)" style="padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);font-size:0.72rem;font-weight:600;background:var(--card);color:var(--text);cursor:pointer;font-family:inherit">🧹 เก็บงานดี</button>
+      <button onclick="toggleRtTag(this)" style="padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);font-size:0.72rem;font-weight:600;background:var(--card);color:var(--text);cursor:pointer;font-family:inherit">⏳ รอนาน</button>
+      <button onclick="toggleRtTag(this)" style="padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);font-size:0.72rem;font-weight:600;background:var(--card);color:var(--text);cursor:pointer;font-family:inherit">🔄 ต้องซ่อมซ้ำ</button>
+    </div>
+    <!-- Comment -->
+    <textarea id="rt-comment" placeholder="ความคิดเห็นเพิ่มเติม (ไม่บังคับ)" rows="2"
+      style="width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--border);font-size:0.8rem;font-family:inherit;background:var(--bg);color:var(--text);box-sizing:border-box;resize:none;margin-bottom:14px"></textarea>
+    <button onclick="submitRating()" class="btn btn-ok btn-full" style="font-weight:800">⭐ ส่งคะแนน</button>
+    <button onclick="closeSheet('rating')" style="width:100%;margin-top:8px;padding:10px;background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer;font-family:inherit">ข้ามไปก่อน</button>
+  </div>
+</div>
+
 <div class="sheet-overlay" id="closeconfirm-overlay" onclick="closeSheet('closeconfirm')"></div>
 <div class="sheet" id="closeconfirm-sheet">
   <div class="sheet-handle"></div>

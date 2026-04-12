@@ -3025,9 +3025,11 @@ function doVerify() {
   }
   t.updatedAt=now; saveDB(); syncTicket(t); closeSheet('verify');
   if (result === 'verified') {
-    refreshPage(); // refresh ก่อนเสมอ เพื่อให้ UI อัพเดทแม้ signature pad crash
+    refreshPage();
     showToast('✅ ตรวจรับแล้ว — กรุณาเซ็นชื่อยืนยัน');
     try { setTimeout(() => openSignaturePad(tid, 'reporter_verify'), 500); } catch(e) {}
+    // เปิด rating sheet หลังเซ็นชื่อ
+    setTimeout(() => { if (typeof openRatingSheet === 'function') openRatingSheet(tid); }, 1200);
   } else {
     refreshPage();
   }
@@ -3453,6 +3455,7 @@ function openDetail(tid) {
           if(act.includes('แก้ไขใบ')) return {icon:'✏️',bg:'#f5f3ff',cl:'#6d28d9'};
           if(act.includes('ช่างเซ็น')||act.includes('ยืนยัน')) return {icon:'✍️',bg:'#ecfdf5',cl:'#065f46'};
           if(act.includes('ยกเลิก')||act.includes('ไม่ผ่าน')) return {icon:'❌',bg:'#fee2e2',cl:'#b91c1c'};
+          if(act.includes('ให้คะแนน')) return {icon:'⭐',bg:'#fef9c3',cl:'#92400e'};
           return {icon:'💬',bg:'#f3f4f6',cl:'#6b7280'};
         })(h.act||'');
         return `<div class="tl-item">
@@ -4653,4 +4656,69 @@ function initPullToRefresh() {
       setTimeout(() => { if (typeof forceReloadFromFS === 'function') forceReloadFromFS(); }, 100);
     }
   }, { passive: true });
+}
+
+// ══════════════════════════════════════════════════════
+// RATING / FEEDBACK SYSTEM
+// ══════════════════════════════════════════════════════
+let _rtScore = 0;
+
+function openRatingSheet(tid) {
+  const t = db.tickets.find(x => x.id === tid);
+  if (!t) return;
+  _rtScore = 0;
+  // reset stars
+  document.querySelectorAll('#rt-stars button').forEach(b => {
+    b.textContent = '☆'; b.style.color = '#d1d5db';
+  });
+  document.getElementById('rt-label').textContent = '';
+  document.getElementById('rt-comment').value = '';
+  // reset tags
+  document.querySelectorAll('#rt-tags button').forEach(b => {
+    b.style.background = 'var(--card)';
+    b.style.borderColor = 'var(--border)';
+    b.style.color = 'var(--text)';
+  });
+  document.getElementById('rt-tid').value = tid;
+  const sub = document.getElementById('rt-sub');
+  if (sub) sub.textContent = t.id + ' — ' + (t.problem || '');
+  openSheet('rating');
+}
+
+function setRating(n) {
+  _rtScore = n;
+  const labels = ['','😞 ต้องปรับปรุง','😐 พอใช้ได้','🙂 ดี','😊 ดีมาก','🤩 ยอดเยี่ยม!'];
+  document.querySelectorAll('#rt-stars button').forEach(b => {
+    const s = parseInt(b.dataset.star);
+    b.textContent = s <= n ? '⭐' : '☆';
+    b.style.color  = s <= n ? '#f59e0b' : '#d1d5db';
+  });
+  const lbl = document.getElementById('rt-label');
+  if (lbl) { lbl.textContent = labels[n] || ''; }
+}
+
+function toggleRtTag(btn) {
+  const on = btn.dataset.on === '1';
+  btn.dataset.on = on ? '0' : '1';
+  btn.style.background   = on ? 'var(--card)'  : '#fef3c7';
+  btn.style.borderColor  = on ? 'var(--border)' : '#f59e0b';
+  btn.style.color        = on ? 'var(--text)'   : '#92400e';
+}
+
+function submitRating() {
+  const tid = document.getElementById('rt-tid').value;
+  const t = db.tickets.find(x => x.id === tid);
+  if (!t) { closeSheet('rating'); return; }
+  const score   = _rtScore || 0;
+  const comment = (document.getElementById('rt-comment').value || '').trim();
+  const tags    = [...document.querySelectorAll('#rt-tags button[data-on="1"]')]
+                    .map(b => b.textContent.trim());
+  const now = nowStr();
+  t.rating = { score, comment, tags, by: CU?.name || '', at: now };
+  t.history.push({ act: '⭐ ให้คะแนน ' + score + '/5', by: CU?.name || '', at: now,
+                   detail: (tags.join(', ') + (comment ? ' — ' + comment : '')).trim() });
+  saveDB(); syncTicket(t);
+  closeSheet('rating');
+  showToast('⭐ ขอบคุณสำหรับคะแนน!');
+  refreshPage();
 }
