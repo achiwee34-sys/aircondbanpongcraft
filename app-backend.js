@@ -862,6 +862,35 @@ function renderBkpFirebase() {
     ).join('');
   }
 
+  // ── Offline Queue stats ──────────────────────────────────────────
+  const oqEl = document.getElementById('bkp-offline-queue');
+  if (oqEl) {
+    const q = window._offlineQueue || [];
+    const cnt = q.length;
+    const online = navigator.onLine;
+    if (cnt === 0) {
+      oqEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${online?'#22c55e':'#f59e0b'};flex-shrink:0"></div>
+        <span style="font-size:0.75rem;color:var(--text)">${online ? 'ออนไลน์ · ไม่มีรายการค้าง ✅' : 'ออฟไลน์ · ไม่มีรายการค้าง'}</span>
+      </div>`;
+    } else {
+      oqEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0"></div>
+        <span style="flex:1;font-size:0.75rem;font-weight:700;color:var(--text)">📴 ${cnt} รายการรอ Sync</span>
+        <button onclick="if(typeof openOfflineQueueDrawer==='function')openOfflineQueueDrawer()" style="padding:3px 10px;background:#fef3c7;color:#b45309;border:1px solid #fde68a;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">ดูทั้งหมด</button>
+        ${online ? `<button onclick="if(typeof offlineSync==='function')offlineSync().then(()=>renderBkpFirebase())" style="padding:3px 10px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🔄 Sync</button>` : ''}
+      </div>
+      ${q.slice(0, 5).map(item => `
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:0.8rem">${item.icon||'📦'}</span>
+          <span style="flex:1;font-size:0.68rem;color:var(--text)">${item.label||item.type}</span>
+          ${item.retryCount > 0 ? `<span style="font-size:0.58rem;background:#fee2e2;color:#ef4444;border-radius:4px;padding:1px 4px">retry ${item.retryCount}</span>` : ''}
+          <span style="font-size:0.6rem;color:var(--muted)">${(item.ts||'').slice(11,16)}</span>
+        </div>`).join('')}
+      ${cnt > 5 ? `<div style="font-size:0.65rem;color:var(--muted);text-align:center;padding-top:4px">...และอีก ${cnt-5} รายการ</div>` : ''}`;
+    }
+  }
+
   const errEl = document.getElementById('bkp-errors');
   if (errEl) {
     const errors = window._bkErrors || [];

@@ -1323,6 +1323,9 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 /* ======= ANIMATIONS ======= */
 @keyframes syncpulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes offlinePulse { 0%,100%{transform:scale(1);box-shadow:none} 50%{transform:scale(1.05);box-shadow:0 0 0 3px rgba(180,83,9,0.18)} }
+@keyframes slideDown { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes slideUp { from{transform:translateY(0);opacity:1} to{transform:translateY(-100%);opacity:0} }
 /* Complete Form Cards */
 .c-check-card { display:flex;align-items:center;gap:8px;background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:10px 12px;cursor:pointer;transition:all 0.18s;user-select:none; }
 .c-check-card input[type=checkbox] { display:none; }

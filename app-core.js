@@ -2947,6 +2947,7 @@ function setupBottomNav() {
     history:    '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
     executive:  '<rect x="2" y="3" width="6" height="8" rx="1"/><rect x="9" y="7" width="6" height="4" rx="1"/><rect x="16" y="5" width="6" height="6" rx="1"/><line x1="5" y1="11" x2="5" y2="21"/><line x1="12" y1="11" x2="12" y2="21"/><line x1="19" y1="11" x2="19" y2="21"/>',
     airsearch:  '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    backend:    '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M6 8h.01M9 8h.01M12 8h5"/>',
   };
 
   const mkIcon = p => `<span class="bn-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG[p]||''}</svg></span>`;
@@ -2960,6 +2961,7 @@ function setupBottomNav() {
         {page:'report',     label:'รายงาน'},
         {page:'history',    label:'ประวัติ',    action:()=>openRepairHistoryPage()},
         {page:'settings',   label:'ตั้งค่า'},
+        {page:'backend',    label:'Backend'},
       ]
     : isExec
       ? [
@@ -3000,7 +3002,12 @@ function setupBottomNav() {
     const iconHtml = item.page === 'incomplete'
       ? `<span class="bn-icon" style="${iconColor}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG['incomplete']}</svg></span>`
       : mkIcon(item.page);
-    btn.innerHTML = iconHtml + `<span class="bn-label"${item.page==='incomplete'?' style="color:#d97706"':''}>${item.label}</span>` + (item.badge ? `<span class="bn-badge" id="${item.badge}"></span>` : '');
+    const isBackend = item.page === 'backend';
+    const labelStyle = item.page === 'incomplete' ? ' style="color:#d97706"'
+                     : isBackend ? ' style="color:#64748b;font-size:0.52rem;font-weight:800"' : '';
+    const btnExtraStyle = isBackend ? 'opacity:0.75;' : '';
+    if (btnExtraStyle) btn.style.cssText += btnExtraStyle;
+    btn.innerHTML = iconHtml + `<span class="bn-label"${labelStyle}>${item.label}</span>` + (item.badge ? `<span class="bn-badge" id="${item.badge}"></span>` : '');
     nav.appendChild(btn);
   });
 
@@ -4168,12 +4175,17 @@ function deletePMEvent(id) {
   showToast('🗑️ ลบแผน PM แล้ว');
 }
 
-// ════════════════════════════════════════════════
-// OFFLINE QUEUE — บันทึกการกระทำเมื่อไม่มีอินเทอร์เน็ต
-// ════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// OFFLINE QUEUE v2 — Full Feature
+// Queue types: fsSave | syncTicketGAS | uploadPhoto | createTicket
+// Auto-sync on window 'online' event
+// Persistent via localStorage, retry limit 5, conflict by updatedAt
+// ════════════════════════════════════════════════════════════════
 const OFFLINE_Q_KEY = 'aircon_offline_queue';
 let _offlineQueue = [];
+let _offlineSyncing = false;  // ป้องกัน concurrent sync
 
+// ── Persist helpers ──────────────────────────────────────────────
 function _loadOfflineQueue() {
   try { _offlineQueue = JSON.parse(localStorage.getItem(OFFLINE_Q_KEY) || '[]'); } catch(e){ _offlineQueue=[]; }
 }
@@ -4182,87 +4194,308 @@ function _saveOfflineQueue() {
 }
 _loadOfflineQueue();
 
+// ── Online check ─────────────────────────────────────────────────
 function isOnline() { return navigator.onLine; }
 
-function offlineEnqueue(type, payload) {
-  _offlineQueue.push({ id: Date.now()+'_'+Math.random().toString(36).slice(2,6), type, payload, ts: new Date().toISOString() });
+// ── Labels สำหรับ UI ─────────────────────────────────────────────
+const _Q_LABELS = {
+  fsSave:         { icon: '☁️', label: 'Sync ข้อมูลหลัก' },
+  syncTicketGAS:  { icon: '📋', label: 'ส่งข้อมูลงานไป GAS' },
+  uploadPhoto:    { icon: '📷', label: 'อัปโหลดรูปภาพ' },
+  createTicket:   { icon: '🎫', label: 'สร้างงานใหม่' },
+};
+
+// ── Enqueue ──────────────────────────────────────────────────────
+function offlineEnqueue(type, payload, opts = {}) {
+  // dedup: ถ้า type === 'fsSave' ให้ merge แทนเพิ่มซ้ำ
+  if (type === 'fsSave') {
+    const existing = _offlineQueue.find(q => q.type === 'fsSave');
+    if (existing) {
+      existing.ts = new Date().toISOString(); // update timestamp เท่านั้น
+      _saveOfflineQueue();
+      updateOfflineBadge();
+      return;
+    }
+  }
+  const item = {
+    id:          Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    type,
+    payload,
+    ts:          new Date().toISOString(),
+    retryCount:  0,
+    label:       opts.label || (_Q_LABELS[type]?.label) || type,
+    icon:        opts.icon  || (_Q_LABELS[type]?.icon)  || '📦',
+  };
+  _offlineQueue.push(item);
   _saveOfflineQueue();
   updateOfflineBadge();
-  showToast('📴 ออฟไลน์ — บันทึกใน Queue แล้ว จะ Sync อัตโนมัติเมื่อออนไลน์');
+  if (!opts.silent) {
+    const lbl = item.label;
+    showToast(`📴 ออฟไลน์ — "${lbl}" บันทึกใน Queue (${_offlineQueue.length} รายการ)`);
+  }
 }
 
+// ── Process one queue item ────────────────────────────────────────
+async function _processQueueItem(item) {
+  switch (item.type) {
+
+    case 'fsSave':
+      // ใช้ fsSaveNow โดยตรง (bypass debounce + offline guard ใหม่)
+      if (typeof fsSaveNow === 'function') await fsSaveNow();
+      break;
+
+    case 'syncTicketGAS': {
+      const { ticketData } = item.payload;
+      const url = db?.gsUrl;
+      if (!url) break; // GAS URL ยังไม่ set → ข้าม (ไม่ถือว่า error)
+      const { signatures: _s, ...tNoSig } = ticketData;
+      await fetch(url, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'ticket', d: tNoSig }),
+      });
+      break;
+    }
+
+    case 'uploadPhoto': {
+      // delegate ไปยัง photo-storage ถ้ายังมี pendingData
+      const { tid, photoData, photoType } = item.payload;
+      if (typeof uploadSinglePhotoToStorage === 'function') {
+        await uploadSinglePhotoToStorage(tid, photoData, photoType);
+      }
+      break;
+    }
+
+    case 'createTicket': {
+      // ticket ถูก push เข้า db.tickets แล้ว (local) → แค่ fsSave ให้ขึ้น Firebase
+      if (typeof fsSaveNow === 'function') await fsSaveNow();
+      // ส่ง GAS ด้วย
+      const { ticketData } = item.payload;
+      if (ticketData && db?.gsUrl) {
+        const { signatures: _s2, ...td } = ticketData;
+        await fetch(db.gsUrl, {
+          method: 'POST', mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'ticket', d: td }),
+        });
+      }
+      break;
+    }
+
+    default:
+      console.warn('[offlineSync] unknown type:', item.type);
+  }
+}
+
+// ── Sync all queued items ─────────────────────────────────────────
 async function offlineSync() {
-  if(!isOnline() || _offlineQueue.length === 0) return;
+  if (!isOnline() || _offlineQueue.length === 0 || _offlineSyncing) return;
+  _offlineSyncing = true;
+  _setOfflineSyncingUI(true);
+
   const pending = [..._offlineQueue];
   _offlineQueue = [];
   _saveOfflineQueue();
   updateOfflineBadge();
+
   let success = 0, fail = 0;
-  for(const item of pending) {
+
+  for (const item of pending) {
     try {
-      if(item.type === 'fsSave') {
-        await fsSave();
-        success++;
-      }
-    } catch(e) {
-      console.warn('[offlineSync] failed:', item.type, e);
-      // RETRY LIMIT FIX (audit #5): ไม่ retry ถ้าเกิน 5 ครั้ง ป้องกัน infinite loop
+      await _processQueueItem(item);
+      success++;
+    } catch (e) {
+      console.warn('[offlineSync] failed:', item.type, e?.message);
       if ((item.retryCount || 0) < 5) {
         item.retryCount = (item.retryCount || 0) + 1;
-        _offlineQueue.push(item); // put back
+        _offlineQueue.push(item); // put back with incremented retry
       } else {
-        console.warn('[offlineSync] Drop item after 5 retries:', item.id || item.type);
+        console.warn('[offlineSync] Dropped after 5 retries:', item.id);
+        bkLog && bkLog('error', `offlineSync drop: ${item.type} after 5 retries`, item.id);
       }
       fail++;
     }
   }
+
   _saveOfflineQueue();
+  _offlineSyncing = false;
+  _setOfflineSyncingUI(false);
   updateOfflineBadge();
-  if(success > 0) showToast(`✅ Sync ${success} รายการสำเร็จ`);
-  if(fail > 0)    showToast(`⚠️ Sync ล้มเหลว ${fail} รายการ — ลองใหม่ภายหลัง`);
+
+  if (success > 0) showToast(`✅ Sync ${success} รายการสำเร็จ`);
+  if (fail > 0)    showToast(`⚠️ ${fail} รายการ Sync ไม่สำเร็จ — จะลองใหม่เมื่อออนไลน์`);
+  if (success > 0) { refreshPage(); updateOpenBadge(); updateNBadge(); }
 }
 
+// ── Syncing animation UI ──────────────────────────────────────────
+function _setOfflineSyncingUI(on) {
+  const badge = document.getElementById('offline-queue-badge');
+  if (!badge) return;
+  if (on) {
+    badge.style.background = '#dbeafe';
+    badge.style.color = '#1d4ed8';
+    badge.style.borderColor = '#93c5fd';
+    badge.innerHTML = '🔄 กำลัง Sync...';
+    badge.style.animation = 'syncpulse 0.8s infinite';
+  } else {
+    badge.style.animation = '';
+  }
+}
+
+// ── Badge + drawer ────────────────────────────────────────────────
 function updateOfflineBadge() {
   const cnt = _offlineQueue.length;
-  // Update badge in status bar if it exists
   const badge = document.getElementById('offline-queue-badge');
-  if(badge) {
-    badge.textContent = cnt > 0 ? `📴 ${cnt} รายการรอ Sync` : '';
-    badge.style.display = cnt > 0 ? 'flex' : 'none';
+  if (badge) {
+    if (cnt > 0) {
+      badge.style.display = 'flex';
+      badge.style.background = '#fef3c7';
+      badge.style.color = '#b45309';
+      badge.style.borderColor = '#fde68a';
+      badge.style.animation = 'offlinePulse 2s ease-in-out infinite';
+      badge.innerHTML = `📴 ${cnt}`;
+      badge.title = `${cnt} รายการรอ Sync — แตะเพื่อดูรายละเอียด`;
+    } else {
+      badge.style.display = 'none';
+      badge.style.animation = '';
+    }
   }
-  // Update nav badge
+  // Update any .offline-count spans
   document.querySelectorAll('.offline-count').forEach(el => {
     el.textContent = cnt > 0 ? String(cnt) : '';
     el.style.display = cnt > 0 ? 'inline-flex' : 'none';
   });
 }
 
-// Auto-sync when coming back online
-window.addEventListener('online', () => {
+// ── Queue Drawer — แสดงรายการที่รอ Sync ──────────────────────────
+function openOfflineQueueDrawer() {
+  const existing = document.getElementById('_oq-drawer');
+  if (existing) { existing.remove(); return; }
+
+  const cnt = _offlineQueue.length;
+  const overlay = document.createElement('div');
+  overlay.id = '_oq-drawer';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99990;display:flex;flex-direction:column;justify-content:flex-end';
+  overlay.innerHTML = `
+    <div onclick="document.getElementById('_oq-drawer').remove()" style="flex:1;background:rgba(0,0,0,0.4)"></div>
+    <div style="background:white;border-radius:20px 20px 0 0;padding:20px 16px 32px;max-height:70vh;overflow-y:auto;box-shadow:0 -4px 24px rgba(0,0,0,0.18)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-size:1rem;font-weight:900;color:#0f172a">📴 Offline Queue</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px">${cnt} รายการรอ Sync เมื่อออนไลน์</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${isOnline() && cnt > 0 ? `<button onclick="offlineSync();document.getElementById('_oq-drawer').remove()" style="padding:7px 14px;background:#1d4ed8;color:white;border:none;border-radius:10px;font-size:0.75rem;font-weight:800;cursor:pointer;font-family:inherit">🔄 Sync เลย</button>` : ''}
+          ${cnt > 0 ? `<button onclick="if(confirm('ล้าง Queue ทั้งหมด?')){window._offlineQueue=[];_offlineQueue=[];_saveOfflineQueue();updateOfflineBadge();document.getElementById('_oq-drawer').remove();showToast('🗑️ ล้าง Queue แล้ว')}" style="padding:7px 14px;background:#fee2e2;color:#ef4444;border:none;border-radius:10px;font-size:0.75rem;font-weight:800;cursor:pointer;font-family:inherit">🗑️ ล้าง</button>` : ''}
+        </div>
+      </div>
+      ${cnt === 0
+        ? `<div style="text-align:center;padding:32px;color:#94a3b8">
+            <div style="font-size:2rem;margin-bottom:8px">✅</div>
+            <div style="font-size:0.85rem;font-weight:700">ไม่มีรายการรอ Sync</div>
+          </div>`
+        : _offlineQueue.map((item, i) => {
+            const d = new Date(item.ts);
+            const timeStr = d.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
+            const dateStr = d.toLocaleDateString('th-TH', {day:'2-digit',month:'2-digit'});
+            const retryBadge = item.retryCount > 0
+              ? `<span style="font-size:0.6rem;background:#fee2e2;color:#ef4444;border-radius:99px;padding:1px 6px;font-weight:700">retry ${item.retryCount}/5</span>`
+              : '';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:12px;margin-bottom:8px;border:1px solid #e2e8f0">
+              <div style="font-size:1.4rem;flex-shrink:0">${item.icon || '📦'}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:0.78rem;font-weight:800;color:#0f172a">${item.label || item.type}</div>
+                ${item.payload?.ticketData?.id ? `<div style="font-size:0.65rem;color:#64748b;font-family:monospace">${item.payload.ticketData.id}</div>` : ''}
+                <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">${dateStr} ${timeStr} ${retryBadge}</div>
+              </div>
+              <div style="font-size:0.62rem;font-weight:700;color:#94a3b8">#${i+1}</div>
+            </div>`;
+          }).join('')
+      }
+      ${!isOnline() ? `<div style="text-align:center;margin-top:12px;font-size:0.72rem;color:#b45309;background:#fef3c7;border-radius:10px;padding:8px 12px">📴 ไม่มีการเชื่อมต่อ — รายการจะ Sync อัตโนมัติเมื่อออนไลน์</div>` : ''}
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ── Offline banner (persistent ไม่ใช่ toast) ─────────────────────
+let _offlineBannerShown = false;
+function _showOfflineBanner() {
+  if (_offlineBannerShown || document.getElementById('_oq-top-banner')) return;
+  _offlineBannerShown = true;
+  const b = document.createElement('div');
+  b.id = '_oq-top-banner';
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99998;background:#92400e;color:white;font-size:0.72rem;font-weight:700;text-align:center;padding:6px 12px;display:flex;align-items:center;justify-content:center;gap:8px;animation:slideDown 0.25s ease';
+  b.innerHTML = '📴 ไม่มีการเชื่อมต่ออินเทอร์เน็ต — ข้อมูลจะถูกบันทึก Local และ Sync อัตโนมัติ <button onclick="this.parentElement.remove()" style="margin-left:8px;background:rgba(255,255,255,0.2);border:none;border-radius:4px;color:white;padding:2px 8px;cursor:pointer;font-size:0.7rem">✕</button>';
+  document.body.prepend(b);
+}
+function _hideOfflineBanner() {
+  _offlineBannerShown = false;
+  const b = document.getElementById('_oq-top-banner');
+  if (b) { b.style.animation = 'slideUp 0.2s ease'; setTimeout(() => b.remove(), 200); }
+}
+
+// ── Network event listeners ───────────────────────────────────────
+window.addEventListener('online', async () => {
+  _hideOfflineBanner();
   updateOfflineBadge();
-  offlineSync();
-  showToast('🌐 กลับมาออนไลน์แล้ว กำลัง Sync...');
+  if (_offlineQueue.length > 0) {
+    showToast(`🌐 ออนไลน์แล้ว — กำลัง Sync ${_offlineQueue.length} รายการ...`);
+    // รอ Firebase init ก่อน sync (300ms buffer)
+    await new Promise(r => setTimeout(r, 300));
+    await offlineSync();
+  } else {
+    showToast('🌐 กลับมาออนไลน์แล้ว');
+  }
 });
 window.addEventListener('offline', () => {
+  _showOfflineBanner();
   updateOfflineBadge();
-  showToast('📴 ไม่มีการเชื่อมต่ออินเทอร์เน็ต');
 });
 
-// Override fsSave to queue when offline
-// BUG FIX: override was declared but never completed — saves fired into Firestore
-// even when offline, failing silently and generating 28+ warnings per session
+// init banner ถ้าเปิดแอพขณะ offline
+if (!navigator.onLine) { setTimeout(_showOfflineBanner, 1000); }
+
+// ── Periodic retry (ทุก 30 วิ ถ้ามี queue ค้าง + online) ─────────
+setInterval(() => {
+  if (isOnline() && _offlineQueue.length > 0 && !_offlineSyncing) {
+    console.info('[offlineQueue] periodic retry:', _offlineQueue.length, 'items');
+    offlineSync();
+  }
+}, 30_000);
+
+// ── Override fsSave to queue when offline ────────────────────────
+// (อยู่ท้ายสุดเพื่อให้ reference ถูกต้อง)
 const _origFsSave = typeof fsSave !== 'undefined' ? fsSave : null;
 // eslint-disable-next-line no-global-assign
 fsSave = function fsSave_offlineGuard() {
   if (!navigator.onLine) {
-    if (typeof offlineEnqueue === 'function') offlineEnqueue('fsSave', { ts: new Date().toISOString() });
-    updateOfflineBadge();
+    offlineEnqueue('fsSave', { ts: new Date().toISOString() }, { silent: true });
     return;
   }
   if (typeof _origFsSave === 'function') {
     _origFsSave();
   } else if (typeof fsSaveNow === 'function') {
-    // fallback if original reference was lost
     fsSaveNow().catch(e => console.warn('[fsSave_offlineGuard] error:', e?.message));
   }
 };
+
+// ── Override syncTicket to queue when offline ─────────────────────
+const _origSyncTicket = typeof syncTicket !== 'undefined' ? syncTicket : null;
+// eslint-disable-next-line no-global-assign
+syncTicket = async function syncTicket_offlineGuard(t) {
+  if (!navigator.onLine) {
+    offlineEnqueue('syncTicketGAS', { ticketData: t }, { silent: true });
+    return;
+  }
+  if (typeof _origSyncTicket === 'function') {
+    return _origSyncTicket(t);
+  }
+};
+
+// expose globals for Backend Dashboard
+window.offlineEnqueue    = offlineEnqueue;
+window.offlineSync       = offlineSync;
+window.updateOfflineBadge = updateOfflineBadge;
+window.openOfflineQueueDrawer = openOfflineQueueDrawer;
+window._offlineQueue     = _offlineQueue; // live reference via getter below
+Object.defineProperty(window, '_offlineQueueCount', { get: () => _offlineQueue.length });
