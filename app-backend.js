@@ -551,7 +551,12 @@ let _bkpClearType = null;
 
 // ── เปิดหน้า backend (เรียกจาก goPage หรือ nav) ──────────────
 function renderBackendPage() {
-  if (!window.CU || window.CU.role !== 'admin') { goPage('home'); return; }
+  // ถ้า CU ยังไม่พร้อม (Firebase sync ยังไม่เสร็จ) → retry แทนการ redirect ออก
+  if (!window.CU) {
+    setTimeout(() => { if (document.querySelector('.page.active')?.id === 'pg-backend') renderBackendPage(); }, 400);
+    return;
+  }
+  if (window.CU.role !== 'admin') { goPage('home'); return; }
   _bkpCheckConnection();
   switchBkpTab(_bkpTab || 'overview');
 }
