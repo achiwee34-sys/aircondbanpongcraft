@@ -756,6 +756,13 @@ function openPOForm(tid) {
       // reset height เมื่อเปิด panel ใหม่
       pp.style.height = '';
       pp.style.maxHeight = '';
+      // ── Force repaint — แก้ปัญหาหน้าว่างจนกว่าหมุนจอ (Android WebView) ──
+      void pp.offsetHeight;
+      requestAnimationFrame(() => {
+        void pp.offsetHeight;
+        const pg = document.getElementById('pg-purchase');
+        if (pg) { pg.style.display = 'flex'; void pg.offsetHeight; }
+      });
     }
 
     // ── Warning / Info banner ── ต้องทำหลัง panel แสดงเพื่อให้ DOM พร้อม
@@ -3718,7 +3725,6 @@ async function _resolveDetailPhotos(ticketId, attempt = 0) {
   // retry ถ้ายังมี item ที่ resolve ไม่สำเร็จ
   if (pendingRetry && attempt < MAX_RETRY) {
     const delay = RETRY_DELAY_MS[attempt + 1] ?? 3000;
-    console.log(`[photo resolve] retry ${attempt + 1}/${MAX_RETRY} in ${delay}ms`);
     setTimeout(() => _resolveDetailPhotos(ticketId, attempt + 1), delay);
   }
 }

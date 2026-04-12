@@ -18,7 +18,7 @@
 <!-- PWA Manifest inline -->
 <script src="manifest.js"></script>
 
-<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="main.css?v=1775960500">
 
 <!-- ========== LINE LIFF SDK ========== -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -783,7 +783,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
 
 <!-- Register Screen -->
 <div id="register-screen" style="display:none;position:fixed;inset:0;z-index:1100;overflow-y:auto;background:#f4f5f7">
-<link rel="stylesheet" href="register.css">
+<link rel="stylesheet" href="register.css?v=1775960400">
 
 <!-- HEADER -->
 <div class="rg-header">
@@ -1672,10 +1672,10 @@ window._liffLandingUpdateCard = liffUpdateCard;
 
     <!-- REPORT PAGE -->
     <!-- ══ PURCHASE TRACKING PAGE ══ -->
-    <div class="page" id="pg-purchase" data-page="purchase" style="position:relative">
+    <div class="page" id="pg-purchase" data-page="purchase" style="position:relative;display:none;flex-direction:column;padding:0;overflow:hidden">
 
       <!-- ─ LIST PANEL ─ -->
-      <div id="pur-list-panel" style="display:flex;flex-direction:column;height:100%;overflow:hidden;-webkit-overflow-scrolling:touch">
+      <div id="pur-list-panel" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;-webkit-overflow-scrolling:touch">
         <!-- Tab bar: สั่งซื้อ / ติดตามงาน -->
         <div id="pur-tab-bar" style="display:flex;background:var(--surface);border-bottom:2px solid var(--border);flex-shrink:0">
           <button id="pur-tab-order" onclick="setPurchaseTab('order')"
@@ -1735,7 +1735,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
         </div>
 
         <!-- ── Body ── -->
-        <div id="po-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 8px">
+        <div id="po-body" style="padding:14px 14px 8px">
           <!-- Warning/info banner injected by openPOForm -->
           <div id="po-tech-warn" style="display:none"></div>
 
@@ -1996,7 +1996,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
     <div class="page" id="pg-executive" data-page="executive" style="padding:0;overflow:hidden;flex-direction:column">
 
       <!-- ══ EXECUTIVE HEADER v3 — Clean Light Premium ══ -->
-      <link rel="stylesheet" href="executive.css">
+      <link rel="stylesheet" href="executive.css?v=1775960400">
       <div id="exec-header" style="background:white;flex-shrink:0;padding:calc(env(safe-area-inset-top,0px)+14px) 14px 0;border-bottom:1px solid #f1f5f9;box-shadow:0 2px 12px rgba(0,0,0,.06)">
 
         <!-- Top row -->
@@ -4582,14 +4582,14 @@ window._liffLandingUpdateCard = liffUpdateCard;
 })();
 </script>
 <!-- PERF FIX (audit #7): เพิ่ม defer ป้องกัน script block initial render -->
-<script src="app-tracking.js?v=1775893846" defer></script>
+<script src="app-tracking.js?v=1775960500" defer></script>
 <script src="func-loc-data.js?v=1775879071" defer></script>
 <script src="app-core.js?v=1775898100" defer></script>
 <script src="liff-auth.js?v=1775897980" defer></script>
 <script src="line-messaging.js?v=1775879071" defer></script>
 <script src="app-tickets.js?v=1775897870" defer></script>
 <script src="app-machines.js?v=1775897870" defer></script>
-<script src="app-users.js?v=1775897870" defer></script>
+<script src="app-users.js?v=1775960400" defer></script>
 <script src="app-reports.js?v=1775960300" defer></script>
 <script src="app-admin.js?v=1775879071" defer></script>
 <script src="app-backend.js?v=1775879071" defer></script>
