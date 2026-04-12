@@ -2692,6 +2692,10 @@ function saveTechReq() {
   });
   showAdminCard('📋 สั่งซื้ออะไหล่ ['+tid+']', CU.name+': '+itemList, tid, '📋');
   saveDB(); syncTicket(t);
+  // ── LINE Push: แจ้ง Admin ทันทีเมื่อช่างส่งรายการ ──
+  if (typeof lineMessagingEvent === 'function') {
+    lineMessagingEvent('techreq', t).catch(e => console.warn('[LINE techreq]', e));
+  }
   closeTechReqForm();
   showToast('✅ แจ้งรายการสั่งซื้อแล้ว — Admin จะดำเนินการ');
   if (navigator.vibrate) navigator.vibrate([50,30,80]);

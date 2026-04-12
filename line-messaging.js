@@ -124,7 +124,8 @@ const EVENT_COLORS = {
   done:     '#16a34a',
   newUser:  '#0891b2',
   purchase: '#b45309',  // Bug 6: สีสำหรับ event สั่งซื้อ
-  record:   '#0f766e'   // Bug 6: สีสำหรับ event บันทึกผล
+  record:   '#0f766e',  // Bug 6: สีสำหรับ event บันทึกผล
+  techreq:  '#e65100'   // Fix28: ช่างแจ้งรายการสั่งซื้ออะไหล่
 };
 
 function ticketUrl(tid) {
@@ -266,5 +267,21 @@ async function lineMessagingEvent(event, t) {
     await linePushAdmin([flex]);
     await linePushRole('tech', [flex]);
     if (reporter?.lineUserId) await linePush(reporter.lineUserId, [flex]);
+
+  // ── Fix28: ช่างแจ้งรายการสั่งซื้ออะไหล่ → push LINE หา Admin ──
+  } else if (event === 'techreq') {
+    const rows     = (t.techRequest?.rows || []).filter(r => r.name);
+    const total    = rows.reduce((s, r) => s + (Number(r.qty||1) * Number(r.price||0)), 0);
+    const itemList = rows.map(r => r.name + (r.qty > 1 ? ` ×${r.qty}` : '')).join(', ') || '—';
+    const flex = buildFlex(EVENT_COLORS.techreq, '📋', 'ช่างแจ้งรายการสั่งซื้ออะไหล่',
+      [['เลขงาน',     t.id       || '—'],
+       ['ปัญหา',      t.problem  || '—'],
+       ['เครื่อง',    t.machine  || '—'],
+       ['ช่าง',       t.assignee || '—'],
+       ['รายการ',     itemList],
+       ['รวมประมาณ',  total > 0 ? '฿' + total.toLocaleString() : '—'],
+       ['เวลา',       time]],
+      '📋 ดูและออก PO', ticketUrl(t.id));
+    await linePushAdmin([flex]);
   }
 }

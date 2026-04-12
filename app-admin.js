@@ -390,6 +390,9 @@ function _openTopMenu() {
   const ri = {admin:'👑 ADMIN', tech:'🔧 TECHNICIAN', reporter:'📢 REPORTER', executive:'📊 EXECUTIVE'};
   const rl = document.getElementById('tb-qm-role');
   if (rl && CU) rl.textContent = (ri[CU.role] || CU.role) + ' — ' + (CU.name || '');
+  // show backend button for admin
+  const bkBtn = document.getElementById('tb-qm-backend');
+  if (bkBtn) bkBtn.style.display = (CU && CU.role === 'admin') ? 'flex' : 'none';
   // close on outside tap
   setTimeout(() => document.addEventListener('click', _menuOutsideTap), 10);
 }

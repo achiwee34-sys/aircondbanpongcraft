@@ -2641,6 +2641,91 @@ function openCompleteSheet(tid) {
   _showCompleteDialog();
 }
 } // ── end openCompleteSheet ──
+// ── Fix29: Summary Confirm Dialog ─────────────────────────────
+function confirmBeforeComplete() {
+  // 1. ทำ validation เบื้องต้นก่อน (tags + sum)
+  const tags = [...document.querySelectorAll('#c-repair-tags .rtag')];
+  const sum  = document.getElementById('c-sum')?.value.trim() || '';
+  const errors = [];
+  if (!tags.length) errors.push('กรุณาเลือกรายการงานที่ดำเนินการ');
+  if (!sum) errors.push('กรุณากรอกสรุปผลการดำเนินการ');
+  if (errors.length) {
+    showToast('⚠️ ' + errors.join(' และ '));
+    if (!tags.length) {
+      const el = document.querySelector('#complete-sheet [onclick="openRepairPicker()"]');
+      if (el) { el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.outline='2.5px solid #c8102e'; setTimeout(()=>el.style.outline='',2000); }
+    } else {
+      const el = document.getElementById('c-sum');
+      if (el) { el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); el.style.outline='2.5px solid #c8102e'; setTimeout(()=>el.style.outline='',2000); }
+    }
+    return;
+  }
+
+  // 2. สร้าง preview summary
+  const repairItems = tags.map(el => {
+    const qty = parseInt(el.dataset.qty || 1);
+    const name = el.dataset.val || '';
+    return qty > 1 ? name + ' ×' + qty : name;
+  }).filter(Boolean);
+
+  // หา manual note (บรรทัดที่ไม่ใช่ repairItems)
+  const _nk = s => s.trim().replace(/^[-\s•×\d]+/,'').replace(/\s*ขนาด\s*[\d,]+\s*BTU/gi,'').replace(/\s*[×xX]\d+\s*$/,'').replace(/\s+/g,' ').toLowerCase().trim();
+  const repairSet = new Set(repairItems.map(_nk));
+  const sumLines  = sum.split('\n').map(l=>l.trim()).filter(Boolean);
+  const manualLines = sumLines.filter(l => !repairSet.has(_nk(l)));
+
+  // รูปภาพ
+  const photoBefore = (typeof pendingPhotos !== 'undefined' ? pendingPhotos.before : []).filter(Boolean);
+  const photoAfter  = (typeof pendingPhotos !== 'undefined' ? pendingPhotos.after  : []).filter(Boolean);
+
+  // 3. แสดงใน dialog
+  const repairEl = document.getElementById('sc-repair-list');
+  const noteEl   = document.getElementById('sc-summary-note');
+  const countEl  = document.getElementById('sc-photo-count');
+  const warnEl   = document.getElementById('sc-warn');
+
+  if (repairEl) repairEl.textContent = repairItems.join('\n') || '—';
+  if (noteEl)   noteEl.textContent   = manualLines.join('\n') || '(ไม่มีหมายเหตุเพิ่มเติม)';
+  if (countEl)  countEl.textContent  = 'รูปก่อนซ่อม ' + photoBefore.length + ' รูป  ·  รูปหลังซ่อม ' + photoAfter.length + ' รูป';
+
+  // warning ถ้าไม่มีรูปหลังซ่อม
+  if (warnEl) {
+    if (!photoAfter.length) {
+      warnEl.textContent = '⚠️ ยังไม่มีรูปหลังซ่อม — แนะนำให้ถ่ายรูปก่อนส่ง';
+      warnEl.style.display = 'block';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+
+  // 4. เปิด dialog
+  const ov = document.getElementById('summary-confirm-overlay');
+  const sh = document.getElementById('summary-confirm-sheet');
+  if (ov) { ov.style.display = 'block'; }
+  if (sh) { sh.style.display = 'flex'; }
+}
+
+function closeSummaryConfirm() {
+  const ov = document.getElementById('summary-confirm-overlay');
+  const sh = document.getElementById('summary-confirm-sheet');
+  if (ov) ov.style.display = 'none';
+  if (sh) sh.style.display = 'none';
+}
+
+async function _doCompleteAfterConfirm() {
+  const btn = document.getElementById('btn-do-complete');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = '⏳ กำลังบันทึก...'; }
+  try {
+    await doComplete();
+  } catch(e) {
+    console.error('[doComplete]', e);
+    showToast('❌ เกิดข้อผิดพลาด: ' + (e.message || 'กรุณาลองใหม่'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = '💾 ส่งผลการซ่อม'; }
+  }
+}
+// ──────────────────────────────────────────────────────────────
+
 async function doComplete( /* PATCH v67 */) {
   const tid = document.getElementById('c-tid').value;
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;

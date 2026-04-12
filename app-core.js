@@ -632,6 +632,8 @@ function renderSettingsPage() {
   // populate _seq value
   const seqEl = document.getElementById('sp-seq-val');
   if (seqEl && CU.role === 'admin') seqEl.textContent = db._seq || 0;
+  // Fix29: โหลด photo retention UI
+  if (CU.role === 'admin' && typeof initPhotoRetentionUI === 'function') initPhotoRetentionUI();
 
   // LINE & GAS card — admin only + fill current URL
   const lineGasCard = document.getElementById('sp-line-gas-card');
@@ -640,6 +642,10 @@ function renderSettingsPage() {
     const urlEl = document.getElementById('sp-gs-url');
     if (urlEl) urlEl.value = db.gsUrl || '';
   }
+
+  // Backend page shortcut — admin only
+  const bkShortcut = document.getElementById('sp-backend-shortcut');
+  if (bkShortcut) bkShortcut.style.display = CU.role === 'admin' ? 'block' : 'none';
 
   // Backend panel — show only for admin
   const backendPanel = document.getElementById('sp-backend-panel');
@@ -982,6 +988,8 @@ async function viewQuotationFull(tid) {
     repairLines.forEach(seg => {
       const c = seg.trim().replace(/^[-\u2013\u2022\u00B7*]+\s*/, '').trim();
       if (!c) return;
+      // Fix28: ข้าม BTU-only fragment เช่น "000 BTU ขนาด 48,000 BTU"
+      if (/^[\d,\.\s]*BTU/i.test(c)) return;
       const mx = c.match(/^(.+?)\s*[\u00D7\u2715xX](\d+)\s*$/);
       if (mx) { rows.push({name: mx[1].trim(), qty: parseInt(mx[2])||1}); return; }
       const mkWm = c.match(/(สารทำความเย็น[^\d]*|น้ำยา[^\d]*)(R-\w+)\s*(\d+(?:\.\d+)?)\s*กก/);
@@ -1019,6 +1027,11 @@ async function viewQuotationFull(tid) {
       const _g = (db.repairGroups||[]);
       let price=0, unit='JOB';
       for(const grp of _g){ const it=grp.items?.find(i=>i.name===r.name); if(it){price=it.price||0;unit=it.unit||'JOB';break;} }
+      // Fix28: fallback ราคาจาก techRequest.rows ของช่าง
+      if(!price){
+        const _trEntry = (t.techRequest?.rows||[]).find(tr=>tr.name&&tr.name.toLowerCase().trim()===r.name.toLowerCase().trim()&&tr.price>0);
+        if(_trEntry){ price=Number(_trEntry.price); }
+      }
       if(!price && _macBTU>0){
         // ลอง strip "ขนาด X,XXX BTU" suffix ออก แล้วหาจาก tier
         const baseNoSuffix = r.name.replace(/\s*ขนาด\s*[\d,]+\s*BTU\s*/gi,'').trim();
@@ -1366,6 +1379,8 @@ async function generateRepairPDF(tid) {
     _repLines.forEach(seg => {
       const c = seg.trim().replace(/^[-\u2013\u2022\u00B7*]+\s*/, '').trim();
       if (!c) return;
+      // Fix28: ข้าม BTU-only fragment เช่น "000 BTU ขนาด 48,000 BTU"
+      if (/^[\d,\.\s]*BTU/i.test(c)) return;
       const mx = c.match(/^(.+?)\s*[\u00D7\u2715xX](\d+)\s*$/);
       if (mx) { rows.push({name: mx[1].trim(), qty: parseInt(mx[2])||1}); return; }
       rows.push({name: c, qty: 1});
@@ -1433,13 +1448,22 @@ async function generateRepairPDF(tid) {
     for(const[ref,price]of Object.entries(refMap)){ if(name.includes(ref)) return{price,unit:'Kg.'}; }
     return {price:0, unit:'JOB'};
   };
+  // Fix28: สร้าง lookup ราคาจาก techRequest.rows (ช่างกรอก) เป็น fallback
+  const _techReqPriceMap = new Map();
+  (t.techRequest?.rows||[]).filter(r=>r.name&&r.price>0).forEach(r => {
+    _techReqPriceMap.set((r.name||'').toLowerCase().trim(), {price:Number(r.price), qty:Number(r.qty)||1});
+  });
   const quotRows = repairRows.map(r => {
     const {price,unit} = getPrice(r.name);
-    return { name:r.name, qty:r.qty, unit, unitPrice:price, total:r.qty*price };
+    // Fix28: ถ้าไม่มีราคาใน repairGroups → ดึงจาก techRequest
+    const trEntry = price <= 0 ? _techReqPriceMap.get((r.name||'').toLowerCase().trim()) : null;
+    const finalPrice = price > 0 ? price : (trEntry?.price || 0);
+    const finalQty   = r.qty > 0 ? r.qty : (trEntry?.qty || 1);
+    return { name:r.name, qty:finalQty, unit, unitPrice:finalPrice, total:finalQty*finalPrice };
   });
   const poRows = (t.purchaseOrder?.rows||[]).filter(r=>r.name);
   // push เฉพาะ PO rows ที่ไม่ซ้ำกับ repairRows (normalize: lowercase + trim + remove spaces)
-  const _norm = s => (s||'').toLowerCase().replace(/\s+/g,'').replace(/[\-–—]/g,'-');
+  const _norm = s => (s||'').toLowerCase().replace(/\s+/g,'').replace(/[\-\u2013\u2014]/g,'-');
   const repairNames = new Set(repairRows.map(r=>_norm(r.name)));
   // ตรวจ refrigerant types ที่มีใน repairRows แล้ว ป้องกัน PO ซ้ำ
   const REFS = ['R-22','R-32','R-407C','R-407c','R-410A','R-410a','R-134A','R-134a','R-141B'];
@@ -3154,7 +3178,8 @@ function goPage(name) {
       tickets:'งาน / Ticket', new:'แจ้งงานใหม่', tracking:'ติดตามงาน',
       mywork:'งานของฉัน', purchase:'สั่งซื้อ', report:'รายงาน',
       users:'ผู้ใช้งาน', machines:'เครื่อง', calendar:'ปฏิทิน',
-      chatroom:'แชท', settings:'ตั้งค่า', executive:'สรุปผู้บริหาร'
+      chatroom:'แชท', settings:'ตั้งค่า', executive:'สรุปผู้บริหาร',
+      backend:'Backend Dashboard'
     };
     showLoginRequired(pageLabels[name] || name);
     return;
@@ -3226,6 +3251,7 @@ function goPage(name) {
     }
     else if (name === 'chat') { renderChatPage(); }
     else if (name === 'settings') { renderSettingsPage(); renderTopbarAvatar(); }
+    else if (name === 'backend') { if (typeof renderBackendPage === 'function') renderBackendPage(); }
     // close any open sheet
     document.querySelectorAll('.sheet-overlay.open').forEach(o => o.classList.remove('open'));
     document.querySelectorAll('.sheet.open').forEach(s => s.classList.remove('open'));

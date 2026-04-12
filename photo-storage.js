@@ -216,3 +216,122 @@ async function runPhotoMigrationUI() {
   if (typeof showToast === 'function') showToast('ℹ️ ระบบใช้ Firestore แทน Storage แล้ว');
 }
 function auditPhotoStorage() { return {}; }
+
+// ============================================================
+// PHOTO RETENTION — ลบรูปจาก Firestore หลังงานปิดครบกี่วัน
+// Fix29 — Admin ตั้งค่าได้ใน Settings
+// ============================================================
+const PHOTO_RETENTION_KEY = 'aircon_photo_retention';
+
+function getPhotoRetentionConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(PHOTO_RETENTION_KEY) || '{}');
+  } catch(e) { return {}; }
+}
+
+function savePhotoRetentionSettings() {
+  const enable = document.getElementById('sp-photo-del-enable')?.checked || false;
+  const days   = parseInt(document.getElementById('sp-photo-del-days')?.value) || 90;
+  const cfg    = { enable, days };
+  localStorage.setItem(PHOTO_RETENTION_KEY, JSON.stringify(cfg));
+  // sync ขึ้น Firestore ผ่าน db.photoRetention
+  if (typeof db !== 'undefined') {
+    db.photoRetention = cfg;
+    if (typeof saveDB === 'function') saveDB();
+    if (typeof fsSave === 'function') fsSave();
+  }
+  // อัปเดต toggle UI
+  _updatePhotoRetentionUI(enable);
+}
+
+function _updatePhotoRetentionUI(enable) {
+  const toggle = document.getElementById('sp-photo-del-toggle');
+  const knob   = document.getElementById('sp-photo-del-knob');
+  const row    = document.getElementById('sp-photo-del-row');
+  const runBtn = document.getElementById('sp-photo-del-run');
+  if (toggle) toggle.style.background = enable ? '#7c3aed' : '#e5e7eb';
+  if (knob)   knob.style.transform    = enable ? 'translateX(18px)' : 'translateX(0)';
+  if (row)    row.style.opacity       = enable ? '1' : '0.45';
+  if (runBtn) runBtn.style.opacity    = enable ? '1' : '0.6';
+}
+
+function loadPhotoRetentionUI() {
+  // โหลดค่าจาก db.photoRetention (Firestore) ก่อน localStorage
+  const stored = (typeof db !== 'undefined' && db.photoRetention) ? db.photoRetention : getPhotoRetentionConfig();
+  const enable = stored.enable || false;
+  const days   = stored.days   || 90;
+  const chk = document.getElementById('sp-photo-del-enable');
+  const inp = document.getElementById('sp-photo-del-days');
+  if (chk) chk.checked  = enable;
+  if (inp) inp.value    = days;
+  _updatePhotoRetentionUI(enable);
+}
+
+async function runPhotoCleanupNow() {
+  const cfg = (typeof db !== 'undefined' && db.photoRetention) ? db.photoRetention : getPhotoRetentionConfig();
+  const days = cfg.days || 90;
+  const resultEl = document.getElementById('sp-photo-del-result');
+  const btn      = document.getElementById('sp-photo-del-run');
+
+  if (typeof FSdb === 'undefined' || !FSdb) {
+    if (resultEl) resultEl.textContent = '❌ ไม่มีการเชื่อมต่อ Firestore';
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังตรวจสอบ...'; }
+  if (resultEl) resultEl.textContent = '';
+
+  try {
+    const cutoffMs = Date.now() - (days * 24 * 60 * 60 * 1000);
+    const tickets  = (typeof db !== 'undefined' ? db.tickets : []) || [];
+
+    // หางานที่ปิดแล้ว (closed/verified) และ closedAt ก่อน cutoff
+    const expired = tickets.filter(t => {
+      if (!['closed','verified'].includes(t.status)) return false;
+      // หาวันปิดงานจาก history หรือ updatedAt
+      const closedEntry = (t.history || []).slice().reverse()
+        .find(h => h.act && (h.act.includes('ปิดงาน') || h.act.includes('ตรวจรับ')));
+      const closedAtStr = closedEntry?.at || t.updatedAt || '';
+      if (!closedAtStr) return false;
+      try {
+        const closedTs = new Date(closedAtStr.replace(' ','T')).getTime();
+        return closedTs < cutoffMs;
+      } catch(e) { return false; }
+    });
+
+    if (!expired.length) {
+      if (resultEl) resultEl.innerHTML = '✅ ไม่มีรูปที่หมดอายุ (ทุกงานยังอยู่ใน ' + days + ' วัน)';
+      if (btn) { btn.disabled = false; btn.innerHTML = '🗑️ ลบรูปที่หมดอายุแล้ว (รันทันที)'; }
+      return;
+    }
+
+    let deleted = 0;
+    for (const t of expired) {
+      try {
+        const snap = await FSdb.collection('ticket_photos').doc(t.id).get();
+        if (snap.exists) {
+          await FSdb.collection('ticket_photos').doc(t.id).delete();
+          // invalidate cache
+          if (typeof _photoCache !== 'undefined') delete _photoCache[t.id];
+          deleted++;
+        }
+      } catch(e) {
+        console.warn('[PhotoCleanup] error deleting', t.id, e.message);
+      }
+    }
+    const msg = deleted > 0
+      ? `🗑️ ลบรูปแล้ว ${deleted} งาน (จาก ${expired.length} งานที่หมดอายุ)`
+      : `ℹ️ ${expired.length} งานหมดอายุแล้ว แต่ไม่มีรูปใน Firestore`;
+    if (resultEl) resultEl.textContent = msg;
+    if (typeof showToast === 'function') showToast(msg);
+  } catch(e) {
+    if (resultEl) resultEl.textContent = '❌ เกิดข้อผิดพลาด: ' + e.message;
+    console.error('[PhotoCleanup]', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '🗑️ ลบรูปที่หมดอายุแล้ว (รันทันที)'; }
+  }
+}
+
+// เรียกจาก renderSettingsPage ให้ UI sync
+function initPhotoRetentionUI() {
+  loadPhotoRetentionUI();
+}
