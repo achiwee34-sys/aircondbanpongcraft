@@ -222,7 +222,7 @@ async function doLoginWithLine() {
     // เพิ่ม dupIds เข้า deletedUserIds เพื่อป้องกัน sync กลับ
     db.deletedUserIds = [...new Set([...(db.deletedUserIds || []), ...dupIds])];
     // save เพื่อทำความสะอาด Firestore ด้วย
-    if (typeof fsSaveNow === 'function') fsSaveNow().catch(() => {});
+    if (typeof fsSave === 'function') fsSave(); // FIX v23-fix22: ผ่าน debounce
     console.warn('[LIFF] cleaned duplicate lineUserId:', lineUserId, '| removed:', dupIds, '| kept:', canonical.id);
     showToast('⚠️ พบข้อมูลซ้ำและทำความสะอาดแล้ว');
     // ดำเนินการต่อด้วย canonical user

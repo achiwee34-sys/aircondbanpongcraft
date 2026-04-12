@@ -45,6 +45,17 @@ function syncDocVersion(data) {
 async function fsSaveWithLock(payload) {
   if (!_firebaseReady || !FSdb) return 'error';
 
+  // ── FIX v23-fix22: ตรวจ auth ก่อน write ──
+  // ถ้า firebase.auth().currentUser เป็น null → write จะ fail 400 ทันที
+  // รอให้ auth พร้อมก่อน (max 3s) เพื่อป้องกัน spurious :commit 400
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+      console.info('[ConflictGuard] auth not ready — skip write');
+      return 'error';
+    }
+  }
+
   const ref = FSdb.collection('appdata').doc('main');
 
   try {
@@ -199,7 +210,19 @@ async function fsSaveNowSafe() {
       }
     }
 
-    const result = await fsSaveWithLock(payload);
+    // ── FIX v23-fix23: sanitize payload ก่อน write ──
+    // Firestore ไม่รองรับ: undefined, NaN, Infinity, circular refs
+    // ถ้ามี field เหล่านี้ → 400 Bad Request เงียบๆ
+    const _sanitize = (obj) => JSON.parse(JSON.stringify(obj, (k, v) => {
+      if (v === undefined) return null;
+      if (typeof v === 'number' && !isFinite(v)) return null;
+      return v;
+    }));
+    let _safePayload;
+    try { _safePayload = _sanitize(payload); }
+    catch(e) { console.warn('[ConflictGuard] payload sanitize failed:', e); _safePayload = payload; }
+
+    const result = await fsSaveWithLock(_safePayload);
 
     if (result === 'conflict') {
       await handleSaveConflict();
@@ -210,7 +233,7 @@ async function fsSaveNowSafe() {
       console.warn('[ConflictGuard] save error — falling back to direct set');
       // fallback: ใช้ .set() เดิม (ไม่มี lock แต่ดีกว่า fail เงียบ)
       if(window.bkCountWrite) window.bkCountWrite(1);
-      await FSdb.collection('appdata').doc('main').set(payload);
+      await FSdb.collection('appdata').doc('main').set(_safePayload);
     }
 
     // save signatures แยก (ถ้ามี)

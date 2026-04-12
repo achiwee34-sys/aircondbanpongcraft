@@ -794,12 +794,10 @@ function getPDFConfig() {
 }
 function savePDFConfig(cfg) {
   localStorage.setItem(PDF_CFG_KEY, JSON.stringify(cfg));
-  // sync to firebase
-  if(typeof fsSaveNow==='function') {
-    if(!db.pdfConfig) db.pdfConfig={};
-    Object.assign(db.pdfConfig, cfg);
-    fsSaveNow().catch(()=>{});
-  }
+  // sync to firebase — FIX v23-fix23: ผ่าน debounce
+  if(!db.pdfConfig) db.pdfConfig={};
+  Object.assign(db.pdfConfig, cfg);
+  if(typeof fsSave==='function') fsSave();
 }
 
 const PDF_THEMES = {
