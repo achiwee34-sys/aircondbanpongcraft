@@ -3108,6 +3108,10 @@ function goPage(name) {
   }
 
   // ── 2. Page switch — hide หน้าเก่า show หน้าใหม่ทันที ──
+  // Safety: remove active from ALL pages first (prevents double-active bug)
+  document.querySelectorAll('.page.active').forEach(p => {
+    if (p.id !== 'pg-' + name) p.classList.remove('active');
+  });
   const old = document.getElementById('pg-'+_activePage);
   if (old) old.classList.remove('active');
   _activePage = name;
