@@ -232,219 +232,180 @@ function renderReport() {
 function renderRptCostMonthly() {
   const el = document.getElementById('rpt-cost-monthly');
   if (!el) return;
-  const allT = (db.tickets||[]).filter(t => Number(t.cost||0) > 0 || Number(t.repairCost||0) > 0 || Number(t.partsCost||0) > 0);
+
+  const allT = (db.tickets||[]).filter(t =>
+    Number(t.cost||0)>0 || Number(t.repairCost||0)>0 || Number(t.partsCost||0)>0
+  );
   if (!allT.length) {
-    el.innerHTML = '<div style="font-size:0.82rem;color:#94a3b8;text-align:center;padding:12px">ยังไม่มีข้อมูลค่าใช้จ่าย</div>';
+    el.innerHTML = '<div style="font-size:0.82rem;color:#94a3b8;text-align:center;padding:20px">ยังไม่มีข้อมูลค่าใช้จ่าย</div>';
     return;
   }
 
-  // จัดกลุ่มตามปี-เดือน (12 เดือนล่าสุด)
+  // 12 เดือนล่าสุด รวมเดือนปัจจุบัน
   const now = new Date();
   const months = [];
   for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({ year: d.getFullYear(), month: d.getMonth(), label: MONTH_TH[d.getMonth()].slice(0,3) + ' ' + String(d.getFullYear()+543).slice(2) });
+    months.push({ year: d.getFullYear(), month: d.getMonth(),
+      label: MONTH_TH[d.getMonth()].slice(0,3) + '\u0027' + String(d.getFullYear()+543).slice(2) });
   }
 
   const monthData = months.map(m => {
-    const tickets = allT.filter(t => {
+    const tks = allT.filter(t => {
       const d = new Date(t.updatedAt || t.createdAt || '');
-      return d.getFullYear() === m.year && d.getMonth() === m.month;
+      return d.getFullYear()===m.year && d.getMonth()===m.month;
     });
-    const repair = tickets.reduce((s,t) => {
-      const rc = Number(t.repairCost||0);
-      const pc = Number(t.partsCost||0);
-      const po = Number(t.purchaseOrder?.total||0);
-      const tc = Number(t.cost||0);
-      if (rc > 0 || pc > 0) return s + rc;
-      if (po > 0) return s;           // PO only → ทั้งหมดเป็นอะไหล่
-      return s + tc;                  // cost เก่า
+    const repair = tks.reduce((s,t) => {
+      const rc=Number(t.repairCost||0), pc=Number(t.partsCost||0);
+      const po=Number(t.purchaseOrder?.total||0), tc=Number(t.cost||0);
+      if (rc>0||pc>0) return s+rc;
+      if (po>0) return s;
+      return s+tc;
     }, 0);
-    const parts = tickets.reduce((s,t) => {
-      const rc = Number(t.repairCost||0);
-      const pc = Number(t.partsCost||0);
-      const po = Number(t.purchaseOrder?.total||0);
-      if (rc > 0 || pc > 0) return s + Math.max(pc, po); // เอาค่าล่าสุดระหว่าง partsCost กับ PO
-      if (po > 0) return s + po;
+    const parts = tks.reduce((s,t) => {
+      const rc=Number(t.repairCost||0), pc=Number(t.partsCost||0);
+      const po=Number(t.purchaseOrder?.total||0);
+      if (rc>0||pc>0) return s+Math.max(pc,po);
+      if (po>0) return s+po;
       return s;
     }, 0);
-    const total = repair + parts;
-    return { ...m, tickets, total, repair, parts, legacy:0, count: tickets.length };
+    return { ...m, repair, parts, total: repair+parts, count: tks.length };
   });
 
-  const maxTotal = Math.max(...monthData.map(m => m.total), 1);
+  const maxVal     = Math.max(...monthData.map(m => Math.max(m.repair, m.parts)), 1);
   const grandTotal = monthData.reduce((s,m) => s+m.total, 0);
-  const grandRepair = monthData.reduce((s,m) => s+m.repair, 0);
-  const grandParts  = monthData.reduce((s,m) => s+m.parts+m.legacy, 0);
+  const grandRepair= monthData.reduce((s,m) => s+m.repair, 0);
+  const grandParts = monthData.reduce((s,m) => s+m.parts, 0);
+  const curIdx     = monthData.findIndex(m => m.year===now.getFullYear() && m.month===now.getMonth());
 
-  // หาเดือนปัจจุบัน (rptMonth/rptYear)
-  const currentIdx = monthData.findIndex(m => m.year===rptYear && m.month===rptMonth);
+  // ── SVG responsive full-width ──
+  const VW=360, VH=170, PL=38, PR=6, PT=10, PB=26;
+  const cW=VW-PL-PR, cH=VH-PT-PB;
+  const slotW = cW/12;
+  const gap=2, bW=Math.max(Math.floor((slotW-gap*3)/2), 3);
 
-  // ── SVG Chart ──
-  const SVG_W = 380, SVG_H = 160, PAD_L = 48, PAD_R = 10, PAD_T = 14, PAD_B = 32;
-  const chartW = SVG_W - PAD_L - PAD_R;
-  const chartH = SVG_H - PAD_T - PAD_B;
-  const barW2  = Math.floor(chartW / 12) - 4;
-
-  // Y gridlines (3 lines)
-  const yStep = maxTotal > 0 ? maxTotal / 3 : 1;
-  const gridLines = [1,2,3].map(i => {
-    const val = yStep * i;
-    const y = PAD_T + chartH - Math.round(val / maxTotal * chartH);
-    const label = val >= 1000000 ? (val/1000000).toFixed(1)+'M' : val >= 1000 ? Math.round(val/1000)+'K' : val;
-    return { y, label };
-  });
-
-  // ── FIX v23-fix25: grouped bar chart (2 bars side-by-side) ──
-  // แสดงค่าแรง + ค่าสั่งซื้อ เคียงกันชัดเจน ไม่ซ้อน
-  const slotW  = chartW / 12;
-  const barGap = 2;
-  const bW     = Math.floor((slotW - barGap * 3) / 2); // ความกว้างแต่ละแท่ง
-
-  const svgBars = monthData.map((m, i) => {
-    const slotX   = PAD_L + i * slotW;
-    const xRep    = slotX + barGap;           // แท่งค่าแรง (ซ้าย)
-    const xPar    = slotX + barGap + bW + barGap; // แท่งค่าสั่งซื้อ (ขวา)
-    const isCurrent = i === currentIdx;
-    const yBase   = PAD_T + chartH;
-
-    const repH = m.repair > 0 ? Math.max(Math.round(m.repair / maxTotal * chartH), 3) : 0;
-    const parH = m.parts  > 0 ? Math.max(Math.round(m.parts  / maxTotal * chartH), 3) : 0;
-
-    const repCol = isCurrent ? '#1d4ed8' : '#60a5fa';
-    const parCol = isCurrent ? '#c2410c' : '#fb923c';
-
-    const parts = [];
-
-    // ค่าแรง bar
-    if (repH > 0) {
-      parts.push(`<rect x="${xRep}" y="${yBase-repH}" width="${bW}" height="${repH}" rx="2" fill="${repCol}"/>`);
-      parts.push(`<rect x="${xRep}" y="${yBase-repH}" width="${bW}" height="3" rx="2" fill="${repCol}"/>`);
-    } else {
-      parts.push(`<rect x="${xRep}" y="${yBase-2}" width="${bW}" height="2" rx="1" fill="#e2e8f0"/>`);
-    }
-
-    // ค่าสั่งซื้อ bar
-    if (parH > 0) {
-      parts.push(`<rect x="${xPar}" y="${yBase-parH}" width="${bW}" height="${parH}" rx="2" fill="${parCol}"/>`);
-      parts.push(`<rect x="${xPar}" y="${yBase-parH}" width="${bW}" height="3" rx="2" fill="${parCol}"/>`);
-    } else {
-      parts.push(`<rect x="${xPar}" y="${yBase-2}" width="${bW}" height="2" rx="1" fill="#e2e8f0"/>`);
-    }
-
-    // เดือนปัจจุบัน — กรอบเน้น
-    if (isCurrent) {
-      const totalH = Math.max(repH, parH);
-      if (totalH > 0) parts.push(`<rect x="${xRep-1}" y="${yBase-totalH-2}" width="${bW*2+barGap+2}" height="${totalH+2}" rx="3" fill="none" stroke="#c8102e" stroke-width="1.5" stroke-dasharray="3,2"/>`);
-    }
-
-    // clickable area ทั้ง slot
-    parts.push(`<rect x="${slotX}" y="${PAD_T}" width="${slotW}" height="${chartH+2}" fill="transparent" style="cursor:pointer" onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')"><title>${m.label} · ค่าแรง ฿${m.repair.toLocaleString()} · สั่งซื้อ ฿${m.parts.toLocaleString()} · ${m.count} งาน</title></rect>`);
-
-    return parts.join('');
+  // Y grid 3 lines
+  const grids = [0.33,0.66,1.0].map(f => {
+    const val=maxVal*f, y=PT+cH-Math.round(f*cH);
+    const lbl=val>=1e6?(val/1e6).toFixed(1)+'M':val>=1000?Math.round(val/1000)+'K':Math.round(val);
+    return `<line x1="${PL}" y1="${y}" x2="${VW-PR}" y2="${y}" stroke="#e2e8f0" stroke-width="0.7" stroke-dasharray="2,3"/>
+            <text x="${PL-3}" y="${y+3}" text-anchor="end" font-size="7" fill="#94a3b8">${lbl}</text>`;
   }).join('');
 
-  const svgLabels = monthData.map((m, i) => {
-    const x = PAD_L + i * (chartW / 12) + barW2/2 + 1;
-    const isCurrent = i === currentIdx;
-    return `<text x="${x}" y="${SVG_H - 8}" text-anchor="middle" font-size="8.5" font-weight="${isCurrent?'800':'500'}" fill="${isCurrent?'#c8102e':'#94a3b8'}">${m.label.replace(' ','')}</text>`;
+  const bars = monthData.map((m,i) => {
+    const sx=PL+i*slotW, xR=sx+gap, xP=sx+gap+bW+gap;
+    const yB=PT+cH, isCur=i===curIdx;
+    const rH=m.repair>0?Math.max(Math.round(m.repair/maxVal*cH),3):0;
+    const pH=m.parts>0?Math.max(Math.round(m.parts/maxVal*cH),3):0;
+    // สีแท่ง: เดือนปัจจุบัน เข้มกว่า
+    const rCol=isCur?'#1d4ed8':'#93c5fd';
+    const pCol=isCur?'#ea580c':'#fdba74';
+    let o='';
+    o+=rH>0?`<rect x="${xR}" y="${yB-rH}" width="${bW}" height="${rH}" rx="2" fill="${rCol}"/>`
+          :`<rect x="${xR}" y="${yB-2}" width="${bW}" height="2" rx="1" fill="#e2e8f0"/>`;
+    o+=pH>0?`<rect x="${xP}" y="${yB-pH}" width="${bW}" height="${pH}" rx="2" fill="${pCol}"/>`
+          :`<rect x="${xP}" y="${yB-2}" width="${bW}" height="2" rx="1" fill="#e2e8f0"/>`;
+    if (isCur) {
+      const hi=Math.max(rH,pH,4);
+      o+=`<rect x="${xR-1}" y="${yB-hi-3}" width="${bW*2+gap+2}" height="${hi+3}" rx="3" fill="none" stroke="#c8102e" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+    }
+    o+=`<rect x="${sx}" y="${PT}" width="${slotW}" height="${cH+2}" fill="transparent" style="cursor:pointer" onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')"><title>${m.label}: ค่าแรง ฿${m.repair.toLocaleString()} | สั่งซื้อ ฿${m.parts.toLocaleString()} | ${m.count} งาน</title></rect>`;
+    return o;
+  }).join('');
+
+  const xlabels = monthData.map((m,i) => {
+    const x=PL+i*slotW+slotW/2, isCur=i===curIdx;
+    return `<text x="${x}" y="${VH-5}" text-anchor="middle" font-size="7" font-weight="${isCur?900:500}" fill="${isCur?'#c8102e':'#94a3b8'}">${m.label}</text>`;
   }).join('');
 
   el.innerHTML = `
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
       <div>
         <div style="font-size:0.88rem;font-weight:900;color:#0f172a">📅 ค่าใช้จ่ายรายเดือน</div>
-        <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">12 เดือนล่าสุด · กดแท่งดูรายละเอียด</div>
+        <div style="font-size:0.6rem;color:#94a3b8;margin-top:2px">12 เดือนล่าสุด · แตะแท่งดูรายละเอียด</div>
       </div>
       <div style="text-align:right">
         <div style="font-size:1rem;font-weight:900;color:#c8102e">฿${grandTotal.toLocaleString()}</div>
-        <div style="font-size:0.6rem;color:#94a3b8">รวมทั้งหมด</div>
+        <div style="font-size:0.58rem;color:#94a3b8">รวมทั้งหมด</div>
       </div>
     </div>
 
-    <!-- Summary badges: FIX v23-fix25 เพิ่ม % สัดส่วน -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div style="background:#eff6ff;border:2px solid #93c5fd;border-radius:12px;padding:10px 12px">
+      <div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:12px;padding:10px 12px">
         <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
-          <div style="width:10px;height:10px;border-radius:2px;background:#3b82f6"></div>
+          <div style="width:10px;height:10px;border-radius:2px;background:#1d4ed8;flex-shrink:0"></div>
           <span style="font-size:0.65rem;color:#1d4ed8;font-weight:800">🔧 ค่าแรงซ่อม</span>
         </div>
-        <div style="font-size:1.05rem;font-weight:900;color:#1d4ed8">${grandRepair>0?'฿'+grandRepair.toLocaleString():'—'}</div>
+        <div style="font-size:1rem;font-weight:900;color:#1d4ed8">${grandRepair>0?'฿'+grandRepair.toLocaleString():'—'}</div>
         <div style="display:flex;justify-content:space-between;margin-top:3px">
           <span style="font-size:0.58rem;color:#64748b">จาก Price List</span>
-          <span style="font-size:0.62rem;font-weight:700;color:#3b82f6">${grandTotal>0?Math.round(grandRepair/grandTotal*100)+'%':''}</span>
+          <span style="font-size:0.62rem;font-weight:800;color:#3b82f6">${grandTotal>0?Math.round(grandRepair/grandTotal*100)+'%':''}</span>
         </div>
       </div>
-      <div style="background:#fff7ed;border:2px solid #fdba74;border-radius:12px;padding:10px 12px">
+      <div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:10px 12px">
         <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
-          <div style="width:10px;height:10px;border-radius:2px;background:#f97316"></div>
-          <span style="font-size:0.65rem;color:#c2410c;font-weight:800">📦 ค่าสั่งซื้อ</span>
+          <div style="width:10px;height:10px;border-radius:2px;background:#ea580c;flex-shrink:0"></div>
+          <span style="font-size:0.65rem;color:#ea580c;font-weight:800">📦 ค่าสั่งซื้อ</span>
         </div>
-        <div style="font-size:1.05rem;font-weight:900;color:#c2410c">${grandParts>0?'฿'+grandParts.toLocaleString():'—'}</div>
+        <div style="font-size:1rem;font-weight:900;color:#ea580c">${grandParts>0?'฿'+grandParts.toLocaleString():'—'}</div>
         <div style="display:flex;justify-content:space-between;margin-top:3px">
           <span style="font-size:0.58rem;color:#64748b">จาก PO/PR</span>
-          <span style="font-size:0.62rem;font-weight:700;color:#f97316">${grandTotal>0?Math.round(grandParts/grandTotal*100)+'%':''}</span>
+          <span style="font-size:0.62rem;font-weight:800;color:#f97316">${grandTotal>0?Math.round(grandParts/grandTotal*100)+'%':''}</span>
         </div>
       </div>
     </div>
 
-    <!-- SVG Bar Chart -->
-    <div style="background:#f8fafc;border-radius:14px;padding:10px 6px 4px;margin-bottom:8px;overflow:hidden">
-      <svg width="100%" viewBox="0 0 ${SVG_W} ${SVG_H}" style="display:block;overflow:visible;max-height:180px">
-        <!-- Y gridlines -->
-        ${gridLines.map(g=>`
-          <line x1="${PAD_L}" y1="${g.y}" x2="${SVG_W-PAD_R}" y2="${g.y}" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="3,3"/>
-          <text x="${PAD_L-5}" y="${g.y+3}" text-anchor="end" font-size="8.5" fill="#94a3b8">${g.label}</text>
-        `).join('')}
-        <!-- baseline -->
-        <line x1="${PAD_L}" y1="${PAD_T+chartH}" x2="${SVG_W-PAD_R}" y2="${PAD_T+chartH}" stroke="#e2e8f0" stroke-width="1"/>
-        <!-- bars -->
-        ${svgBars}
-        <!-- x labels -->
-        ${svgLabels}
+    <!-- กราฟแท่งคู่ full-width -->
+    <div style="background:#f8fafc;border-radius:14px;padding:8px 4px 2px;margin-bottom:6px">
+      <svg viewBox="0 0 ${VW} ${VH}" width="100%" style="display:block;overflow:visible">
+        ${grids}
+        <line x1="${PL}" y1="${PT+cH}" x2="${VW-PR}" y2="${PT+cH}" stroke="#e2e8f0" stroke-width="1"/>
+        ${bars}
+        ${xlabels}
       </svg>
     </div>
-    <!-- legend — FIX v23-fix25: grouped bar legend -->
-    <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;padding:0 2px">
+
+    <!-- Legend -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;padding:0 4px">
       <div style="display:flex;align-items:center;gap:5px">
-        <div style="width:12px;height:12px;border-radius:2px;background:#60a5fa"></div>
+        <div style="width:14px;height:10px;border-radius:2px;background:linear-gradient(90deg,#1d4ed8,#93c5fd)"></div>
         <span style="font-size:0.65rem;color:#1d4ed8;font-weight:700">ค่าแรงซ่อม</span>
       </div>
       <div style="display:flex;align-items:center;gap:5px">
-        <div style="width:12px;height:12px;border-radius:2px;background:#fb923c"></div>
-        <span style="font-size:0.65rem;color:#c2410c;font-weight:700">ค่าสั่งซื้อ/อะไหล่</span>
+        <div style="width:14px;height:10px;border-radius:2px;background:linear-gradient(90deg,#ea580c,#fdba74)"></div>
+        <span style="font-size:0.65rem;color:#ea580c;font-weight:700">ค่าสั่งซื้อ/อะไหล่</span>
       </div>
-      <span style="font-size:0.58rem;color:#cbd5e1;margin-left:auto">กดแท่งดูรายละเอียด</span>
+      <span style="font-size:0.58rem;color:#cbd5e1;margin-left:auto">แตะแท่งดูรายละเอียด</span>
     </div>
 
-    <!-- Month rows (top 5) -->
+    <!-- Top months list -->
     <div style="border-top:1px solid #f1f5f9;padding-top:10px">
       ${monthData.filter(m=>m.total>0).sort((a,b)=>b.total-a.total).slice(0,5).map(m => {
-        const pct = Math.round(m.total/grandTotal*100);
-        const barW = Math.round(m.total/maxTotal*100);
-        const repW = m.total>0 ? Math.round(m.repair/m.total*100) : 0;
+        const pct=Math.round(m.total/grandTotal*100);
+        const barPct=Math.round(m.total/maxVal*100);
+        const repW=m.total>0?Math.round(m.repair/m.total*100):0;
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f8fafc;cursor:pointer"
           onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')">
-          <div style="min-width:70px">
+          <div style="min-width:64px">
             <div style="font-size:0.75rem;font-weight:800;color:#0f172a">${MONTH_TH[m.month].slice(0,3)} ${m.year+543}</div>
             <div style="font-size:0.6rem;color:#94a3b8;margin-top:1px">${m.count} งาน</div>
           </div>
           <div style="flex:1">
-            <div style="background:#f1f5f9;border-radius:99px;height:7px;overflow:hidden;display:flex">
-              <div style="height:100%;width:${barW*repW/100}%;background:#3b82f6;transition:width 0.5s;border-radius:99px 0 0 99px"></div>
-              <div style="height:100%;width:${barW*(100-repW)/100}%;background:#f97316;transition:width 0.5s"></div>
+            <div style="background:#f1f5f9;border-radius:99px;height:8px;overflow:hidden;display:flex">
+              <div style="height:100%;width:${barPct*repW/100}%;background:#3b82f6;border-radius:99px 0 0 99px;transition:width 0.5s"></div>
+              <div style="height:100%;width:${barPct*(100-repW)/100}%;background:#f97316;transition:width 0.5s"></div>
             </div>
           </div>
-          <div style="text-align:right;min-width:80px">
+          <div style="text-align:right;min-width:72px">
             <div style="font-size:0.78rem;font-weight:900;color:#c8102e">฿${m.total.toLocaleString()}</div>
             <div style="font-size:0.58rem;color:#94a3b8">${pct}%</div>
           </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>`;
       }).join('')}
     </div>`;
 }
+
 
 function openCostMonthDrill(year, month, label) {
   const tickets = (db.tickets||[]).filter(t => {

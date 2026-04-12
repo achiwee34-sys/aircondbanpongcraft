@@ -551,14 +551,30 @@ let _bkpClearType = null;
 
 // ── เปิดหน้า backend (เรียกจาก goPage หรือ nav) ──────────────
 function renderBackendPage() {
-  // ถ้า CU ยังไม่พร้อม (Firebase sync ยังไม่เสร็จ) → retry แทนการ redirect ออก
+  // ถ้า CU ยังไม่พร้อม → retry
   if (!window.CU) {
     setTimeout(() => { if (document.querySelector('.page.active')?.id === 'pg-backend') renderBackendPage(); }, 400);
     return;
   }
   if (window.CU.role !== 'admin') { goPage('home'); return; }
+
+  // ถ้า db ยังว่าง (Firebase ยังโหลดไม่เสร็จ) → retry
+  const hasData = (window.db?.tickets?.length || 0) + (window.db?.machines?.length || 0) + (window.db?.users?.length || 0);
+  if (!hasData && window._firebaseReady !== true) {
+    setTimeout(() => { if (document.querySelector('.page.active')?.id === 'pg-backend') renderBackendPage(); }, 700);
+    return;
+  }
+
+  // แสดงแค่ overview เสมอ — ซ่อน pane อื่น
+  ['data','users','notify','firebase','log','danger'].forEach(t => {
+    const el = document.getElementById('bkp-pane-' + t);
+    if (el) el.style.display = 'none';
+  });
+  const ov = document.getElementById('bkp-pane-overview');
+  if (ov) ov.style.display = '';
+
   _bkpCheckConnection();
-  switchBkpTab(_bkpTab || 'overview');
+  renderBkpOverview();
 }
 
 function refreshBackendPage() {

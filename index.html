@@ -2676,30 +2676,21 @@ window._liffLandingUpdateCard = liffUpdateCard;
   <!-- ======================================================
        pg-backend — Admin Backend Dashboard (แยกหน้าจาก settings)
   ====================================================== -->
-  <div class="page" id="pg-backend" data-page="backend" style="padding:0;flex-direction:column;background:var(--bg);overflow-y:auto">
-    <!-- Sticky header -->
-    <div id="bkp-header" style="position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:14px 16px 0;box-shadow:0 4px 20px rgba(0,0,0,0.4)">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <button onclick="goPage('home')" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">&#8249;</button>
+  <div class="page" id="pg-backend" data-page="backend" style="padding:0;display:flex !important;flex-direction:column;background:var(--bg);overflow:hidden">
+    <!-- Fixed header — ไม่ sticky ไม่ล้น -->
+    <div id="bkp-header" style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:12px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.35)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="goPage('home')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">&#8249;</button>
         <div style="flex:1;min-width:0">
-          <div style="color:white;font-size:0.95rem;font-weight:900;letter-spacing:-0.01em">&#128187; Backend Dashboard</div>
-          <div id="bkp-conn-badge" style="font-size:0.62rem;color:rgba(255,255,255,0.5);margin-top:1px">&#128308; กำลังตรวจสอบ...</div>
+          <div style="color:white;font-size:0.9rem;font-weight:900;letter-spacing:-0.01em">&#128187; Backend Dashboard</div>
+          <div id="bkp-conn-badge" style="font-size:0.6rem;color:rgba(255,255,255,0.5);margin-top:1px">&#128308; กำลังตรวจสอบ...</div>
         </div>
-        <button onclick="refreshBackendPage()" style="padding:6px 12px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit">&#128260; รีเฟรช</button>
-      </div>
-      <!-- Tab bar -->
-      <div style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none">
-        <button onclick="switchBkpTab('overview')" id="bkp-tab-overview" style="flex-shrink:0;padding:10px 14px;border:none;background:transparent;color:white;font-size:0.68rem;font-weight:800;cursor:pointer;border-bottom:2px solid white;font-family:inherit">&#128202; ภาพรวม</button>
-        <button onclick="switchBkpTab('data')"     id="bkp-tab-data"     style="flex-shrink:0;padding:10px 14px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-size:0.68rem;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">&#128452;&#65039; ข้อมูล</button>
-        <button onclick="switchBkpTab('users')"    id="bkp-tab-users"    style="flex-shrink:0;padding:10px 14px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-size:0.68rem;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">&#128101; ผู้ใช้</button>
-        <button onclick="switchBkpTab('notify')"   id="bkp-tab-notify"   style="flex-shrink:0;padding:10px 14px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-size:0.68rem;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">&#128276; แจ้งเตือน</button>
-        <button onclick="switchBkpTab('firebase')" id="bkp-tab-firebase" style="flex-shrink:0;padding:10px 14px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-size:0.68rem;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">&#128293; Firebase</button>
-        <button onclick="switchBkpTab('log')"      id="bkp-tab-log"      style="flex-shrink:0;padding:10px 14px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-size:0.68rem;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">&#128203; Log</button>
-        <button onclick="switchBkpTab('danger')"   id="bkp-tab-danger"   style="flex-shrink:0;padding:10px 14px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-size:0.68rem;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit">&#9888;&#65039; Danger</button>
+        <button onclick="refreshBackendPage()" style="padding:5px 10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">&#128260; รีเฟรช</button>
       </div>
     </div>
 
-    <div style="padding:14px;max-width:720px;margin:0 auto;width:100%;box-sizing:border-box">
+    <!-- Scrollable content -->
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px;max-width:720px;margin:0 auto;width:100%;box-sizing:border-box;padding-bottom:calc(var(--nav-h,56px) + 20px)">
 
       <!-- TAB: OVERVIEW -->
       <div id="bkp-pane-overview">
@@ -2955,7 +2946,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
         </div>
       </div><!-- end pane-danger -->
 
-    </div><!-- inner padding -->
+    </div><!-- end scrollable content -->
   </div><!-- end pg-backend -->
 
 
