@@ -1,5 +1,8 @@
 // ── Firebase Setup ─────────────────────────────────────────
 let FSdb = null, _firebaseReady = false, _fsListener = null;
+// expose to window so app-backend.js can read these
+Object.defineProperty(window, '_fsListener', { get: () => _fsListener, configurable: true });
+Object.defineProperty(window, 'FSdb', { get: () => FSdb, configurable: true });
 let _fsSaving = false;
 let _fsChatSaving = false;
 
@@ -32,6 +35,7 @@ function initFirebase() {
     FSdb = firebase.firestore();
     _firebaseReady = true;
     if (firebase.auth) {
+      window.firebaseAuth = firebase.auth();
       firebase.auth().onAuthStateChanged(user => {
         if (user) {
           // รับทั้ง custom token (LIFF) และ anonymous (PC fallback)
