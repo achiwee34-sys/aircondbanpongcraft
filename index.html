@@ -2671,14 +2671,14 @@ window._liffLandingUpdateCard = liffUpdateCard;
       </button>
 
     </div>
-  </div><!-- end content-area -->
 
+  <!-- pg-backend moved inside content-area so position:absolute clips correctly -->
   <!-- ======================================================
        pg-backend — Admin Backend Dashboard (แยกหน้าจาก settings)
   ====================================================== -->
-  <div class="page" id="pg-backend" data-page="backend" style="padding:0;display:flex !important;flex-direction:column;background:var(--bg);overflow:hidden">
+  <div class="page" id="pg-backend" data-page="backend" style="padding:0;background:var(--bg)">
     <!-- Fixed header — ไม่ sticky ไม่ล้น -->
-    <div id="bkp-header" style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:10px 12px 0;box-shadow:0 2px 12px rgba(0,0,0,0.35)">
+    <div id="bkp-header" style="flex-shrink:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:10px 12px 0;box-shadow:0 2px 12px rgba(0,0,0,0.35);overflow:hidden;max-width:100%;box-sizing:border-box">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <button onclick="goPage('home')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">&#8249;</button>
         <div style="flex:1;min-width:0;overflow:hidden">
@@ -2688,7 +2688,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
         <button onclick="refreshBackendPage()" style="padding:5px 8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">&#128260; รีเฟรช</button>
       </div>
       <!-- Tab strip — scrollable horizontal -->
-      <div style="display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -12px;padding:0 12px">
+      <div style="display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -12px 0 -12px;padding:0 4px">
         <button id="bkp-tab-overview" onclick="switchBkpTab('overview')" style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid white;color:white;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Overview</button>
         <button id="bkp-tab-data"     onclick="switchBkpTab('data')"     style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Data</button>
         <button id="bkp-tab-users"    onclick="switchBkpTab('users')"    style="padding:6px 12px;background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Users</button>
@@ -2964,6 +2964,10 @@ window._liffLandingUpdateCard = liffUpdateCard;
 
     </div><!-- end scrollable content -->
   </div><!-- end pg-backend -->
+
+  </div><!-- end content-area -->
+
+
 
 
   <!-- ── PAGE TAB BAR (สลับตามหน้า) ── -->

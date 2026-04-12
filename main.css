@@ -938,9 +938,10 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 }
 .page.active { display: block; }
 /* chatroom + executive page use flex layout */
-#pg-chatroom.active, #pg-executive.active, #pg-report.active, #pg-pmplan.active, #pg-backend.active { display: flex !important; flex-direction: column; padding-bottom: 14px; overflow-y: auto !important; }
-/* backend page: override mobile padding — managed internally via flex layout */
-#pg-backend.active { padding: 0 !important; overflow: hidden !important; }
+#pg-chatroom.active, #pg-executive.active, #pg-report.active, #pg-pmplan.active { display: flex !important; flex-direction: column; padding-bottom: 14px; overflow-y: auto !important; }
+/* backend page — flex layout, no padding, managed internally */
+#pg-backend { display: none; }
+#pg-backend.active { display: flex !important; flex-direction: column !important; padding: 0 !important; overflow: hidden !important; max-width: 100% !important; box-sizing: border-box !important; left: 0 !important; right: 0 !important; }
 /* machines page — overflow-y visible for dropdown, clip x */
 #pg-machines { overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch !important; overscroll-behavior: contain !important; height: 100% !important; position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; }
 
@@ -1383,6 +1384,7 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
   #main-col { order: 1 !important; flex: 1 1 0 !important; min-height: 0 !important; overflow: hidden !important; }
   .content-area { flex: 1 1 0 !important; overflow: hidden !important; min-height: 0 !important; position: relative !important; }
   .content-area > .page { overflow-y: auto !important; overflow-x: hidden !important; padding: 12px 16px calc(var(--nav-h, 56px) + var(--safe-bot, 0px) + 20px) !important; }
+  #pg-backend { display: none !important; }
   #pg-backend.active { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; }
   .bn-item {
     flex-direction: column !important;
