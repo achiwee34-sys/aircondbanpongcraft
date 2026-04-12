@@ -917,6 +917,17 @@ function getRepairKeyByBTU(baseName, btu) {
 async function viewQuotationFull(tid) {
   const t        = db.tickets.find(x=>x.id===tid); if(!t){showToast('ไม่พบข้อมูลงาน');return;}
 
+  // ── FIX v23-fix24: แสดง loading ทันที ก่อน await Firestore ──
+  // ป้องกันหน้าขาวขณะรอ signatures โหลด
+  let _loadingOv = document.getElementById('_quot_loading');
+  if (!_loadingOv) {
+    _loadingOv = document.createElement('div');
+    _loadingOv.id = '_quot_loading';
+    _loadingOv.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px';
+    _loadingOv.innerHTML = '<div style="width:44px;height:44px;border:4px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite"></div><div style="color:#fff;font-size:0.9rem;font-weight:600">กำลังโหลดใบเสนอราคา...</div>';
+    document.body.appendChild(_loadingOv);
+  }
+
   // ── โหลด signatures: merge จาก cache + Firebase เสมอ (ไม่ใช่แค่ตอนว่าง) ──
   if (!t.signatures) t.signatures = {};
   try {
@@ -1198,6 +1209,10 @@ async function viewQuotationFull(tid) {
     +'</div></body></html>';
 
   // open full-screen overlay
+  // ── ลบ loading overlay ──
+  const _lOv = document.getElementById('_quot_loading');
+  if (_lOv) _lOv.remove();
+
   let ov = document.getElementById('_pdf_overlay');
   if(ov) ov.remove();
   ov = document.createElement('div');
@@ -1654,7 +1669,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     <tr>
       <td style="padding:7px 10px">
         <strong>งาน : ซ่อมแอร์ห้อง ${machineName}</strong><br>
-        <strong>ยี่ห้อ : ${machineBrand} &nbsp;&nbsp; ขนาด : ${machineBTU}</strong><br>
+        <strong>ยี่ห้อ (FCU) : ${[machine?.mfrFCU, machine?.modelFCU].filter(Boolean).join(' ') || machine?.brandFCU || machineBrand} &nbsp;&nbsp; (CDU) : ${[machine?.mfrCDU, machine?.modelCDU].filter(Boolean).join(' ') || machine?.brandCDU || machineBrand} &nbsp;&nbsp; ขนาด : ${machineBTU}</strong><br>
         มีความยินดีที่จะเสนอราคาสินค้าดังต่อไปนี้ &nbsp; Please to quote the following items
       </td>
     </tr>
@@ -1678,7 +1693,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
       ${quotRows.length ? quotRows.map((r,i)=>`
       <tr>
         <td style="padding:8px 6px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:9pt">${i+1}</td>
-        <td style="padding:8px 8px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:8pt;color:#555">${String(i+1).padStart(2,'0')}-${String(Math.floor(Math.random()*900)+100)}</td>
+        <td style="padding:8px 8px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:8pt;color:#555">${r.code||'—'}</td>
         <td style="padding:8px 10px;border-right:1px solid #ddd;border-bottom:1px solid #eee;font-size:9pt">${fmtPDFItemName(r.name, machine&&machine.btu?Number(machine.btu):0)||'—'}</td>
         <td style="padding:8px 6px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:9pt">${r.qty>0?Number(r.qty).toLocaleString('en-US',{minimumFractionDigits:2}):'—'}</td>
         <td style="padding:8px 6px;border-right:1px solid #ddd;border-bottom:1px solid #eee;text-align:center;font-size:8.5pt">${r.unit||'JOB'}</td>

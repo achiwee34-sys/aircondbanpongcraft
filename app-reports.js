@@ -295,28 +295,52 @@ function renderRptCostMonthly() {
     return { y, label };
   });
 
+  // ── FIX v23-fix25: grouped bar chart (2 bars side-by-side) ──
+  // แสดงค่าแรง + ค่าสั่งซื้อ เคียงกันชัดเจน ไม่ซ้อน
+  const slotW  = chartW / 12;
+  const barGap = 2;
+  const bW     = Math.floor((slotW - barGap * 3) / 2); // ความกว้างแต่ละแท่ง
+
   const svgBars = monthData.map((m, i) => {
-    const x = PAD_L + i * (chartW / 12) + 1;
+    const slotX   = PAD_L + i * slotW;
+    const xRep    = slotX + barGap;           // แท่งค่าแรง (ซ้าย)
+    const xPar    = slotX + barGap + bW + barGap; // แท่งค่าสั่งซื้อ (ขวา)
     const isCurrent = i === currentIdx;
-    const totalH = m.total > 0 ? Math.max(Math.round(m.total / maxTotal * chartH), 4) : 0;
-    const repH2  = m.total > 0 ? Math.round(m.repair / m.total * totalH) : 0;
-    const parH2  = totalH - repH2;
-    const yBase  = PAD_T + chartH;
-    const repCol  = isCurrent ? '#2563eb' : '#60a5fa';
-    const parCol  = isCurrent ? '#ea580c' : '#fb923c';
+    const yBase   = PAD_T + chartH;
+
+    const repH = m.repair > 0 ? Math.max(Math.round(m.repair / maxTotal * chartH), 3) : 0;
+    const parH = m.parts  > 0 ? Math.max(Math.round(m.parts  / maxTotal * chartH), 3) : 0;
+
+    const repCol = isCurrent ? '#1d4ed8' : '#60a5fa';
+    const parCol = isCurrent ? '#c2410c' : '#fb923c';
+
     const parts = [];
-    if (totalH === 0) {
-      parts.push(`<rect x="${x}" y="${yBase-2}" width="${barW2}" height="2" rx="1" fill="#e2e8f0"/>`);
+
+    // ค่าแรง bar
+    if (repH > 0) {
+      parts.push(`<rect x="${xRep}" y="${yBase-repH}" width="${bW}" height="${repH}" rx="2" fill="${repCol}"/>`);
+      parts.push(`<rect x="${xRep}" y="${yBase-repH}" width="${bW}" height="3" rx="2" fill="${repCol}"/>`);
     } else {
-      if (repH2 > 0) parts.push(`<rect x="${x}" y="${yBase-totalH}" width="${barW2}" height="${repH2}" rx="0" fill="${repCol}"/>`);
-      if (parH2 > 0) parts.push(`<rect x="${x}" y="${yBase-parH2}" width="${barW2}" height="${parH2}" rx="0" fill="${parCol}"/>`);
-      // round top
-      parts.push(`<rect x="${x}" y="${yBase-totalH}" width="${barW2}" height="4" rx="3" fill="${repH2>0?repCol:parCol}"/>`);
+      parts.push(`<rect x="${xRep}" y="${yBase-2}" width="${bW}" height="2" rx="1" fill="#e2e8f0"/>`);
     }
-    // current outline
-    if (isCurrent && totalH > 0) parts.push(`<rect x="${x-1}" y="${yBase-totalH-1}" width="${barW2+2}" height="${totalH+1}" rx="3" fill="none" stroke="#c8102e" stroke-width="1.5"/>`);
-    // clickable overlay
-    parts.push(`<rect x="${x-1}" y="${PAD_T}" width="${barW2+2}" height="${chartH+2}" rx="3" fill="transparent" style="cursor:pointer" onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')"><title>฿${m.total.toLocaleString()} · ${m.count} งาน</title></rect>`);
+
+    // ค่าสั่งซื้อ bar
+    if (parH > 0) {
+      parts.push(`<rect x="${xPar}" y="${yBase-parH}" width="${bW}" height="${parH}" rx="2" fill="${parCol}"/>`);
+      parts.push(`<rect x="${xPar}" y="${yBase-parH}" width="${bW}" height="3" rx="2" fill="${parCol}"/>`);
+    } else {
+      parts.push(`<rect x="${xPar}" y="${yBase-2}" width="${bW}" height="2" rx="1" fill="#e2e8f0"/>`);
+    }
+
+    // เดือนปัจจุบัน — กรอบเน้น
+    if (isCurrent) {
+      const totalH = Math.max(repH, parH);
+      if (totalH > 0) parts.push(`<rect x="${xRep-1}" y="${yBase-totalH-2}" width="${bW*2+barGap+2}" height="${totalH+2}" rx="3" fill="none" stroke="#c8102e" stroke-width="1.5" stroke-dasharray="3,2"/>`);
+    }
+
+    // clickable area ทั้ง slot
+    parts.push(`<rect x="${slotX}" y="${PAD_T}" width="${slotW}" height="${chartH+2}" fill="transparent" style="cursor:pointer" onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')"><title>${m.label} · ค่าแรง ฿${m.repair.toLocaleString()} · สั่งซื้อ ฿${m.parts.toLocaleString()} · ${m.count} งาน</title></rect>`);
+
     return parts.join('');
   }).join('');
 
@@ -339,23 +363,29 @@ function renderRptCostMonthly() {
       </div>
     </div>
 
-    <!-- Summary badges: ค่าแรง + ค่าสั่งซื้อ -->
+    <!-- Summary badges: FIX v23-fix25 เพิ่ม % สัดส่วน -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:9px 12px">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
-          <div style="width:8px;height:8px;border-radius:2px;background:#3b82f6"></div>
-          <span style="font-size:0.6rem;color:#0369a1;font-weight:700">ค่าแรงซ่อม</span>
+      <div style="background:#eff6ff;border:2px solid #93c5fd;border-radius:12px;padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+          <div style="width:10px;height:10px;border-radius:2px;background:#3b82f6"></div>
+          <span style="font-size:0.65rem;color:#1d4ed8;font-weight:800">🔧 ค่าแรงซ่อม</span>
         </div>
-        <div style="font-size:1rem;font-weight:900;color:#0369a1">${grandRepair>0?'฿'+grandRepair.toLocaleString():'—'}</div>
-        <div style="font-size:0.58rem;color:#64748b;margin-top:1px">จาก Price List</div>
+        <div style="font-size:1.05rem;font-weight:900;color:#1d4ed8">${grandRepair>0?'฿'+grandRepair.toLocaleString():'—'}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          <span style="font-size:0.58rem;color:#64748b">จาก Price List</span>
+          <span style="font-size:0.62rem;font-weight:700;color:#3b82f6">${grandTotal>0?Math.round(grandRepair/grandTotal*100)+'%':''}</span>
+        </div>
       </div>
-      <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:9px 12px">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
-          <div style="width:8px;height:8px;border-radius:2px;background:#f97316"></div>
-          <span style="font-size:0.6rem;color:#c2410c;font-weight:700">ค่าสั่งซื้อ</span>
+      <div style="background:#fff7ed;border:2px solid #fdba74;border-radius:12px;padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+          <div style="width:10px;height:10px;border-radius:2px;background:#f97316"></div>
+          <span style="font-size:0.65rem;color:#c2410c;font-weight:800">📦 ค่าสั่งซื้อ</span>
         </div>
-        <div style="font-size:1rem;font-weight:900;color:#c2410c">${grandParts>0?'฿'+grandParts.toLocaleString():'—'}</div>
-        <div style="font-size:0.58rem;color:#64748b;margin-top:1px">จาก PO/PR</div>
+        <div style="font-size:1.05rem;font-weight:900;color:#c2410c">${grandParts>0?'฿'+grandParts.toLocaleString():'—'}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          <span style="font-size:0.58rem;color:#64748b">จาก PO/PR</span>
+          <span style="font-size:0.62rem;font-weight:700;color:#f97316">${grandTotal>0?Math.round(grandParts/grandTotal*100)+'%':''}</span>
+        </div>
       </div>
     </div>
 
@@ -375,11 +405,17 @@ function renderRptCostMonthly() {
         ${svgLabels}
       </svg>
     </div>
-    <!-- legend -->
-    <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;padding:0 2px">
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:2px;background:#60a5fa"></div><span style="font-size:0.62rem;color:#64748b">ค่าแรง</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:2px;background:#fb923c"></div><span style="font-size:0.62rem;color:#64748b">ค่าอะไหล่</span></div>
-      <span style="font-size:0.58rem;color:#cbd5e1;margin-left:auto">กดแท่งดูรายงาน</span>
+    <!-- legend — FIX v23-fix25: grouped bar legend -->
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;padding:0 2px">
+      <div style="display:flex;align-items:center;gap:5px">
+        <div style="width:12px;height:12px;border-radius:2px;background:#60a5fa"></div>
+        <span style="font-size:0.65rem;color:#1d4ed8;font-weight:700">ค่าแรงซ่อม</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <div style="width:12px;height:12px;border-radius:2px;background:#fb923c"></div>
+        <span style="font-size:0.65rem;color:#c2410c;font-weight:700">ค่าสั่งซื้อ/อะไหล่</span>
+      </div>
+      <span style="font-size:0.58rem;color:#cbd5e1;margin-left:auto">กดแท่งดูรายละเอียด</span>
     </div>
 
     <!-- Month rows (top 5) -->
@@ -2170,8 +2206,9 @@ function renderPurchaseTech() {
       { icon:'📦', label:'รับแล้ว' },
     ];
 
+    // ── FIX v23-fix26: stepper compact ──
     const stepperHtml = `
-      <div style="display:flex;align-items:center;gap:0;padding:14px 16px 10px;position:relative">
+      <div style="display:flex;align-items:flex-start;gap:0;padding:10px 12px 8px;position:relative">
         ${steps.map((s,i) => {
           const done_s  = i < step;
           const active  = i === step;
@@ -2184,22 +2221,26 @@ function renderPurchaseTech() {
           return `
             <div style="display:flex;flex-direction:column;align-items:center;flex:1;position:relative">
               ${i>0?`<div style="position:absolute;top:14px;right:50%;width:100%;height:2px;background:${i<=step?'#e65100':'#e5e7eb'};z-index:0"></div>`:''}
-              <div style="width:28px;height:28px;border-radius:50%;background:${done_s?'#e65100':active?'#fff7ed':'#f9fafb'};border:2px solid ${dotBorder};display:flex;align-items:center;justify-content:center;font-size:${done_s?'0.7rem':'0.85rem'};z-index:1;flex-shrink:0">
+              <div style="width:24px;height:24px;border-radius:50%;background:${done_s?'#e65100':active?'#fff7ed':'#f9fafb'};border:2px solid ${dotBorder};display:flex;align-items:center;justify-content:center;font-size:${done_s?'0.65rem':'0.78rem'};z-index:1;flex-shrink:0">
                 ${done_s ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>` : s.icon}
               </div>
-              <div style="font-size:0.58rem;font-weight:${active?'800':'600'};color:${textColor};margin-top:4px;text-align:center;line-height:1.3">${s.label}</div>
+              <div style="font-size:0.55rem;font-weight:${active?'800':'500'};color:${textColor};margin-top:4px;text-align:center;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px">${s.label}</div>
             </div>`;
         }).join('')}
       </div>`;
 
     // ── ticket info ──
+    // ── FIX v23-fix26: infoBar compact ──
     const infoBar = `
-      <div style="padding:0 14px 10px;border-bottom:1px solid #f1f5f9">
-        <div style="font-size:0.68rem;font-weight:700;color:#94a3b8;font-family:monospace;margin-bottom:2px">${t.id}</div>
-        <div style="font-size:0.9rem;font-weight:800;color:#0f172a;line-height:1.35;margin-bottom:3px">${escapeHtml(t.problem)}</div>
-        <div style="display:flex;gap:10px;font-size:0.68rem;color:#64748b">
+      <div style="padding:8px 12px 8px;border-bottom:1px solid #f1f5f9">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
+          <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;font-family:monospace">${t.id}</div>
+          <div style="font-size:0.6rem;color:#94a3b8">${(t.updatedAt||'').slice(0,10)}</div>
+        </div>
+        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;line-height:1.3;margin-bottom:4px">${escapeHtml(t.problem)}</div>
+        <div style="display:flex;gap:8px;font-size:0.65rem;color:#64748b;flex-wrap:wrap">
           <span>❄️ ${t.machine||'—'}</span>
-          <span>📍 ${t.location||'—'}</span>
+          ${t.location?`<span>📍 ${t.location}</span>`:''}
         </div>
       </div>`;
 
@@ -2207,13 +2248,13 @@ function renderPurchaseTech() {
     const reqRows = (req?.rows||[]).filter(r=>r.name);
     const reqTotal = reqRows.reduce((s,r)=>s+(Number(r.qty||1)*Number(r.price||0)),0);
     const reqBlock = reqRows.length ? `
-      <div style="margin:10px 14px;background:#fafafa;border:1px solid #f1f5f9;border-radius:12px;overflow:hidden">
-        <div style="padding:8px 12px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9">
+      <div style="margin:8px 10px;background:#fafafa;border:1px solid #f0f0f0;border-radius:10px;overflow:hidden">
+        <div style="padding:6px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0;background:#f8fafc">
           <span style="font-size:0.68rem;font-weight:800;color:#374151">รายการที่แจ้ง</span>
           <span style="font-size:0.65rem;color:#9ca3af">${(req.requestedAt||'').slice(0,10)}</span>
         </div>
         ${reqRows.map((r,i)=>`
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f8fafc">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #f4f4f5">
             <div style="width:18px;height:18px;border-radius:5px;background:#e65100;color:white;font-size:0.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
             <div style="flex:1;min-width:0">
               <div style="font-size:0.8rem;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
@@ -2224,7 +2265,7 @@ function renderPurchaseTech() {
               ${r.price?`<div style="font-size:0.72rem;font-weight:700;color:#e65100">฿${Number(r.price).toLocaleString()}</div>`:''}
             </div>
           </div>`).join('')}
-        ${reqTotal?`<div style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center;background:#fff7ed">
+        ${reqTotal?`<div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center;background:#fff7ed">
           <span style="font-size:0.7rem;font-weight:700;color:#92400e">รวมประมาณ</span>
           <span style="font-size:0.85rem;font-weight:900;color:#e65100">฿${reqTotal.toLocaleString()}</span>
         </div>`:''}
@@ -2298,12 +2339,13 @@ function renderPurchaseTech() {
         </div>`;
     }
 
+    // ── FIX v23-fix26: card wrapper tighter ──
     const borderColor = isRecv?'#6ee7b7':hasPO?'#c4b5fd':req?'#fcd34d':'#fdba74';
     const headerBg    = isRecv?'#ecfdf5':hasPO?'#f5f3ff':req?'#fffbeb':'#fff7ed';
 
     return `
-      <div style="background:white;border:2px solid ${borderColor};border-radius:18px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.06)">
-        <div style="background:${headerBg};padding:0">
+      <div style="background:white;border:1.5px solid ${borderColor};border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.05)">
+        <div style="background:${headerBg}">
           ${stepperHtml}
         </div>
         ${infoBar}
@@ -2311,9 +2353,9 @@ function renderPurchaseTech() {
         ${poBlock}
         ${recvBanner}
         ${actionBtn}
-        <div style="padding:0 14px 14px">
-          <button onclick="openDetail('${t.id}')" style="width:100%;padding:10px;background:#f8fafc;color:#374151;border:1.5px solid #e5e7eb;border-radius:11px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <div style="padding:0 10px 10px">
+          <button onclick="openDetail('${t.id}')" style="width:100%;padding:8px;background:#f8fafc;color:#64748b;border:1px solid #e5e7eb;border-radius:9px;font-size:0.73rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             ดูรายละเอียดงาน
           </button>
         </div>
@@ -2395,8 +2437,8 @@ function showLockedTechReq(t) {
         <div style="font-size:0.7rem;color:#64748b;font-weight:600">${rows.length} รายการ</div>
       </div>
       ${rows.map((r,i)=>`
-        <div style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;margin-bottom:8px;overflow:hidden">
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #f1f5f9">
+        <div style="background:white;border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:6px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9">
             <div style="width:24px;height:24px;border-radius:7px;background:#e65100;color:white;font-size:0.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
             <div style="flex:1;font-size:0.86rem;font-weight:700;color:#0f172a">${r.name}</div>
           </div>
@@ -2525,22 +2567,27 @@ function openTechReqForm(tid) {
   document.body.appendChild(sh);
   renderTechReqRows();
 
-  // ── Keyboard fix: ปรับความสูง sheet เมื่อ keyboard ขึ้น/ลง ──
+  // ── FIX v23-fix27: keyboard overlap — ทำให้ footer ไม่ทับ keyboard ──
   if (window.visualViewport) {
+    const _footer = sh.querySelector('div[style*="flex-shrink:0;background:white;border-top"]');
     const _kbFix = () => {
       if (!document.body.contains(sh)) {
         window.visualViewport.removeEventListener('resize', _kbFix);
         window.visualViewport.removeEventListener('scroll', _kbFix);
         return;
       }
-      const vvh = window.visualViewport.height;
-      const vvOffset = window.visualViewport.offsetTop;
-      sh.style.maxHeight = (vvh * 0.95) + 'px';
-      sh.style.bottom = '0px';
-      sh.style.transform = `translateY(${-vvOffset}px)`;
+      const vvh    = window.visualViewport.height;
+      const vvTop  = window.visualViewport.offsetTop;
+      const winH   = window.innerHeight;
+      const kbH    = winH - vvh - vvTop; // ความสูง keyboard
+      // ขยับ sheet ทั้งก้อนขึ้นตาม keyboard
+      sh.style.maxHeight = (vvh * 0.96) + 'px';
+      sh.style.bottom    = Math.max(0, kbH) + 'px';
+      sh.style.transform = 'none';
     };
     window.visualViewport.addEventListener('resize', _kbFix);
     window.visualViewport.addEventListener('scroll', _kbFix);
+    _kbFix(); // รันทันที
   }
 }
 function closeTechReqForm() {
@@ -2555,9 +2602,9 @@ function closeTechReqForm() {
 function renderTechReqRows() {
   const box = document.getElementById('tech-req-rows'); if (!box) return;
   box.innerHTML = _techReqRows.map((r,i) => `
-    <div style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;margin-bottom:8px;overflow:hidden">
+    <div style="background:white;border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:6px;overflow:hidden">
       <!-- name row -->
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #f1f5f9">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9">
         <div style="width:24px;height:24px;border-radius:7px;background:#e65100;color:white;font-size:0.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
         <input type="text" value="${r.name}" placeholder="ชื่ออะไหล่ / ชิ้นส่วน *"
           style="flex:1;border:none;outline:none;font-size:0.86rem;font-weight:700;font-family:inherit;color:#0f172a;background:transparent"
@@ -2565,29 +2612,23 @@ function renderTechReqRows() {
         ${_techReqRows.length>1?`<button onclick="removeTechReqRow(${i})" title="ลบ"
           style="width:26px;height:26px;border-radius:50%;background:#fee2e2;border:none;cursor:pointer;color:#ef4444;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>`:''}
       </div>
-      <!-- qty + price -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #f1f5f9">
-        <div style="padding:10px 14px;border-right:1px solid #f1f5f9">
-          <div style="font-size:0.6rem;font-weight:700;color:#9ca3af;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em">จำนวน</div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button onclick="_techReqRows[${i}].qty=Math.max(1,(_techReqRows[${i}].qty||1)-1);renderTechReqRows()"
-              style="width:26px;height:26px;border-radius:7px;background:#f1f5f9;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151">−</button>
-            <input type="number" value="${r.qty||1}" min="1"
-              style="flex:1;border:none;outline:none;font-size:0.95rem;font-weight:800;font-family:inherit;text-align:center;color:#0f172a;background:transparent"
-              oninput="_techReqRows[${i}].qty=parseInt(this.value)||1;updateTechReqTotal()"/>
-            <button onclick="_techReqRows[${i}].qty=(_techReqRows[${i}].qty||1)+1;renderTechReqRows()"
-              style="width:26px;height:26px;border-radius:7px;background:#f1f5f9;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151">+</button>
-          </div>
-        </div>
-        <div style="padding:10px 14px">
-          <div style="font-size:0.6rem;font-weight:700;color:#9ca3af;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em">ราคาประมาณ / ชิ้น (฿)</div>
-          <input type="number" value="${r.price||''}" placeholder="0"
-            style="width:100%;border:none;outline:none;font-size:0.95rem;font-weight:800;font-family:inherit;color:#e65100;background:transparent;box-sizing:border-box"
-            oninput="_techReqRows[${i}].price=parseFloat(this.value)||0;updateTechReqTotal()"/>
-        </div>
+      <!-- qty + price — FIX v23-fix27: compact single row ──-->
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px;border-bottom:1px solid #f1f5f9">
+        <span style="font-size:0.62rem;font-weight:600;color:#9ca3af;white-space:nowrap">จำนวน</span>
+        <button onclick="_techReqRows[${i}].qty=Math.max(1,(_techReqRows[${i}].qty||1)-1);renderTechReqRows()"
+          style="width:22px;height:22px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151;line-height:1">−</button>
+        <input type="number" value="${r.qty||1}" min="1"
+          style="width:36px;border:1px solid #e2e8f0;border-radius:6px;outline:none;font-size:0.85rem;font-weight:700;font-family:inherit;text-align:center;color:#0f172a;background:white;padding:2px 4px"
+          oninput="_techReqRows[${i}].qty=parseInt(this.value)||1;updateTechReqTotal()"/>
+        <button onclick="_techReqRows[${i}].qty=(_techReqRows[${i}].qty||1)+1;renderTechReqRows()"
+          style="width:22px;height:22px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151;line-height:1">+</button>
+        <span style="font-size:0.62rem;font-weight:600;color:#9ca3af;white-space:nowrap;margin-left:8px">ราคา/ชิ้น (฿)</span>
+        <input type="number" value="${r.price||''}" placeholder="0"
+          style="flex:1;min-width:60px;border:1px solid #e2e8f0;border-radius:6px;outline:none;font-size:0.85rem;font-weight:700;font-family:inherit;color:#e65100;background:white;padding:2px 6px;text-align:right;box-sizing:border-box"
+          oninput="_techReqRows[${i}].price=parseFloat(this.value)||0;updateTechReqTotal()"/>
       </div>
       <!-- subtotal + note -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f8fafc">
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:#f8fafc">
         <input type="text" value="${r.note||''}" placeholder="หมายเหตุ: ยี่ห้อ / รุ่น / spec..."
           style="flex:1;border:none;outline:none;font-size:0.74rem;font-family:inherit;color:#64748b;background:transparent"
           oninput="_techReqRows[${i}].note=this.value"/>
