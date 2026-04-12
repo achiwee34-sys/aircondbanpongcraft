@@ -133,7 +133,7 @@ function _renderExecDashboard(d) {
       {icon:'✅',val:done.length,   lbl:'สำเร็จ '+doneRate+'%', bg:'#f0fdf4', cl:'#16a34a', bdr:'#bbf7d0'},
       {icon:'⏳',val:openAll,       lbl:'ค้างทั้งหมด',  bg:'#fffbeb', cl:'#d97706', bdr:'#fde68a'},
       {icon:'👷',val:techCount,     lbl:'ช่างซ่อม',   bg:'#f5f3ff', cl:'#7c3aed', bdr:'#ddd6fe'},
-      {icon:'❄️',val:macCount,      lbl:'เครื่องแอร์', bg:'#e0f2fe', cl:'#0369a1', bdr:'#bae6fd'},
+      // เครื่องแอร์ card removed
     ];
     strip.innerHTML = strips.map(s=>`<div style="flex-shrink:0;background:${s.bg};border:1.5px solid ${s.bdr};border-radius:12px;padding:7px 12px;display:flex;align-items:center;gap:7px;white-space:nowrap"><span style="font-size:.85rem">${s.icon}</span><div><div style="font-size:.92rem;font-weight:900;color:${s.cl};line-height:1;font-family:'JetBrains Mono',monospace">${s.val}</div><div style="font-size:.5rem;color:${s.cl};opacity:.7;font-weight:700;margin-top:1px">${s.lbl}</div></div></div>`).join('');
   }
@@ -188,7 +188,8 @@ function _renderExecDashboard(d) {
       {label:'รอดำเนินการ', count:monthT.filter(t=>['pending','open','new','assigned','accepted'].includes(t.status)).length, color:'#f59e0b'},
       {label:'รอชิ้นส่วน',  count:monthT.filter(t=>t.status==='waiting_part').length, color:'#a855f7'},
     ].filter(s=>s.count>0);
-    const tot = (monthT&&monthT.length>0) ? monthT.length : 1; let cum=0;
+    const segTot = statuses.reduce((a,s)=>a+s.count,0);
+    const tot = segTot > 0 ? segTot : 1; let cum=0;
     const segs = statuses.map(s=>{const pct=isFinite(s.count/tot)?s.count/tot*100:0;const sg={...s,pct,offset:cum};cum+=pct;return sg;});
     const r=38,cx=50,cy=50,circ=2*Math.PI*r;
     statusEl.innerHTML=`<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
@@ -208,7 +209,7 @@ function _renderExecDashboard(d) {
         </div>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;gap:10px">
-        ${statuses.length>0?statuses.map(s=>`<div>
+        ${segs.length>0?segs.map(s=>`<div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <div style="display:flex;align-items:center;gap:6px">
               <div style="width:9px;height:9px;border-radius:3px;background:${s.color}"></div>

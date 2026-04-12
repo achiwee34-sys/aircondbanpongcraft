@@ -1173,9 +1173,9 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 /* ── Page Tab Bar (ด้านล่าง เหนือ bottom-nav) ── */
 #page-tabbar { display:none; flex-direction:column; background:transparent; border-top:none; flex-shrink:0; z-index:150; }
 #page-tabbar.visible { display:flex; }
-#page-tabbar .ptab-row { display:flex; align-items:stretch; justify-content:stretch; gap:0; width:100%; overflow:hidden; }
-/* ptab-row no scrollbar needed */
-.ptab { flex:1 1 0; min-width:0; padding:10px 4px; font-size:0.72rem; font-weight:700; border:none; background:transparent; color:var(--muted); cursor:pointer; border-top:3px solid transparent; transition:all 0.15s; font-family:'IBM Plex Sans Thai',sans-serif; white-space:nowrap; text-align:center; overflow:hidden; text-overflow:ellipsis; }
+#page-tabbar .ptab-row { display:flex; align-items:stretch; gap:0; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+#page-tabbar .ptab-row::-webkit-scrollbar { display:none; }
+.ptab { flex:0 0 auto; padding:10px 10px; font-size:0.72rem; font-weight:700; border:none; background:transparent; color:var(--muted); cursor:pointer; border-top:3px solid transparent; transition:all 0.15s; font-family:'IBM Plex Sans Thai',sans-serif; white-space:nowrap; text-align:center; }
 .ptab.active { color:var(--accent); border-top-color:var(--accent); }
 #page-tabbar .ptab-search { padding:6px 10px; border-top:none; }
 #page-tabbar .ptab-search input { width:100%; border:1.5px solid #e5e7eb; border-radius:99px; padding:7px 14px; font-size:0.82rem; font-family:inherit; outline:none; box-sizing:border-box; }

@@ -829,17 +829,20 @@ function openPOForm(tid) {
     }
   } else {
     goPage('purchase');
-    // รอ page switch + renderPurchaseAdmin() เสร็จก่อน (เพิ่มจาก 80ms → 300ms)
-    setTimeout(() => {
+    // Polling รอ DOM พร้อมจริงๆ แทน fixed timeout (fix blank page bug)
+    let _poRetry = 0;
+    const _poWait = setInterval(() => {
+      _poRetry++;
       const lp = document.getElementById('pur-list-panel');
       const pp = document.getElementById('pur-po-panel');
       if (lp && pp) {
+        clearInterval(_poWait);
         showPOPanel();
-      } else {
-        // retry อีกครั้งถ้า DOM ยังไม่พร้อม
-        setTimeout(showPOPanel, 200);
+      } else if (_poRetry >= 25) {
+        clearInterval(_poWait);
+        showPOPanel();
       }
-    }, 300);
+    }, 100);
   }
 }
 function savePODraft() {
@@ -3780,6 +3783,9 @@ function refreshPage() {
     if (tc && tc.style.display !== 'none') renderTrackingInline(tc);
   }
   else if (active === 'report') renderReport?.();
+  else if (active === 'executive') {
+    if (typeof renderExecutiveDashboard === 'function') renderExecutiveDashboard();
+  }
   updateOpenBadge();
 }
 
