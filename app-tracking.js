@@ -764,25 +764,27 @@ function openPOForm(tid) {
       // ── Force repaint — แก้ปัญหาหน้าว่างจนกว่าหมุนจอ (Android WebView) ──
       void pp.offsetHeight;
       const pg = document.getElementById('pg-purchase');
-      // Android Chrome repaint fix: toggle transform เพื่อบังคับ GPU layer ใหม่
+      // Android Chrome repaint fix: บังคับ reflow + repaint หลาย layer
       if (pg) {
+        pg.style.display = 'flex';
         pg.style.transform = 'translateZ(0)';
         pg.style.webkitTransform = 'translateZ(0)';
+        void pg.offsetHeight;
       }
       pp.style.transform = 'translateZ(0)';
       pp.style.webkitTransform = 'translateZ(0)';
+      void pp.offsetHeight;
       requestAnimationFrame(() => {
-        void pp.offsetHeight;
-        if (pg) {
-          pg.style.display = 'flex';
-          void pg.offsetHeight;
-        }
-        // clear transform หลัง paint เสร็จ
+        void pp.offsetWidth; // force reflow อีกครั้ง
+        if (pg) void pg.offsetWidth;
         setTimeout(() => {
+          // clear transform หลัง paint เสร็จ
           pp.style.transform = '';
           pp.style.webkitTransform = '';
           if (pg) { pg.style.transform = ''; pg.style.webkitTransform = ''; }
-        }, 100);
+          // scroll to top ให้เห็น content
+          pp.scrollTop = 0;
+        }, 50);
       });
     }
 
@@ -857,20 +859,22 @@ function openPOForm(tid) {
     }
   } else {
     goPage('purchase');
-    // Polling รอ DOM พร้อมจริงๆ แทน fixed timeout (fix blank page bug)
+    // ── Android blank page fix: รอให้ browser paint ก่อน showPOPanel ──
+    // ใช้ double-rAF + setTimeout 200ms เพื่อให้ layout/paint เสร็จก่อนจริงๆ
     let _poRetry = 0;
     const _poWait = setInterval(() => {
       _poRetry++;
       const lp = document.getElementById('pur-list-panel');
       const pp = document.getElementById('pur-po-panel');
-      if (lp && pp) {
+      const pg = document.getElementById('pg-purchase');
+      const pgReady = pg && (pg.classList.contains('active') || pg.style.display !== 'none');
+      if (lp && pp && pgReady) {
         clearInterval(_poWait);
-        // ── Android blank page fix: รอให้ browser paint หน้า purchase ก่อนค่อย showPOPanel ──
-        // DOM พร้อมแล้วแต่ยังไม่ได้ paint — ต้องรอ 1 frame + เวลาเพิ่มเติม
-        requestAnimationFrame(() => setTimeout(showPOPanel, 80));
-      } else if (_poRetry >= 25) {
+        // double rAF + 200ms delay — ให้ Android Chrome paint หน้าเสร็จก่อน
+        requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(showPOPanel, 200)));
+      } else if (_poRetry >= 30) {
         clearInterval(_poWait);
-        requestAnimationFrame(() => setTimeout(showPOPanel, 80));
+        requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(showPOPanel, 200)));
       }
     }, 100);
   }
