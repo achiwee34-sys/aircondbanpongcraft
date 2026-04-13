@@ -827,23 +827,21 @@ function openPOForm(tid) {
     }
   } else {
     goPage('purchase');
-    // รอ renderPurchaseAdmin() inject DOM แล้วค่อย showPOPanel
-    let _poRetry = 0;
-    const _poWait = setInterval(() => {
-      _poRetry++;
+    // poll รอ pur-list-panel + pur-po-panel ใน DOM + pg-purchase.active
+    let _retry = 0;
+    const _wait = setInterval(() => {
+      _retry++;
       const lp = document.getElementById('pur-list-panel');
       const pp = document.getElementById('pur-po-panel');
       const pg = document.getElementById('pg-purchase');
-      const pgActive = pg && pg.classList.contains('active');
-      if (lp && pp && pgActive) {
-        clearInterval(_poWait);
-        // รอ 1 frame ให้ layout เสร็จก่อน
+      if (lp && pp && pg && pg.classList.contains('active')) {
+        clearInterval(_wait);
         requestAnimationFrame(() => showPOPanel());
-      } else if (_poRetry >= 40) {
-        // timeout fallback — force render แล้ว show
-        clearInterval(_poWait);
+      } else if (_retry >= 50) {
+        // timeout 5s — force render แล้ว show
+        clearInterval(_wait);
         if (typeof renderPurchase === 'function') renderPurchase();
-        setTimeout(showPOPanel, 150);
+        setTimeout(showPOPanel, 300);
       }
     }, 100);
   }
