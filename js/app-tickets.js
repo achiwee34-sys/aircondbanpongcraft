@@ -171,6 +171,8 @@ function renderHome() {
         <span id="pur-badge" style="display:none;position:absolute;top:6px;right:10px;background:#c8102e;color:white;border-radius:99px;padding:1px 5px;font-size:0.6rem;font-weight:700"></span>
       </button>
     </div>
+    ${renderOverdueAlert(T)}
+    ${renderPMReminderBanner()}
     ${renderHomeRecentMachines()}
     ${renderHomeCal(T)}`;
 
@@ -791,6 +793,112 @@ function renderMyWork() {
 
   mwList.innerHTML = kpiHtml + groupHtml;
   requestAnimationFrame(() => _resolveListPhotos(mwList));
+}
+
+// ══ Overdue Ticket Alert Banner ══
+function renderOverdueAlert(T) {
+  const OVERDUE_DAYS = 3; // งานที่ค้างเกินกี่วัน ถือว่า "นาน"
+  const now = Date.now();
+  const activeStatuses = ['new','assigned','accepted','inprogress','waiting_part'];
+  const overdue = (T || []).filter(t => {
+    if (!activeStatuses.includes(t.status)) return false;
+    const created = new Date(t.createdAt || t.updatedAt || 0).getTime();
+    const days = (now - created) / (1000 * 60 * 60 * 24);
+    return days >= OVERDUE_DAYS;
+  }).sort((a, b) => new Date(a.createdAt||0) - new Date(b.createdAt||0)); // เก่าสุดก่อน
+
+  if (!overdue.length) return '';
+
+  const items = overdue.slice(0, 5).map(t => {
+    const created = new Date(t.createdAt || t.updatedAt || 0).getTime();
+    const days = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+    const urgColor = days >= 7 ? '#b91c1c' : days >= 5 ? '#d97706' : '#c8102e';
+    const urgBg   = days >= 7 ? '#fef2f2' : days >= 5 ? '#fffbeb' : '#fff0f2';
+    const urgBdr  = days >= 7 ? '#fecaca' : days >= 5 ? '#fde68a' : '#fecaca';
+    return `<div onclick="safeOpenDetail('${t.id}')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:white;border-radius:10px;border:1px solid #f1f5f9;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:5px" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+      <div style="background:${urgBg};border:1.5px solid ${urgBdr};border-radius:8px;padding:3px 8px;font-size:0.65rem;font-weight:900;color:${urgColor};flex-shrink:0;min-width:36px;text-align:center">${days}d</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.78rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.machine||'—')}</div>
+        <div style="font-size:0.62rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem||'—')}</div>
+      </div>
+      <span style="font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${urgBg};color:${urgColor};border:1px solid ${urgBdr};flex-shrink:0">${t.assignee||'ยังไม่มีช่าง'}</span>
+    </div>`;
+  }).join('');
+
+  const moreCount = overdue.length > 5 ? overdue.length - 5 : 0;
+
+  return `
+  <div style="background:linear-gradient(135deg,#fff5f5,#fff0f0);border:2px solid #fca5a5;border-radius:18px;padding:14px 14px 10px;margin-bottom:12px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#dc2626,#f87171)"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:7px">
+        <div style="width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#dc2626,#ef4444);display:flex;align-items:center;justify-content:center;font-size:0.85rem;box-shadow:0 3px 8px rgba(220,38,38,.3)">⚠️</div>
+        <div>
+          <div style="font-size:0.72rem;font-weight:900;color:#dc2626">งานค้างนานเกิน ${OVERDUE_DAYS} วัน!</div>
+          <div style="font-size:0.58rem;color:#ef4444;margin-top:1px">พบ ${overdue.length} งาน ต้องดำเนินการ</div>
+        </div>
+      </div>
+      <button onclick="setFilter('status','');goPage('tickets')" style="background:#dc2626;color:white;border:none;border-radius:8px;padding:5px 10px;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0">ดูทั้งหมด →</button>
+    </div>
+    ${items}
+    ${moreCount > 0 ? `<div style="text-align:center;font-size:0.65rem;color:#ef4444;font-weight:700;padding-top:4px">และอีก ${moreCount} งาน...</div>` : ''}
+  </div>`;
+}
+
+// ══ PM Reminder Banner ══
+function renderPMReminderBanner() {
+  const WARN_DAYS = 7; // แจ้งเตือนล่วงหน้าก่อนกี่วัน
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const warnDate = new Date(now.getTime() + WARN_DAYS * 86400000).toISOString().slice(0, 10);
+
+  const pmEvents = (db.calEvents || []).filter(e =>
+    (e.type === 'clean-major' || e.type === 'clean-minor') &&
+    e.date >= todayStr && e.date <= warnDate
+  ).sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!pmEvents.length) return '';
+
+  const items = pmEvents.slice(0, 3).map(e => {
+    const d = new Date(e.date + 'T00:00');
+    const diff = Math.round((d - now) / 86400000);
+    const isMajor = e.type === 'clean-major';
+    const tagColor = isMajor ? '#0369a1' : '#059669';
+    const tagBg    = isMajor ? '#eff6ff' : '#f0fdf4';
+    const tagBdr   = isMajor ? '#bfdbfe' : '#bbf7d0';
+    const urgText  = diff === 0 ? '🔴 วันนี้!' : diff === 1 ? '🟠 พรุ่งนี้' : `🟡 อีก ${diff} วัน`;
+    const dateStr  = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+    return `<div onclick="goPage('calendar')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:white;border-radius:10px;border:1px solid #f1f5f9;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:5px" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+      <div style="font-size:1.2rem;flex-shrink:0">${isMajor ? '🔵' : '💦'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.78rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(e.title||'แผน PM')}</div>
+        <div style="font-size:0.62rem;color:#94a3b8">📅 ${dateStr}${e.tech ? ' · 👷 ' + escapeHtml(e.tech) : ''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+        <span style="font-size:0.58rem;font-weight:800;padding:2px 7px;border-radius:99px;background:${tagBg};color:${tagColor};border:1px solid ${tagBdr}">${isMajor ? 'Major' : 'Minor'}</span>
+        <span style="font-size:0.6rem;font-weight:700;color:#64748b">${urgText}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const moreCount = pmEvents.length > 3 ? pmEvents.length - 3 : 0;
+
+  return `
+  <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:2px solid #7dd3fc;border-radius:18px;padding:14px 14px 10px;margin-bottom:12px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0284c7,#38bdf8)"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:7px">
+        <div style="width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#0284c7,#38bdf8);display:flex;align-items:center;justify-content:center;font-size:0.85rem;box-shadow:0 3px 8px rgba(2,132,199,.3)">📅</div>
+        <div>
+          <div style="font-size:0.72rem;font-weight:900;color:#0284c7">แผน PM ใน ${WARN_DAYS} วันข้างหน้า</div>
+          <div style="font-size:0.58rem;color:#0369a1;margin-top:1px">พบ ${pmEvents.length} แผน ต้องเตรียมพร้อม</div>
+        </div>
+      </div>
+      <button onclick="goPage('calendar')" style="background:#0284c7;color:white;border:none;border-radius:8px;padding:5px 10px;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0">ดูปฏิทิน →</button>
+    </div>
+    ${items}
+    ${moreCount > 0 ? `<div style="text-align:center;font-size:0.65rem;color:#0284c7;font-weight:700;padding-top:4px">และอีก ${moreCount} แผน...</div>` : ''}
+  </div>`;
 }
 
 // ══ Calendar 7 days for admin home ══

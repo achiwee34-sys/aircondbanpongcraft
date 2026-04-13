@@ -2030,16 +2030,15 @@ window._liffLandingUpdateCard = liffUpdateCard;
         </div>
 
         <!-- Live quick-stats strip -->
-        <div id="exec-quick-strip" style="display:flex;gap:7px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;justify-content:center;flex-wrap:wrap"></div>
+        <div id="exec-quick-strip" style="display:flex;gap:7px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap"></div>
 
         <!-- Tabs — clean pill -->
         <div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:14px" id="exec-tab-bar">
           <button class="exec-tab-btn active" data-tab="dashboard" onclick="switchExecTab('dashboard')">🏠 ภาพรวม</button>
-          <button class="exec-tab-btn" data-tab="pending" onclick="switchExecTab('pending')">⏳ งานค้าง</button>
           <button class="exec-tab-btn" data-tab="cost" onclick="switchExecTab('cost')">💰 ค่าใช้จ่าย</button>
-          <button class="exec-tab-btn" data-tab="repair" onclick="switchExecTab('repair')">📋 งานทั้งหมด</button>
-          <button class="exec-tab-btn" data-tab="done" onclick="switchExecTab('done')">✅ งานเสร็จ</button>
-          <button class="exec-tab-btn" data-tab="dept" onclick="switchExecTab('dept')">🏢 แผนก</button>
+          <button class="exec-tab-btn" data-tab="repair" onclick="switchExecTab('repair')">🔧 งานซ่อม</button>
+          <button class="exec-tab-btn" data-tab="vendor" onclick="switchExecTab('vendor')">🏢 Vendor</button>
+          <button class="exec-tab-btn" data-tab="risk" onclick="switchExecTab('risk')">⚠️ ความเสี่ยง</button>
         </div>
       </div>
 
@@ -3088,6 +3087,10 @@ window._liffLandingUpdateCard = liffUpdateCard;
       <span style="font-size:0.65rem;font-weight:700;color:#94a3b8;flex-shrink:0">Vendor:</span>
       <div id="mac-vendor-tabs" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
       <div id="mac-clear-btn" style="margin-left:auto;flex-shrink:0"></div>
+    </div>
+    <div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
+      <span style="font-size:0.65rem;font-weight:700;color:#94a3b8;flex-shrink:0">BTU:</span>
+      <div id="mac-btu-tabs" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
     </div>
   </div>
   <!-- Table -->

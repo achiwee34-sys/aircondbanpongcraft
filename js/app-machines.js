@@ -526,6 +526,14 @@ function setMacZone(zone) {
   renderMachines();
 }
 let _macVendorFilter = '';
+let _macBtuFilter = ''; // '' | 'small' | 'mid' | 'large' | 'xlarge'
+const BTU_RANGES = [
+  { key: 'small',  label: '< 9,000',       min: 0,     max: 8999  },
+  { key: 'mid',    label: '9K–18K',         min: 9000,  max: 18000 },
+  { key: 'large',  label: '18K–36K',        min: 18001, max: 36000 },
+  { key: 'xlarge', label: '> 36,000',       min: 36001, max: Infinity },
+];
+function setMacBtu(key) { _macBtuFilter = (_macBtuFilter === key) ? '' : key; applyMachineFilter(); }
 
 function applyMachineFilter() {
   const q = document.getElementById('mac-search')?.value || '';
@@ -539,6 +547,10 @@ function applyMachineFilter() {
   if (_macDeptFilter) { list = list.filter(m => (m.dept||m.location||'') === _macDeptFilter); }
   if (_macVendorFilter) {
     list = list.filter(m => (m.vendor||'') === _macVendorFilter);
+  }
+  if (_macBtuFilter) {
+    const range = BTU_RANGES.find(r => r.key === _macBtuFilter);
+    if (range) list = list.filter(m => { const b = Number(m.btu||0); return b >= range.min && b <= range.max; });
   }
   if (kw) {
     list = list.filter(m =>
@@ -555,7 +567,7 @@ function applyMachineFilter() {
   }
   window._macFilteredList = list;
   const allCount = db.machines.length;
-  const hasFilter = !!(_macDeptFilter || _macVendorFilter || kw);
+  const hasFilter = !!(_macDeptFilter || _macVendorFilter || _macBtuFilter || kw);
 
   // ── Build dept tabs ──
   const depts = [...new Set(db.machines.map(m => m.dept||m.location||'').filter(Boolean))].sort();
@@ -576,6 +588,16 @@ function applyMachineFilter() {
   }).join('');
 
   // ── Clear button ──
+  // ── Build BTU chips ──
+  let btuTabsHtml = BTU_RANGES.map(r => {
+    const cnt = db.machines.filter(m => { const b = Number(m.btu||0); return b >= r.min && b <= r.max; }).length;
+    if (!cnt) return '';
+    const active = _macBtuFilter === r.key;
+    const colors = { small:'#6d28d9', mid:'#0369a1', large:'#ea580c', xlarge:'#b91c1c' };
+    const c = colors[r.key] || '#475569';
+    return `<button onclick="setMacBtu('${r.key}')" style="white-space:nowrap;border:none;border-radius:99px;padding:4px 10px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;background:${active?c+'20':'#f3f4f6'};color:${active?c:'#6b7280'};border:1.5px solid ${active?c+'60':'transparent'}">${r.label} BTU (${cnt})</button>`;
+  }).join('');
+
   const clearHtml = hasFilter
     ? `<button onclick="clearMacFilter()" style="white-space:nowrap;border:none;border-radius:99px;padding:5px 12px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;background:#fee2e2;color:#b91c1c;display:flex;align-items:center;gap:4px;flex-shrink:0"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>ล้าง</button>`
     : '';
@@ -590,6 +612,8 @@ function applyMachineFilter() {
     if (tabsEl) tabsEl.innerHTML = tabsHtml;
     const vendorEl = document.getElementById('mac-vendor-tabs');
     if (vendorEl) vendorEl.innerHTML = vendorTabsHtml;
+    const btuEl = document.getElementById('mac-btu-tabs');
+    if (btuEl) btuEl.innerHTML = btuTabsHtml;
     const clearEl = document.getElementById('mac-clear-btn');
     if (clearEl) clearEl.innerHTML = clearHtml;
     const tableSheet = document.getElementById('mac-table-sheet');
@@ -618,6 +642,7 @@ function setMacVendor(vendor) {
 function clearMacFilter() {
   _macDeptFilter = '';
   _macVendorFilter = '';
+  _macBtuFilter = '';
   window._macPage = 0;
   const searchEl = document.getElementById('mac-search');
   if (searchEl) searchEl.value = '';
