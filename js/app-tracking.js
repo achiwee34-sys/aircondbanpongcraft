@@ -752,29 +752,8 @@ function openPOForm(tid) {
       pp.style.maxHeight = '';
       // ── Force repaint — แก้ปัญหาหน้าว่างจนกว่าหมุนจอ (Android WebView) ──
       void pp.offsetHeight;
-      const pg = document.getElementById('pg-purchase');
-      // Android Chrome repaint fix: บังคับ reflow + repaint หลาย layer
-      if (pg) {
-        pg.style.display = 'flex';
-        pg.style.transform = 'translateZ(0)';
-        pg.style.webkitTransform = 'translateZ(0)';
-        void pg.offsetHeight;
-      }
-      pp.style.transform = 'translateZ(0)';
-      pp.style.webkitTransform = 'translateZ(0)';
-      void pp.offsetHeight;
-      requestAnimationFrame(() => {
-        void pp.offsetWidth; // force reflow อีกครั้ง
-        if (pg) void pg.offsetWidth;
-        setTimeout(() => {
-          // clear transform หลัง paint เสร็จ
-          pp.style.transform = '';
-          pp.style.webkitTransform = '';
-          if (pg) { pg.style.transform = ''; pg.style.webkitTransform = ''; }
-          // scroll to top ให้เห็น content
-          pp.scrollTop = 0;
-        }, 50);
-      });
+      // scroll to top ให้เห็น content
+      pp.scrollTop = 0;
     }
 
     // ── Warning / Info banner ── ต้องทำหลัง panel แสดงเพื่อให้ DOM พร้อม
@@ -848,22 +827,23 @@ function openPOForm(tid) {
     }
   } else {
     goPage('purchase');
-    // ── Android blank page fix: รอให้ browser paint ก่อน showPOPanel ──
-    // ใช้ double-rAF + setTimeout 200ms เพื่อให้ layout/paint เสร็จก่อนจริงๆ
+    // รอ renderPurchaseAdmin() inject DOM แล้วค่อย showPOPanel
     let _poRetry = 0;
     const _poWait = setInterval(() => {
       _poRetry++;
       const lp = document.getElementById('pur-list-panel');
       const pp = document.getElementById('pur-po-panel');
       const pg = document.getElementById('pg-purchase');
-      const pgReady = pg && (pg.classList.contains('active') || pg.style.display !== 'none');
-      if (lp && pp && pgReady) {
+      const pgActive = pg && pg.classList.contains('active');
+      if (lp && pp && pgActive) {
         clearInterval(_poWait);
-        // double rAF + 200ms delay — ให้ Android Chrome paint หน้าเสร็จก่อน
-        requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(showPOPanel, 200)));
-      } else if (_poRetry >= 30) {
+        // รอ 1 frame ให้ layout เสร็จก่อน
+        requestAnimationFrame(() => showPOPanel());
+      } else if (_poRetry >= 40) {
+        // timeout fallback — force render แล้ว show
         clearInterval(_poWait);
-        requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(showPOPanel, 200)));
+        if (typeof renderPurchase === 'function') renderPurchase();
+        setTimeout(showPOPanel, 150);
       }
     }, 100);
   }
