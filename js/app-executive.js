@@ -129,13 +129,12 @@ function _renderExecDashboard(d) {
     const techCount = (db.users||[]).filter(u=>u.role==='tech').length;
     const macCount  = (db.machines||[]).length;
     const strips = [
-      {icon:'📋',val:monthT.length, lbl:'งานเดือนนี้', bg:'#eff6ff', cl:'#1d4ed8', bdr:'#bfdbfe'},
-      {icon:'✅',val:done.length,   lbl:'สำเร็จ '+doneRate+'%', bg:'#f0fdf4', cl:'#16a34a', bdr:'#bbf7d0'},
-      {icon:'⏳',val:openAll,       lbl:'ค้างทั้งหมด',  bg:'#fffbeb', cl:'#d97706', bdr:'#fde68a'},
-      {icon:'👷',val:techCount,     lbl:'ช่างซ่อม',   bg:'#f5f3ff', cl:'#7c3aed', bdr:'#ddd6fe'},
-      // เครื่องแอร์ card removed
+      {icon:'📋',val:monthT.length, lbl:'งานเดือนนี้', cl:'#1d4ed8'},
+      {icon:'✅',val:done.length,   lbl:'สำเร็จ '+doneRate+'%', cl:'#16a34a'},
+      {icon:'⏳',val:openAll,       lbl:'ค้างทั้งหมด',  cl:'#d97706'},
+      {icon:'👷',val:techCount,     lbl:'ช่างซ่อม',    cl:'#7c3aed'},
     ];
-    strip.innerHTML = strips.map(s=>`<div style="flex-shrink:0;background:${s.bg};border:1.5px solid ${s.bdr};border-radius:12px;padding:7px 12px;display:flex;align-items:center;gap:7px;white-space:nowrap"><span style="font-size:.85rem">${s.icon}</span><div><div style="font-size:.92rem;font-weight:900;color:${s.cl};line-height:1;font-family:'JetBrains Mono',monospace">${s.val}</div><div style="font-size:.5rem;color:${s.cl};opacity:.7;font-weight:700;margin-top:1px">${s.lbl}</div></div></div>`).join('');
+    strip.innerHTML = strips.map(s=>`<div class="exec-stat-cell"><div class="ico">${s.icon}</div><div class="val" style="color:${s.cl}">${s.val}</div><div class="lbl">${s.lbl}</div></div>`).join('');
   }
 
   // ── KPI Cards — Bright clean white cards ──

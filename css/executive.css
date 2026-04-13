@@ -1,7 +1,59 @@
+/* ── Executive Dashboard Stylesheet ── */
+
+/* Shine animation */
 .exec-card-shine{position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-15deg);pointer-events:none;animation:execShine 3.5s ease-in-out infinite}
 @keyframes execShine{0%,100%{left:-80%}60%{left:130%}}
-#exec-tab-bar::-webkit-scrollbar{display:none}
-#exec-quick-strip::-webkit-scrollbar{display:none}
-.exec-tab-btn{flex-shrink:0;padding:8px 16px;border:1.5px solid #e5e7eb;background:white;font-family:inherit;font-size:0.7rem;font-weight:700;color:#64748b;border-radius:12px;cursor:pointer;white-space:nowrap;transition:all .18s;-webkit-tap-highlight-color:transparent}
-.exec-tab-btn.active{background:linear-gradient(135deg,#c8102e,#e63950);color:white;border-color:transparent;box-shadow:0 3px 12px rgba(200,16,46,.3);font-weight:900}
-.exec-tab-btn:active{transform:scale(.96)}
+
+/* Scrollbar hide */
+#exec-tab-bar::-webkit-scrollbar,
+#exec-quick-strip::-webkit-scrollbar { display:none }
+
+/* ── Tab buttons ── */
+#pg-executive .exec-tab-btn {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .18s;
+  -webkit-tap-highlight-color: transparent;
+}
+#pg-executive .exec-tab-btn.active {
+  background: linear-gradient(135deg,#c8102e,#e63950);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 3px 12px rgba(200,16,46,.3);
+  font-weight: 900;
+}
+#pg-executive .exec-tab-btn:active { transform: scale(.95); }
+
+/* ── Quick-stat cells ── */
+#pg-executive .exec-stat-cell {
+  background: white;
+  border: 1.5px solid #e8ecf0;
+  border-radius: 12px;
+  padding: 9px 6px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+#pg-executive .exec-stat-cell .ico { font-size: 0.85rem; margin-bottom: 3px; }
+#pg-executive .exec-stat-cell .val {
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+  font-family: 'JetBrains Mono', monospace;
+}
+#pg-executive .exec-stat-cell .lbl {
+  font-size: 0.46rem;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

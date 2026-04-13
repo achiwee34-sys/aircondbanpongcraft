@@ -1996,44 +1996,40 @@ window._liffLandingUpdateCard = liffUpdateCard;
     <div class="page" id="pg-executive" data-page="executive" style="padding:0;overflow:hidden;flex-direction:column">
 
       <!-- ══ EXECUTIVE HEADER v3 — Clean Light Premium ══ -->
-      <link rel="stylesheet" href="css/executive.css?v=1775960400">
-      <div id="exec-header" style="background:white;flex-shrink:0;padding:calc(env(safe-area-inset-top,0px)+14px) 14px 0;border-bottom:1px solid #f1f5f9;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+      <link rel="stylesheet" href="css/executive.css?v=1776063800">
+      <div id="exec-header" style="background:white;flex-shrink:0;padding:calc(env(safe-area-inset-top,0px)+14px) 16px 0;border-bottom:1px solid #e8ecf0;box-shadow:0 2px 16px rgba(0,0,0,.07)">
 
-        <!-- Top row -->
-        <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px">
-          <!-- Brand pill -->
-          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
-            <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#c8102e,#e63950);box-shadow:0 4px 14px rgba(200,16,46,.35);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">📊</div>
-            <div style="min-width:0">
-              <div style="font-size:0.92rem;font-weight:900;color:#0f172a;letter-spacing:-0.02em;line-height:1.1">Executive Dashboard</div>
-              <div style="font-size:0.56rem;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;margin-top:1px">BP PROCESS · AIRCONDITION</div>
-            </div>
+        <!-- Top row: brand + month nav + export -->
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px">
+          <!-- Brand -->
+          <div style="width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#c8102e,#e63950);box-shadow:0 4px 12px rgba(200,16,46,.3);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">📊</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.88rem;font-weight:900;color:#0f172a;letter-spacing:-0.01em;line-height:1.1">Executive Dashboard</div>
+            <div style="font-size:0.5rem;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;margin-top:1px">BP PROCESS · AIRCONDITION</div>
           </div>
-          <!-- Action buttons -->
-          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-            <button onclick="exportExecCSV()" style="padding:7px 11px;background:#f8fafc;border:1.5px solid #e2e8f0;color:#475569;border-radius:10px;font-size:0.6rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f1f5f9'" onmouseup="this.style.background='#f8fafc'">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV
-            </button>
-            <button onclick="exportExecPDF()" style="padding:7px 11px;background:linear-gradient(135deg,#c8102e,#e63950);border:none;color:white;border-radius:10px;font-size:0.6rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(200,16,46,.4);display:flex;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.85'" onmouseup="this.style.opacity='1'">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF
-            </button>
-          </div>
+          <!-- Export buttons -->
+          <button onclick="exportExecCSV()" style="padding:6px 10px;background:#f8fafc;border:1.5px solid #e2e8f0;color:#475569;border-radius:9px;font-size:0.58rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;flex-shrink:0;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f1f5f9'" onmouseup="this.style.background='#f8fafc'">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV
+          </button>
+          <button onclick="exportExecPDF()" style="padding:6px 10px;background:linear-gradient(135deg,#c8102e,#e63950);border:none;color:white;border-radius:9px;font-size:0.58rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(200,16,46,.35);display:flex;align-items:center;gap:3px;flex-shrink:0;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.8'" onmouseup="this.style.opacity='1'">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF
+          </button>
         </div>
 
-        <!-- Month nav — clean pill -->
-        <div style="display:flex;align-items:center;gap:8px;padding-bottom:12px">
-          <button onclick="execPrevMonth()" style="width:34px;height:34px;background:#f8fafc;border:1.5px solid #e2e8f0;color:#475569;border-radius:10px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;touch-action:manipulation;flex-shrink:0;font-weight:700;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#e2e8f0'" onmouseup="this.style.background='#f8fafc'">‹</button>
-          <div style="flex:1;background:linear-gradient(135deg,#fff5f6,#fef2f2);border:1.5px solid #fecaca;border-radius:12px;padding:7px 0;text-align:center">
+        <!-- Month nav bar + quick stats in one row -->
+        <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;padding-bottom:10px">
+          <button onclick="execPrevMonth()" style="width:34px;height:34px;background:#f8fafc;border:1.5px solid #e2e8f0;color:#64748b;border-radius:10px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#e2e8f0'" onmouseup="this.style.background='#f8fafc'">‹</button>
+          <div style="background:linear-gradient(135deg,#fff5f6,#fef2f2);border:1.5px solid #fecaca;border-radius:11px;padding:7px 0;text-align:center">
             <div id="exec-month-label" style="color:#c8102e;font-size:0.85rem;font-weight:900;letter-spacing:.02em"></div>
           </div>
-          <button onclick="execNextMonth()" style="width:34px;height:34px;background:#f8fafc;border:1.5px solid #e2e8f0;color:#475569;border-radius:10px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;touch-action:manipulation;flex-shrink:0;font-weight:700;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#e2e8f0'" onmouseup="this.style.background='#f8fafc'">›</button>
+          <button onclick="execNextMonth()" style="width:34px;height:34px;background:#f8fafc;border:1.5px solid #e2e8f0;color:#64748b;border-radius:10px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#e2e8f0'" onmouseup="this.style.background='#f8fafc'">›</button>
         </div>
 
-        <!-- Live quick-stats strip -->
-        <div id="exec-quick-strip" style="display:flex;gap:7px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap"></div>
+        <!-- Quick-stats: 4-column grid -->
+        <div id="exec-quick-strip" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding-bottom:10px"></div>
 
-        <!-- Tabs — clean pill -->
-        <div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:14px" id="exec-tab-bar">
+        <!-- Tab bar -->
+        <div id="exec-tab-bar" style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:12px">
           <button class="exec-tab-btn active" data-tab="dashboard" onclick="switchExecTab('dashboard')">🏠 ภาพรวม</button>
           <button class="exec-tab-btn" data-tab="cost" onclick="switchExecTab('cost')">💰 ค่าใช้จ่าย</button>
           <button class="exec-tab-btn" data-tab="repair" onclick="switchExecTab('repair')">🔧 งานซ่อม</button>
@@ -2043,7 +2039,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
       </div>
 
       <!-- Tab content panels -->
-      <div id="exec-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#f0f4f8">
+      <div id="exec-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#f1f5f9">
 
         <!-- ── TAB: DASHBOARD ── -->
         <div id="exec-panel-dashboard" class="exec-panel" style="padding:14px 12px 24px">
