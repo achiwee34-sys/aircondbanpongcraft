@@ -5,6 +5,13 @@ Object.defineProperty(window, '_fsListener', { get: () => _fsListener, configura
 Object.defineProperty(window, 'FSdb', { get: () => FSdb, configurable: true });
 let _fsSaving = false;
 let _fsChatSaving = false;
+// ── Pending Write Guard (FIX: race condition onSnapshot vs fsSave debounce) ──
+// เก็บ ticket.id ที่ user เพิ่งเปลี่ยน status — onSnapshot จะไม่เขียนทับจนกว่า Firestore จะ confirm
+const _pendingTicketIds = new Set();
+function _lockTicket(tid)   { if (tid) _pendingTicketIds.add(tid); }
+function _unlockTicket(tid) { if (tid) _pendingTicketIds.delete(tid); }
+window._lockTicket   = _lockTicket;
+window._unlockTicket = _unlockTicket;
 
 const firebaseConfig = {
   apiKey: "AIzaSyBh14SxXJGgldlr6h1p8H0_S0la7xHkH6w",
@@ -311,7 +318,14 @@ async function fsSaveNow() {
       }
     }
   } catch(e) { console.warn('fsSaveNow error:', e); }
-  finally { setTimeout(() => { _fsSaving = false; }, 800); } // FIX v23-track2: ลดจาก 3000→800ms ป้องกัน onSnapshot block นานเกิน
+  finally {
+    setTimeout(() => {
+      _fsSaving = false;
+      // ── Pending Write Guard: unlock ทุก ticket หลัง Firestore confirm write ──
+      // onSnapshot ที่ยิงหลังจากนี้จะ sync ได้ตามปกติ
+      _pendingTicketIds.clear();
+    }, 800); // FIX v23-track2: ลดจาก 3000→800ms ป้องกัน onSnapshot block นานเกิน
+  }
 }
 
 // fire-and-forget save
@@ -475,6 +489,16 @@ async function fsListen() {
         if (key === 'tickets' && d.length > 0) {
           const seen = new Set();
           d = d.filter(t => { if (!t.id || seen.has(t.id)) return false; seen.add(t.id); return true; });
+          // ── Pending Write Guard: อย่า overwrite ticket ที่ user เพิ่ง action แต่ยังรอ Firestore confirm ──
+          // ป้องกัน race condition: fsSave debounce 800ms vs onSnapshot จากอุปกรณ์อื่น
+          if (_pendingTicketIds.size > 0) {
+            d = d.map(remote => {
+              if (!_pendingTicketIds.has(remote.id)) return remote;
+              // ใช้ local version แทน remote สำหรับ ticket ที่กำลัง pending
+              const local = (db.tickets||[]).find(l => l.id === remote.id);
+              return local || remote;
+            });
+          }
         }
         if (d.length !== localArr.length) { db[key] = d; return true; }
         const sig = a => a.length + '|' + a.map(x => (x?.updatedAt||x?.id||'')).join(',');

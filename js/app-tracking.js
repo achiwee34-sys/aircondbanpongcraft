@@ -579,6 +579,7 @@ function doAccept(tid) {
   try {
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;
   const now = nowStr();
+  if (typeof _lockTicket === 'function') _lockTicket(tid);
   t.status = 'inprogress';   // รับงาน = เริ่มซ่อมทันที
   t.updatedAt = now;
   t.startedAt = t.startedAt || now;
@@ -626,6 +627,7 @@ function doAccept(tid) {
 
 function doStart(tid) {
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;
+  if (typeof _lockTicket === 'function') _lockTicket(tid);
   const now = nowStr(); t.status='inprogress'; t.updatedAt=now;
   t.history.push({act:'🔧 เริ่มซ่อม',by:CU.name,at:now});
   t.startedAt = now;
@@ -2862,6 +2864,7 @@ async function doComplete( /* PATCH v67 */) {
     pendingPhotos.before.forEach(p => { if (!existing.has(p)) merged.push(p); });
     t.photosBefore = merged;
   }
+  if (typeof _lockTicket === 'function') _lockTicket(tid);
   t.status  = 'done';
   t.updatedAt = now;
   t.history.push({act:'✅ ซ่อมเสร็จ', by:CU.name, at:now, detail:t.summary});
@@ -3028,6 +3031,7 @@ function doVerify() {
     notifyUser(t.assigneeId,'↩️ งานถูกส่งกลับ ซ่อมใหม่ด่วน!','งาน ['+tid+'] ส่งซ่อมใหม่: '+(note||'ไม่ผ่านการตรวจ'),tid);
     notifyRole('admin','↩️ งานส่งซ่อมใหม่ ['+tid+']',CU.name+' ส่งงานกลับให้ซ่อมใหม่',tid);
   }
+  if (typeof _lockTicket === 'function') _lockTicket(tid);
   t.updatedAt=now; saveDB(); syncTicket(t); closeSheet('verify');
   if (result === 'verified') {
     refreshPage();
@@ -3058,6 +3062,9 @@ function openCloseConfirmSheet(tid) {
 function doCloseConfirm(withPdf) {
   const tid = document.getElementById('cc-tid').value;
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;
+  // ── Pending Write Guard: lock ticket ก่อน saveDB ──
+  // ป้องกัน onSnapshot เขียนทับ status ระหว่าง fsSave debounce 800ms
+  if (typeof _lockTicket === 'function') _lockTicket(tid);
   const now = nowStr(); t.status='closed'; t.updatedAt=now;
   t.history.push({act:'🔒 ปิดงาน',by:CU.name,at:now});
   notifyUser(t.reporterId,'🔒 งานปิดสมบูรณ์','งาน ['+tid+'] ปิดสมบูรณ์แล้ว',tid);
