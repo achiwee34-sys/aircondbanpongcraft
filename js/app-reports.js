@@ -281,11 +281,13 @@ function renderRptCostMonthly() {
   // ── Compact executive-style SVG (6 เดือนล่าสุด เพื่อให้กะทัดรัด) ──
   const last6   = monthData.slice(-6);
   const max6    = Math.max(...last6.map(m => m.total), 1);
-  // SVG dimensions — ขนาดเล็ก เหมือน executive dashboard
-  const VW=280, VH=80, PL=0, PR=0, PT=4, PB=18;
+  // SVG dimensions — เพิ่มความสูงเพื่อให้มีพื้นที่แสดงตัวเลขบนแท่ง
+  const VW=280, VH=100, PL=0, PR=0, PT=18, PB=18;
   const cW=VW-PL-PR, cH=VH-PT-PB;
   const slotW = cW/6;
   const gap=2, bW=Math.max(Math.floor((slotW-gap*3)/2), 4);
+
+  const _fmtK = v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(0)+'K' : v > 0 ? v.toLocaleString() : '';
 
   const bars6 = last6.map((m,i) => {
     const sx=PL+i*slotW;
@@ -300,10 +302,18 @@ function renderRptCostMonthly() {
     let o='';
     o+=`<rect x="${xR}" y="${yB-rH}" width="${bW}" height="${rH}" rx="2" fill="${rCol}"/>`;
     o+=`<rect x="${xP}" y="${yB-pH}" width="${bW}" height="${pH}" rx="2" fill="${pCol}"/>`;
-    if (isCur) {
-      const hi=Math.max(rH,pH,4);
-      o+=`<rect x="${xR-1}" y="${yB-hi-2}" width="${bW*2+gap+2}" height="${hi+2}" rx="3" fill="none" stroke="#c8102e" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+
+    // ── ตัวเลขยอดรวมเหนือแท่ง (เฉพาะเดือนที่มีข้อมูล) ──
+    if (m.total > 0) {
+      const hi = Math.max(rH, pH);
+      const labelX = sx + slotW/2;
+      const labelY = yB - hi - 3;
+      const labelVal = _fmtK(m.total);
+      const fontW = isCur ? 700 : 500;
+      const fontCol = isCur ? '#0f172a' : '#64748b';
+      o+=`<text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="6.5" font-weight="${fontW}" fill="${fontCol}">${labelVal}</text>`;
     }
+
     o+=`<rect x="${sx}" y="${PT}" width="${slotW}" height="${cH+2}" fill="transparent" style="cursor:pointer" onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')"><title>${m.label}: ค่าแรง ฿${m.repair.toLocaleString()} | อะไหล่ ฿${m.parts.toLocaleString()}</title></rect>`;
     return o;
   }).join('');
@@ -317,8 +327,6 @@ function renderRptCostMonthly() {
   const cur = monthData[curIdx] || { repair:0, parts:0, total:0, count:0 };
   const repPct = cur.total>0 ? Math.round(cur.repair/cur.total*100) : 0;
   const parPct = cur.total>0 ? Math.round(cur.parts/cur.total*100) : 0;
-
-  const _fmtK = v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(0)+'K' : v.toLocaleString();
 
   el.innerHTML = `
     <!-- ── Header row ── -->
