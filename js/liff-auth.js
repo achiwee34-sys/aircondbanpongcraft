@@ -271,6 +271,14 @@ async function doLoginWithLine() {
 function _doLineLogin(existing, lineUserId) {
   clearLoginErr();
   CU = existing;
+
+  // ── บันทึก lineUserId กลับเข้า db.users ถ้ายังไม่มี ──
+  if (lineUserId && existing.lineUserId !== lineUserId) {
+    existing.lineUserId = lineUserId;
+    CU.lineUserId = lineUserId;
+    if (typeof fsSave === 'function') fsSave();
+  }
+
   const sessionData = {
     uid: existing.id,
     uname: existing.username,
