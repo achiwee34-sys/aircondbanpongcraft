@@ -1329,14 +1329,15 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 #pur-po-panel {
   flex: 1;
   min-height: 0;
-  height: 0;                      /* fix3: บังคับ flex item คำนวณ height ถูกต้องใน desktop */
+  /* height:0 ถูกลบออก — pg-purchase.active ใช้ position:absolute+top/bottom แล้ว
+     flex:1+min-height:0 เพียงพอใน absolute container, height:0 ทำให้ scroll เสีย */
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;            /* fix2: บอก browser ชัดเจนว่า pan-y ใน element นี้ */
 }
-/* po-body ต้องมี padding-bottom พอที่ sticky footer จะไม่บัง content */
-#po-body { padding-bottom: 100px !important; }
+/* po-body: padding-bottom ต้องเผื่อ nav bar + sticky save footer */
+#po-body { padding-bottom: calc(var(--nav-h, 56px) + var(--safe-bot, 0px) + 80px) !important; }
 /* sticky footer ของ po-panel: ใช้ sticky แทน fixed เพื่อไม่ลอยเมื่อ keyboard ขึ้น */
 #pur-po-panel > div:last-child {
   position: sticky;

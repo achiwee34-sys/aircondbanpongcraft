@@ -1151,3 +1151,159 @@ function closeKpiModal() {
 })();
 
 
+
+// ══════════════════════════════════════════════════════════════
+// NEW TABS: pending / done / dept  (v23-fix45)
+// ══════════════════════════════════════════════════════════════
+
+// ── helper: ticket card row ──
+function _execTicketRow(t, macMap) {
+  const mac = macMap.get(t.machineId);
+  const statusLabel = {new:'ใหม่',assigned:'จ่ายแล้ว',accepted:'รับแล้ว',inprogress:'กำลังซ่อม',waiting_part:'รออะไหล่',done:'เสร็จแล้ว',verified:'ตรวจรับ',closed:'ปิดงาน',rejected:'ส่งซ่อมใหม่'}[t.status]||t.status;
+  const statusColor = {new:'#1d4ed8',assigned:'#4338ca',accepted:'#7c3aed',inprogress:'#0e7490',waiting_part:'#c2410c',done:'#15803d',verified:'#15803d',closed:'#6b7280',rejected:'#b91c1c'}[t.status]||'#6b7280';
+  const cost = _tCost(t);
+  const dateStr = t.createdAt ? t.createdAt.slice(0,10) : '';
+  return `<div style="background:white;border-radius:14px;padding:14px;border:1px solid #e8ecf0;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:8px">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="width:34px;height:34px;border-radius:10px;background:${statusColor}18;border:1.5px solid ${statusColor}33;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:900;color:${statusColor};flex-shrink:0;font-family:'JetBrains Mono',monospace">${(t.id||'').slice(-3)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span style="font-size:0.78rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${t.problem||'—'}</span>
+          <span style="background:${statusColor}15;color:${statusColor};border-radius:6px;padding:2px 8px;font-size:0.6rem;font-weight:800;flex-shrink:0">${statusLabel}</span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <span style="font-size:0.62rem;color:#64748b">❄️ ${mac?.name||t.machine||'—'}</span>
+          <span style="font-size:0.62rem;color:#64748b">👷 ${t.assignee||'ยังไม่จ่ายงาน'}</span>
+          ${cost>0?`<span style="font-size:0.62rem;color:#7c3aed;font-weight:700">฿${cost.toLocaleString()}</span>`:''}
+          ${dateStr?`<span style="font-size:0.62rem;color:#94a3b8">${dateStr}</span>`:''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── TAB: PENDING ──
+function _renderExecPending(d) {
+  const { tickets, macMap } = d;
+  const el = document.getElementById('exec-pending-list');
+  if (!el) return;
+  const pending = tickets.filter(t => !['done','verified','closed'].includes(t.status))
+    .sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+  const header = `<div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fde68a;border-radius:16px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:1.4rem">⏳</span>
+    <div>
+      <div style="font-size:0.88rem;font-weight:900;color:#92400e">รายการงานที่ยังค้างอยู่</div>
+      <div style="font-size:0.65rem;color:#b45309;margin-top:2px">${pending.length} รายการ · ยังไม่ปิดงาน</div>
+    </div>
+  </div>`;
+  if (!pending.length) {
+    el.innerHTML = header + `<div style="background:white;border-radius:14px;padding:28px;text-align:center;border:1px solid #e2e8f0"><div style="font-size:2rem;margin-bottom:6px">🎉</div><div style="font-size:0.85rem;font-weight:800;color:#059669">ไม่มีงานค้าง!</div></div>`;
+    return;
+  }
+  el.innerHTML = header + pending.map(t => _execTicketRow(t, macMap)).join('');
+}
+
+// ── TAB: DONE ──
+function _renderExecDone(d) {
+  const { tickets, macMap } = d;
+  const el = document.getElementById('exec-done-list');
+  if (!el) return;
+  const done = tickets.filter(t => ['done','verified','closed'].includes(t.status))
+    .sort((a,b) => (b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''))
+    .slice(0, 100);
+  const header = `<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #bbf7d0;border-radius:16px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:1.4rem">✅</span>
+    <div>
+      <div style="font-size:0.88rem;font-weight:900;color:#166534">รายการงานที่เสร็จแล้ว</div>
+      <div style="font-size:0.65rem;color:#15803d;margin-top:2px">${done.length} รายการล่าสุด</div>
+    </div>
+  </div>`;
+  if (!done.length) {
+    el.innerHTML = header + `<div style="background:white;border-radius:14px;padding:28px;text-align:center;border:1px solid #e2e8f0"><div style="font-size:0.8rem;color:#94a3b8">ยังไม่มีงานเสร็จ</div></div>`;
+    return;
+  }
+  el.innerHTML = header + done.map(t => _execTicketRow(t, macMap)).join('');
+}
+
+// ── TAB: DEPT — Top แผนก + drill-down ห้อง ──
+function _renderExecDept(d) {
+  const { tickets, macMap } = d;
+  const el = document.getElementById('exec-dept-list');
+  if (!el) return;
+
+  // Group by dept
+  const deptMap = {};
+  tickets.forEach(t => {
+    const mac = macMap.get(t.machineId);
+    const dept = t.dept || mac?.dept || mac?.location || 'ไม่ระบุแผนก';
+    const room = mac?.name || t.machine || '—';
+    if (!deptMap[dept]) deptMap[dept] = { count:0, rooms:{}, cost:0 };
+    deptMap[dept].count++;
+    deptMap[dept].cost += _tCost(t);
+    deptMap[dept].rooms[room] = (deptMap[dept].rooms[room]||0) + 1;
+  });
+
+  const sorted = Object.entries(deptMap).sort((a,b) => b[1].count - a[1].count);
+  const maxCnt = sorted[0]?.[1]?.count || 1;
+  const palettes = ['#1d4ed8','#7c3aed','#0891b2','#d97706','#16a34a','#dc2626','#0e7490','#9333ea'];
+
+  const header = `<div style="background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1.5px solid #bfdbfe;border-radius:16px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:1.4rem">🏢</span>
+    <div>
+      <div style="font-size:0.88rem;font-weight:900;color:#1e3a8a">Top แผนกที่มีงานมากสุด</div>
+      <div style="font-size:0.65rem;color:#1d4ed8;margin-top:2px">${sorted.length} แผนก · กดดูห้องได้</div>
+    </div>
+  </div>`;
+
+  if (!sorted.length) {
+    el.innerHTML = header + `<div style="background:white;border-radius:14px;padding:28px;text-align:center;border:1px solid #e2e8f0"><div style="font-size:0.8rem;color:#94a3b8">ไม่มีข้อมูล</div></div>`;
+    return;
+  }
+
+  el.innerHTML = header + sorted.map(([dept, info], i) => {
+    const color = palettes[i % palettes.length];
+    const pct = Math.round(info.count / maxCnt * 100);
+    const roomsSorted = Object.entries(info.rooms).sort((a,b) => b[1]-a[1]);
+    const roomsHtml = roomsSorted.map(([room, cnt]) =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f8fafc">
+        <span style="font-size:0.7rem;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">🔹 ${room}</span>
+        <span style="font-size:0.7rem;font-weight:800;color:${color};flex-shrink:0;margin-left:8px">${cnt} งาน</span>
+      </div>`
+    ).join('');
+    const uid = 'dept-' + i;
+    return `<div style="background:white;border-radius:16px;border:1px solid #e8ecf0;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:10px;overflow:hidden">
+      <div onclick="document.getElementById('${uid}').style.display=document.getElementById('${uid}').style.display==='none'?'block':'none';this.querySelector('.dept-arrow').style.transform=document.getElementById('${uid}').style.display!=='none'?'rotate(90deg)':'rotate(0deg)'"
+        style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+        <div style="width:40px;height:40px;border-radius:12px;background:${color}18;border:2px solid ${color}33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <span style="font-size:0.78rem;font-weight:900;color:${color}">🏢</span>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.82rem;font-weight:900;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
+          <div style="margin-top:5px;background:#f1f5f9;border-radius:99px;height:5px;overflow:hidden">
+            <div style="background:${color};border-radius:99px;height:5px;width:${pct}%;transition:width .6s ease"></div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:1rem;font-weight:900;color:${color};font-family:'JetBrains Mono',monospace">${info.count}</div>
+          <div style="font-size:0.55rem;color:#94a3b8;font-weight:700">งาน</div>
+        </div>
+        <svg class="dept-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" style="flex-shrink:0;transition:transform .2s"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div id="${uid}" style="display:none;border-top:1px solid #f1f5f9;padding:12px 14px">
+        <div style="font-size:0.65rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">ห้อง / เครื่อง</div>
+        ${roomsHtml}
+        ${info.cost > 0 ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between"><span style="font-size:0.68rem;color:#94a3b8">รวมค่าใช้จ่าย</span><span style="font-size:0.72rem;font-weight:900;color:#7c3aed">฿${info.cost.toLocaleString()}</span></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Patch _renderExecTab to include new tabs ──
+const _origRenderExecTab = _renderExecTab;
+_renderExecTab = function(tab) {
+  const d = _execGetData();
+  if (tab === 'pending') _renderExecPending(d);
+  else if (tab === 'done') _renderExecDone(d);
+  else if (tab === 'dept') _renderExecDept(d);
+  else _origRenderExecTab(tab);
+};

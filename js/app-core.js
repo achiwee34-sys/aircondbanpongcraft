@@ -2965,7 +2965,6 @@ function setupBottomNav() {
       ? [
           {page:'executive',  label:'Dashboard'},
           {page:'tickets',    label:'งานซ่อม',  badge:'open-badge'},
-          {page:'machines',   label:'เครื่องแอร์'},
           {page:'settings',   label:'ตั้งค่า'},
         ]
     : CU.role === 'tech'

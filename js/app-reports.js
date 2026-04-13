@@ -284,13 +284,8 @@ function renderRptCostMonthly() {
   const slotW = cW/12;
   const gap=2, bW=Math.max(Math.floor((slotW-gap*3)/2), 3);
 
-  // Y grid 3 lines
-  const grids = [0.33,0.66,1.0].map(f => {
-    const val=maxVal*f, y=PT+cH-Math.round(f*cH);
-    const lbl=val>=1e6?(val/1e6).toFixed(1)+'M':val>=1000?Math.round(val/1000)+'K':Math.round(val);
-    return `<line x1="${PL}" y1="${y}" x2="${VW-PR}" y2="${y}" stroke="#e2e8f0" stroke-width="0.7" stroke-dasharray="2,3"/>
-            <text x="${PL-3}" y="${y+3}" text-anchor="end" font-size="7" fill="#94a3b8">${lbl}</text>`;
-  }).join('');
+  // Y grid lines removed — clean bar chart style
+  const grids = '';
 
   const bars = monthData.map((m,i) => {
     const sx=PL+i*slotW, xR=sx+gap, xP=sx+gap+bW+gap;
@@ -359,7 +354,7 @@ function renderRptCostMonthly() {
     <div style="background:#f8fafc;border-radius:14px;padding:8px 4px 2px;margin-bottom:6px">
       <svg viewBox="0 0 ${VW} ${VH}" width="100%" style="display:block;overflow:visible">
         ${grids}
-        <line x1="${PL}" y1="${PT+cH}" x2="${VW-PR}" y2="${PT+cH}" stroke="#e2e8f0" stroke-width="1"/>
+        <!-- baseline removed for clean look -->
         ${bars}
         ${xlabels}
       </svg>
