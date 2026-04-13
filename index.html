@@ -3189,15 +3189,15 @@ window._liffLandingUpdateCard = liffUpdateCard;
 <div class="sheet-overlay" id="notif-overlay" onclick="closeSheet('notif')"></div>
 <div class="sheet" id="notif-sheet">
   <div class="sheet-handle"></div>
-  <div style="display:flex;align-items:center;padding:16px 20px 0">
+  <div style="display:flex;align-items:center;padding:16px 20px 0;flex-shrink:0">
     <div style="flex:1;font-size:1rem;font-weight:800;color:var(--text)">🔔 การแจ้งเตือน</div>
     <button onclick="closeSheet('notif')" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:700">✕</button>
   </div>
-  <div style="display:flex;gap:8px;padding:8px 20px 0">
+  <div style="display:flex;gap:8px;padding:8px 20px 0;flex-shrink:0">
     <button class="btn btn-ghost btn-xs" onclick="markAllRead()">อ่านทั้งหมด</button>
     <button class="btn btn-ghost btn-xs" onclick="clearNotifs()">ลบทั้งหมด</button>
   </div>
-  <div class="sheet-body" id="notif-body" style="padding-top:10px"></div>
+  <div class="sheet-body" id="notif-body" style="padding-top:10px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;min-height:0"></div>
 </div>
 
 

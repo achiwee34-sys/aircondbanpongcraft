@@ -737,16 +737,21 @@ function openPOForm(tid) {
       if (window.visualViewport && !pp._kbBound) {
         pp._kbFix = () => {
           if (pp.style.display === 'none') return;
-          const vvh = window.visualViewport.height;
-          const pg = document.getElementById('pg-purchase');
-          // ปรับทั้ง pg และ pp ให้ตรงกับ visualViewport จริง
-          if (pg) pg.style.height = vvh + 'px';
+          const vv = window.visualViewport;
+          const vvh = vv.height;
+          const vvTop = vv.offsetTop || 0;
+          const vvLeft = vv.offsetLeft || 0;
+          // ผูก panel ตาม viewport จริง — ป้องกัน keyboard ลอยทับ
+          pp.style.position = 'fixed';
+          pp.style.top    = vvTop + 'px';
+          pp.style.left   = vvLeft + 'px';
+          pp.style.width  = vv.width + 'px';
           pp.style.height = vvh + 'px';
           pp.style.maxHeight = vvh + 'px';
-          // scroll active input into view หลัง keyboard ขึ้น
+          // scroll active input ให้พ้น keyboard
           const active = document.activeElement;
           if (active && pp.contains(active)) {
-            setTimeout(() => active.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+            setTimeout(() => active.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
           }
         };
         window.visualViewport.addEventListener('resize', pp._kbFix);
@@ -758,10 +763,26 @@ function openPOForm(tid) {
       pp.style.maxHeight = '';
       // ── Force repaint — แก้ปัญหาหน้าว่างจนกว่าหมุนจอ (Android WebView) ──
       void pp.offsetHeight;
+      const pg = document.getElementById('pg-purchase');
+      // Android Chrome repaint fix: toggle transform เพื่อบังคับ GPU layer ใหม่
+      if (pg) {
+        pg.style.transform = 'translateZ(0)';
+        pg.style.webkitTransform = 'translateZ(0)';
+      }
+      pp.style.transform = 'translateZ(0)';
+      pp.style.webkitTransform = 'translateZ(0)';
       requestAnimationFrame(() => {
         void pp.offsetHeight;
-        const pg = document.getElementById('pg-purchase');
-        if (pg) { pg.style.display = 'flex'; void pg.offsetHeight; }
+        if (pg) {
+          pg.style.display = 'flex';
+          void pg.offsetHeight;
+        }
+        // clear transform หลัง paint เสร็จ
+        setTimeout(() => {
+          pp.style.transform = '';
+          pp.style.webkitTransform = '';
+          if (pg) { pg.style.transform = ''; pg.style.webkitTransform = ''; }
+        }, 100);
       });
     }
 
@@ -844,10 +865,12 @@ function openPOForm(tid) {
       const pp = document.getElementById('pur-po-panel');
       if (lp && pp) {
         clearInterval(_poWait);
-        showPOPanel();
+        // ── Android blank page fix: รอให้ browser paint หน้า purchase ก่อนค่อย showPOPanel ──
+        // DOM พร้อมแล้วแต่ยังไม่ได้ paint — ต้องรอ 1 frame + เวลาเพิ่มเติม
+        requestAnimationFrame(() => setTimeout(showPOPanel, 80));
       } else if (_poRetry >= 25) {
         clearInterval(_poWait);
-        showPOPanel();
+        requestAnimationFrame(() => setTimeout(showPOPanel, 80));
       }
     }, 100);
   }
@@ -1056,6 +1079,11 @@ function closePOInline() {
     pp.style.display = 'none';
     pp.style.height = '';
     pp.style.maxHeight = '';
+    // reset position กลับเป็น absolute (ค่าเดิม) เมื่อปิด panel
+    pp.style.position = '';
+    pp.style.top = '';
+    pp.style.left = '';
+    pp.style.width = '';
   }
   // restore page height
   const pg = document.getElementById('pg-purchase');

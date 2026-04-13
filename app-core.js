@@ -3412,7 +3412,7 @@ function renderNotifPanel(){
             </div>
           </div>
           ${!n.read?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px"></div>':''}
-          <button onclick="event.stopPropagation();dismissNotif('${n.id}')"
+          <button ontouchstart="event.stopPropagation()" onclick="event.stopPropagation();dismissNotif('${n.id}')"
             style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;color:#94a3b8;font-size:0.85rem;font-weight:800;display:flex;align-items:center;justify-content:center">×</button>
         </div>
       </div><div class="ni-sep"></div>`).join('');
