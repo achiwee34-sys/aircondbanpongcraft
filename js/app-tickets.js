@@ -7,7 +7,7 @@ function safeOpenDetail(tid) {
 }
 function updateChatBadge() {
   if (!db.chats || !CU) return;
-  const myTickets = db.tickets.filter(t =>
+  const myTickets = (db.tickets||[]).filter(t =>
     t.assigneeId === CU.id || t.reporterId === CU.id || CU.role === 'admin'
   );
   let total = 0;
@@ -372,9 +372,9 @@ function _renderTicketsInner() {
   if (CU.role === 'admin' || CU.role === 'executive') {
     base = db.tickets;
   } else if (CU.role === 'tech') {
-    base = db.tickets.filter(t => t.assigneeId === CU.id);
+    base = (db.tickets||[]).filter(t => t.assigneeId === CU.id);
   } else {
-    base = db.tickets.filter(t => t.reporterId === CU.id);
+    base = (db.tickets||[]).filter(t => t.reporterId === CU.id);
   }
   const list = base.filter(t => {
     const txt = (t.id+t.machine+t.problem+t.detail+t.reporter+(t.assignee||'')).toLowerCase();
@@ -715,9 +715,9 @@ function renderPagination(page, totalPages, total, from, to) {
 
 function tkGoPage(p) {
   const totalPages = Math.ceil(
-    (CU.role==='admin' ? db.tickets
-      : CU.role==='tech' ? db.tickets.filter(t=>t.assigneeId===CU.id)
-      : db.tickets.filter(t=>t.reporterId===CU.id)
+    (CU.role==='admin' ? (db.tickets||[])
+      : CU.role==='tech' ? (db.tickets||[]).filter(t=>t.assigneeId===CU.id)
+      : (db.tickets||[]).filter(t=>t.reporterId===CU.id)
     ).filter(t=>{
       const txt=(t.id+t.machine+t.problem+t.detail+t.reporter+(t.assignee||'')).toLowerCase();
       return (!fSearch||txt.includes(fSearch))&&(!fStatus||t.status===fStatus)&&(!fPriority||t.priority===fPriority);
@@ -732,8 +732,8 @@ function tkGoPage(p) {
 
 function renderMyWork() {
   const DONE_S = ['done','verified','closed'];
-  const allMine = CU.role==='reporter' ? db.tickets.filter(t=>t.reporterId===CU.id)
-                : CU.role==='tech'     ? db.tickets.filter(t=>t.assigneeId===CU.id) : [];
+  const allMine = CU.role==='reporter' ? (db.tickets||[]).filter(t=>t.reporterId===CU.id)
+                : CU.role==='tech'     ? (db.tickets||[]).filter(t=>t.assigneeId===CU.id) : [];
   const pending  = allMine.filter(t=>!DONE_S.includes(t.status)).reverse();
   const doneList = allMine.filter(t=>DONE_S.includes(t.status)).slice(0,5);
   const mwLabel  = document.getElementById('mywork-label');
@@ -1212,7 +1212,7 @@ function openBulkAssignSheet() {
   const tl = document.getElementById('bulk-tech-list');
   if (tl) {
     tl.innerHTML = db.users.filter(u => u.role === 'tech').map(u => {
-      const cnt = db.tickets.filter(t => t.assigneeId === u.id && !['closed','verified','done'].includes(t.status)).length;
+      const cnt = (db.tickets||[]).filter(t => t.assigneeId === u.id && !['closed','verified','done'].includes(t.status)).length;
       const wLevel = cnt === 0 ? 'free' : cnt <= 2 ? 'ok' : cnt <= 4 ? 'busy' : 'full';
       const wCfg = {
         free: { bar:'#22c55e', barW:'0%',    badge:'ว่าง',     badgeBg:'#dcfce7', badgeColor:'#166534', bdr:'#bbf7d0' },
@@ -1293,9 +1293,9 @@ function getMyTickets() {
   if (_tkCache && _tkCacheRole === CU?.role && _tkCacheId === CU?.id) return _tkCache;
   if (!CU) return [];
   _tkCacheRole = CU.role; _tkCacheId = CU.id;
-  _tkCache = CU.role==='admin' ? db.tickets
-    : CU.role==='tech' ? db.tickets.filter(t=>t.assigneeId===CU.id)
-    : db.tickets.filter(t=>t.reporterId===CU.id);
+  _tkCache = CU.role==='admin' ? (db.tickets||[])
+    : CU.role==='tech' ? (db.tickets||[]).filter(t=>t.assigneeId===CU.id)
+    : (db.tickets||[]).filter(t=>t.reporterId===CU.id);
   return _tkCache;
 }
 function invalidateTkCache() { _tkCache = null; if(typeof _tkCardCache!=="undefined") _tkCardCache.clear(); }
@@ -1307,7 +1307,7 @@ function updateOpenBadge() {
   const cnt = myT.filter(open).length;
   document.querySelectorAll('#open-badge').forEach(b=>{b.textContent=cnt;b.classList.toggle('on',cnt>0);});
   if (CU.role==='admin') {
-    const nPur = db.tickets.filter(t => t.techRequest?.locked && !t.purchaseOrder).length;
+    const nPur = (db.tickets||[]).filter(t => t.techRequest?.locked && !t.purchaseOrder).length;
     document.querySelectorAll('#pur-badge').forEach(b=>{ b.textContent=nPur||''; b.style.display=nPur>0?'flex':'none'; });
   }
 }

@@ -605,7 +605,7 @@ function renderSettingsPage() {
   if(statsCard) {
     if(CU.role === 'tech') {
       statsCard.style.display = '';
-      const myTickets = db.tickets.filter(t => t.assigneeId === CU.id);
+      const myTickets = (db.tickets||[]).filter(t => t.assigneeId === CU.id);
       const done = myTickets.filter(t => ['done','verified','closed'].includes(t.status));
       const totalCost = done.reduce((s,t) => s+Number(t.cost||0), 0);
       const avgHours = done.length ? (done.reduce((s,t)=>s+Number(t.repairHours||0),0)/done.length).toFixed(1) : '—';
@@ -3238,7 +3238,7 @@ function goPage(name) {
         _ppReset.style.cssText = 'display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f8fafc;font-family:inherit;overscroll-behavior:contain;z-index:10';
       }
       if (_lpReset) { _lpReset.style.display = 'flex'; _lpReset.style.flexDirection = 'column'; }
-      renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order');
+      renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order', true);
     }
     else if (name === 'report') { if (typeof renderReport === 'function') renderReport(); if (typeof switchReportTab === 'function') switchReportTab('summary'); }
     else if (name === 'chatroom') { if(typeof initChatroomLayout==='function') initChatroomLayout(); if(typeof renderChatroomList==='function') renderChatroomList(); }

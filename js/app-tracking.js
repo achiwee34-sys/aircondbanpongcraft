@@ -295,7 +295,7 @@ async function submitTicket() { // PATCH v67
 
   // ── ตรวจงานซ้ำ: เครื่องนี้มีงานค้างอยู่หรือไม่ ──
   const ACTIVE_STATUSES = ['new','assigned','accepted','inprogress','waiting_part'];
-  const existingJobs = db.tickets.filter(t =>
+  const existingJobs = (db.tickets||[]).filter(t =>
     t.machineId === mid && ACTIVE_STATUSES.includes(t.status)
   );
 
@@ -476,7 +476,7 @@ function openAssignSheet(tid) {
   if (lbl && _at) lbl.textContent = _at.id + ' · ' + (_at.problem||'');
   setTimeout(()=>setAssignPriority(_at?.priority||'mid'), 50);
   document.getElementById('tech-list').innerHTML = db.users.filter(u=>u.role==='tech').map(u=>{
-    const cnt = db.tickets.filter(t=>t.assigneeId===u.id&&!['closed','verified','done'].includes(t.status)).length;
+    const cnt = (db.tickets||[]).filter(t=>t.assigneeId===u.id&&!['closed','verified','done'].includes(t.status)).length;
     const isSelected = _at?.assigneeId === u.id;
 
     // workload level

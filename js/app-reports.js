@@ -38,7 +38,7 @@ function renderHistory() {
   const doneStatuses = ['done','verified','closed'];
 
   // filter: only done/verified/closed, optionally by keyword
-  let tickets = db.tickets.filter(t => doneStatuses.includes(t.status));
+  let tickets = (db.tickets||[]).filter(t => doneStatuses.includes(t.status));
 
   // Date range filter
   if(dateFrom) {
@@ -1573,7 +1573,7 @@ let _techReqTid = null;
 let _techReqRows = [];
 let _currentPurchaseTab = 'order'; // 'order' | 'track'
 
-function setPurchaseTab(tab) {
+function setPurchaseTab(tab, skipRender) {
   _currentPurchaseTab = tab;
   const orderBtn = document.getElementById('pur-tab-order');
   const trackBtn = document.getElementById('pur-tab-track');
@@ -1591,7 +1591,7 @@ function setPurchaseTab(tab) {
     if (headerBar) headerBar.style.display = '';
     if (list) list.style.display = '';
     if (trackContent) trackContent.style.display = 'none';
-    renderPurchase();
+    if (!skipRender) renderPurchase();
   } else {
     trackBtn.style.cssText = activeStyle + 'color:#1d4ed8;border-bottom-color:#1d4ed8;';
     orderBtn.style.cssText = inactiveStyle;
@@ -1894,7 +1894,7 @@ function renderPurchaseAdmin() {
 
   // ── KPI ──
   // รวม ticket ที่: waiting_part+techRequest, หรือมี purchaseOrder (รวมถึง inprogress ที่รับของแล้ว)
-  const allTk = db.tickets.filter(t =>
+  const allTk = (db.tickets||[]).filter(t =>
     (t.status === 'waiting_part' && t.techRequest?.locked) ||
     t.purchaseOrder
   );
@@ -1930,7 +1930,7 @@ function renderPurchaseAdmin() {
 
   // ── Filter + Search ──
   const search = (document.getElementById('pur-search')?.value||'').toLowerCase();
-  const allTickets = db.tickets.filter(t =>
+  const allTickets = (db.tickets||[]).filter(t =>
     (t.status === 'waiting_part' && t.techRequest?.locked) ||
     t.purchaseOrder
   );
@@ -2127,7 +2127,7 @@ function renderPurchaseTech() {
       </div>`;
   }
 
-  const myTickets = db.tickets.filter(t =>
+  const myTickets = (db.tickets||[]).filter(t =>
     t.assigneeId === CU.id && (t.status === 'waiting_part' || t.techRequest)
   );
   const pendingCount = myTickets.filter(t => !t.techRequest && t.status === 'waiting_part').length;
@@ -2729,7 +2729,7 @@ function exportPurchaseExcel() {
 
   // ── Sheet 1: สรุปรายการสั่งซื้อ ──
   const sumRows = [['TK','ปัญหา','เครื่อง','ตำแหน่ง','ช่าง','สถานะ','อะไหล่ (แจ้งเบื้องต้น)','MO/WR','PR หลัก','PO','มูลค่า PO (฿)','บันทึกโดย','บันทึกวันที่','สถานะรับ','รับวันที่']];
-  db.tickets.filter(t => t.waitPart || t.purchaseOrder || t.techRequest).forEach(t => {
+  (db.tickets||[]).filter(t => t.waitPart || t.purchaseOrder || t.techRequest).forEach(t => {
     const po = t.purchaseOrder||{}; const wp = t.waitPart||{}; const tr = t.techRequest||{};
     const recv = po.receiveStatus==='received';
     sumRows.push([
@@ -2747,7 +2747,7 @@ function exportPurchaseExcel() {
 
   // ── Sheet 2: รายการที่ช่างแจ้ง (techRequest) ──
   const trRows = [['TK','ปัญหา','เครื่อง','ตำแหน่ง','ช่างผู้แจ้ง','วันที่แจ้ง','#','ชื่ออะไหล่','จำนวน','ราคาประมาณ/ชิ้น (฿)','รวม (฿)','หมายเหตุ','สถานะ PO']];
-  db.tickets.filter(t => t.techRequest?.rows?.length).forEach(t => {
+  (db.tickets||[]).filter(t => t.techRequest?.rows?.length).forEach(t => {
     const tr = t.techRequest; const po = t.purchaseOrder;
     const hasPO = !!po?.po;
     tr.rows.filter(r=>r.name).forEach((r,i) => {
@@ -2766,7 +2766,7 @@ function exportPurchaseExcel() {
 
   // ── Sheet 3: รายการ PO (รายละเอียด) ──
   const detRows = [['TK','ปัญหา','เครื่อง','MO/WR','PR หลัก','PO','#','ชื่ออะไหล่','PR รายการ','จำนวน','ราคา/ชิ้น (฿)','รวม (฿)','สถานะรับ']];
-  db.tickets.filter(t => t.purchaseOrder?.rows?.length).forEach(t => {
+  (db.tickets||[]).filter(t => t.purchaseOrder?.rows?.length).forEach(t => {
     const po = t.purchaseOrder; const recv = po.receiveStatus==='received';
     po.rows.filter(r=>r.name).forEach((r,i) => {
       detRows.push([t.id, t.problem, t.machine, po.mowr||'—', po.pr||'—', po.po||'—',
@@ -2780,7 +2780,7 @@ function exportPurchaseExcel() {
 
   // ── Sheet 4: รอสั่งซื้อ (ยังไม่มี PO) ──
   const pendRows = [['TK','ปัญหา','เครื่อง','ช่าง','รายการจากช่าง','ราคาประมาณรวม (฿)','แจ้งเมื่อ','สถานะ']];
-  db.tickets.filter(t => (t.techRequest || t.waitPart) && !t.purchaseOrder).forEach(t => {
+  (db.tickets||[]).filter(t => (t.techRequest || t.waitPart) && !t.purchaseOrder).forEach(t => {
     const tr = t.techRequest; const wp = t.waitPart;
     const items = tr ? tr.rows.filter(r=>r.name).map(r=>r.name+(r.qty>1?` ×${r.qty}`:'')).join(', ') : wp?.items||'—';
     const total = tr ? Number(tr.total||0) : Number(wp?.price||0);
@@ -2802,7 +2802,7 @@ function exportTechReqExcel() {
   if (typeof XLSX === 'undefined') { waitForXLSX(exportTechReqExcel); return; }
   const wb = XLSX.utils.book_new();
   const today = new Date().toLocaleDateString('th-TH');
-  const myTickets = db.tickets.filter(t =>
+  const myTickets = (db.tickets||[]).filter(t =>
     t.assigneeId === CU.id && (t.techRequest || t.waitPart)
   );
   // Sheet 1: สรุป

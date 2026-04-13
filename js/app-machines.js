@@ -56,7 +56,7 @@ function openMachineHistory(mid) {
   const m = db.machines.find(x => x.id === mid);
   if (!m) return;
   _mhistCurrentMid = mid; // track สำหรับ Export Excel
-  const tickets = db.tickets.filter(t => t.machineId === mid || t.machine === m.name)
+  const tickets = (db.tickets||[]).filter(t => t.machineId === mid || t.machine === m.name)
     .sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
   // XSS FIX (audit #6): escape m.serial and m.name before innerHTML
   const _escMH = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -835,7 +835,7 @@ function exportMachineHistory() {
     waiting_part:'รออะไหล่',done:'เสร็จแล้ว',verified:'ตรวจรับแล้ว',closed:'ปิดงานแล้ว'};
   let seq = 1;
   db.machines.forEach(m => {
-    const mTickets = db.tickets.filter(t => t.machineId === m.id)
+    const mTickets = (db.tickets||[]).filter(t => t.machineId === m.id)
       .sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));
     mTickets.forEach(t => {
       histRows.push([
@@ -869,7 +869,7 @@ function exportMachineHistory() {
   let seq2 = 1;
   const macSorted = [...db.machines].sort((a,b)=>(a.dept||'').localeCompare(b.dept||''));
   macSorted.forEach(m => {
-    const mTickets = db.tickets.filter(t => t.machineId === m.id);
+    const mTickets = (db.tickets||[]).filter(t => t.machineId === m.id);
     const totalCost = mTickets.reduce((s,t) => s + Number(t.cost||0), 0);
     const doneTickets = mTickets.filter(t => ['done','verified','closed'].includes(t.status))
       .sort((a,b) => (b.updatedAt||'').localeCompare(a.updatedAt||''));
@@ -969,10 +969,10 @@ function renderMachineDashboardStats() {
   const totalAll = all.length;
   const isFiltered = filtered.length < all.length;
 
-  const activeTickets = id => db.tickets.filter(x=>x.machineId===id&&!['closed','verified'].includes(x.status));
-  const allCost = m => db.tickets.filter(x=>x.machineId===m.id&&x.cost).reduce((s,x)=>s+Number(x.cost||0),0);
+  const activeTickets = id => (db.tickets||[]).filter(x=>x.machineId===id&&!['closed','verified'].includes(x.status));
+  const allCost = m => (db.tickets||[]).filter(x=>x.machineId===m.id&&x.cost).reduce((s,x)=>s+Number(x.cost||0),0);
   const lastRepair = m => {
-    const done = db.tickets.filter(x=>x.machineId===m.id&&['done','verified','closed'].includes(x.status));
+    const done = (db.tickets||[]).filter(x=>x.machineId===m.id&&['done','verified','closed'].includes(x.status));
     return done.length ? done.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''))[0] : null;
   };
   const pmDue = m => {
@@ -1117,7 +1117,7 @@ function renderMachineDashboardStats() {
         });
         const btuChips = Object.entries(btuGroups).sort((a,b)=>b[1]-a[1]).slice(0,3)
           .map(([k,n])=>`<span style="background:${bg};color:${cl};border:1px solid ${bd};border-radius:4px;padding:1px 5px;font-size:0.57rem;font-weight:700">${k}\xd7${n}</span>`).join('');
-        const activeTix = db.tickets.filter(t=>{const m=getMacMap().get(t.machineId);return m&&m.vendor===v&&!['closed','verified'].includes(t.status);}).length;
+        const activeTix = (db.tickets||[]).filter(t=>{const m=getMacMap().get(t.machineId);return m&&m.vendor===v&&!['closed','verified'].includes(t.status);}).length;
         return `<div onclick="filterByVendor('${v}')" style="padding:10px 14px;border-bottom:${isLast?'none':'1px solid #f8fafc'};cursor:pointer;transition:background 0.12s" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <div style="width:8px;height:8px;border-radius:50%;background:${dot};flex-shrink:0"></div>
@@ -1158,10 +1158,10 @@ function renderMachineDashboardCards() {
   const cardsEl = el.querySelector('.mac-cards-container'); if(!cardsEl) return;
   const filtered = window._macFilteredList || db.machines || [];
   const today = new Date();
-  const activeTickets = id => db.tickets.filter(x=>x.machineId===id&&!['closed','verified'].includes(x.status));
-  const allCost = m => db.tickets.filter(x=>x.machineId===m.id&&x.cost).reduce((s,x)=>s+Number(x.cost||0),0);
+  const activeTickets = id => (db.tickets||[]).filter(x=>x.machineId===id&&!['closed','verified'].includes(x.status));
+  const allCost = m => (db.tickets||[]).filter(x=>x.machineId===m.id&&x.cost).reduce((s,x)=>s+Number(x.cost||0),0);
   const lastRepair = m => {
-    const done = db.tickets.filter(x=>x.machineId===m.id&&['done','verified','closed'].includes(x.status));
+    const done = (db.tickets||[]).filter(x=>x.machineId===m.id&&['done','verified','closed'].includes(x.status));
     return done.length ? done.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''))[0] : null;
   };
   const vcMap = {
@@ -2310,7 +2310,7 @@ function openRepairHistory() {
   document.getElementById('rh-subtitle').textContent = subtitle;
 
   // กรองประวัติ: เครื่องตรงกัน หรือถ้าไม่มี machineId → ใช้แผนก
-  let history = db.tickets.filter(t =>
+  let history = (db.tickets||[]).filter(t =>
     ['done','verified','closed'].includes(t.status) &&
     (mid ? t.machineId === mid : t.machine?.includes(dept||''))
   );
@@ -3410,7 +3410,7 @@ function openNewMachinesTable() {
     return pageItems.map((m, idx) => {
       const i = start + idx;
       const vc = vcMap[m.vendor] || dvc;
-      const activeT = db.tickets.filter(x=>x.machineId===m.id&&!['closed','verified'].includes(x.status));
+      const activeT = (db.tickets||[]).filter(x=>x.machineId===m.id&&!['closed','verified'].includes(x.status));
       const hasIssue = activeT.length > 0;
       const addedDate = (m.addedAt||'').substring(0,10);
       const daysAgo = m.addedAt ? Math.floor((Date.now()-new Date(m.addedAt.replace(' ','T')))/(1000*60*60*24)) : null;
@@ -3532,7 +3532,7 @@ function openNewMachinesTable() {
   };
 
   // stats bar
-  const withIssue = list.filter(m => db.tickets.some(t=>t.machineId===m.id&&!['closed','verified'].includes(t.status))).length;
+  const withIssue = list.filter(m => (db.tickets||[]).some(t=>t.machineId===m.id&&!['closed','verified'].includes(t.status))).length;
   const noFL = list.filter(m => !getMachineEqStatus(m).hasFL).length;
   const noEQ = list.filter(m => !getMachineEqStatus(m).hasEQ).length;
 
