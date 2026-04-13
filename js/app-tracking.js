@@ -836,7 +836,8 @@ function openPOForm(tid) {
       const pg = document.getElementById('pg-purchase');
       if (lp && pp && pg && pg.classList.contains('active')) {
         clearInterval(_wait);
-        requestAnimationFrame(() => showPOPanel());
+        if (typeof renderPurchase === 'function') renderPurchase();
+        setTimeout(() => requestAnimationFrame(() => showPOPanel()), 80);
       } else if (_retry >= 50) {
         // timeout 5s — force render แล้ว show
         clearInterval(_wait);

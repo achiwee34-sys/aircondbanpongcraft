@@ -3235,7 +3235,7 @@ function goPage(name) {
           window.visualViewport.removeEventListener('scroll', _ppReset._kbFix);
           delete _ppReset._kbFix; delete _ppReset._kbBound;
         }
-        _ppReset.style.cssText = 'display:none;flex-direction:column;position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f8fafc;font-family:inherit;overscroll-behavior:contain;z-index:10';
+        _ppReset.style.cssText = 'display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f8fafc;font-family:inherit;overscroll-behavior:contain;z-index:10';
       }
       if (_lpReset) { _lpReset.style.display = 'flex'; _lpReset.style.flexDirection = 'column'; }
       renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order');
