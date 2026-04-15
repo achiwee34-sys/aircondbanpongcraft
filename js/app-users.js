@@ -63,8 +63,9 @@ var _esc = typeof escapeHtml === 'function' ? escapeHtml : function(s){ return s
 function buildUserCard(u, tm) {
   var initials = typeof getAvatarInitials==='function' ? getAvatarInitials(u.name) : (u.name||'?').slice(0,2);
   var avatarBg = typeof getAvatarColor==='function' ? getAvatarColor(u.id) : '#c8102e';
-  var avatarHtml = (u.avatar||u.photo)
-    ? '<img src="' + _esc(u.avatar||u.photo) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+  var _photo = (u.avatar&&u.avatar!=='undefined')?u.avatar:(u.photo&&u.photo!=='undefined')?u.photo:'';
+  var avatarHtml = _photo
+    ? '<img src="' + _esc(_photo) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
     : '<span style="font-size:1rem;font-weight:900;color:white">' + _esc(initials) + '</span>';
 
   var roleTag = {tech:'ช่าง',reporter:'ผู้แจ้ง',admin:'Admin',executive:'ผู้บริหาร'}[u.role]||u.role;
@@ -203,7 +204,7 @@ function _doOpenUserSheet(id, defaultRole) {
 
   var prevEl = document.getElementById('u-avatar-preview');
   if (prevEl) {
-    prevEl.innerHTML = (u&&u.photo)
+    prevEl.innerHTML = (u&&u.photo&&u.photo!=='undefined')
       ? '<img src="'+_esc(u.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
       : '<span style="font-size:2rem">'+({admin:'👑',tech:'🔧',reporter:'📢',executive:'📊'}[role]||'👤')+'</span>';
   }

@@ -493,8 +493,8 @@ function openAssignSheet(tid) {
     const _ac = (u.name||'?').charAt(0).toUpperCase();
     const _aGrad = {W:'linear-gradient(135deg,#1d4ed8,#3b82f6)',T:'linear-gradient(135deg,#ea580c,#fb923c)',S:'linear-gradient(135deg,#16a34a,#4ade80)',P:'linear-gradient(135deg,#7c3aed,#a78bfa)'}[_ac] || 'linear-gradient(135deg,#374151,#6b7280)';
     const _aGradSel = isSelected ? 'linear-gradient(135deg,#9b0b22,#c8102e)' : _aGrad;
-    const avatar = u.photo
-      ? `<img src="${u.photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid ${isSelected?'#c8102e':'#e2e8f0'};flex-shrink:0">`
+    const avatar = (u.photo && u.photo !== 'undefined')
+      ? `<img src="${u.photo}" onerror="this.style.display='none'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid ${isSelected?'#c8102e':'#e2e8f0'};flex-shrink:0">`
       : `<div style="width:48px;height:48px;border-radius:50%;background:${_aGradSel};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2.5px solid ${isSelected?'#c8102e':'rgba(255,255,255,0.2)'};font-size:0.9rem;font-weight:900;color:white;letter-spacing:0.02em;box-shadow:0 2px 10px rgba(0,0,0,0.18)">${_ai}</div>`;
 
     return `<div class="tech-item${isSelected?' sel':''}" id="tc-${u.id}" onclick="pickTech('${u.id}')"
@@ -4480,8 +4480,8 @@ function renderCalTechSummary() {
     const waiting = T.filter(t=>t.assigneeId===tech.id&&t.status==='waiting_part').length;
     const active  = T.filter(t=>t.assigneeId===tech.id&&!['closed','verified','done'].includes(t.status)).length;
     const activeColor = active>3?'var(--accent)':active>1?'#e65100':'#1a8a4a';
-    const avatar = tech.photo
-      ? `<img src="${tech.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid white">`
+    const avatar = (tech.photo && tech.photo !== 'undefined')
+      ? `<img src="${tech.photo}" onerror="this.style.display='none'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid white">`
       : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:1.1rem;border:2px solid rgba(255,255,255,0.4)">🔧</div>`;
     return `<div onclick="openTechPopup('${tech.id}')" style="flex-shrink:0;width:150px;background:white;border-radius:14px;border:1px solid #e5e7eb;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:transform 0.15s,box-shadow 0.15s" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">
       <div style="background:linear-gradient(135deg,var(--accent),var(--accent2));padding:10px 12px;display:flex;align-items:center;gap:8px">

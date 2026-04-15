@@ -817,8 +817,8 @@ function renderRptTech(monthTickets) {
     const pct     = myJobs.length ? Math.round(myDone.length/myJobs.length*100) : 0;
     const barColor= pct>=80?'#22c55e':pct>=50?'#f59e0b':'#c8102e';
     const avBg    = getAvatarColor(tech.id);
-    const avatar  = tech.photo
-      ? `<img src="${tech.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.1)">`
+    const avatar  = (tech.photo && tech.photo !== 'undefined')
+      ? `<img src="${tech.photo}" onerror="this.style.display='none'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.1)">`
       : `<div style="width:40px;height:40px;border-radius:50%;background:${avBg};display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:900;color:white;flex-shrink:0;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.1)">${getAvatarInitials(tech.name)}</div>`;
     return `
       <div style="background:white;border-radius:14px;padding:12px 14px;margin-bottom:8px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
@@ -1320,7 +1320,7 @@ function openChat(ticketId, partnerId) {
   // Header
   const avatarEl = document.getElementById('chat-avatar');
   if (partner?.photo) {
-    avatarEl.innerHTML = `<img src="${partner.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    avatarEl.innerHTML = `<img src="${partner.photo}" onerror="this.style.display='none'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   } else {
     avatarEl.textContent = {admin:'👑',tech:'🔧',reporter:'📢'}[partner?.role||'']||'👤';
   }
