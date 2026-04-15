@@ -2887,23 +2887,17 @@ async function doComplete( /* PATCH v67 */) {
 
 function selectVerifyResult(val) {
   const isOk = val === 'verified';
-  const cardOk      = document.getElementById('v-card-ok');
-  const cardReject  = document.getElementById('v-card-reject');
-  const btn         = document.getElementById('v-confirm-btn');
-  const rejectIcon  = document.getElementById('v-reject-icon');
-  const rejectSub   = document.getElementById('v-reject-sub');
-  const ratingSec   = document.getElementById('v-rating-section');
-
+  const cardOk     = document.getElementById('v-card-ok');
+  const cardReject = document.getElementById('v-card-reject');
+  const btn        = document.getElementById('v-confirm-btn');
+  const rejectIcon = document.getElementById('v-reject-icon');
+  const rejectSub  = document.getElementById('v-reject-sub');
   if (cardOk) {
-    cardOk.style.background  = isOk ? '#f0fdf4' : '#f8fafc';
+    cardOk.style.background  = isOk ? '#f0fdf4' : '#fff8f8';
     cardOk.style.borderColor = isOk ? '#16a34a' : '#e2e8f0';
     cardOk.style.boxShadow   = isOk ? '0 4px 14px rgba(22,163,74,0.2)' : 'none';
     const icon = cardOk.querySelector('div');
-    if (icon) {
-      icon.style.background  = isOk ? 'linear-gradient(135deg,#22c55e,#16a34a)' : '#f1f5f9';
-      icon.style.borderColor = isOk ? '#16a34a' : '#e2e8f0';
-      icon.style.boxShadow   = isOk ? '0 4px 10px rgba(22,163,74,0.3)' : 'none';
-    }
+    if(icon){icon.style.background=isOk?'linear-gradient(135deg,#22c55e,#16a34a)':'#fef2f2';icon.style.borderColor=isOk?'#16a34a':'#fecaca';}
   }
   if (cardReject) {
     cardReject.style.background  = !isOk ? '#fff1f2' : '#f8fafc';
@@ -2916,75 +2910,38 @@ function selectVerifyResult(val) {
     rejectIcon.style.boxShadow   = !isOk ? '0 4px 12px rgba(200,16,46,0.3)' : 'none';
   }
   if (rejectSub) rejectSub.style.color = !isOk ? '#e65100' : '#94a3b8';
-
-  // §6 rating — แสดงเฉพาะตอน verified
-  if (ratingSec) ratingSec.style.display = isOk ? 'block' : 'none';
-
   if (btn) {
-    btn.style.background = 'linear-gradient(135deg,#c8102e,#ef4444)';
-    btn.style.boxShadow  = '0 4px 16px rgba(200,16,46,0.35)';
-    btn.innerHTML = isOk
-      ? '<span style="font-size:1rem">✅</span> ยืนยันรับงาน'
-      : '<span style="font-size:1rem">↩️</span> ส่งซ่อมใหม่';
+    btn.style.background = isOk
+      ? '#c8102e'
+      : 'linear-gradient(135deg,#7f1d1d,#c8102e)';
+    btn.style.boxShadow = '0 4px 14px rgba(200,16,46,0.3)';
+    btn.textContent = isOk ? '✅ ยืนยันรับงาน' : '↩️ ส่งซ่อมใหม่';
   }
   const radio = document.querySelector(`input[name="v-result"][value="${val}"]`);
   if (radio) radio.checked = true;
-}
-
-function setVerifyRating(n) {
-  window._vRating = n;
-  const labels = ['','😞 ต้องปรับปรุง','😐 พอใช้ได้','🙂 ดี','😊 ดีมาก','🤩 ยอดเยี่ยม!'];
-  document.querySelectorAll('#v-stars-row button').forEach(b => {
-    const s = parseInt(b.dataset.vstar);
-    b.textContent  = s <= n ? '⭐' : '☆';
-    b.style.color  = s <= n ? '#f59e0b' : '#d1d5db';
-    if (s === n) {
-      b.style.transform = 'scale(1.35)';
-      setTimeout(() => { if(b) b.style.transform = 'scale(1)'; }, 200);
-    }
-  });
-  const lbl = document.getElementById('v-star-label');
-  if (lbl) lbl.textContent = labels[n] || '';
-}
-
-function toggleVerifyTag(btn) {
-  const on = btn.dataset.on === '1';
-  btn.dataset.on    = on ? '0' : '1';
-  btn.style.background   = on ? 'white'   : '#fef3c7';
-  btn.style.borderColor  = on ? '#e2e8f0' : '#f59e0b';
-  btn.style.color        = on ? '#64748b' : '#92400e';
 }
 function openVerifySheet(tid) {
   const t = db.tickets.find(x=>x.id===tid); if(!t){ showToast('⚠️ ไม่พบข้อมูลงาน'); return; }
   document.getElementById('v-tid').value = tid;
   document.getElementById('v-note').value = '';
 
-  // reset inline rating
-  window._vRating = 0;
-  document.querySelectorAll('#v-stars-row button').forEach(b => { b.textContent='☆'; b.style.color='#d1d5db'; b.style.transform='scale(1)'; });
-  const lbl = document.getElementById('v-star-label'); if(lbl) lbl.textContent='';
-  document.querySelectorAll('#v-tags-row button').forEach(b => { b.dataset.on='0'; b.style.background='white'; b.style.borderColor='#e2e8f0'; b.style.color='#64748b'; });
-  const rc = document.getElementById('v-rating-comment'); if(rc) rc.value='';
-
-  // resolve machine
+  // ── Resolve machine: fallback to macMap if t.machine empty ──
   const _vm = getMacMap().get(t.machineId);
   const machineName = (t.machine && t.machine.trim()) ? t.machine : (_vm?.name || '(ไม่ระบุเครื่อง)');
-  const serial = _vm?.serial || getSerial(t);
-  const btuLabel = _vm?.btu ? Number(_vm.btu).toLocaleString() + ' BTU' : '';
-  const dept = _vm?.dept || t.reporterDept || '—';
 
-  // hero
+  // hero header
+  const serial = _vm?.serial || getSerial(t);
   const sb = document.getElementById('v-serial-badge');
-  if (sb) { sb.textContent = serial; sb.style.display = serial ? 'inline-block' : 'none'; }
+  if (sb) { sb.textContent = serial; sb.style.display = serial ? 'block' : 'none'; }
   const heroTid = document.getElementById('v-hero-tid');
-  if (heroTid) heroTid.textContent = t.id;
+  if (heroTid) heroTid.textContent = t.id + (t.problem ? ' — ' + t.problem : '');
   const heroMac = document.getElementById('v-hero-machine');
   if (heroMac) heroMac.textContent = '❄️ ' + machineName;
-  const heroMeta = document.getElementById('v-hero-meta');
-  if (heroMeta) heroMeta.textContent = [dept, btuLabel].filter(Boolean).join(' · ');
-
+  // tech avatar — handle null/empty assignee gracefully
   const assigneeName = t.assignee || '';
-  const initials = assigneeName ? assigneeName.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase() : '—';
+  const initials = assigneeName
+    ? assigneeName.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase()
+    : '—';
   const ta = document.getElementById('v-tech-avatar');
   if (ta) { ta.textContent = initials; ta.style.background = assigneeName ? '#c8102e' : '#94a3b8'; }
   const tn = document.getElementById('v-tech-name');
@@ -2992,114 +2949,96 @@ function openVerifySheet(tid) {
 
   selectVerifyResult('verified');
 
-  // §1 ผลงานช่าง
-  const tr = t.techRequest;
-  const techRows = (tr?.rows||[]).filter(r=>r.name && r.name.trim());
-  const techRowsHtml = techRows.length ? ('<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:10px">' +
-    '<div style="padding:7px 12px;background:#f1f5f9;border-bottom:1px solid #e2e8f0"><span style="font-size:0.58rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">รายการอะไหล่ (ช่างแจ้ง)</span></div>' +
-    techRows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;${i>0?'border-top:1px solid #f1f5f9':''}"><div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.55rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:0.78rem;font-weight:600;color:#0f172a">${escapeHtml(r.name)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:#64748b">×${r.qty||1}</span>${r.price?`<span style="font-size:0.7rem;font-weight:800;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(r.price).toLocaleString()}</span>`:''}</div></div>`).join('') +
-    '</div>') : '';
-
-  const zoneHtml = (()=>{ const z=_vm?.zone||'process'; return z==='office'?'<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:5px;padding:1px 7px;font-size:0.62rem;font-weight:800">🏢 Office</span>':'<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:5px;padding:1px 7px;font-size:0.62rem;font-weight:800">⚙️ Process</span>'; })();
-  const rangeHtml = (()=>{ if(!_vm) return ''; const r=getMachineRange(_vm); const styles={A:'background:#fff1f2;color:#be123c;border:1px solid #fecdd3',B:'background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd',C:'background:#f7fee7;color:#4d7c0f;border:1px solid #d9f99d'}; const labels={A:'🔴 Range A',B:'🔵 Range B',C:'🟢 Range C'}; return `<span style="${styles[r]||styles.B};border-radius:5px;padding:1px 7px;font-size:0.62rem;font-weight:800">${labels[r]||r}</span>`; })();
-
-  document.getElementById('v-result-box').innerHTML =
-    `<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.78rem">
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700;width:38%;vertical-align:top">เลขที่ใบงาน</td><td style="padding:7px 0;color:#0f172a;font-weight:800;font-family:'JetBrains Mono',monospace">${t.id}</td></tr>
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700;vertical-align:top">เครื่องแอร์</td><td style="padding:7px 0;color:#0f172a;font-weight:700;line-height:1.4">${escapeHtml(machineName)}${serial?`<br><span style="font-size:0.62rem;color:#3b82f6;font-family:'JetBrains Mono',monospace">${serial}</span>`:''}</td></tr>
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">แผนก / BTU</td><td style="padding:7px 0;color:#0f172a;font-weight:700">${escapeHtml(dept)}${btuLabel?` <span style="font-size:0.62rem;color:#64748b">${btuLabel}</span>`:''}</td></tr>
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">Zone / Range</td><td style="padding:7px 0"><div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding-top:2px">${zoneHtml} ${rangeHtml}</div></td></tr>
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">ช่างผู้ซ่อม</td><td style="padding:7px 0;color:#0f172a;font-weight:700">${escapeHtml(t.assignee||'—')}</td></tr>
-      ${t.cost?`<tr><td style="padding:7px 0;color:#94a3b8;font-weight:700">ค่าใช้จ่าย</td><td style="padding:7px 0;color:#0369a1;font-weight:900;font-family:'JetBrains Mono',monospace">฿${Number(t.cost).toLocaleString()}</td></tr>`:''}
-    </table>
-    <div style="margin-bottom:${techRows.length||t.parts?'12px':'0'}">
-      <div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">สรุปการซ่อม</div>
-      <div style="font-size:0.85rem;color:#1e293b;line-height:1.7;font-weight:500">${formatSummary(t.summary)}</div>
+  // result box — ผลงานช่าง (reuse _vm resolved above)
+  const hasAfter = t.photosAfter?.length > 0;
+  const _vMachine = _vm;
+  const _vDept = _vMachine?.dept || '—';
+  const _vSerial = serial;
+  document.getElementById('v-result-box').innerHTML = `
+    <!-- header label -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:3px;height:18px;background:#0369a1;border-radius:99px;flex-shrink:0"></div>
+      <div style="font-size:0.68rem;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:0.08em">รายงานผลการซ่อม</div>
     </div>
-    ${techRowsHtml}
-    ${t.parts?`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px"><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">อะไหล่ (หมายเหตุ)</div><div style="font-size:0.8rem;color:#334155;line-height:1.6">${escapeHtml(t.parts)}</div></div>`:''}`;
 
-  // §2 รูปภาพเปรียบเทียบ
-  const hasBefore = t.photosBefore?.length > 0;
-  const hasAfter  = t.photosAfter?.length > 0;
-  const photosSec  = document.getElementById('v-photos-section');
-  const photosBody = document.getElementById('v-photos-body');
-  if ((hasBefore || hasAfter) && photosSec && photosBody) {
-    photosSec.style.display = 'block';
-    const makeGrid = (photos, tid2) => photos.map(p => {
-      const isFsKey = p && p.startsWith('fs:');
-      return `<div class="photo-grid-item${photos.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${tid2}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'about:blank':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;
-    }).join('');
-    photosBody.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      ${hasBefore?`<div><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>ก่อนซ่อม · ${t.photosBefore.length} รูป</div><div class="photo-grid">${makeGrid(t.photosBefore,tid)}</div></div>`:'<div></div>'}
-      ${hasAfter?`<div><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>หลังซ่อม · ${t.photosAfter.length} รูป</div><div class="photo-grid">${makeGrid(t.photosAfter,tid)}</div></div>`:'<div style="display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;min-height:80px"><div style="text-align:center;color:#cbd5e1"><div style="font-size:1.5rem">📷</div><div style="font-size:0.62rem;font-weight:700;margin-top:4px">ยังไม่มีรูปหลังซ่อม</div></div></div>'}
-    </div>`;
-  } else if (photosSec) { photosSec.style.display = 'none'; }
+    <!-- info table -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:0.78rem">
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:6px 0;color:#94a3b8;font-weight:600;width:38%;vertical-align:top">เลขที่ใบงาน</td>
+        <td style="padding:6px 0;color:#0f172a;font-weight:800;font-family:'JetBrains Mono',monospace">${t.id}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:6px 0;color:#94a3b8;font-weight:600;vertical-align:top">เครื่องแอร์</td>
+        <td style="padding:6px 0;color:#0f172a;font-weight:700;line-height:1.4">${machineName}${_vSerial?`<br><span style="font-size:0.65rem;color:#3b82f6;font-family:'JetBrains Mono',monospace">${_vSerial}</span>`:''}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:6px 0;color:#94a3b8;font-weight:600">แผนก</td>
+        <td style="padding:6px 0;color:#0f172a;font-weight:700">${_vDept}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:6px 0;color:#94a3b8;font-weight:600;vertical-align:top">Zone / Range</td>
+        <td style="padding:6px 0;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+          ${(()=>{ const z=_vMachine?.zone||'process'; return z==='office'?'<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:5px;padding:1px 7px;font-size:0.65rem;font-weight:800">🏢 Office</span>':'<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:5px;padding:1px 7px;font-size:0.65rem;font-weight:800">⚙️ Process</span>'; })()}
+          ${(()=>{ if(!_vMachine) return ''; const r=getMachineRange(_vMachine); const styles={A:'background:#fff1f2;color:#be123c;border:1px solid #fecdd3',B:'background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd',C:'background:#f7fee7;color:#4d7c0f;border:1px solid #d9f99d'}; const labels={A:'🔴 Range A',B:'🔵 Range B',C:'🟢 Range C'}; return `<span style="${styles[r]||styles.B};border-radius:5px;padding:1px 7px;font-size:0.65rem;font-weight:800">${labels[r]||r}</span>`; })()}
+        </td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:6px 0;color:#94a3b8;font-weight:600">ช่างผู้ซ่อม</td>
+        <td style="padding:6px 0;color:#0f172a;font-weight:700">${escapeHtml(t.assignee||'—')}</td>
+      </tr>
+      ${t.cost ? `<tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:6px 0;color:#94a3b8;font-weight:600">ค่าใช้จ่าย</td>
+        <td style="padding:6px 0;color:#0369a1;font-weight:800;font-family:'JetBrains Mono',monospace">฿${Number(t.cost).toLocaleString()}</td>
+      </tr>` : ''}
+    </table>
 
-  // §3 ใบสั่งซื้ออะไหล่
-  const po = t.purchaseOrder;
-  const poSec  = document.getElementById('v-po-section');
-  const poBody = document.getElementById('v-po-body');
-  const poRows = (po?.rows||[]).filter(r=>r.name);
-  if (po && poBody && poSec) {
-    poSec.style.display = 'block';
-    const badges = [
-      po.mowr?`<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:800">MO: ${po.mowr}</span>`:'',
-      po.pr?`<span style="background:#fff7ed;color:#e65100;border:1px solid #fed7aa;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:800">PR: ${po.pr}</span>`:'',
-      po.po?`<span style="background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:800">PO: ${po.po}</span>`:'',
-    ].filter(Boolean).join('');
-    poBody.innerHTML = (badges?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">${badges}</div>`:'') +
-      (poRows.length?`<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">${poRows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;${i>0?'border-top:1px solid #f1f5f9':''}"><div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.58rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:0.8rem;font-weight:600;color:#0f172a">${escapeHtml(r.name)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:#64748b">×${r.qty||1}</span>${r.price?`<span style="font-size:0.72rem;font-weight:800;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(r.price).toLocaleString()}</span>`:''}</div></div>`).join('')}${po.total?`<div style="border-top:2px solid #e0f2fe;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;background:#f0f9ff"><span style="font-size:0.7rem;font-weight:800;color:#0369a1">มูลค่ารวม</span><span style="font-size:0.92rem;font-weight:900;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(po.total).toLocaleString()}</span></div>`:''}</div>`:'<div style="color:#94a3b8;font-size:0.75rem;text-align:center;padding:12px">ไม่มีรายการอะไหล่</div>');
-  } else if (poSec) { poSec.style.display = 'none'; }
+    <!-- สรุปการซ่อม -->
+    <div style="margin-bottom:${t.parts||hasAfter?'10px':'0'}">
+      <div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">สรุปการซ่อม</div>
+      <div style="font-size:0.85rem;color:#1e293b;line-height:1.65;font-weight:500">${formatSummary(t.summary)}</div>
+    </div>
 
-  // §4 ประวัติงาน
-  const histBody = document.getElementById('v-history-body');
-  if (histBody) {
-    const hist = (t.history||[]).slice().reverse().slice(0,8);
-    histBody.innerHTML = hist.length
-      ? '<div style="display:flex;flex-direction:column;gap:0">' + hist.map((h,i)=>`<div style="display:flex;gap:10px;padding:9px 0;${i>0?'border-top:1px solid #f8fafc':''}"><div style="width:2px;background:${i===0?'#c8102e':'#e2e8f0'};border-radius:99px;flex-shrink:0;margin:3px 0"></div><div style="flex:1;min-width:0"><div style="font-size:0.78rem;font-weight:700;color:${i===0?'#0f172a':'#374151'}">${h.act||''}</div>${h.detail?`<div style="font-size:0.68rem;color:#64748b;margin-top:2px;line-height:1.4">${escapeHtml(h.detail)}</div>`:''}<div style="font-size:0.6rem;color:#94a3b8;margin-top:2px">${h.by||''} · ${h.at||''}</div></div></div>`).join('') + '</div>'
-      : '<div style="color:#94a3b8;font-size:0.75rem;text-align:center;padding:12px">ยังไม่มีประวัติ</div>';
-  }
+    <!-- อะไหล่ที่ใช้ -->
+    ${t.parts ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:${hasAfter?'10px':'0'}">
+      <div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">อะไหล่ที่ใช้</div>
+      <div style="font-size:0.8rem;color:#334155;line-height:1.6">${escapeHtml(t.parts)}</div>
+    </div>` : ''}
 
+    <!-- รูปหลังซ่อม -->
+    ${hasAfter ? `<div>
+      <div class="photo-section-label" style="color:#15803d">
+        <span class="lbl-dot" style="background:#22c55e"></span>✅ รูปหลังซ่อม
+        <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
+      </div>
+      <div class="photo-grid">${t.photosAfter.map(p=>{const isFsKey=p&&p.startsWith('fs:');return`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${t.id}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'about:blank':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;}).join('')}</div>
+    </div>` : ''}
+  `;
   openSheet('verify');
 }
 function doVerify() {
-  const tid    = document.getElementById('v-tid').value;
+  const tid = document.getElementById('v-tid').value;
   const result = document.querySelector('input[name="v-result"]:checked')?.value || 'verified';
-  const note   = document.getElementById('v-note').value.trim();
+  const note = document.getElementById('v-note').value.trim();
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;
   const now = nowStr();
-
-  if (result === 'verified') {
-    // ── save inline rating (§6) before verifying ──
-    const score   = window._vRating || 0;
-    const comment = (document.getElementById('v-rating-comment')?.value || '').trim();
-    const tags    = [...document.querySelectorAll('#v-tags-row button[data-on="1"]')].map(b=>b.textContent.trim());
-    if (score > 0) {
-      t.rating = { score, comment, tags, by: CU?.name || '', at: now };
-      t.history.push({ act: '⭐ ให้คะแนน ' + score + '/5', by: CU?.name || '', at: now,
-                       detail: (tags.join(', ') + (comment ? ' — ' + comment : '')).trim() });
-    }
-    t.status = 'verified';
-    t.history.push({ act:'🎉 ตรวจรับงาน', by:CU.name, at:now, detail:note });
-    notifyRole('admin','🎉 ตรวจรับงานแล้ว ['+tid+']', CU.name+' ตรวจรับ รอปิดงาน', tid);
-    notifyUser(t.assigneeId,'🎉 งานผ่านตรวจรับ','งาน ['+tid+'] ผ่านการตรวจรับแล้ว', tid);
+  if (result==='verified') {
+    t.status='verified'; t.history.push({act:'🎉 ตรวจรับงาน',by:CU.name,at:now,detail:note});
+    notifyRole('admin','🎉 ตรวจรับงานแล้ว ['+tid+']',CU.name+' ตรวจรับ รอปิดงาน',tid);
+    notifyUser(t.assigneeId,'🎉 งานผ่านตรวจรับ','งาน ['+tid+'] ผ่านการตรวจรับแล้ว',tid);
   } else {
-    t.status = 'inprogress';
-    t.history.push({ act:'↩️ ส่งซ่อมใหม่', by:CU.name, at:now, detail:note||'ไม่ผ่านการตรวจ' });
-    notifyUser(t.assigneeId,'↩️ งานถูกส่งกลับ ซ่อมใหม่ด่วน!','งาน ['+tid+'] ส่งซ่อมใหม่: '+(note||'ไม่ผ่านการตรวจ'), tid);
-    notifyRole('admin','↩️ งานส่งซ่อมใหม่ ['+tid+']', CU.name+' ส่งงานกลับให้ซ่อมใหม่', tid);
+    t.status='inprogress'; // กลับไปซ่อมต่อทันที ไม่ต้องกด รับงาน/เริ่มซ่อม ซ้ำ
+    t.history.push({act:'↩️ ส่งซ่อมใหม่',by:CU.name,at:now,detail:note||'ไม่ผ่านการตรวจ'});
+    notifyUser(t.assigneeId,'↩️ งานถูกส่งกลับ ซ่อมใหม่ด่วน!','งาน ['+tid+'] ส่งซ่อมใหม่: '+(note||'ไม่ผ่านการตรวจ'),tid);
+    notifyRole('admin','↩️ งานส่งซ่อมใหม่ ['+tid+']',CU.name+' ส่งงานกลับให้ซ่อมใหม่',tid);
   }
-
   if (typeof _lockTicket === 'function') _lockTicket(tid);
-  t.updatedAt = now; saveDB(); syncTicket(t); closeSheet('verify');
-
+  t.updatedAt=now; saveDB(); syncTicket(t); closeSheet('verify');
   if (result === 'verified') {
     refreshPage();
-    const ratingNote = (window._vRating||0) > 0 ? ` · ⭐ ${window._vRating}/5` : '';
-    showToast('✅ ตรวจรับแล้ว — กรุณาเซ็นชื่อยืนยัน' + ratingNote);
+    showToast('✅ ตรวจรับแล้ว — กรุณาเซ็นชื่อยืนยัน');
     try { setTimeout(() => openSignaturePad(tid, 'reporter_verify'), 500); } catch(e) {}
-    // ไม่เปิด openRatingSheet แยก — rating บันทึก inline แล้ว
+    // เปิด rating sheet หลังเซ็นชื่อ
+    setTimeout(() => { if (typeof openRatingSheet === 'function') openRatingSheet(tid); }, 1200);
   } else {
     refreshPage();
   }
