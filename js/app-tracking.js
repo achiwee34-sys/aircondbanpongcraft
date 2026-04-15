@@ -3114,6 +3114,7 @@ function openVerifySheet(tid) {
   requestAnimationFrame(() => setTimeout(() => _resolveContainerPhotos(tid, 'v-photos-body'), 300));
   setTimeout(() => _resolveContainerPhotos(tid, 'v-photos-body'), 900);
 }
+function doVerify() {
   const tid    = document.getElementById('v-tid').value;
   const result = document.querySelector('input[name="v-result"]:checked')?.value || 'verified';
   const note   = document.getElementById('v-note').value.trim();

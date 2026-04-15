@@ -3653,3 +3653,6 @@ function delMachine(id) {
 }
 
 // ── แสดงรายการแอร์ที่ข้อมูลไม่ครบ ──
+
+// Alias: refreshMachineList → renderMachines (called from app-core and liff-auth with typeof guard)
+window.refreshMachineList = function() { if (typeof renderMachines === 'function') renderMachines(); };
