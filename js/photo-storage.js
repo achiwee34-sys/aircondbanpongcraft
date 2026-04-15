@@ -89,10 +89,12 @@ async function savePhotosToFirestore(ticketId, photosBefore, photosAfter) {
 }
 
 // ── โหลดรูปจาก Firestore ──────────────────────────────────
-// ✅ H2 fix: LRU cache จำกัด 20 entries ป้องกัน memory leak
+// BUG FIX (Bug 6): เพิ่ม cache จาก 20 → 60 entries
+// เดิม 20 entries — session ที่มี 21+ tickets จะ evict ทุกครั้ง → re-fetch ซ้ำ
+// 60 entries ≈ ~3MB max (แต่ละ entry มีแค่ URL strings ไม่ใช่ blob)
 var _photoCache = {};
 var _photoCacheKeys = [];
-var _PHOTO_CACHE_MAX = 20;
+var _PHOTO_CACHE_MAX = 60;
 
 const _PHOTO_CACHE_TTL_MS = 20 * 60 * 1000; // 20 นาที — ลด Firestore reads (เพิ่มจาก 5 นาที)
 

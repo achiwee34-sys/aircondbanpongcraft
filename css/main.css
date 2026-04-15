@@ -1329,12 +1329,18 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 #pur-po-panel {
   flex: 1;
   min-height: 0;
-  /* height:0 ถูกลบออก — pg-purchase.active ใช้ position:absolute+top/bottom แล้ว
-     flex:1+min-height:0 เพียงพอใน absolute container, height:0 ทำให้ scroll เสีย */
+  /* ใช้ height:100% ร่วมกับ flex:1 เพื่อให้ scroll ได้บน iOS/Android WebView
+     เมื่อ parent เป็น position:absolute container */
+  height: 100%;
+  max-height: 100%;
   overflow-y: auto !important;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  touch-action: pan-y;            /* fix2: บอก browser ชัดเจนว่า pan-y ใน element นี้ */
+  touch-action: pan-y;
+  /* Force GPU layer สำหรับ smooth scroll บน Android */
+  transform: translateZ(0);
+  will-change: scroll-position;
 }
 /* po-body: padding-bottom ต้องเผื่อ nav bar + sticky save footer */
 #po-body { padding-bottom: calc(var(--nav-h, 56px) + var(--safe-bot, 0px) + 80px) !important; }

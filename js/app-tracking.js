@@ -735,6 +735,10 @@ function openPOForm(tid) {
     if (pp) {
       pp.style.display = 'flex';
       pp.style.flexDirection = 'column';
+      // ── ให้ po-panel เต็มพื้นที่ pg-purchase ──
+      // position:absolute container ต้องการ height explicit บน iOS/Android
+      pp.style.height = '100%';
+      pp.style.maxHeight = '100%';
       // ── iOS + Android keyboard fix for PO panel ──
       if (window.visualViewport && !pp._kbBound) {
         pp._kbFix = () => {
@@ -749,9 +753,6 @@ function openPOForm(tid) {
         window.visualViewport.addEventListener('scroll', pp._kbFix);
         pp._kbBound = true;
       }
-      // reset height เมื่อเปิด panel ใหม่
-      pp.style.height = '';
-      pp.style.maxHeight = '';
       // ── Force repaint — แก้ปัญหาหน้าว่างจนกว่าหมุนจอ (Android WebView) ──
       void pp.offsetHeight;
       // scroll to top ให้เห็น content
@@ -1053,6 +1054,7 @@ function closePOInline() {
     pp.style.display = 'none';
     pp.style.height = '';
     pp.style.maxHeight = '';
+    pp.style.flex = '';
   }
   // restore page height
   const pg = document.getElementById('pg-purchase');
@@ -1128,18 +1130,36 @@ function buildPORow(i) {
   const qtyPriceRow = document.createElement('div');
   qtyPriceRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-left:30px';
 
-  // Qty
+  // Qty — with +/- stepper buttons for mobile
   const qtyWrap = document.createElement('div');
   qtyWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px';
   const qtyLabel = document.createElement('div');
-  qtyLabel.style.cssText = 'font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em';
+  qtyLabel.style.cssText = 'font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px';
   qtyLabel.textContent = 'จำนวน';
+  const qtyStepWrap = document.createElement('div');
+  qtyStepWrap.style.cssText = 'display:flex;align-items:center;gap:3px';
   const inQty = document.createElement('input');
   inQty.type='number'; inQty.inputMode='numeric'; inQty.min='1'; inQty.max='9999';
   inQty.value = String(r.qty||1);
   inQty.readOnly = lockItemFields;
-  inQty.style.cssText = `width:60px;border:1.5px solid ${lockItemFields?'#c4b5fd':'#e5e7eb'};border-radius:9px;padding:7px 5px;font-size:0.82rem;font-family:inherit;font-weight:700;color:${lockItemFields?'#5b21b6':'#374151'};outline:none;text-align:center;box-sizing:border-box;background:${lockItemFields?'#faf5ff':'white'};cursor:${lockItemFields?'default':'text'}`;
+  inQty.style.cssText = `width:44px;border:1.5px solid ${lockItemFields?'#c4b5fd':'#e5e7eb'};border-radius:8px;padding:6px 3px;font-size:0.82rem;font-family:inherit;font-weight:700;color:${lockItemFields?'#5b21b6':'#374151'};outline:none;text-align:center;box-sizing:border-box;background:${lockItemFields?'#faf5ff':'white'};cursor:${lockItemFields?'default':'text'}`;
   if (!lockItemFields) {
+    const btnMinus = document.createElement('button');
+    btnMinus.type = 'button';
+    btnMinus.textContent = '−';
+    btnMinus.style.cssText = 'width:26px;height:26px;border-radius:7px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151;line-height:1;-webkit-tap-highlight-color:transparent';
+    btnMinus.addEventListener('click', () => {
+      let v = Math.max(1, (_poRows[i].qty||1) - 1);
+      _poRows[i].qty = v; inQty.value = v; updatePORowTotal(i);
+    });
+    const btnPlus = document.createElement('button');
+    btnPlus.type = 'button';
+    btnPlus.textContent = '+';
+    btnPlus.style.cssText = 'width:26px;height:26px;border-radius:7px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151;line-height:1;-webkit-tap-highlight-color:transparent';
+    btnPlus.addEventListener('click', () => {
+      let v = Math.min(9999, (_poRows[i].qty||1) + 1);
+      _poRows[i].qty = v; inQty.value = v; updatePORowTotal(i);
+    });
     inQty.addEventListener('input', e => {
       let v = parseInt(e.target.value)||1;
       if(v < 1) { v=1; e.target.value=1; }
@@ -1148,9 +1168,12 @@ function buildPORow(i) {
       updatePORowTotal(i);
     });
     inQty.addEventListener('focus', e => e.target.style.borderColor='#e65100');
-    inQty.addEventListener('blur',  e => e.target.style.borderColor='#e5e7eb');
+    inQty.addEventListener('blur',  e => e.target.style.borderColor=lockItemFields?'#c4b5fd':'#e5e7eb');
+    qtyStepWrap.append(btnMinus, inQty, btnPlus);
+  } else {
+    qtyStepWrap.appendChild(inQty);
   }
-  qtyWrap.append(qtyLabel, inQty);
+  qtyWrap.append(qtyLabel, qtyStepWrap);
 
   const mulSign = document.createElement('span');
   mulSign.style.cssText = 'font-size:0.9rem;color:#cbd5e1;font-weight:700;margin-top:14px;flex-shrink:0';
@@ -1212,21 +1235,25 @@ function buildPORow(i) {
     const inp = document.createElement('input');
     inp.type='text'; inp.value=val||'';
     inp.placeholder = label+'-';
-    inp.readOnly = !isAdmin; // Admin เท่านั้นที่กรอก PR/PO
+    // Admin กรอกได้เสมอ — ไม่ readOnly
+    inp.readOnly = false;
+    inp.disabled = !isAdmin;
     const hasVal = !!(val&&val.trim());
-    inp.style.cssText = `width:100%;box-sizing:border-box;border:1.5px solid ${hasVal?color+'55':'#e5e7eb'};border-radius:9px;padding:7px 9px;font-size:0.75rem;font-family:inherit;font-weight:700;color:${isAdmin?color:'#94a3b8'};outline:none;background:${isAdmin?(hasVal?bgFocus:'white'):'#f8fafc'};transition:all 0.2s`;
-    inp.addEventListener('input', e => {
-      cbFn(e.target.value);
-      const hv = !!(e.target.value.trim());
-      e.target.style.borderColor = hv?color+'55':'#e5e7eb';
-      e.target.style.background  = hv?bgFocus:'white';
-    });
-    inp.addEventListener('focus', e => { if(isAdmin){ e.target.style.borderColor=color; e.target.style.background=bgFocus; } });
-    inp.addEventListener('blur',  e => {
-      const hv = !!(e.target.value.trim());
-      e.target.style.borderColor = hv?color+'55':'#e5e7eb';
-      e.target.style.background  = hv?bgFocus:'white';
-    });
+    inp.style.cssText = `width:100%;box-sizing:border-box;border:1.5px solid ${hasVal?color+'55':'#e5e7eb'};border-radius:9px;padding:7px 9px;font-size:0.75rem;font-family:inherit;font-weight:700;color:${isAdmin?color:'#94a3b8'};outline:none;background:${isAdmin?(hasVal?bgFocus:'white'):'#f8fafc'};transition:all 0.2s;cursor:${isAdmin?'text':'default'}`;
+    if (isAdmin) {
+      inp.addEventListener('input', e => {
+        cbFn(e.target.value);
+        const hv = !!(e.target.value.trim());
+        e.target.style.borderColor = hv?color+'55':'#e5e7eb';
+        e.target.style.background  = hv?bgFocus:'white';
+      });
+      inp.addEventListener('focus', e => { e.target.style.borderColor=color; e.target.style.background=bgFocus; });
+      inp.addEventListener('blur',  e => {
+        const hv = !!(e.target.value.trim());
+        e.target.style.borderColor = hv?color+'55':'#e5e7eb';
+        e.target.style.background  = hv?bgFocus:'white';
+      });
+    }
     box.append(lbl, inp);
     return box;
   };
@@ -2616,28 +2643,49 @@ function openCompleteSheet(tid) {
       // copy รูปผู้แจ้งเข้า pendingPhotos.before ก่อน (fs: key เดิม)
       pendingPhotos.before = [...reporterPhotos];
 
-      // async resolve fs: keys → URL จริง
-      Promise.all(reporterPhotos.map(async (src, i) => {
-        try {
-          let resolvedSrc = src;
-          if (src && src.startsWith('fs:') && typeof resolvePhotoUrl === 'function') {
-            resolvedSrc = await resolvePhotoUrl(src, tid) || src;
-          }
-          const div = document.getElementById('c-rp-photo-' + i);
-          if (div && resolvedSrc && !resolvedSrc.startsWith('fs:')) {
-            div.innerHTML = `<img src="${resolvedSrc}" onclick="openLightbox('${resolvedSrc}')"
-              style="width:100%;height:100%;object-fit:cover;cursor:pointer;border-radius:8px;"/>
-              <div style="position:absolute;bottom:2px;right:2px;background:rgba(194,65,12,0.85);color:white;border-radius:4px;padding:1px 4px;font-size:0.5rem;font-weight:800">ผู้แจ้ง</div>`;
-          } else if (div) {
-            div.innerHTML = `<span style="font-size:1rem">🖼️</span>`;
-          }
-          return (resolvedSrc && !resolvedSrc.startsWith('fs:')) ? resolvedSrc : src;
-        } catch(e) { console.warn('[photo resolve]', e); return src; }
-      })).then(resolvedArr => {
-        // merge รูปผู้แจ้ง (resolved) กับรูปที่ช่างถ่ายเพิ่ม
+      // async resolve fs: keys → URL จริง (พร้อม auth wait + retry)
+      const _resolveReporterPhotos = async (attempt) => {
+        // รอ auth พร้อมก่อน (สำคัญมาก — Firestore อ่านไม่ได้ถ้า anonymous ยังไม่ signIn)
+        if (typeof _waitForAuth === 'function') {
+          await _waitForAuth(8000).catch(() => {});
+        }
+        const resolvedArr = await Promise.all(reporterPhotos.map(async (src, i) => {
+          try {
+            let resolvedSrc = src;
+            if (src && src.startsWith('fs:') && typeof loadPhotosFromFirestore === 'function') {
+              // ใช้ loadPhotosFromFirestore (batch + cached) แทน resolvePhotoUrl (per-key)
+              const parts = src.split(':');
+              const ftid = parts[1] || tid;
+              const slot = parts[2] || '';
+              const ftype = slot[0] === 'b' ? 'before' : 'after';
+              const fidx = parseInt(slot.slice(1)) || 0;
+              const photoData = await loadPhotosFromFirestore(ftid);
+              resolvedSrc = photoData[ftype]?.[fidx] || null;
+            }
+            const div = document.getElementById('c-rp-photo-' + i);
+            if (div && resolvedSrc && !resolvedSrc.startsWith('fs:')) {
+              div.innerHTML = `<img src="${resolvedSrc}" onclick="openLightbox('${resolvedSrc}')"
+                style="width:100%;height:100%;object-fit:cover;cursor:pointer;border-radius:8px;"/>
+                <div style="position:absolute;bottom:2px;right:2px;background:rgba(194,65,12,0.85);color:white;border-radius:4px;padding:1px 4px;font-size:0.5rem;font-weight:800">ผู้แจ้ง</div>`;
+            } else if (div && attempt >= 3) {
+              div.innerHTML = `<span style="font-size:1rem">🖼️</span>`;
+            }
+            return (resolvedSrc && !resolvedSrc.startsWith('fs:')) ? resolvedSrc : src;
+          } catch(e) { console.warn('[photo resolve]', e); return src; }
+        }));
         const techAdded = pendingPhotos.before.filter(s => s && !reporterPhotos.includes(s));
-        pendingPhotos.before = [...resolvedArr.filter(s => s && !s.startsWith('fs:')), ...techAdded];
-      }).catch(err => {
+        const resolved  = resolvedArr.filter(s => s && !s.startsWith('fs:'));
+        if (resolved.length > 0) {
+          pendingPhotos.before = [...resolved, ...techAdded];
+        } else if (attempt < 4) {
+          // retry ถ้า resolve ไม่สำเร็จเลย
+          const delay = [0, 1000, 2500, 4000][attempt + 1] ?? 3000;
+          setTimeout(() => _resolveReporterPhotos(attempt + 1), delay);
+        } else {
+          pendingPhotos.before = [...reporterPhotos]; // fallback keep fs: keys
+        }
+      };
+      _resolveReporterPhotos(0).catch(err => {
         console.warn('[openCompleteSheet] resolve reporter photos failed:', err);
         pendingPhotos.before = [...reporterPhotos];
       });
@@ -2887,17 +2935,23 @@ async function doComplete( /* PATCH v67 */) {
 
 function selectVerifyResult(val) {
   const isOk = val === 'verified';
-  const cardOk     = document.getElementById('v-card-ok');
-  const cardReject = document.getElementById('v-card-reject');
-  const btn        = document.getElementById('v-confirm-btn');
-  const rejectIcon = document.getElementById('v-reject-icon');
-  const rejectSub  = document.getElementById('v-reject-sub');
+  const cardOk      = document.getElementById('v-card-ok');
+  const cardReject  = document.getElementById('v-card-reject');
+  const btn         = document.getElementById('v-confirm-btn');
+  const rejectIcon  = document.getElementById('v-reject-icon');
+  const rejectSub   = document.getElementById('v-reject-sub');
+  const ratingSec   = document.getElementById('v-rating-section');
+
   if (cardOk) {
-    cardOk.style.background  = isOk ? '#f0fdf4' : '#fff8f8';
+    cardOk.style.background  = isOk ? '#f0fdf4' : '#f8fafc';
     cardOk.style.borderColor = isOk ? '#16a34a' : '#e2e8f0';
     cardOk.style.boxShadow   = isOk ? '0 4px 14px rgba(22,163,74,0.2)' : 'none';
     const icon = cardOk.querySelector('div');
-    if(icon){icon.style.background=isOk?'linear-gradient(135deg,#22c55e,#16a34a)':'#fef2f2';icon.style.borderColor=isOk?'#16a34a':'#fecaca';}
+    if (icon) {
+      icon.style.background  = isOk ? 'linear-gradient(135deg,#22c55e,#16a34a)' : '#f1f5f9';
+      icon.style.borderColor = isOk ? '#16a34a' : '#e2e8f0';
+      icon.style.boxShadow   = isOk ? '0 4px 10px rgba(22,163,74,0.3)' : 'none';
+    }
   }
   if (cardReject) {
     cardReject.style.background  = !isOk ? '#fff1f2' : '#f8fafc';
@@ -2910,38 +2964,75 @@ function selectVerifyResult(val) {
     rejectIcon.style.boxShadow   = !isOk ? '0 4px 12px rgba(200,16,46,0.3)' : 'none';
   }
   if (rejectSub) rejectSub.style.color = !isOk ? '#e65100' : '#94a3b8';
+
+  // §6 rating — แสดงเฉพาะตอน verified
+  if (ratingSec) ratingSec.style.display = isOk ? 'block' : 'none';
+
   if (btn) {
-    btn.style.background = isOk
-      ? '#c8102e'
-      : 'linear-gradient(135deg,#7f1d1d,#c8102e)';
-    btn.style.boxShadow = '0 4px 14px rgba(200,16,46,0.3)';
-    btn.textContent = isOk ? '✅ ยืนยันรับงาน' : '↩️ ส่งซ่อมใหม่';
+    btn.style.background = 'linear-gradient(135deg,#c8102e,#ef4444)';
+    btn.style.boxShadow  = '0 4px 16px rgba(200,16,46,0.35)';
+    btn.innerHTML = isOk
+      ? '<span style="font-size:1rem">✅</span> ยืนยันรับงาน'
+      : '<span style="font-size:1rem">↩️</span> ส่งซ่อมใหม่';
   }
   const radio = document.querySelector(`input[name="v-result"][value="${val}"]`);
   if (radio) radio.checked = true;
+}
+
+function setVerifyRating(n) {
+  window._vRating = n;
+  const labels = ['','😞 ต้องปรับปรุง','😐 พอใช้ได้','🙂 ดี','😊 ดีมาก','🤩 ยอดเยี่ยม!'];
+  document.querySelectorAll('#v-stars-row button').forEach(b => {
+    const s = parseInt(b.dataset.vstar);
+    b.textContent  = s <= n ? '⭐' : '☆';
+    b.style.color  = s <= n ? '#f59e0b' : '#d1d5db';
+    if (s === n) {
+      b.style.transform = 'scale(1.35)';
+      setTimeout(() => { if(b) b.style.transform = 'scale(1)'; }, 200);
+    }
+  });
+  const lbl = document.getElementById('v-star-label');
+  if (lbl) lbl.textContent = labels[n] || '';
+}
+
+function toggleVerifyTag(btn) {
+  const on = btn.dataset.on === '1';
+  btn.dataset.on    = on ? '0' : '1';
+  btn.style.background   = on ? 'white'   : '#fef3c7';
+  btn.style.borderColor  = on ? '#e2e8f0' : '#f59e0b';
+  btn.style.color        = on ? '#64748b' : '#92400e';
 }
 function openVerifySheet(tid) {
   const t = db.tickets.find(x=>x.id===tid); if(!t){ showToast('⚠️ ไม่พบข้อมูลงาน'); return; }
   document.getElementById('v-tid').value = tid;
   document.getElementById('v-note').value = '';
 
-  // ── Resolve machine: fallback to macMap if t.machine empty ──
+  // reset inline rating
+  window._vRating = 0;
+  document.querySelectorAll('#v-stars-row button').forEach(b => { b.textContent='☆'; b.style.color='#d1d5db'; b.style.transform='scale(1)'; });
+  const lbl = document.getElementById('v-star-label'); if(lbl) lbl.textContent='';
+  document.querySelectorAll('#v-tags-row button').forEach(b => { b.dataset.on='0'; b.style.background='white'; b.style.borderColor='#e2e8f0'; b.style.color='#64748b'; });
+  const rc = document.getElementById('v-rating-comment'); if(rc) rc.value='';
+
+  // resolve machine
   const _vm = getMacMap().get(t.machineId);
   const machineName = (t.machine && t.machine.trim()) ? t.machine : (_vm?.name || '(ไม่ระบุเครื่อง)');
-
-  // hero header
   const serial = _vm?.serial || getSerial(t);
+  const btuLabel = _vm?.btu ? Number(_vm.btu).toLocaleString() + ' BTU' : '';
+  const dept = _vm?.dept || t.reporterDept || '—';
+
+  // hero
   const sb = document.getElementById('v-serial-badge');
-  if (sb) { sb.textContent = serial; sb.style.display = serial ? 'block' : 'none'; }
+  if (sb) { sb.textContent = serial; sb.style.display = serial ? 'inline-block' : 'none'; }
   const heroTid = document.getElementById('v-hero-tid');
-  if (heroTid) heroTid.textContent = t.id + (t.problem ? ' — ' + t.problem : '');
+  if (heroTid) heroTid.textContent = t.id;
   const heroMac = document.getElementById('v-hero-machine');
   if (heroMac) heroMac.textContent = '❄️ ' + machineName;
-  // tech avatar — handle null/empty assignee gracefully
+  const heroMeta = document.getElementById('v-hero-meta');
+  if (heroMeta) heroMeta.textContent = [dept, btuLabel].filter(Boolean).join(' · ');
+
   const assigneeName = t.assignee || '';
-  const initials = assigneeName
-    ? assigneeName.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase()
-    : '—';
+  const initials = assigneeName ? assigneeName.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase() : '—';
   const ta = document.getElementById('v-tech-avatar');
   if (ta) { ta.textContent = initials; ta.style.background = assigneeName ? '#c8102e' : '#94a3b8'; }
   const tn = document.getElementById('v-tech-name');
@@ -2949,96 +3040,116 @@ function openVerifySheet(tid) {
 
   selectVerifyResult('verified');
 
-  // result box — ผลงานช่าง (reuse _vm resolved above)
-  const hasAfter = t.photosAfter?.length > 0;
-  const _vMachine = _vm;
-  const _vDept = _vMachine?.dept || '—';
-  const _vSerial = serial;
-  document.getElementById('v-result-box').innerHTML = `
-    <!-- header label -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <div style="width:3px;height:18px;background:#0369a1;border-radius:99px;flex-shrink:0"></div>
-      <div style="font-size:0.68rem;font-weight:800;color:#0369a1;text-transform:uppercase;letter-spacing:0.08em">รายงานผลการซ่อม</div>
-    </div>
+  // §1 ผลงานช่าง
+  const tr = t.techRequest;
+  const techRows = (tr?.rows||[]).filter(r=>r.name && r.name.trim());
+  const techRowsHtml = techRows.length ? ('<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:10px">' +
+    '<div style="padding:7px 12px;background:#f1f5f9;border-bottom:1px solid #e2e8f0"><span style="font-size:0.58rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">รายการอะไหล่ (ช่างแจ้ง)</span></div>' +
+    techRows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;${i>0?'border-top:1px solid #f1f5f9':''}"><div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.55rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:0.78rem;font-weight:600;color:#0f172a">${escapeHtml(r.name)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:#64748b">×${r.qty||1}</span>${r.price?`<span style="font-size:0.7rem;font-weight:800;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(r.price).toLocaleString()}</span>`:''}</div></div>`).join('') +
+    '</div>') : '';
 
-    <!-- info table -->
-    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:0.78rem">
-      <tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:6px 0;color:#94a3b8;font-weight:600;width:38%;vertical-align:top">เลขที่ใบงาน</td>
-        <td style="padding:6px 0;color:#0f172a;font-weight:800;font-family:'JetBrains Mono',monospace">${t.id}</td>
-      </tr>
-      <tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:6px 0;color:#94a3b8;font-weight:600;vertical-align:top">เครื่องแอร์</td>
-        <td style="padding:6px 0;color:#0f172a;font-weight:700;line-height:1.4">${machineName}${_vSerial?`<br><span style="font-size:0.65rem;color:#3b82f6;font-family:'JetBrains Mono',monospace">${_vSerial}</span>`:''}</td>
-      </tr>
-      <tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:6px 0;color:#94a3b8;font-weight:600">แผนก</td>
-        <td style="padding:6px 0;color:#0f172a;font-weight:700">${_vDept}</td>
-      </tr>
-      <tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:6px 0;color:#94a3b8;font-weight:600;vertical-align:top">Zone / Range</td>
-        <td style="padding:6px 0;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-          ${(()=>{ const z=_vMachine?.zone||'process'; return z==='office'?'<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:5px;padding:1px 7px;font-size:0.65rem;font-weight:800">🏢 Office</span>':'<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:5px;padding:1px 7px;font-size:0.65rem;font-weight:800">⚙️ Process</span>'; })()}
-          ${(()=>{ if(!_vMachine) return ''; const r=getMachineRange(_vMachine); const styles={A:'background:#fff1f2;color:#be123c;border:1px solid #fecdd3',B:'background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd',C:'background:#f7fee7;color:#4d7c0f;border:1px solid #d9f99d'}; const labels={A:'🔴 Range A',B:'🔵 Range B',C:'🟢 Range C'}; return `<span style="${styles[r]||styles.B};border-radius:5px;padding:1px 7px;font-size:0.65rem;font-weight:800">${labels[r]||r}</span>`; })()}
-        </td>
-      </tr>
-      <tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:6px 0;color:#94a3b8;font-weight:600">ช่างผู้ซ่อม</td>
-        <td style="padding:6px 0;color:#0f172a;font-weight:700">${escapeHtml(t.assignee||'—')}</td>
-      </tr>
-      ${t.cost ? `<tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:6px 0;color:#94a3b8;font-weight:600">ค่าใช้จ่าย</td>
-        <td style="padding:6px 0;color:#0369a1;font-weight:800;font-family:'JetBrains Mono',monospace">฿${Number(t.cost).toLocaleString()}</td>
-      </tr>` : ''}
+  const zoneHtml = (()=>{ const z=_vm?.zone||'process'; return z==='office'?'<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:5px;padding:1px 7px;font-size:0.62rem;font-weight:800">🏢 Office</span>':'<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:5px;padding:1px 7px;font-size:0.62rem;font-weight:800">⚙️ Process</span>'; })();
+  const rangeHtml = (()=>{ if(!_vm) return ''; const r=getMachineRange(_vm); const styles={A:'background:#fff1f2;color:#be123c;border:1px solid #fecdd3',B:'background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd',C:'background:#f7fee7;color:#4d7c0f;border:1px solid #d9f99d'}; const labels={A:'🔴 Range A',B:'🔵 Range B',C:'🟢 Range C'}; return `<span style="${styles[r]||styles.B};border-radius:5px;padding:1px 7px;font-size:0.62rem;font-weight:800">${labels[r]||r}</span>`; })();
+
+  document.getElementById('v-result-box').innerHTML =
+    `<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.78rem">
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700;width:38%;vertical-align:top">เลขที่ใบงาน</td><td style="padding:7px 0;color:#0f172a;font-weight:800;font-family:'JetBrains Mono',monospace">${t.id}</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700;vertical-align:top">เครื่องแอร์</td><td style="padding:7px 0;color:#0f172a;font-weight:700;line-height:1.4">${escapeHtml(machineName)}${serial?`<br><span style="font-size:0.62rem;color:#3b82f6;font-family:'JetBrains Mono',monospace">${serial}</span>`:''}</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">แผนก / BTU</td><td style="padding:7px 0;color:#0f172a;font-weight:700">${escapeHtml(dept)}${btuLabel?` <span style="font-size:0.62rem;color:#64748b">${btuLabel}</span>`:''}</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">Zone / Range</td><td style="padding:7px 0"><div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding-top:2px">${zoneHtml} ${rangeHtml}</div></td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">ช่างผู้ซ่อม</td><td style="padding:7px 0;color:#0f172a;font-weight:700">${escapeHtml(t.assignee||'—')}</td></tr>
+      ${t.cost?`<tr><td style="padding:7px 0;color:#94a3b8;font-weight:700">ค่าใช้จ่าย</td><td style="padding:7px 0;color:#0369a1;font-weight:900;font-family:'JetBrains Mono',monospace">฿${Number(t.cost).toLocaleString()}</td></tr>`:''}
     </table>
-
-    <!-- สรุปการซ่อม -->
-    <div style="margin-bottom:${t.parts||hasAfter?'10px':'0'}">
-      <div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">สรุปการซ่อม</div>
-      <div style="font-size:0.85rem;color:#1e293b;line-height:1.65;font-weight:500">${formatSummary(t.summary)}</div>
+    <div style="margin-bottom:${techRows.length||t.parts?'12px':'0'}">
+      <div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">สรุปการซ่อม</div>
+      <div style="font-size:0.85rem;color:#1e293b;line-height:1.7;font-weight:500">${formatSummary(t.summary)}</div>
     </div>
+    ${techRowsHtml}
+    ${t.parts?`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px"><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">อะไหล่ (หมายเหตุ)</div><div style="font-size:0.8rem;color:#334155;line-height:1.6">${escapeHtml(t.parts)}</div></div>`:''}`;
 
-    <!-- อะไหล่ที่ใช้ -->
-    ${t.parts ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:${hasAfter?'10px':'0'}">
-      <div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">อะไหล่ที่ใช้</div>
-      <div style="font-size:0.8rem;color:#334155;line-height:1.6">${escapeHtml(t.parts)}</div>
-    </div>` : ''}
+  // §2 รูปภาพเปรียบเทียบ
+  const hasBefore = t.photosBefore?.length > 0;
+  const hasAfter  = t.photosAfter?.length > 0;
+  const photosSec  = document.getElementById('v-photos-section');
+  const photosBody = document.getElementById('v-photos-body');
+  if ((hasBefore || hasAfter) && photosSec && photosBody) {
+    photosSec.style.display = 'block';
+    const makeGrid = (photos, tid2) => photos.map(p => {
+      const isFsKey = p && p.startsWith('fs:');
+      return `<div class="photo-grid-item${photos.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${tid2}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'about:blank':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;
+    }).join('');
+    photosBody.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${hasBefore?`<div><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>ก่อนซ่อม · ${t.photosBefore.length} รูป</div><div class="photo-grid">${makeGrid(t.photosBefore,tid)}</div></div>`:'<div></div>'}
+      ${hasAfter?`<div><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>หลังซ่อม · ${t.photosAfter.length} รูป</div><div class="photo-grid">${makeGrid(t.photosAfter,tid)}</div></div>`:'<div style="display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;min-height:80px"><div style="text-align:center;color:#cbd5e1"><div style="font-size:1.5rem">📷</div><div style="font-size:0.62rem;font-weight:700;margin-top:4px">ยังไม่มีรูปหลังซ่อม</div></div></div>'}
+    </div>`;
+  } else if (photosSec) { photosSec.style.display = 'none'; }
 
-    <!-- รูปหลังซ่อม -->
-    ${hasAfter ? `<div>
-      <div class="photo-section-label" style="color:#15803d">
-        <span class="lbl-dot" style="background:#22c55e"></span>✅ รูปหลังซ่อม
-        <span style="font-size:0.55rem;color:#9ca3af;font-weight:600;margin-left:2px">(${t.photosAfter.length} รูป)</span>
-      </div>
-      <div class="photo-grid">${t.photosAfter.map(p=>{const isFsKey=p&&p.startsWith('fs:');return`<div class="photo-grid-item${t.photosAfter.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${t.id}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'about:blank':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;}).join('')}</div>
-    </div>` : ''}
-  `;
+  // §3 ใบสั่งซื้ออะไหล่
+  const po = t.purchaseOrder;
+  const poSec  = document.getElementById('v-po-section');
+  const poBody = document.getElementById('v-po-body');
+  const poRows = (po?.rows||[]).filter(r=>r.name);
+  if (po && poBody && poSec) {
+    poSec.style.display = 'block';
+    const badges = [
+      po.mowr?`<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:800">MO: ${po.mowr}</span>`:'',
+      po.pr?`<span style="background:#fff7ed;color:#e65100;border:1px solid #fed7aa;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:800">PR: ${po.pr}</span>`:'',
+      po.po?`<span style="background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:800">PO: ${po.po}</span>`:'',
+    ].filter(Boolean).join('');
+    poBody.innerHTML = (badges?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">${badges}</div>`:'') +
+      (poRows.length?`<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">${poRows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;${i>0?'border-top:1px solid #f1f5f9':''}"><div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.58rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:0.8rem;font-weight:600;color:#0f172a">${escapeHtml(r.name)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:#64748b">×${r.qty||1}</span>${r.price?`<span style="font-size:0.72rem;font-weight:800;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(r.price).toLocaleString()}</span>`:''}</div></div>`).join('')}${po.total?`<div style="border-top:2px solid #e0f2fe;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;background:#f0f9ff"><span style="font-size:0.7rem;font-weight:800;color:#0369a1">มูลค่ารวม</span><span style="font-size:0.92rem;font-weight:900;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(po.total).toLocaleString()}</span></div>`:''}</div>`:'<div style="color:#94a3b8;font-size:0.75rem;text-align:center;padding:12px">ไม่มีรายการอะไหล่</div>');
+  } else if (poSec) { poSec.style.display = 'none'; }
+
+  // §4 ประวัติงาน
+  const histBody = document.getElementById('v-history-body');
+  if (histBody) {
+    const hist = (t.history||[]).slice().reverse().slice(0,8);
+    histBody.innerHTML = hist.length
+      ? '<div style="display:flex;flex-direction:column;gap:0">' + hist.map((h,i)=>`<div style="display:flex;gap:10px;padding:9px 0;${i>0?'border-top:1px solid #f8fafc':''}"><div style="width:2px;background:${i===0?'#c8102e':'#e2e8f0'};border-radius:99px;flex-shrink:0;margin:3px 0"></div><div style="flex:1;min-width:0"><div style="font-size:0.78rem;font-weight:700;color:${i===0?'#0f172a':'#374151'}">${h.act||''}</div>${h.detail?`<div style="font-size:0.68rem;color:#64748b;margin-top:2px;line-height:1.4">${escapeHtml(h.detail)}</div>`:''}<div style="font-size:0.6rem;color:#94a3b8;margin-top:2px">${h.by||''} · ${h.at||''}</div></div></div>`).join('') + '</div>'
+      : '<div style="color:#94a3b8;font-size:0.75rem;text-align:center;padding:12px">ยังไม่มีประวัติ</div>';
+  }
+
   openSheet('verify');
+  // ── Async photo resolver: resolve fs: thumbnails in verify sheet ──
+  requestAnimationFrame(() => setTimeout(() => _resolveContainerPhotos(tid, 'v-photos-body'), 300));
+  setTimeout(() => _resolveContainerPhotos(tid, 'v-photos-body'), 900);
 }
-function doVerify() {
-  const tid = document.getElementById('v-tid').value;
+  const tid    = document.getElementById('v-tid').value;
   const result = document.querySelector('input[name="v-result"]:checked')?.value || 'verified';
-  const note = document.getElementById('v-note').value.trim();
+  const note   = document.getElementById('v-note').value.trim();
   const t = db.tickets.find(x=>x.id===tid); if(!t)return;
   const now = nowStr();
-  if (result==='verified') {
-    t.status='verified'; t.history.push({act:'🎉 ตรวจรับงาน',by:CU.name,at:now,detail:note});
-    notifyRole('admin','🎉 ตรวจรับงานแล้ว ['+tid+']',CU.name+' ตรวจรับ รอปิดงาน',tid);
-    notifyUser(t.assigneeId,'🎉 งานผ่านตรวจรับ','งาน ['+tid+'] ผ่านการตรวจรับแล้ว',tid);
+
+  if (result === 'verified') {
+    // ── save inline rating (§6) before verifying ──
+    const score   = window._vRating || 0;
+    const comment = (document.getElementById('v-rating-comment')?.value || '').trim();
+    const tags    = [...document.querySelectorAll('#v-tags-row button[data-on="1"]')].map(b=>b.textContent.trim());
+    if (score > 0) {
+      t.rating = { score, comment, tags, by: CU?.name || '', at: now };
+      t.history.push({ act: '⭐ ให้คะแนน ' + score + '/5', by: CU?.name || '', at: now,
+                       detail: (tags.join(', ') + (comment ? ' — ' + comment : '')).trim() });
+    }
+    t.status = 'verified';
+    t.history.push({ act:'🎉 ตรวจรับงาน', by:CU.name, at:now, detail:note });
+    notifyRole('admin','🎉 ตรวจรับงานแล้ว ['+tid+']', CU.name+' ตรวจรับ รอปิดงาน', tid);
+    notifyUser(t.assigneeId,'🎉 งานผ่านตรวจรับ','งาน ['+tid+'] ผ่านการตรวจรับแล้ว', tid);
   } else {
-    t.status='inprogress'; // กลับไปซ่อมต่อทันที ไม่ต้องกด รับงาน/เริ่มซ่อม ซ้ำ
-    t.history.push({act:'↩️ ส่งซ่อมใหม่',by:CU.name,at:now,detail:note||'ไม่ผ่านการตรวจ'});
-    notifyUser(t.assigneeId,'↩️ งานถูกส่งกลับ ซ่อมใหม่ด่วน!','งาน ['+tid+'] ส่งซ่อมใหม่: '+(note||'ไม่ผ่านการตรวจ'),tid);
-    notifyRole('admin','↩️ งานส่งซ่อมใหม่ ['+tid+']',CU.name+' ส่งงานกลับให้ซ่อมใหม่',tid);
+    t.status = 'inprogress';
+    t.history.push({ act:'↩️ ส่งซ่อมใหม่', by:CU.name, at:now, detail:note||'ไม่ผ่านการตรวจ' });
+    notifyUser(t.assigneeId,'↩️ งานถูกส่งกลับ ซ่อมใหม่ด่วน!','งาน ['+tid+'] ส่งซ่อมใหม่: '+(note||'ไม่ผ่านการตรวจ'), tid);
+    notifyRole('admin','↩️ งานส่งซ่อมใหม่ ['+tid+']', CU.name+' ส่งงานกลับให้ซ่อมใหม่', tid);
   }
+
   if (typeof _lockTicket === 'function') _lockTicket(tid);
-  t.updatedAt=now; saveDB(); syncTicket(t); closeSheet('verify');
+  t.updatedAt = now; saveDB(); syncTicket(t); closeSheet('verify');
+
   if (result === 'verified') {
     refreshPage();
-    showToast('✅ ตรวจรับแล้ว — กรุณาเซ็นชื่อยืนยัน');
+    const ratingNote = (window._vRating||0) > 0 ? ` · ⭐ ${window._vRating}/5` : '';
+    showToast('✅ ตรวจรับแล้ว — กรุณาเซ็นชื่อยืนยัน' + ratingNote);
     try { setTimeout(() => openSignaturePad(tid, 'reporter_verify'), 500); } catch(e) {}
-    // เปิด rating sheet หลังเซ็นชื่อ
-    setTimeout(() => { if (typeof openRatingSheet === 'function') openRatingSheet(tid); }, 1200);
+    // ไม่เปิด openRatingSheet แยก — rating บันทึก inline แล้ว
   } else {
     refreshPage();
   }
@@ -3549,12 +3660,19 @@ function openDetail(tid) {
   }
   document.getElementById('detail-actions').innerHTML = acts.join('');
   openSheet('detail');
-  // ── Async photo resolver: load fs: placeholder photos after sheet opens ──
-  // ใช้ requestAnimationFrame + 300ms เพื่อให้ sheet render เสร็จก่อน
-  // รอ sheet animate เสร็จก่อน (300ms) แล้วเริ่ม resolve รูป
-  // FIX: เพิ่ม second trigger ที่ 800ms กัน race condition กับ sheet animation
-  requestAnimationFrame(() => setTimeout(() => _resolveDetailPhotos(t.id, 0), 300));
-  setTimeout(() => _resolveDetailPhotos(t.id, 0), 800);
+  // ── BUG FIX (Bug 5): ป้องกัน _resolveDetailPhotos ทำงาน 2 instance พร้อมกัน ──
+  // ใช้ module-level Set แทน local flag เพื่อป้องกัน race กับ ticket อื่น
+  if (!window._photoResolveInFlight) window._photoResolveInFlight = new Set();
+  const _resolveTicketId = t.id;
+  window._photoResolveInFlight.delete(_resolveTicketId); // reset สำหรับ ticket นี้
+  // เรียกครั้งเดียวที่ 300ms หลัง sheet render เสร็จ — ยกเลิก fallback 800ms
+  requestAnimationFrame(() => setTimeout(() => {
+    if (window._photoResolveInFlight.has(_resolveTicketId)) return;
+    window._photoResolveInFlight.add(_resolveTicketId);
+    _resolveDetailPhotos(_resolveTicketId, 0).finally(() => {
+      window._photoResolveInFlight.delete(_resolveTicketId);
+    });
+  }, 300));
   } catch(e) {
     console.error("[openDetail] error:", e);
     try {
@@ -3562,6 +3680,81 @@ function openDetail(tid) {
       if (body) body.innerHTML = `<div style="padding:24px;text-align:center;color:#dc2626"><div style="font-size:2rem;margin-bottom:8px">⚠️</div><div style="font-weight:700">โหลดรายละเอียดไม่ได้</div><div style="font-size:0.8rem;color:#64748b;margin-top:4px">${e.message||"กรุณาปิดแล้วลองใหม่"}</div></div>`;
       openSheet("detail");
     } catch(e2) {}
+  }
+}
+
+// ── Generic photo resolver — ใช้กับ container ใดก็ได้ ──────────
+// ticketId: ID ของ ticket (สำหรับ Firestore batch load)
+// containerId: string id ของ DOM container ที่มี [data-photo-key] elements
+async function _resolveContainerPhotos(ticketId, containerId, attempt) {
+  attempt = attempt || 0;
+  const MAX_RETRY = 4;
+  const RETRY_DELAYS = [0, 1200, 2500, 4000];
+
+  const container = document.getElementById(containerId);
+  if (!container) {
+    if (attempt < 2) setTimeout(() => _resolveContainerPhotos(ticketId, containerId, attempt + 1), 500);
+    return;
+  }
+
+  const items = container.querySelectorAll('[data-photo-key]');
+  if (!items.length) {
+    if (attempt < 2) setTimeout(() => _resolveContainerPhotos(ticketId, containerId, attempt + 1), 500);
+    return;
+  }
+
+  // รอ auth ก่อนอ่าน Firestore (สำคัญสำหรับ anonymous user)
+  if (typeof _waitForAuth === 'function') {
+    await _waitForAuth(8000).catch(() => {});
+  }
+
+  // Batch load รูปทั้งหมดของ ticket ใน 1 call
+  let photoData = null;
+  const hasFsKey = [...items].some(el => (el.dataset.photoKey||'').startsWith('fs:'));
+  if (hasFsKey && typeof loadPhotosFromFirestore === 'function') {
+    try {
+      if (attempt > 0 && typeof _photoCache !== 'undefined') {
+        delete _photoCache[ticketId];
+        const idx = (typeof _photoCacheKeys !== 'undefined') ? _photoCacheKeys.indexOf(ticketId) : -1;
+        if (idx !== -1) _photoCacheKeys.splice(idx, 1);
+      }
+      photoData = await loadPhotosFromFirestore(ticketId);
+    } catch(e) { console.warn('[photo resolve container]', e.message); }
+  }
+
+  let needRetry = false;
+  for (const div of items) {
+    const key = div.dataset.photoKey || '';
+    const img = div.querySelector('img');
+    const spin = div.querySelector('._ph-spin');
+    if (!img) continue;
+    if (img.style.opacity === '1') continue; // already resolved
+
+    let src = null;
+    if (key.startsWith('data:') || key.startsWith('https://') || key.startsWith('http://')) {
+      src = key;
+    } else if (key.startsWith('fs:') && photoData) {
+      const parts = key.split(':');
+      const slot = parts[2] || '';
+      const type = slot[0] === 'b' ? 'before' : 'after';
+      const idx  = parseInt(slot.slice(1)) || 0;
+      src = photoData[type]?.[idx] || null;
+    }
+
+    if (src) {
+      img.src = src;
+      img.style.opacity = '1';
+      if (spin) spin.remove();
+      div.onclick = () => openLightbox(src);
+    } else {
+      if (spin) spin.innerHTML = attempt >= MAX_RETRY ? '🖼️' : '⏳';
+      needRetry = true;
+    }
+  }
+
+  if (needRetry && attempt < MAX_RETRY) {
+    const delay = RETRY_DELAYS[attempt + 1] ?? 3000;
+    setTimeout(() => _resolveContainerPhotos(ticketId, containerId, attempt + 1), delay);
   }
 }
 

@@ -2595,8 +2595,12 @@ function openMachineDetail(id) {
   openMachineHistory(id);
 }
 
-function openMachineSheet(id) {
-  const m = id ? db.machines.find(x=>x.id===id) : null;
+// BUG FIX (Bug 4): async + รอ Firebase auth ก่อนเปิด sheet
+// เดิม: เปิดทันที → db.machines อาจยังว่าง (anonymous auth ยังไม่ ready)
+async function openMachineSheet(id) {
+  // รอ auth max 5 วินาที — ถ้าไม่ ready ก็เปิดต่อด้วย local data
+  if (typeof _waitForAuth === 'function') await _waitForAuth(5000).catch(() => {});
+  const m = id ? (db.machines||[]).find(x=>x.id===id) : null;
   // ── อัพเดท header อย่างถูกต้อง — ไม่ override innerHTML ทั้งหมด ──
   const titleText = document.getElementById('ms-title-text');
   const titleSub  = document.getElementById('ms-title-sub');

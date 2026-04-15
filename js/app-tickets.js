@@ -306,6 +306,7 @@ function renderHome() {
 // ============================================================
 function setFilter(type, val) {
   tkPage = 1;
+  _tkLastFingerprint = ''; // force re-render
   if (type === 'status')    fStatus = val;
   else if (type === 'priority') fPriority = val;
   else if (type === 'machineId') { fMachineId = val; fStatus = ''; fPriority = ''; }
@@ -325,6 +326,7 @@ function setFilter(type, val) {
 function setTicketFilter(val) {
   // val เป็น status key ('high'=priority, 'waiting_part'=status, 'inprogress'=status)
   tkPage = 1; fMachineId = '';
+  _tkLastFingerprint = ''; // force re-render
   if (val === 'high') { fPriority = 'high'; fStatus = ''; }
   else { fStatus = val; fPriority = ''; }
   updateStatusScroller();
@@ -360,13 +362,21 @@ function skeletonMachines(n=3) {
     </div>`).join('');
 }
 
+// ── BUG FIX (Bug 1): debounce renderTickets — ป้องกัน re-render ทุกครั้งที่พิมพ์ search ──
+// ใช้ debounce 80ms: fast enough ไม่รู้สึก lag แต่ลด DOM rebuild จาก O(n) ทุก keystroke
+let _renderTicketsTimer = null;
 function renderTickets() {
   if (!CU) return;
-  // แสดง skeleton ก่อน render จริง
+  // แสดง skeleton เฉพาะครั้งแรก (ยังไม่มี content)
   const tlEl = document.getElementById('ticket-list');
   if (tlEl && !tlEl.innerHTML) tlEl.innerHTML = skeletonTickets(5);
-  requestAnimationFrame(_renderTicketsInner);
+  // debounce: ยกเลิก render ก่อนหน้าถ้ายังไม่ทัน flush
+  clearTimeout(_renderTicketsTimer);
+  _renderTicketsTimer = setTimeout(() => requestAnimationFrame(_renderTicketsInner), 80);
 }
+// BUG FIX (Bug 1): dirty-check fingerprint — ถ้า list IDs + page ไม่เปลี่ยน ไม่ต้อง rebuild DOM
+let _tkLastFingerprint = '';
+
 function _renderTicketsInner() {
   if (!CU) return;
   fSearch = document.getElementById('f-search')?.value?.toLowerCase() || '';
@@ -378,12 +388,11 @@ function _renderTicketsInner() {
   } else {
     base = (db.tickets||[]).filter(t => t.reporterId === CU.id);
   }
-  const list = base.filter(t => {
+  const list = (base||[]).filter(t => {
     const txt = (t.id+t.machine+t.problem+t.detail+t.reporter+(t.assignee||'')).toLowerCase();
     if (fMachineId && t.machineId !== fMachineId) return false;
     if (fStatus === '_active') {
       // กลุ่ม: กำลังดำเนินการ (assigned + accepted + inprogress + waiting_part)
-      // รวม waiting_part เพราะยังเป็นงานที่ช่างรับผิดชอบอยู่
       return (!fSearch||txt.includes(fSearch)) && (!fPriority||t.priority===fPriority)
         && ['assigned','accepted','inprogress','waiting_part'].includes(t.status);
     }
@@ -404,16 +413,25 @@ function _renderTicketsInner() {
   const tlEl = document.getElementById('ticket-list');
   if (!tlEl) return;
 
+  // BUG FIX (Bug 1): dirty-check — skip DOM rebuild ถ้า content ไม่เปลี่ยน
+  // fingerprint = IDs ของ page นี้ + status + updatedAt (ตรวจจับ edit ด้วย)
+  const fingerprint = pageItems.map(t => t.id + '|' + (t.status||'') + '|' + (t.updatedAt||'')).join(',')
+    + '::p' + tkPage + '::tot' + total;
+  if (fingerprint === _tkLastFingerprint && tlEl.children.length > 0) {
+    // list ไม่เปลี่ยน — อัปเดตแค่ badge/scroller ไม่ต้อง rebuild DOM
+    updateOpenBadge();
+    updateStatusScroller();
+    return;
+  }
+  _tkLastFingerprint = fingerprint;
+
   if (total === 0) {
     tlEl.innerHTML = `<div class="empty"><div class="ei">${CU.role==='reporter'?'📋':'🔍'}</div><p>${fSearch||fStatus||fPriority?'ไม่พบรายการ':CU.role==='reporter'?'ยังไม่มีงานที่แจ้ง':'ไม่พบรายการ'}</p></div>`;
   } else {
-    // cards
     let html = pageItems.map(t => tkCard(t)).join('');
-    // pagination bar
     html += renderPagination(tkPage, totalPages, total, start, Math.min(start+TK_PER_PAGE,total));
     tlEl.innerHTML = html;
-    // BUG FIX: auto-resolve fs: photo thumbnails in cards after render
-    // previously cards showed ⏳ permanently — only _resolveAndLightbox() (onclick) could resolve them
+    // auto-resolve fs: photo thumbnails in cards after render
     requestAnimationFrame(() => _resolveListPhotos(tlEl));
   }
 
@@ -421,7 +439,6 @@ function _renderTicketsInner() {
   if (srch && !srch.value) srch.placeholder = CU.role==='reporter'?'🔍 ค้นหางานของฉัน...':CU.role==='tech'?'🔍 ค้นหางานของฉัน...':'🔍 ค้นหาทุกงาน...';
   updateOpenBadge();
   updateStatusScroller();
-  // Init swipe on all .tk-swipeable
   requestAnimationFrame(() => initSwipeCards());
 }
 

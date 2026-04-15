@@ -44,9 +44,22 @@ function renderExecutiveDashboard() {
   _renderExecTab(_execTab);
 }
 
+// BUG FIX (Bug 7): memoize _execGetData — ป้องกัน O(n×13) recompute ทุกครั้งที่ switch tab
+// cache invalidate เมื่อ tickets.length เปลี่ยน หรือเปลี่ยนเดือนที่เลือก
+let _execDataCache = null;
+let _execDataCacheKey = '';
+
 function _execGetData() {
   const tickets = db.tickets || [];
   const machines = db.machines || [];
+
+  // cache key: จำนวน tickets + updatedAt ล่าสุด + เดือน/ปีที่เลือก
+  const lastUpdated = tickets.length > 0 ? (tickets[tickets.length-1].updatedAt || tickets[tickets.length-1].createdAt || '') : '';
+  const cacheKey = tickets.length + '|' + lastUpdated + '|' + _execMonth + '|' + _execYear;
+  if (_execDataCache && _execDataCacheKey === cacheKey) {
+    return _execDataCache;
+  }
+
   const macMap = new Map(machines.map(m => [m.id, m]));
 
   // helper: หาวันที่ที่ดีที่สุดของ ticket (รองรับ Firestore Timestamp และ string)
@@ -59,29 +72,37 @@ function _execGetData() {
   };
   const _tDate = t => _toDateStr(t.createdAt) || _toDateStr(t.updatedAt) || _toDateStr(t.doneAt) || _toDateStr(t.closedAt) || _toDateStr(t.verifiedAt) || '';
 
-  // งานเดือนที่เลือก
-  const monthT = tickets.filter(t => {
-    const ds = _tDate(t); if (!ds) return false;
-    const d = new Date(ds);
-    return d.getFullYear() === _execYear && d.getMonth() === _execMonth;
-  });
-
-  // ทุกงาน 12 เดือนย้อนหลัง
+  // Single-pass: แบ่ง tickets ตามเดือนในรอบเดียว ไม่วน 13 รอบ
   const now = new Date();
+  const monthBuckets = {}; // key: "y-m"
+  const monthT = [];
+
+  for (const t of tickets) {
+    const ds = _tDate(t);
+    if (!ds) continue;
+    const d = new Date(ds);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    // เดือนที่เลือก
+    if (y === _execYear && m === _execMonth) monthT.push(t);
+    // 12 เดือนย้อนหลัง
+    const key = y + '-' + m;
+    if (!monthBuckets[key]) monthBuckets[key] = { tickets: [], cost: 0, y, m };
+    monthBuckets[key].tickets.push(t);
+    monthBuckets[key].cost += _tCost(t);
+  }
+
   const monthly = Array.from({length: 12}, (_, i) => {
     let m = now.getMonth() - (11 - i);
     let y = now.getFullYear();
     while (m < 0) { m += 12; y--; }
-    const ts = tickets.filter(t => {
-      const ds = _tDate(t); if (!ds) return false;
-      const d = new Date(ds);
-      return d.getFullYear() === y && d.getMonth() === m;
-    });
-    const cost = ts.reduce((s, t) => s + _tCost(t), 0);
-    return { label: EXEC_MONTH_TH[m] + "'" + String(y + 543).slice(2), count: ts.length, cost, m, y };
+    const bucket = monthBuckets[y + '-' + m] || { tickets: [], cost: 0 };
+    return { label: EXEC_MONTH_TH[m] + "'" + String(y + 543).slice(2), count: bucket.tickets.length, cost: bucket.cost, m, y };
   });
 
-  return { tickets, machines, macMap, monthT, monthly };
+  _execDataCache = { tickets, machines, macMap, monthT, monthly };
+  _execDataCacheKey = cacheKey;
+  return _execDataCache;
 }
 
 function _tCost(t) {

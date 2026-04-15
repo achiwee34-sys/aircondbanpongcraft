@@ -1048,6 +1048,10 @@ function crOpenDetail() {
 }
 
 // ── init layout on page enter ──
+// BUG FIX (Bug 3 Chat): ป้องกัน listener leak เมื่อ goPage('chatroom') ถูกเรียกซ้ำ
+// layout adjust ทำทุกครั้ง แต่ addEventListener ทำครั้งเดียว
+let _crLayoutInited = false;
+
 function initChatroomLayout() {
   const isMobile = window.innerWidth < 768;
   const right = document.getElementById('cr-chat-panel');
@@ -1066,9 +1070,12 @@ function initChatroomLayout() {
     if (back)  back.style.display  = 'none';
   }
 
+  // ── listeners ลงทะเบียนครั้งเดียว — ป้องกัน leak ──
+  if (_crLayoutInited) return;
+  _crLayoutInited = true;
+
   // ── visualViewport handler: แก้ keyboard ลอยค้าง บน Android ──
   if (window.visualViewport && pg) {
-    // ลบ handler เก่าก่อน
     if (window._crVpHandler) {
       window.visualViewport.removeEventListener('resize', window._crVpHandler);
       window.visualViewport.removeEventListener('scroll', window._crVpHandler);
@@ -1078,13 +1085,10 @@ function initChatroomLayout() {
       if (!pgEl || !pgEl.classList.contains('active')) return;
       const vv = window.visualViewport;
       const offsetTop = vv.offsetTop || 0;
-      // เลื่อน chatroom page ตาม keyboard เพื่อไม่ให้ลอย
       pgEl.style.transform = offsetTop > 0 ? `translateY(${offsetTop}px)` : '';
       pgEl.style.height    = offsetTop > 0 ? `${vv.height}px` : '';
-      // scroll messages ลงสุดเมื่อ keyboard ขึ้น
       const msgs = document.getElementById('cr-messages');
       if (msgs && offsetTop === 0) {
-        // keyboard ยุบแล้ว — reset position
         pgEl.style.transform = '';
         pgEl.style.height    = '';
       }
@@ -1105,7 +1109,6 @@ function initChatroomLayout() {
       if (r) r.style.display = 'flex';
       if (b) b.style.display = 'none';
     }
-    // reset keyboard position เมื่อหมุนจอ
     const pgEl = document.getElementById('pg-chatroom');
     if (pgEl) { pgEl.style.transform = ''; pgEl.style.height = ''; }
   };
@@ -1621,7 +1624,21 @@ function setPurchaseTab(tab, skipRender) {
     orderBtn.style.cssText = inactiveStyle;
     if (headerBar) headerBar.style.display = 'none';
     if (list) list.style.display = 'none';
-    if (trackContent) { trackContent.style.display = ''; renderTrackingInline(trackContent); }
+    if (trackContent) {
+      trackContent.style.display = '';
+      // ถ้า Firebase ยังไม่พร้อม — แสดง loading + retry อัตโนมัติ
+      if (typeof _firebaseReady !== 'undefined' && !_firebaseReady) {
+        trackContent.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#94a3b8"><div style="font-size:2rem;margin-bottom:10px">⏳</div><div style="font-size:0.85rem;font-weight:600">กำลังโหลดข้อมูล...</div></div>';
+        const _retryTrack = setInterval(() => {
+          if (typeof _firebaseReady === 'undefined' || _firebaseReady) {
+            clearInterval(_retryTrack);
+            if (trackContent.style.display !== 'none') renderTrackingInline(trackContent);
+          }
+        }, 800);
+      } else {
+        renderTrackingInline(trackContent);
+      }
+    }
   }
 }
 
