@@ -286,7 +286,7 @@ function renderHome() {
   }
 
   hcEl.innerHTML = html;
-  requestAnimationFrame(() => _resolveListPhotos(hcEl));
+  requestAnimationFrame(() => typeof _resolveListPhotos === "function" && _resolveListPhotos(hcEl));
 
   // ── Phase 2: defer heavy sections (tech photos + calendar) ──
   if (CU.role === 'admin') {
@@ -432,7 +432,7 @@ function _renderTicketsInner() {
     html += renderPagination(tkPage, totalPages, total, start, Math.min(start+TK_PER_PAGE,total));
     tlEl.innerHTML = html;
     // auto-resolve fs: photo thumbnails in cards after render
-    requestAnimationFrame(() => _resolveListPhotos(tlEl));
+    requestAnimationFrame(() => typeof _resolveListPhotos === "function" && _resolveListPhotos(tlEl));
   }
 
   const srch = document.getElementById('f-search');
@@ -809,7 +809,7 @@ function renderMyWork() {
   if (!groupHtml) groupHtml = `<div class="empty"><div class="ei">✅</div><p>ไม่มีงานค้าง</p></div>`;
 
   mwList.innerHTML = kpiHtml + groupHtml;
-  requestAnimationFrame(() => _resolveListPhotos(mwList));
+  requestAnimationFrame(() => typeof _resolveListPhotos === "function" && _resolveListPhotos(mwList));
 }
 
 // ══ Overdue Ticket Alert Banner ══
