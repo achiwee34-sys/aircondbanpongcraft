@@ -45,63 +45,115 @@ function renderHome() {
     const nWait = byS('waiting_part');
     const monthTotal = myT.filter(t=>(t.createdAt||'').startsWith(ym)).length;
 
-    html += `
-    <!-- Hero — Clean White Premium Card -->
-    <div style="background:white;border-radius:22px;padding:18px 16px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(200,16,46,.1);border:2px solid #fecaca">
-      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#c8102e,#e63950,#f59e0b);border-radius:22px 22px 0 0"></div>
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;margin-top:4px">
-        <div>
-          <div style="font-size:0.56rem;font-weight:800;color:#c8102e;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px">📋 งานซ่อมเดือนนี้</div>
-          <div style="font-size:3rem;font-weight:900;color:#0f172a;line-height:1;font-family:'JetBrains Mono',monospace">${monthTotal}</div>
-          <div style="font-size:0.62rem;color:#94a3b8;margin-top:5px">จาก <strong style="color:#64748b;font-family:'JetBrains Mono',monospace">${T.length}</strong> ใบงานทั้งหมด</div>
-        </div>
-        <div style="text-align:right">
-          <div style="display:flex;gap:6px;justify-content:flex-end;margin-bottom:8px;flex-wrap:wrap">
-            <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:5px 10px;font-size:0.62rem;font-weight:800;color:#1d4ed8">👷 ${db.users.filter(u=>u.role==='tech').length} ช่าง</div>
-            <div style="background:#e0f2fe;border:1.5px solid #bae6fd;border-radius:10px;padding:5px 10px;font-size:0.62rem;font-weight:800;color:#0369a1">❄️ ${db.machines.length} เครื่อง</div>
-          </div>
-          <div style="font-size:0.58rem;color:#94a3b8;margin-bottom:3px;font-weight:600">ค้าง / เสร็จ</div>
-          <div style="font-size:1.8rem;font-weight:900;color:#0f172a;line-height:1;font-family:'JetBrains Mono',monospace">${active.length} <span style="color:#d1d5db;font-size:1.2rem">/</span> ${doneAll}</div>
-        </div>
-      </div>
-      <div>
-        <div style="background:#f1f5f9;border-radius:99px;height:8px;overflow:hidden;margin-bottom:5px">
-          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#c8102e,#e63950);border-radius:99px;transition:width 1s ease;box-shadow:0 0 8px rgba(200,16,46,.35)"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:0.58rem;color:#94a3b8">
-          <span>ความคืบหน้าเดือนนี้</span>
-          <span style="color:#c8102e;font-weight:800">${pct}% เสร็จสิ้น</span>
-        </div>
-      </div>
-    </div>
+    // Circular ring values
+    const _circ = 2 * Math.PI * 38;
+    const _qToday = byS('assigned')+byS('accepted')+byS('inprogress')+byS('done')+byS('verified')+byS('closed');
+    const _qDone  = byS('done')+byS('verified')+byS('closed');
+    const _ringOffset = _qToday > 0 ? _circ * (1 - _qDone/_qToday) : _circ;
+    const _techCount  = db.users.filter(u=>u.role==='tech').length;
 
-    <!-- KPI 2×2 — Bright clean white cards -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px">
-      <div onclick="setFilter('status','new');goPage('tickets')" style="background:white;border-radius:18px;padding:14px 12px;position:relative;overflow:hidden;box-shadow:0 2px 16px rgba(29,78,216,.1);cursor:pointer;-webkit-tap-highlight-color:transparent;border:2px solid #dbeafe" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
-        <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:.9rem;box-shadow:0 3px 8px rgba(29,78,216,.3);margin-bottom:8px">🆕</div>
-        <div style="font-size:0.5rem;font-weight:800;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">รอจ่ายงาน</div>
-        <div style="font-size:2.4rem;font-weight:900;color:#1d4ed8;line-height:1;font-family:'JetBrains Mono',monospace">${nNew}</div>
-        <div style="font-size:0.56rem;color:#94a3b8;margin-top:5px">แตะเพื่อดู →</div>
+    html += `
+    <!-- ══ New Dashboard Card (design v2) ══ -->
+    <div style="background:white;border-radius:24px;box-shadow:0 8px 40px rgba(0,0,0,0.13);overflow:hidden;border:1px solid #f0f0f0;margin-bottom:12px">
+
+      <!-- Top Hero: repair count + ring -->
+      <div style="display:flex;align-items:stretch;border-bottom:1.5px solid #f5e8e8">
+
+        <!-- Left: จำนวนซ่อมเดือนนี้ -->
+        <div style="flex:1;padding:16px 16px 14px;position:relative;overflow:hidden">
+          <div style="position:absolute;bottom:-10px;left:0;right:0;height:50px;background:linear-gradient(180deg,transparent,rgba(200,16,46,0.04));border-radius:50% 50% 0 0"></div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="font-size:0.72rem;color:#64748b;font-weight:700">📅</span>
+            <span style="font-size:0.72rem;font-weight:800;color:#374151">จำนวนซ่อมเดือนนี้</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:2.8rem;font-weight:900;color:#0f172a;line-height:1;font-family:'JetBrains Mono',monospace">${monthTotal}</span>
+            <span style="font-size:0.72rem;color:#94a3b8;font-weight:600">จาก ${T.length} ใบงานทั้งหมด</span>
+          </div>
+          <!-- Progress bar -->
+          <div style="margin-top:10px;height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+            <div style="height:100%;border-radius:99px;width:${pct}%;background:linear-gradient(90deg,#c8102e,#e63950);box-shadow:0 0 8px rgba(200,16,46,0.4);transition:width 1s ease"></div>
+          </div>
+          <div style="margin-top:4px;display:flex;justify-content:space-between">
+            <span style="font-size:0.6rem;color:#94a3b8;font-weight:600">${pct}% สำเร็จ</span>
+            <span style="font-size:0.6rem;color:#94a3b8;font-weight:600">
+              <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:3px;vertical-align:middle;animation:pulse-dot 2s infinite"></span>Live
+            </span>
+          </div>
+        </div>
+
+        <!-- Right: SVG ring -->
+        <div style="width:110px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 14px;border-left:1.5px solid #f5e8e8;background:linear-gradient(135deg,#fff8f8,#fff5f5)">
+          <div style="font-size:0.58rem;font-weight:700;color:#94a3b8;margin-bottom:6px;letter-spacing:.06em">🏭 ${db.machines.length.toLocaleString()} เครื่อง</div>
+          <div style="position:relative;width:84px;height:84px">
+            <svg width="84" height="84" viewBox="0 0 84 84" style="display:block">
+              <defs>
+                <linearGradient id="ringGradAC" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#c8102e"/>
+                  <stop offset="100%" stop-color="#e63950"/>
+                </linearGradient>
+              </defs>
+              <circle cx="42" cy="42" r="38" fill="none" stroke="#f0f0f0" stroke-width="7"/>
+              <circle cx="42" cy="42" r="38" fill="none"
+                stroke="url(#ringGradAC)" stroke-width="7"
+                stroke-linecap="round"
+                stroke-dasharray="${_circ.toFixed(1)}"
+                stroke-dashoffset="${_ringOffset.toFixed(1)}"
+                transform="rotate(-90 42 42)"
+                style="transition:stroke-dashoffset 0.6s ease"/>
+              <text x="42" y="38" text-anchor="middle" font-size="15" font-weight="900" fill="#0f172a" font-family="'JetBrains Mono',Arial Black,sans-serif">${_qDone}/${_qToday}</text>
+              <text x="42" y="52" text-anchor="middle" font-size="9" font-weight="700" fill="#94a3b8">คิว / เสร็จ</text>
+            </svg>
+          </div>
+        </div>
       </div>
-      <div onclick="setFilter('status','');goPage('tickets')" style="background:white;border-radius:18px;padding:14px 12px;position:relative;overflow:hidden;box-shadow:0 2px 16px rgba(217,119,6,.1);cursor:pointer;-webkit-tap-highlight-color:transparent;border:2px solid #fde68a" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
-        <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#d97706,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:.9rem;box-shadow:0 3px 8px rgba(217,119,6,.3);margin-bottom:8px">⚙️</div>
-        <div style="font-size:0.5rem;font-weight:800;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">กำลังดำเนินการ</div>
-        <div style="font-size:2.4rem;font-weight:900;color:#d97706;line-height:1;font-family:'JetBrains Mono',monospace">${nProg}</div>
-        <div style="font-size:0.56rem;color:#94a3b8;margin-top:5px">แตะเพื่อดู →</div>
+
+      <!-- Status Cards: 4 columns -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1.5px solid #f5e8e8">
+        <!-- รอจ่ายงาน -->
+        <div onclick="setFilter('status','new');goPage('tickets')" style="padding:14px 8px 12px;background:#f8f8f8;border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
+          <div style="width:36px;height:36px;border-radius:10px;background:#f3f4f6;border:1.5px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:1.05rem">📋</div>
+          <div style="font-size:1.7rem;font-weight:900;color:#374151;line-height:1">${nNew}</div>
+          <div style="font-size:0.6rem;font-weight:800;color:#374151;text-align:center;line-height:1.3;opacity:.85">รอนำงาน</div>
+        </div>
+        <!-- กำลังดำเนินการ -->
+        <div onclick="setFilter('status','');goPage('tickets')" style="padding:14px 8px 12px;background:#fff7ed;border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
+          <div style="width:36px;height:36px;border-radius:10px;background:#ffedd5;border:1.5px solid #fed7aa;display:flex;align-items:center;justify-content:center;font-size:1.05rem">😊</div>
+          <div style="font-size:1.7rem;font-weight:900;color:#c2410c;line-height:1">${nProg}</div>
+          <div style="font-size:0.6rem;font-weight:800;color:#c2410c;text-align:center;line-height:1.3;opacity:.85">กำลังดำเนินการ</div>
+        </div>
+        <!-- รอคิวอะไหล่ -->
+        <div onclick="goPage('tracking')" style="padding:14px 8px 12px;background:#fef2f2;border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
+          <div style="width:36px;height:36px;border-radius:10px;background:#ffe4e6;border:1.5px solid #fecaca;display:flex;align-items:center;justify-content:center;font-size:1.05rem">👷</div>
+          <div style="font-size:1.7rem;font-weight:900;color:#be123c;line-height:1">${nWait}</div>
+          <div style="font-size:0.6rem;font-weight:800;color:#be123c;text-align:center;line-height:1.3;opacity:.85">รอคิวอะไหล่</div>
+        </div>
+        <!-- เสร็จแล้ว -->
+        <div onclick="setFilter('status','done');goPage('tickets')" style="padding:14px 8px 12px;background:#f0fdf4;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
+          <div style="width:36px;height:36px;border-radius:10px;background:#dcfce7;border:1.5px solid #bbf7d0;display:flex;align-items:center;justify-content:center;font-size:1.05rem">✅</div>
+          <div style="font-size:1.7rem;font-weight:900;color:#15803d;line-height:1">${doneAll}</div>
+          <div style="font-size:0.6rem;font-weight:800;color:#15803d;text-align:center;line-height:1.3;opacity:.85">เสร็จแล้ว</div>
+          ${doneAll>0?`<div style="position:absolute;top:6px;right:4px;background:#22c55e;color:white;font-size:0.45rem;font-weight:800;border-radius:99px;padding:1px 5px">✓ เดือนนี้</div>`:''}
+        </div>
       </div>
-      <div onclick="goPage('tracking')" style="background:white;border-radius:18px;padding:14px 12px;position:relative;overflow:hidden;box-shadow:0 2px 16px rgba(234,88,12,.1);cursor:pointer;-webkit-tap-highlight-color:transparent;border:2px solid #fed7aa" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
-        <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#ea580c,#f97316);display:flex;align-items:center;justify-content:center;font-size:.9rem;box-shadow:0 3px 8px rgba(234,88,12,.3);margin-bottom:8px">⏳</div>
-        <div style="font-size:0.5rem;font-weight:800;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">รออะไหล่</div>
-        <div style="font-size:2.4rem;font-weight:900;color:#ea580c;line-height:1;font-family:'JetBrains Mono',monospace">${nWait}</div>
-        <div style="font-size:0.56rem;color:#94a3b8;margin-top:5px">แตะติดตามงาน →</div>
-      </div>
-      <div onclick="setFilter('status','done');goPage('tickets')" style="background:white;border-radius:18px;padding:14px 12px;position:relative;overflow:hidden;box-shadow:0 2px 16px rgba(22,163,74,.1);cursor:pointer;-webkit-tap-highlight-color:transparent;border:2px solid #bbf7d0" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
-        <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#16a34a,#22c55e);display:flex;align-items:center;justify-content:center;font-size:.9rem;box-shadow:0 3px 8px rgba(22,163,74,.3);margin-bottom:8px">✅</div>
-        <div style="font-size:0.5rem;font-weight:800;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">เสร็จแล้ว</div>
-        <div style="font-size:2.4rem;font-weight:900;color:#16a34a;line-height:1;font-family:'JetBrains Mono',monospace">${doneAll}</div>
-        <div style="font-size:0.56rem;color:#94a3b8;margin-top:5px">${pct}% ของงานทั้งหมด</div>
+
+      <!-- Footer summary strip -->
+      <div style="display:flex;align-items:center;padding:10px 16px;background:#f8fafc">
+        <div style="flex:1;padding-right:12px;border-right:1px solid #e2e8f0">
+          <div style="font-size:1.05rem;font-weight:900;color:#0f172a">${active.length}</div>
+          <div style="font-size:0.58rem;color:#94a3b8;font-weight:600;margin-top:2px">งานเปิดอยู่</div>
+        </div>
+        <div style="flex:2;text-align:center;padding:0 12px;border-right:1px solid #e2e8f0">
+          <div style="font-size:1.05rem;font-weight:900;color:#d97706">${nNew}/${nProg}/${nWait}</div>
+          <div style="font-size:0.58rem;color:#94a3b8;font-weight:600;margin-top:2px">ใหม่/กำลังซ่อม/รออะไหล่</div>
+        </div>
+        <div style="flex:1;text-align:right;padding-left:12px;border-left:1px solid #e2e8f0">
+          <div style="font-size:1.05rem;font-weight:900;color:#22c55e">${byS('closed')}</div>
+          <div style="font-size:0.58rem;color:#94a3b8;font-weight:600;margin-top:2px">ปิดแล้ว</div>
+        </div>
       </div>
     </div>
+    <style>@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}</style>
 
     <!-- Priority row — redesigned -->
     <div class="home-section-hd">
