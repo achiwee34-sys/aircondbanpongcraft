@@ -333,6 +333,7 @@ let tkPage = 1;
 const _LOGIN_MAX_ATTEMPTS = 5;
 const _LOGIN_LOCKOUT_MS   = 5 * 60 * 1000; // 5 นาที
 const _LOCKOUT_SS_KEY     = 'aircon_lockout';
+let _loginAttempts = 0; // legacy counter declaration (fix: ReferenceError)
 
 function _getLockoutState() {
   try {
