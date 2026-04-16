@@ -192,8 +192,8 @@ function renderHome() {
       const _initials = (u.name||'?').slice(0,2).toUpperCase();
       const _firstChar = (u.name||'?').charAt(0).toUpperCase();
       const _techGrad = {W:'linear-gradient(135deg,#1d4ed8,#3b82f6)',T:'linear-gradient(135deg,#ea580c,#fb923c)',S:'linear-gradient(135deg,#16a34a,#4ade80)',P:'linear-gradient(135deg,#7c3aed,#a78bfa)'}[_firstChar] || 'linear-gradient(135deg,#374151,#6b7280)';
-      const av = (u.photo && u.photo !== 'undefined')
-        ? `<img src="${u.photo}" onerror="this.style.display='none'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${bdr}">`
+      const av   = u.photo
+        ? `<img src="${u.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${bdr}">`
         : `<div style="width:36px;height:36px;border-radius:50%;background:${_techGrad};display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;color:white;border:2px solid ${bdr};letter-spacing:0.02em;box-shadow:0 2px 8px rgba(0,0,0,0.15)">${_initials}</div>`;
       return `<div style="background:white;border-radius:14px;padding:10px 12px;margin-bottom:7px;border:1px solid #f1f5f9;box-shadow:0 1px 6px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openTechPopup('${u.id}')">
         ${av}
@@ -1400,8 +1400,8 @@ function openBulkAssignSheet() {
       const _ti = (u.name||'?').slice(0,2).toUpperCase();
       const _tc = (u.name||'?').charAt(0).toUpperCase();
       const _tGrad = {W:'linear-gradient(135deg,#1d4ed8,#3b82f6)',T:'linear-gradient(135deg,#ea580c,#fb923c)',S:'linear-gradient(135deg,#16a34a,#4ade80)',P:'linear-gradient(135deg,#7c3aed,#a78bfa)'}[_tc] || 'linear-gradient(135deg,#374151,#6b7280)';
-      const avatar = (u.photo && u.photo !== 'undefined')
-        ? `<img src="${u.photo}" onerror="this.style.display='none'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;flex-shrink:0">`
+      const avatar = u.photo
+        ? `<img src="${u.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;flex-shrink:0">`
         : `<div style="width:44px;height:44px;border-radius:50%;background:${_tGrad};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,255,255,0.3);font-size:0.85rem;font-weight:900;color:white;letter-spacing:0.02em;box-shadow:0 2px 10px rgba(0,0,0,0.18)">${_ti}</div>`;
       return `<div id="btc-${u.id}" onclick="_bulkPickTech('${u.id}')"
         style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:2px solid #e5e7eb;background:white;cursor:pointer;transition:all 0.18s;touch-action:manipulation;box-shadow:0 1px 4px rgba(0,0,0,0.04)">

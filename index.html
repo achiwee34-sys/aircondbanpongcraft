@@ -1489,76 +1489,89 @@ window._liffLandingUpdateCard = liffUpdateCard;
     <!-- ========== PM PLAN PAGE ========== -->
     <div class="page" id="pg-pmplan" data-page="pmplan" style="flex-direction:column;padding:0">
 
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,#0c4a6e,#0369a1);flex-shrink:0;padding:calc(env(safe-area-inset-top,0px)+14px) 14px 0">
-        <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px">
-          <button onclick="goPage('calendar')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">‹</button>
+      <!-- ── Header ── -->
+      <div style="flex-shrink:0;background:#0f172a;padding:calc(env(safe-area-inset-top,0px)+14px) 16px 0;position:relative;overflow:hidden">
+        <!-- bg accent -->
+        <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,0.18) 0%,transparent 70%);pointer-events:none"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(14,165,233,0.4),transparent)"></div>
+        <!-- title row -->
+        <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px">
+          <button onclick="goPage('calendar')" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">‹</button>
           <div style="flex:1;min-width:0">
-            <div style="color:white;font-size:0.95rem;font-weight:900;letter-spacing:-0.01em">แผน PM บำรุงรักษา</div>
-            <div style="color:rgba(255,255,255,0.5);font-size:0.6rem;margin-top:1px">Preventive Maintenance Planner</div>
+            <div style="color:white;font-size:0.97rem;font-weight:900;letter-spacing:-0.01em">แผน PM บำรุงรักษา</div>
+            <div style="color:rgba(255,255,255,0.35);font-size:0.58rem;margin-top:1px;letter-spacing:0.05em;text-transform:uppercase">Preventive Maintenance Planner</div>
           </div>
-          <button onclick="goPage('calendar')" style="padding:7px 13px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:10px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">📅 ปฏิทิน</button>
+          <button onclick="goPage('calendar')" style="padding:7px 12px;background:rgba(14,165,233,0.15);border:1px solid rgba(14,165,233,0.3);color:#38bdf8;border-radius:10px;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit">📅 ปฏิทิน</button>
         </div>
-
-        <!-- Tab bar -->
-        <div style="display:flex;gap:6px;padding-bottom:14px" id="pmplan-tab-bar">
-          <button class="pmplan-tab-btn active" data-tab="create" onclick="switchPMPlanTab('create')" style="flex:1;padding:9px 4px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.18);color:white;border-radius:12px;font-size:0.72rem;font-weight:800;cursor:pointer;font-family:inherit">➕ สร้างแผน</button>
-          <button class="pmplan-tab-btn" data-tab="schedule" onclick="switchPMPlanTab('schedule')" style="flex:1;padding:9px 4px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ตารางแผน</button>
-          <button class="pmplan-tab-btn" data-tab="history" onclick="switchPMPlanTab('history')" style="flex:1;padding:9px 4px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit">📊 ประวัติ PM</button>
+        <!-- Tab bar — pill style -->
+        <div style="display:flex;background:rgba(255,255,255,0.05);border-radius:12px;padding:3px;gap:2px;margin-bottom:14px" id="pmplan-tab-bar">
+          <button class="pmplan-tab-btn active" data-tab="create" onclick="switchPMPlanTab('create')" style="flex:1;padding:8px 4px;border:none;background:white;color:#0f172a;border-radius:9px;font-size:0.68rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,0.15)">✦ สร้างแผน</button>
+          <button class="pmplan-tab-btn" data-tab="schedule" onclick="switchPMPlanTab('schedule')" style="flex:1;padding:8px 4px;border:none;background:transparent;color:rgba(255,255,255,0.45);border-radius:9px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">▦ ตารางแผน</button>
+          <button class="pmplan-tab-btn" data-tab="history" onclick="switchPMPlanTab('history')" style="flex:1;padding:8px 4px;border:none;background:transparent;color:rgba(255,255,255,0.45);border-radius:9px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">◎ ประวัติ PM</button>
         </div>
       </div>
 
       <!-- Body -->
-      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#f0f4f8">
+      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#f4f6f9">
 
         <!-- TAB: สร้างแผน -->
-        <div id="pmplan-panel-create" style="padding:14px 12px 32px">
+        <div id="pmplan-panel-create" style="padding:16px 14px 36px">
 
-          <!-- PM Type -->
-          <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;border:1px solid #e8ecf0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-            <div style="font-size:0.72rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">ประเภท PM</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <!-- ── PM Type selector ── -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;padding-left:2px">ประเภท PM</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <!-- ล้างใหญ่ -->
               <button id="pmplan-major-btn" onclick="setPMPlanType('clean-major')"
-                style="padding:14px 8px;border-radius:14px;border:2px solid #0369a1;background:linear-gradient(135deg,#0369a1,#0c4a6e);color:white;cursor:pointer;font-family:inherit;transition:all 0.2s;box-shadow:0 4px 14px rgba(3,105,161,0.4)">
-                <div style="font-size:1.4rem;margin-bottom:4px">🔵</div>
-                <div style="font-size:0.78rem;font-weight:900">ล้างใหญ่</div>
-                <div style="font-size:0.6rem;opacity:0.8;margin-top:2px">PM ครบชุด</div>
+                style="padding:18px 10px 14px;border-radius:18px;border:2px solid #0ea5e9;background:linear-gradient(145deg,#0369a1,#0c4a6e);color:white;cursor:pointer;font-family:inherit;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(3,105,161,0.35);-webkit-tap-highlight-color:transparent"
+                onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform=''"
+                ontouchstart="this.style.transform='scale(0.96)'" ontouchend="this.style.transform=''">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,0.06);border-radius:50%"></div>
+                <div style="font-size:2rem;margin-bottom:6px;position:relative">🔵</div>
+                <div style="font-size:0.85rem;font-weight:900;position:relative">ล้างใหญ่</div>
+                <div style="font-size:0.62rem;opacity:0.65;margin-top:3px;position:relative">PM ครบชุด</div>
+                <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.3);border-radius:0 0 16px 16px"></div>
               </button>
+              <!-- ล้างย่อย -->
               <button id="pmplan-minor-btn" onclick="setPMPlanType('clean-minor')"
-                style="padding:14px 8px;border-radius:14px;border:2px solid #e2e8f0;background:linear-gradient(135deg,#f8fafc,#f1f5f9);color:#64748b;cursor:pointer;font-family:inherit;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-                <div style="font-size:1.4rem;margin-bottom:4px">💦</div>
-                <div style="font-size:0.78rem;font-weight:900">ล้างย่อย</div>
-                <div style="font-size:0.6rem;opacity:0.8;margin-top:2px">PM พื้นฐาน</div>
+                style="padding:18px 10px 14px;border-radius:18px;border:2px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;font-family:inherit;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);-webkit-tap-highlight-color:transparent"
+                onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform=''"
+                ontouchstart="this.style.transform='scale(0.96)'" ontouchend="this.style.transform=''">
+                <div style="font-size:2rem;margin-bottom:6px">💦</div>
+                <div style="font-size:0.85rem;font-weight:900">ล้างย่อย</div>
+                <div style="font-size:0.62rem;opacity:0.6;margin-top:3px">PM พื้นฐาน</div>
               </button>
             </div>
             <input type="hidden" id="pmplan-type" value="clean-major">
           </div>
 
-          <!-- Date + Tech -->
-          <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;border:1px solid #e8ecf0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-            <div style="font-size:0.72rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">กำหนดการ</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <!-- ── กำหนดการ card ── -->
+          <div style="background:white;border-radius:18px;padding:16px;margin-bottom:12px;border:1px solid #edf0f5;box-shadow:0 2px 12px rgba(0,0,0,0.05)">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
+              <div style="width:28px;height:28px;border-radius:9px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:0.9rem">🗓️</div>
+              <span style="font-size:0.75rem;font-weight:900;color:#1e40af;letter-spacing:0.02em">กำหนดการ</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
               <div>
-                <div style="font-size:0.7rem;font-weight:700;color:#374151;margin-bottom:5px">📅 วันที่เริ่ม</div>
+                <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:5px">📅 วันที่เริ่ม</div>
                 <input type="date" id="pmplan-start-date"
-                  style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:white"
-                  onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#e2e8f0'">
+                  style="width:100%;padding:10px 11px;border:1.5px solid #e8ecf2;border-radius:11px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:#fafbfc;color:#0f172a"
+                  onfocus="this.style.borderColor='#0369a1';this.style.background='white'" onblur="this.style.borderColor='#e8ecf2';this.style.background='#fafbfc'">
               </div>
               <div>
-                <div style="font-size:0.7rem;font-weight:700;color:#374151;margin-bottom:5px">👷 ช่างผู้รับผิดชอบ</div>
+                <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:5px">👷 ช่างผู้รับผิดชอบ</div>
                 <select id="pmplan-tech"
-                  style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:white"
-                  onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#e2e8f0'">
+                  style="width:100%;padding:10px 11px;border:1.5px solid #e8ecf2;border-radius:11px;font-size:0.8rem;font-family:inherit;outline:none;box-sizing:border-box;background:#fafbfc;color:#0f172a"
+                  onfocus="this.style.borderColor='#0369a1';this.style.background='white'" onblur="this.style.borderColor='#e8ecf2';this.style.background='#fafbfc'">
                   <option value="">— เลือกช่าง —</option>
                 </select>
               </div>
             </div>
-            <!-- Frequency -->
-            <div style="margin-top:10px">
-              <div style="font-size:0.7rem;font-weight:700;color:#374151;margin-bottom:5px">🔁 ความถี่</div>
+            <div>
+              <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:5px">🔁 ความถี่</div>
               <select id="pmplan-freq"
-                style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:white"
-                onfocus="this.style.borderColor='#0369a1'" onblur="this.style.borderColor='#e2e8f0'">
+                style="width:100%;padding:10px 11px;border:1.5px solid #e8ecf2;border-radius:11px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:#fafbfc;color:#0f172a"
+                onfocus="this.style.borderColor='#0369a1';this.style.background='white'" onblur="this.style.borderColor='#e8ecf2';this.style.background='#fafbfc'">
                 <option value="once">ครั้งเดียว</option>
                 <option value="monthly">รายเดือน (3 เดือน)</option>
                 <option value="quarterly">ทุก 3 เดือน (1 ปี)</option>
@@ -1567,13 +1580,16 @@ window._liffLandingUpdateCard = liffUpdateCard;
             </div>
           </div>
 
-          <!-- Dept selector -->
-          <div style="background:white;border-radius:16px;padding:14px;margin-bottom:14px;border:1px solid #e8ecf0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <div style="font-size:0.72rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.06em">เลือกแผนก</div>
+          <!-- ── เลือกแผนก card ── -->
+          <div style="background:white;border-radius:18px;padding:16px;margin-bottom:16px;border:1px solid #edf0f5;box-shadow:0 2px 12px rgba(0,0,0,0.05)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="display:flex;align-items:center;gap:7px">
+                <div style="width:28px;height:28px;border-radius:9px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:0.9rem">🏭</div>
+                <span style="font-size:0.75rem;font-weight:900;color:#166534">เลือกแผนก</span>
+              </div>
               <div style="display:flex;gap:6px">
-                <button onclick="pmplanSelectAll(true)" style="padding:4px 10px;background:#eff6ff;color:#0369a1;border:1px solid #bfdbfe;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">เลือกทั้งหมด</button>
-                <button onclick="pmplanSelectAll(false)" style="padding:4px 10px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">ล้าง</button>
+                <button onclick="pmplanSelectAll(true)" style="padding:5px 11px;background:#eff6ff;color:#0369a1;border:1.5px solid #bfdbfe;border-radius:8px;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit">เลือกทั้งหมด</button>
+                <button onclick="pmplanSelectAll(false)" style="padding:5px 11px;background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:inherit">ล้าง</button>
               </div>
             </div>
             <div id="pmplan-dept-list" style="display:flex;flex-direction:column;gap:7px;max-height:280px;overflow-y:auto"></div>
@@ -1581,10 +1597,10 @@ window._liffLandingUpdateCard = liffUpdateCard;
 
           <!-- Save button -->
           <button onclick="savePMPlanPage()"
-            style="width:100%;padding:16px;background:linear-gradient(135deg,#0369a1,#0c4a6e);color:white;border:none;border-radius:16px;font-size:0.95rem;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(3,105,161,0.4);display:flex;align-items:center;justify-content:center;gap:8px"
+            style="width:100%;padding:17px;background:#0f172a;color:white;border:none;border-radius:18px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(15,23,42,0.35);display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:0.01em"
             onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''"
             ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             บันทึกลงปฏิทิน
           </button>
         </div>
@@ -3410,147 +3426,116 @@ window._liffLandingUpdateCard = liffUpdateCard;
 <!-- Calendar Event Sheet — redesigned -->
 <div class="sheet-overlay" id="calevent-overlay" onclick="closeSheet('calevent')"></div>
 <div class="sheet" id="calevent-sheet" style="max-height:calc(96vh - env(safe-area-inset-top,0px));border-radius:24px 24px 0 0;overflow:hidden">
-  <!-- drag handle -->
   <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;background:white">
-    <div style="width:40px;height:4px;background:#e2e8f0;border-radius:99px"></div>
+    <div style="width:36px;height:4px;background:#e2e8f0;border-radius:99px"></div>
   </div>
-
-  <!-- ── HEADER ── -->
-  <div style="padding:10px 16px 16px;background:white;flex-shrink:0">
+  <div style="padding:10px 16px 14px;background:white;flex-shrink:0">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
       <div>
-        <div id="calevent-title" style="font-size:1.1rem;font-weight:900;color:#0f172a">➕ เพิ่มกิจกรรม</div>
-        <div style="font-size:0.72rem;color:#94a3b8;margin-top:2px">ปฏิทินงานบำรุงรักษา</div>
+        <div id="calevent-title" style="font-size:1.05rem;font-weight:900;color:#0f172a">📅 เพิ่มงาน</div>
+        <div style="font-size:0.68rem;color:#94a3b8;margin-top:2px">ปฏิทินงานบำรุงรักษา</div>
       </div>
-      <button onclick="closeSheet('calevent')"
-        style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:#64748b;flex-shrink:0">✕</button>
+      <button onclick="closeSheet('calevent')" style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:#64748b;flex-shrink:0">✕</button>
     </div>
-    <!-- ประเภทงาน — 3 big pills -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button id="cetype-repair" onclick="setCeType('repair')"
-        style="padding:10px 6px;border-radius:14px;border:2px solid var(--accent);background:#fff0f2;cursor:pointer;font-family:inherit;transition:all 0.15s">
-        <div style="font-size:1.3rem;margin-bottom:3px">🔧</div>
-        <div style="font-size:0.72rem;font-weight:800;color:var(--accent)">ซ่อมแอร์</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button id="cetype-repair" onclick="setCeType('repair')" style="padding:12px 8px;border-radius:14px;border:2px solid #c8102e;background:#fff0f2;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform=''">
+        <div style="font-size:1.4rem;margin-bottom:4px">🔧</div>
+        <div style="font-size:0.72rem;font-weight:900;color:#c8102e">ซ่อมแอร์</div>
       </button>
-      <button id="cetype-clean" onclick="setCeType('clean')"
-        style="padding:10px 6px;border-radius:14px;border:2px solid #e2e8f0;background:white;cursor:pointer;font-family:inherit;transition:all 0.15s">
-        <div style="font-size:1.1rem;margin-bottom:3px">💧</div>
-        <div style="font-size:0.7rem;font-weight:800;color:#94a3b8">ล้างแอร์</div>
+      <button id="cetype-clean" onclick="setCeType('clean')" style="padding:12px 8px;border-radius:14px;border:2px solid #e2e8f0;background:white;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform=''">
+        <div style="font-size:1.2rem;margin-bottom:4px">💧</div>
+        <div style="font-size:0.7rem;font-weight:800;color:#64748b">ล้างแอร์</div>
       </button>
-      <button id="cetype-clean-major" onclick="setCeType('clean-major')"
-        style="padding:10px 6px;border-radius:14px;border:2px solid #e2e8f0;background:white;cursor:pointer;font-family:inherit;transition:all 0.15s">
-        <div style="font-size:1.1rem;margin-bottom:3px">🔵</div>
-        <div style="font-size:0.7rem;font-weight:800;color:#94a3b8">ล้างใหญ่</div>
+      <button id="cetype-clean-major" onclick="setCeType('clean-major')" style="padding:12px 8px;border-radius:14px;border:2px solid #e2e8f0;background:white;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform=''">
+        <div style="font-size:1.2rem;margin-bottom:4px">🔵</div>
+        <div style="font-size:0.7rem;font-weight:800;color:#64748b">ล้างใหญ่</div>
       </button>
-      <button id="cetype-clean-minor" onclick="setCeType('clean-minor')"
-        style="padding:10px 6px;border-radius:14px;border:2px solid #e2e8f0;background:white;cursor:pointer;font-family:inherit;transition:all 0.15s">
-        <div style="font-size:1.1rem;margin-bottom:3px">💦</div>
-        <div style="font-size:0.7rem;font-weight:800;color:#94a3b8">ล้างย่อย</div>
+      <button id="cetype-clean-minor" onclick="setCeType('clean-minor')" style="padding:12px 8px;border-radius:14px;border:2px solid #e2e8f0;background:white;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform=''">
+        <div style="font-size:1.2rem;margin-bottom:4px">💦</div>
+        <div style="font-size:0.7rem;font-weight:800;color:#64748b">ล้างย่อย</div>
       </button>
     </div>
   </div>
-
   <input type="hidden" id="cev-id"/>
   <input type="hidden" id="cev-type" value="repair"/>
-
-  <!-- ── BODY (scrollable) ── -->
-  <div style="overflow-y:auto;flex:1;padding:0 16px 8px;background:#f8fafc">
-
-    <!-- วันที่ + เวลา -->
-    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-        <div style="width:26px;height:26px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem">📆</div>
-        <span style="font-size:0.75rem;font-weight:800;color:#1e40af">วันและเวลา</span>
+  <div style="overflow-y:auto;flex:1;padding:0 14px 8px;background:#f4f6f9">
+    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:9px;box-shadow:0 1px 6px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px">
+        <div style="width:26px;height:26px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem">📆</div>
+        <span style="font-size:0.72rem;font-weight:900;color:#1e40af">วันและเวลา</span>
       </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:4px">วันที่ *</div>
-        <input type="date" id="cev-date"
-          style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;font-family:inherit;box-sizing:border-box;background:white"/>
+      <div style="margin-bottom:9px">
+        <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;margin-bottom:4px">วันที่ *</div>
+        <input type="date" id="cev-date" style="width:100%;padding:10px 12px;border:1.5px solid #edf0f5;border-radius:11px;font-size:0.88rem;font-family:inherit;box-sizing:border-box;background:#fafbfc;color:#0f172a" onfocus="this.style.borderColor='#3b82f6';this.style.background='white'" onblur="this.style.borderColor='#edf0f5';this.style.background='#fafbfc'"/>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
         <div>
-          <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:4px">⏰ เวลาเริ่ม</div>
-          <input type="time" id="cev-start" value="08:00"
-            style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;font-family:inherit;box-sizing:border-box"/>
+          <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;margin-bottom:4px">⏰ เวลาเริ่ม</div>
+          <input type="time" id="cev-start" value="08:00" style="width:100%;padding:10px 12px;border:1.5px solid #edf0f5;border-radius:11px;font-size:0.88rem;font-family:inherit;box-sizing:border-box;background:#fafbfc" onfocus="this.style.borderColor='#3b82f6';this.style.background='white'" onblur="this.style.borderColor='#edf0f5';this.style.background='#fafbfc'"/>
         </div>
         <div>
-          <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:4px">🏁 สิ้นสุด</div>
-          <input type="time" id="cev-end" value="12:00"
-            style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;font-family:inherit;box-sizing:border-box"/>
+          <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;margin-bottom:4px">🏁 สิ้นสุด</div>
+          <input type="time" id="cev-end" value="12:00" style="width:100%;padding:10px 12px;border:1.5px solid #edf0f5;border-radius:11px;font-size:0.88rem;font-family:inherit;box-sizing:border-box;background:#fafbfc" onfocus="this.style.borderColor='#3b82f6';this.style.background='white'" onblur="this.style.borderColor='#edf0f5';this.style.background='#fafbfc'"/>
         </div>
       </div>
     </div>
-
-    <!-- รายละเอียด -->
-    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-        <div style="width:26px;height:26px;background:#fff0f2;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem">📋</div>
-        <span style="font-size:0.75rem;font-weight:800;color:#be123c">รายละเอียดงาน</span>
+    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:9px;box-shadow:0 1px 6px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px">
+        <div style="width:26px;height:26px;background:#fff0f2;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem">📋</div>
+        <span style="font-size:0.72rem;font-weight:900;color:#be123c">รายละเอียดงาน</span>
       </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:4px">ชื่องาน *</div>
-        <input type="text" id="cev-title-input" placeholder="เช่น ล้างแอร์ BM#1 ชุดที่ 1"
-          style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.88rem;font-family:inherit;box-sizing:border-box"/>
+      <div style="margin-bottom:9px">
+        <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;margin-bottom:4px">ชื่องาน *</div>
+        <input type="text" id="cev-title-input" placeholder="เช่น ล้างแอร์ BM#1 ชุดที่ 1" style="width:100%;padding:10px 12px;border:1.5px solid #edf0f5;border-radius:11px;font-size:0.88rem;font-family:inherit;box-sizing:border-box;background:#fafbfc" onfocus="this.style.borderColor='#c8102e';this.style.background='white'" onblur="this.style.borderColor='#edf0f5';this.style.background='#fafbfc'"/>
       </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:4px">แผนก / Section</div>
-        <select id="cev-dept" onchange="onCevDeptChange(this.value)"
-          style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.85rem;font-family:inherit;background:white;box-sizing:border-box">
-          <option value="">— เลือกแผนก —</option>
+      <div style="margin-bottom:9px">
+        <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;margin-bottom:4px">แผนก / Section</div>
+        <select id="cev-dept" onchange="onCevDeptChange(this.value)" style="width:100%;padding:10px 12px;border:1.5px solid #edf0f5;border-radius:11px;font-size:0.85rem;font-family:inherit;background:#fafbfc;box-sizing:border-box;color:#0f172a" onfocus="this.style.borderColor='#c8102e';this.style.background='white'" onblur="this.style.borderColor='#edf0f5';this.style.background='#fafbfc'">
+          <option value="">— เลือกแผนก (ไม่บังคับ) —</option>
         </select>
       </div>
-      <!-- clean-mode banner: แสดงสรุปจำนวนแอร์ -->
-      <div id="cev-clean-banner" style="display:none;background:linear-gradient(135deg,#0369a1,#0c4a6e);border-radius:12px;padding:12px 14px;margin-bottom:2px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span id="cev-clean-icon" style="font-size:1.4rem;">🔵</span>
+      <div id="cev-clean-banner" style="display:none;background:linear-gradient(135deg,#0369a1,#0c4a6e);border-radius:12px;padding:12px 14px;margin-bottom:2px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span id="cev-clean-icon" style="font-size:1.3rem">🔵</span>
           <div>
-            <div id="cev-clean-type-label" style="font-size:0.8rem;font-weight:900;color:white;">ล้างใหญ่</div>
-            <div id="cev-clean-dept-label" style="font-size:0.68rem;color:rgba(255,255,255,0.8);margin-top:1px;">— เลือกแผนก —</div>
+            <div id="cev-clean-type-label" style="font-size:0.78rem;font-weight:900;color:white">ล้างใหญ่ (ถอดล้างทั้งระบบ)</div>
+            <div id="cev-clean-dept-label" style="font-size:0.65rem;color:rgba(255,255,255,0.75);margin-top:1px">— เลือกแผนก —</div>
           </div>
-          <div id="cev-clean-count-badge" style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:99px;padding:4px 12px;font-size:0.8rem;font-weight:900;color:white;">— เครื่อง</div>
+          <div id="cev-clean-count-badge" style="margin-left:auto;background:rgba(255,255,255,0.18);border-radius:99px;padding:4px 12px;font-size:0.78rem;font-weight:900;color:white">— เครื่อง</div>
         </div>
-        <div id="cev-clean-auto-title" style="font-size:0.7rem;color:rgba(255,255,255,0.7);">ชื่องานจะถูกกรอกอัตโนมัติ</div>
+        <div id="cev-clean-auto-title" style="font-size:0.68rem;color:rgba(255,255,255,0.65)">⬆️ เลือกแผนกด้านบนเพื่อกรอกชื่องานอัตโนมัติ</div>
       </div>
-
       <div id="cev-mac-wrap">
-        <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:4px">เครื่องแอร์ (ถ้ามี)</div>
-        <select id="cev-mac"
-          style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.85rem;font-family:inherit;background:white;box-sizing:border-box">
-          <option value="">— เลือกเครื่อง —</option>
+        <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;margin-bottom:4px">เครื่องแอร์ (ถ้ามี)</div>
+        <select id="cev-mac" style="width:100%;padding:10px 12px;border:1.5px solid #edf0f5;border-radius:11px;font-size:0.85rem;font-family:inherit;background:#fafbfc;box-sizing:border-box" onfocus="this.style.borderColor='#c8102e';this.style.background='white'" onblur="this.style.borderColor='#edf0f5';this.style.background='#fafbfc'">
+          <option value="">— เลือกเครื่อง (ถ้ามี) —</option>
         </select>
       </div>
     </div>
-
-    <!-- มอบหมาย -->
-    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-        <div style="width:26px;height:26px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem">👷</div>
-        <span style="font-size:0.75rem;font-weight:800;color:#166534">มอบหมายงาน</span>
+    <div style="background:white;border-radius:16px;padding:14px;margin-bottom:9px;box-shadow:0 1px 6px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px">
+        <div style="width:26px;height:26px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem">👷</div>
+        <span style="font-size:0.72rem;font-weight:900;color:#166534">มอบหมายงาน</span>
       </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:4px">ช่างผู้รับผิดชอบ</div>
-        <select id="cev-tech"
-          style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.85rem;font-family:inherit;background:white;box-sizing:border-box">
+      <div style="margin-bottom:9px">
+        <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;margin-bottom:4px">ช่างผู้รับผิดชอบ</div>
+        <select id="cev-tech" style="width:100%;padding:10px 12px;border:1.5px solid #edf0f5;border-radius:11px;font-size:0.85rem;font-family:inherit;background:#fafbfc;box-sizing:border-box;color:#0f172a" onfocus="this.style.borderColor='#16a34a';this.style.background='white'" onblur="this.style.borderColor='#edf0f5';this.style.background='#fafbfc'">
           <option value="">— เลือกช่าง —</option>
         </select>
       </div>
       <div>
-        <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;margin-bottom:4px">หมายเหตุ</div>
-        <textarea id="cev-note" rows="2" placeholder="รายละเอียดเพิ่มเติม..."
-          style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.85rem;font-family:inherit;resize:none;box-sizing:border-box"></textarea>
+        <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;margin-bottom:4px">หมายเหตุ</div>
+        <textarea id="cev-note" rows="2" placeholder="รายละเอียดเพิ่มเติม..." style="width:100%;padding:10px 12px;border:1.5px solid #edf0f5;border-radius:11px;font-size:0.85rem;font-family:inherit;resize:none;box-sizing:border-box;background:#fafbfc" onfocus="this.style.borderColor='#16a34a';this.style.background='white'" onblur="this.style.borderColor='#edf0f5';this.style.background='#fafbfc'"></textarea>
       </div>
     </div>
   </div>
-
-  <!-- ── ACTIONS ── -->
-  <div style="padding:12px 16px calc(var(--safe-bot,0px) + 16px);background:white;border-top:1px solid #f1f5f9;flex-shrink:0">
-    <button onclick="saveCalEvent()"
-      style="width:100%;padding:14px;background:#0f172a;color:white;border:none;border-radius:14px;font-size:0.95rem;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:8px;box-shadow:0 4px 14px rgba(200,16,46,0.35)">
-      💾 บันทึกกิจกรรม
+  <div style="padding:12px 14px calc(var(--safe-bot,0px) + 14px);background:white;border-top:1px solid #f1f5f9;flex-shrink:0">
+    <button onclick="saveCalEvent()" style="width:100%;padding:14px;background:#0f172a;color:white;border:none;border-radius:14px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:8px;box-shadow:0 4px 14px rgba(15,23,42,0.25)" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''">
+      🗓️ บันทึกกิจกรรม
     </button>
     <div style="display:flex;gap:8px">
-      <button id="cev-del-btn" style="display:none;flex:1;padding:11px;background:#fff0f2;color:var(--accent);border:1.5px solid #fecdd3;border-radius:12px;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit" onclick="confirmDelCalEvent(this)">🗑️ ลบ</button>
-      <button onclick="closeSheet('calevent')" style="flex:1;padding:11px;background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0;border-radius:12px;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit" data-i18n="ยกเลิก">ยกเลิก</button>
+      <button id="cev-del-btn" style="display:none;flex:1;padding:11px;background:#fff0f2;color:#c8102e;border:1.5px solid #fecdd3;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit" onclick="confirmDelCalEvent(this)">🗑️ ลบ</button>
+      <button onclick="closeSheet('calevent')" style="flex:1;padding:11px;background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit" data-i18n="ยกเลิก">ยกเลิก</button>
     </div>
   </div>
 </div>
