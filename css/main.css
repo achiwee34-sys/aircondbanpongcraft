@@ -1165,7 +1165,8 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
 
 /* ── LANDSCAPE มือถือ/tablet — บังคับ bottom nav ไม่ใช่ sidebar ──
    ต้องอยู่หลัง @media(min-width:768px) เพื่อ override */
-@media (orientation: landscape) and (max-height: 600px) {
+/* ── LANDSCAPE มือถือทุกขนาด (max-width: 767px) — bottom nav เสมอ ── */
+@media (orientation: landscape) and (max-width: 767px) {
   :root { --nav-h: 48px; }
   #app { flex-direction: column !important; overflow: hidden !important; }
   .bottom-nav {
@@ -1178,11 +1179,12 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
     padding: 0 !important;
     overflow: hidden !important;
     flex-shrink: 0 !important;
-    background: white !important;
+    display: flex !important;
+    background: #111827 !important;
   }
   #main-col { order: 1 !important; flex: 1 1 0 !important; min-height: 0 !important; overflow: hidden !important; }
   .content-area { flex: 1 1 0 !important; overflow: hidden !important; min-height: 0 !important; position: relative !important; }
-  .content-area > .page:not(#pg-purchase) { overflow-y: auto !important; overflow-x: hidden !important; padding: 12px 16px calc(var(--nav-h, 56px) + var(--safe-bot, 0px) + 20px) !important; }
+  .content-area > .page:not(#pg-purchase) { overflow-y: auto !important; overflow-x: hidden !important; padding: 12px 16px calc(var(--nav-h, 48px) + var(--safe-bot, 0px) + 8px) !important; }
   #pg-backend { display: none !important; }
   #pg-backend.active { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; }
   .bn-item {
@@ -1197,12 +1199,14 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
     width: auto !important;
     overflow: visible !important;
   }
-  .bn-item:not(.active) .bn-icon { color: rgba(255,255,255,0.38) !important; }
+  .bn-item:not(.active) .bn-icon { color: #64748b !important; }
   .bn-item:not(.active) .bn-icon svg { stroke: #64748b !important; }
   .bn-icon { width: 18px !important; height: 18px !important; }
   .bn-icon svg { width: 18px !important; height: 18px !important; }
   .bn-label { font-size: 0.45rem !important; display: block !important; opacity: 1 !important; max-width: 100% !important; white-space: nowrap !important; color: #64748b !important; }
-  .bn-item.active .bn-label { color: #0f172a !important; }
+  .bn-item.active .bn-label { color: #ffffff !important; }
+  .bn-item.active .bn-icon { color: #ffffff !important; }
+  .bn-item.active .bn-icon svg { stroke: #ffffff !important; }
   .bn-item.active::after { top: 0 !important; left: 15% !important; right: 15% !important; height: 2px !important; bottom: auto !important; }
   .topbar { height: 40px !important; padding-top: 0 !important; }
   :root { --head-h: 40px; }
