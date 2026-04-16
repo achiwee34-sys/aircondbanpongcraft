@@ -1035,11 +1035,11 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden !important; o
 [style*="overflow-y:auto"], [style*="overflow-y: auto"] { -webkit-overflow-scrolling: touch; }
 /* ── Purchase page iOS fixes ── */
 #pg-purchase { -webkit-overflow-scrolling: touch; }
-#pur-list { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; overflow-y: auto; flex: 1; min-height: 0; height: auto !important; touch-action: pan-y; }
-#pur-header-bar { flex-shrink: 0; overflow: visible; padding: 10px 12px 0; }
+#pur-list { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; overflow-y: auto; overflow-x: hidden; flex: 1; min-height: 0; touch-action: pan-y; }
 /* pur-list-panel เป็น flex column — scroll อยู่ที่ pur-list ข้างใน */
 #pg-purchase #pur-list-panel { overflow: hidden !important; display: flex; flex-direction: column; }
-#pur-track-content { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; overflow-y: auto; flex: 1; min-height: 0; height: auto !important; touch-action: pan-y; }
+#pur-header-bar { flex-shrink: 0; max-height: 60vh; overflow-y: auto; }
+#pur-track-content { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
 #po-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .sheet input, .sheet select, .sheet textarea, .sheet button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; pointer-events: auto; position: relative; z-index: 1; }
 /* Bug1-fix: ensure user page header buttons (เพิ่ม) are always tappable — z-index สูงกว่า sheet-overlay (500) */
