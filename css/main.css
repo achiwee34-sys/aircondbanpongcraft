@@ -1527,3 +1527,40 @@ select:not(#pur-po-panel select):not(#pur-po-panel *) {
 #pur-po-panel select {
   font-size: max(16px, 1em);
 }
+
+/* ── Sidebar Toggle Button — แสดงเฉพาะ landscape tablet (768px+) ── */
+#sidebar-toggle-btn {
+  display: none; /* ซ่อนโดย default */
+}
+
+@media (orientation: landscape) and (min-height: 601px) and (min-width: 768px) {
+  #sidebar-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 50%;
+    left: var(--nav-w, 220px);
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    width: 22px;
+    height: 40px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    color: #64748b;
+    cursor: pointer;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.10);
+    transition: left 0.25s ease, background 0.15s, color 0.15s;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #sidebar-toggle-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+  #app.sidebar-collapsed #sidebar-toggle-btn {
+    left: 56px;
+  }
+}

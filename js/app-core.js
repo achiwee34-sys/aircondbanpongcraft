@@ -3687,6 +3687,20 @@ async function syncMachine(m){const url=db.gsUrl;if(!url)return;_showSyncDot();t
 // ADMIN UI FUNCTIONS — ย้ายมาจาก app-admin.js
 // ============================================================
 
+function toggleSidebar() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  const collapsed = app.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('aircon_sidebar_collapsed', collapsed ? '1' : '0');
+  const icon = document.getElementById('sidebar-toggle-icon');
+  if (icon) {
+    // ชี้ขวา = expand (collapsed), ชี้ซ้าย = collapse
+    icon.innerHTML = collapsed
+      ? '<polyline points="9 18 15 12 9 6"/>'
+      : '<polyline points="15 18 9 12 15 6"/>';
+  }
+}
+
 function initSidebarState() {
   const app = document.getElementById('app');
   if (!app) return;
@@ -3695,7 +3709,7 @@ function initSidebarState() {
   if (localStorage.getItem('aircon_sidebar_collapsed') === '1') {
     app.classList.add('sidebar-collapsed');
     const icon = document.getElementById('sidebar-toggle-icon');
-    if (icon) icon.innerHTML = '<polyline points="9 18 15 12 9 6"/>';
+    if (icon) icon.innerHTML = '<polyline points="9 18 15 12 9 6"/>'; // ชี้ขวา = ขยายได้
   }
 }
 
