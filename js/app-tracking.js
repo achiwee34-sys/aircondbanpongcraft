@@ -3076,7 +3076,7 @@ function openVerifySheet(tid) {
     photosSec.style.display = 'block';
     const makeGrid = (photos, tid2) => photos.map(p => {
       const isFsKey = p && p.startsWith('fs:');
-      return `<div class="photo-grid-item${photos.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${tid2}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'about:blank':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;
+      return `<div class="photo-grid-item${photos.length===1?' photo-wide':''}" data-photo-key="${p}" data-tid="${tid2}" onclick="_resolveAndLightbox(this)"><img src="${isFsKey?'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==':p}" style="width:100%;height:100%;object-fit:cover;${isFsKey?'opacity:0':''}"/>${isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`:''}</div>`;
     }).join('');
     photosBody.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       ${hasBefore?`<div><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>ก่อนซ่อม · ${t.photosBefore.length} รูป</div><div class="photo-grid">${makeGrid(t.photosBefore,tid)}</div></div>`:'<div></div>'}
@@ -3517,7 +3517,7 @@ function openDetail(tid) {
           <div style="padding:6px">
             ${hasBefore?`
             <div style="display:grid;grid-template-columns:${t.photosBefore.length===1?'1fr':'1fr 1fr'};gap:4px">
-              ${t.photosBefore.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'about:blank'}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
+              ${t.photosBefore.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
             </div>`:`
             <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px">
               <div style="font-size:1.4rem;opacity:0.35">📷</div>
@@ -3540,7 +3540,7 @@ function openDetail(tid) {
           <div style="padding:6px">
             ${hasAfter?`
             <div style="display:grid;grid-template-columns:${t.photosAfter.length===1?'1fr':'1fr 1fr'};gap:4px">
-              ${t.photosAfter.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'about:blank'}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
+              ${t.photosAfter.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
             </div>`:`
             <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px">
               <div style="font-size:1.4rem;opacity:0.35">📷</div>
@@ -3760,7 +3760,7 @@ async function _resolveContainerPhotos(ticketId, containerId, attempt) {
 }
 
 // ── Auto-resolver for fs: photo thumbnails in ticket card lists ────
-// BUG FIX: card list rendered with src="about:blank" + opacity:0 for fs: keys
+// BUG FIX: card list rendered with src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" + opacity:0 for fs: keys
 // This function resolves them in batches using IntersectionObserver so only
 // visible cards trigger Firestore reads (avoids loading all photos at once)
 function _resolveListPhotos(container) {
