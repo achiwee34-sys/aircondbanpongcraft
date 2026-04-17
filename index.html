@@ -3540,12 +3540,11 @@ window._liffLandingUpdateCard = liffUpdateCard;
   </div>
 </div>
 
-<!-- Ticket Detail Sheet -->
+<!-- Ticket Detail Sheet — Full Page -->
 <div class="sheet-overlay" id="detail-overlay" onclick="closeSheet('detail')"></div>
-<div class="sheet" id="detail-sheet" style="max-height:calc(96vh - env(safe-area-inset-top,0px));border-radius:20px 20px 0 0;overflow:hidden;flex-direction:column">
-  <div class="sheet-handle"></div>
+<div id="detail-sheet" class="sheet detail-fullpage" style="border-radius:0;max-height:100dvh;height:100dvh;max-width:100%;width:100%;bottom:0;left:0;transform:translateX(100%);flex-direction:column">
   <div id="detail-title" style="display:none"></div>
-  <div class="sheet-body" id="detail-body" style="padding:0 0 4px;flex:1;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain"></div>
+  <div class="sheet-body" id="detail-body" style="padding:0;flex:1;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain"></div>
   <div class="sheet-actions" id="detail-actions" style="padding:10px 14px calc(var(--safe-bot,0px) + 14px);flex-shrink:0;background:white;border-top:1px solid #f1f5f9"></div>
 </div>
 
