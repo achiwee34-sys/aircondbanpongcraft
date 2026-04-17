@@ -1864,6 +1864,144 @@ function openRepairPicker() {
 }
 
 // ════════════════════════════════════════════════════════════
+// INLINE REPAIR PICKER — renders task grid inside complete-sheet
+// ════════════════════════════════════════════════════════════
+function initInlineRepairPicker() {
+  var sel = document.getElementById('c-rp-grp-select');
+  if (!sel) return;
+  var groups = _getRepairGroups();
+  sel.innerHTML = '<option value="">📋 ทั้งหมด</option>' +
+    groups.map(function(g,i){return '<option value="'+i+'">'+(g.icon||'📋')+' '+g.label+'</option>';}).join('');
+  renderInlineRepairPicker();
+  _initWageDropdown();
+}
+function _initWageDropdown() {
+  var sel = document.getElementById('c-wage-select');
+  if (!sel) return;
+  var opts = [
+    {label:'ค่าแรงซ่อมเล็กน้อย',value:300},
+    {label:'ค่าแรงซ่อมทั่วไป',value:500},
+    {label:'ค่าแรงซ่อมใหญ่',value:800},
+    {label:'ค่าแรงซ่อมพิเศษ',value:1200},
+    {label:'ค่าแรง Stand by (ต่อชม.)',value:600},
+    {label:'ค่าแรงนอกเวลา (ต่อชม.)',value:110},
+  ];
+  sel.innerHTML = '<option value="">เลือกค่าแรง</option>' +
+    opts.map(function(w){return '<option value="'+w.value+'">'+w.label+' — ฿'+w.value.toLocaleString()+'</option>';}).join('');
+  sel.onchange = function(){
+    var v = document.getElementById('c-wage-val');
+    if (v) v.textContent = '฿' + (this.value ? Number(this.value).toLocaleString() : '0');
+    updateInlineTotals();
+  };
+}
+function renderInlineRepairPicker() {
+  var body = document.getElementById('c-rp-body');
+  if (!body) return;
+  var groups = _getRepairGroups();
+  var searchQ = (document.getElementById('c-rp-search') ? document.getElementById('c-rp-search').value : '').trim().toLowerCase();
+  var grpSelVal = document.getElementById('c-rp-grp-select') ? document.getElementById('c-rp-grp-select').value : '';
+  var activeGrp = (grpSelVal !== '' && grpSelVal !== undefined) ? parseInt(grpSelVal) : null;
+  var tid = document.getElementById('c-tid') ? document.getElementById('c-tid').value : '';
+  var ticket = tid ? (db.tickets||[]).find(function(x){return x.id===tid;}) : null;
+  var mac = ticket ? getMacMap().get(ticket.machineId) : null;
+  var btu = mac && mac.btu ? Number(mac.btu) : 0;
+  var btuInfo = btu>0 ? (btu<=9000?'≤9K':btu<=48000?'9K–48K':btu<=150000?'48K–150K':btu<=240000?'150K–240K':'240K–400K') : '';
+  var grpColors = ['#0369a1','#15803d','#7c3aed','#c2410c','#0891b2','#be185d','#065f46','#1d4ed8'];
+  var filteredGroups = groups.map(function(g,gi){
+    var items = (g.items||[]).filter(function(it){return !searchQ || it.name.toLowerCase().includes(searchQ);});
+    if (activeGrp !== null && gi !== activeGrp) return null;
+    if (!items.length) return null;
+    return {label:g.label,icon:g.icon,items:items,gi:gi};
+  }).filter(Boolean);
+  if (!filteredGroups.length) {
+    body.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8"><div style="font-size:2rem;margin-bottom:8px">🔍</div><div style="font-size:0.82rem;font-weight:700">ไม่พบรายการ</div></div>';
+    return;
+  }
+  body.innerHTML = '';
+  filteredGroups.forEach(function(grp){
+    var gi = grp.gi, label = grp.label, icon = grp.icon, items = grp.items;
+    var gColor = grpColors[gi % grpColors.length];
+    var section = document.createElement('div');
+    section.style.cssText = 'margin:4px 8px 10px;background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1.5px solid '+gColor+'22';
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(135deg,'+gColor+'14,'+gColor+'06);border-bottom:1.5px solid '+gColor+'25';
+    hdr.innerHTML = '<div style="width:28px;height:28px;background:'+gColor+';border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0">'+(icon||'📋')+'</div><span style="font-size:0.82rem;font-weight:900;color:#0f172a;flex:1">'+label+'</span><span style="background:'+gColor+'18;color:'+gColor+';border-radius:99px;padding:2px 8px;font-size:0.58rem;font-weight:700">'+items.length+' รายการ</span>';
+    section.appendChild(hdr);
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f1f5f9';
+    items.forEach(function(it){
+      var price = it.price || REPAIR_PRICE[it.name] || 0;
+      var isSel = [...document.querySelectorAll('#c-repair-tags .rtag')].some(function(t){return t.dataset.val===it.name;});
+      var isBtuMatch = btuInfo && it.name.includes(btuInfo);
+      var card = document.createElement('div');
+      card.dataset.rpInline = it.name;
+      card.style.cssText = 'display:flex;flex-direction:column;justify-content:space-between;padding:8px 10px;min-height:60px;background:'+(isSel?'#fff0f2':isBtuMatch?'#f0f9ff':'white')+';cursor:pointer;position:relative;transition:background 0.1s;user-select:none;-webkit-user-select:none';
+      card.innerHTML = (isSel?'<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+gColor+'"></div>':'')+
+        (isBtuMatch&&!isSel?'<div style="position:absolute;top:4px;right:4px;background:#0369a1;color:white;border-radius:3px;padding:1px 4px;font-size:0.44rem;font-weight:800">BTU✓</div>':'')+
+        '<div style="display:flex;align-items:flex-start;gap:7px">'+
+          '<div style="width:20px;height:20px;border-radius:6px;background:'+(isSel?gColor:gColor+'22')+';display:flex;align-items:center;justify-content:center;font-size:0.65rem;flex-shrink:0">'+(icon||'📋')+'</div>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:0.67rem;font-weight:800;color:'+(isSel?'#c8102e':'#1e293b')+';line-height:1.3;word-break:break-word">'+it.name+'</div>'+
+            '<div style="font-size:0.58rem;font-weight:700;color:'+(isSel?'#be123c':price>0?gColor:'#94a3b8')+';margin-top:1px">'+(price>0?'฿'+price.toLocaleString():'ตามจริง')+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:flex-end;margin-top:4px">'+
+          '<div style="background:'+(isSel?gColor:'#e5e7eb')+';color:'+(isSel?'white':'#94a3b8')+';border-radius:6px;min-width:26px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;padding:0 5px">'+(isSel?'✓':'+')+'</div>'+
+        '</div>';
+      card.onclick = function(){
+        var tags = document.getElementById('c-repair-tags');
+        var existing = [...tags.querySelectorAll('.rtag')].find(function(t){return t.dataset.val===it.name;});
+        if (existing) {
+          existing.remove();
+        } else {
+          var tag = document.createElement('div');
+          tag.className='rtag'; tag.dataset.val=it.name; tag.dataset.qty='1';
+          tag.style.cssText='display:flex;align-items:center;gap:6px;background:#fff0f2;border:1.5px solid #fecdd3;border-radius:8px;padding:6px 10px;font-size:0.72rem;font-weight:700;color:#c8102e';
+          var ico=document.createElement('span');ico.textContent=icon||'🔧';ico.style.cssText='font-size:0.88rem;flex-shrink:0';
+          var txt=document.createElement('span');txt.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';txt.textContent=it.name;
+          var ps=document.createElement('span');ps.style.cssText='color:#15803d;font-size:0.65rem;font-weight:800;flex-shrink:0';ps.textContent=price>0?'฿'+price.toLocaleString():'';
+          var del=document.createElement('button');del.type='button';del.innerHTML='✕';
+          del.style.cssText='background:none;border:none;cursor:pointer;color:#ef4444;font-size:0.7rem;padding:0;flex-shrink:0';
+          del.onclick=function(e){e.stopPropagation();tag.remove();updateRepairCount();updateInlineTotals();renderInlineRepairPicker();};
+          tag.append(ico,txt,ps,del);
+          tags.appendChild(tag);
+        }
+        updateRepairCount();updateInlineTotals();renderInlineRepairPicker();
+        _autoFillSummaryFromTags();
+      };
+      grid.appendChild(card);
+    });
+    section.appendChild(grid);
+    body.appendChild(section);
+  });
+}
+function updateInlineTotals() {
+  var groups = _getRepairGroups();
+  var tags = [...document.querySelectorAll('#c-repair-tags .rtag')];
+  var repairTotal = 0;
+  tags.forEach(function(t){
+    var name=t.dataset.val;
+    for(var i=0;i<groups.length;i++){var it=groups[i].items&&groups[i].items.find(function(x){return x.name===name;});if(it){repairTotal+=(it.price||REPAIR_PRICE[name]||0);break;}}
+  });
+  var wage = Number((document.getElementById('c-wage-select')||{value:0}).value||0);
+  var grand = repairTotal + wage;
+  var rtEl=document.getElementById('c-repair-total-price');
+  var gtEl=document.getElementById('c-grand-total');
+  if(rtEl) rtEl.textContent='฿'+repairTotal.toLocaleString();
+  if(gtEl) gtEl.textContent='฿'+grand.toLocaleString();
+  var cnt=document.getElementById('c-repair-count');
+  if(cnt) cnt.textContent=tags.length+' รายการ';
+}
+function _autoFillSummaryFromTags() {
+  var sumEl=document.getElementById('c-sum');
+  if(!sumEl||sumEl.dataset.autoFilled==='1') return;
+  var tags=[...document.querySelectorAll('#c-repair-tags .rtag')];
+  if(!tags.length) return;
+  sumEl.value=tags.map(function(t){return '- '+t.dataset.val;}).join('\n');
+  sumEl.dataset.autoFilled='1';
+}
+
+// ════════════════════════════════════════════════════════════
 // REPAIR MANAGER — Admin จัดการหมวด / รายการ / ราคา
 // ════════════════════════════════════════════════════════════
 // ══════════════════════════════════════════════
@@ -2354,10 +2492,12 @@ function selectResult(activeId) {
 function addPartRow() {
   const list = document.getElementById('c-parts-list');
   const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:6px;align-items:center';
-  row.innerHTML = `<input type="text" placeholder="ชื่ออะไหล่..." style="flex:2;font-size:0.78rem;padding:7px 8px;border:1.5px solid #fde68a;border-radius:8px;font-family:inherit" class="c-part-name"/>
-    <input type="number" placeholder="จำนวน" style="width:70px;font-size:0.78rem;padding:7px 8px;border:1.5px solid #fde68a;border-radius:8px;font-family:inherit" class="c-part-qty"/>
-    <button onclick="this.parentElement.remove()" style="width:26px;height:26px;border-radius:50%;background:#fee2e2;border:none;cursor:pointer;color:#dc2626;font-size:0.85rem;font-weight:800;flex-shrink:0;display:flex;align-items:center;justify-content:center">×</button>`;
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 60px 60px 70px 28px;gap:4px;align-items:center';
+  row.innerHTML = `<input type="text" placeholder="ชื่อวัสดุ..." class="c-part-name" style="font-size:0.8rem;padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;width:100%;box-sizing:border-box"/>
+    <input type="number" placeholder="0" class="c-part-qty" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+    <input type="text" placeholder="กก." class="c-part-unit" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+    <input type="number" placeholder="0" class="c-part-price" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:right;width:100%;box-sizing:border-box"/>
+    <button type="button" onclick="this.closest('div').remove()" style="width:24px;height:24px;border-radius:6px;background:#fee2e2;border:none;color:#dc2626;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🗑</button>`;
   list.appendChild(row);
 }
 function syncSummaryFromForm() {
@@ -2437,7 +2577,6 @@ function _showCompleteDialog() {
   const el = document.getElementById('complete-sheet');
   if (!el) return;
   el.style.display = 'flex';
-  // close on backdrop tap
   el._backdropHandler = (e) => { if (e.target === el) closeCompleteSheet(); };
   el.addEventListener('click', el._backdropHandler);
 }
@@ -2449,25 +2588,55 @@ function closeCompleteSheet() {
   const bgrid = document.getElementById('c-grid-before');
   if (bgrid) bgrid.innerHTML = '';
   if (typeof pendingPhotos !== 'undefined') pendingPhotos.before = [];
-  // ซ่อนและ reset ทุกอย่างทันที
+  // Reset all form fields
   const pb = document.getElementById('c-parts-block');
-  if (pb) { pb.style.display = 'none'; }
+  if (pb) pb.style.display = 'block';
   const rt = document.getElementById('c-repair-tags');
-  if (rt) { rt.innerHTML = ''; }
+  if (rt) rt.innerHTML = '';
   const rc = document.getElementById('c-repair-count');
-  if (rc) { rc.textContent = '0 รายการ'; }
+  if (rc) rc.textContent = '0 รายการ';
   const cs = document.getElementById('c-sum');
-  if (cs) { cs.value = ''; }
+  if (cs) { cs.value = ''; cs.dataset.autoFilled = '0'; }
+  const ws = document.getElementById('c-wage-select');
+  if (ws) ws.value = '';
+  const wv = document.getElementById('c-wage-val');
+  if (wv) wv.textContent = '฿0';
+  const rt2 = document.getElementById('c-repair-total-price');
+  if (rt2) rt2.textContent = '฿0';
+  const gt = document.getElementById('c-grand-total');
+  if (gt) gt.textContent = '฿0';
+  const rpSearch = document.getElementById('c-rp-search');
+  if (rpSearch) rpSearch.value = '';
+  // Reset parts list to one blank row
+  const pl = document.getElementById('c-parts-list');
+  if (pl) pl.innerHTML = `<div style="display:grid;grid-template-columns:1fr 60px 60px 70px 28px;gap:4px;align-items:center">
+    <input type="text" placeholder="ชื่อวัสดุ..." class="c-part-name" style="font-size:0.8rem;padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;width:100%;box-sizing:border-box"/>
+    <input type="number" placeholder="0" class="c-part-qty" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+    <input type="text" placeholder="กก." class="c-part-unit" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+    <input type="number" placeholder="0" class="c-part-price" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:right;width:100%;box-sizing:border-box"/>
+    <button type="button" onclick="this.closest('div').remove()" style="width:24px;height:24px;border-radius:6px;background:#fee2e2;border:none;color:#dc2626;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🗑</button>
+  </div>`;
 }
 
 function openCompleteSheet(tid) {
   // ── RESET ทุกอย่างก่อนเสมอ ──
   const _pb = document.getElementById('c-parts-block');
-  if (_pb) { _pb.style.display = 'none'; }
+  if (_pb) { _pb.style.display = 'block'; }
   const _rt = document.getElementById('c-repair-tags');
   if (_rt) { _rt.innerHTML = ''; }
   const _sum = document.getElementById('c-sum');
-  if (_sum) { _sum.value = ''; }
+  if (_sum) { _sum.value = ''; _sum.dataset.autoFilled = '0'; }
+  // reset wage
+  const _ws = document.getElementById('c-wage-select');
+  if (_ws) _ws.value = '';
+  const _wv = document.getElementById('c-wage-val');
+  if (_wv) _wv.textContent = '฿0';
+  const _rt2 = document.getElementById('c-repair-total-price');
+  if (_rt2) _rt2.textContent = '฿0';
+  const _gt = document.getElementById('c-grand-total');
+  if (_gt) _gt.textContent = '฿0';
+  const _rps = document.getElementById('c-rp-search');
+  if (_rps) _rps.value = '';
   // re-enable options ที่ disabled ค้างจากครั้งก่อน
   document.querySelectorAll('#c-repair-item option').forEach(o => { o.disabled=false; o.style.color=''; });
   // init chip groups
@@ -2692,6 +2861,9 @@ function openCompleteSheet(tid) {
     }
     // ถ้าไม่มีรูปผู้แจ้ง → pendingPhotos.before = [] รอช่างถ่ายเอง (ตั้งค่าแล้วข้างบน)
   }
+
+  // ── Init inline picker & wage dropdown ──
+  if (typeof initInlineRepairPicker === 'function') initInlineRepairPicker();
 
   _showCompleteDialog();
 }
@@ -3859,7 +4031,6 @@ async function _resolveDetailPhotos(ticketId, attempt = 0) {
         if (idx !== -1) _photoCacheKeys.splice(idx, 1);
       }
       photoData = await loadPhotosFromFirestore(ticketId);
-      console.info('[photo resolve] Firestore data:', JSON.stringify(photoData));
     } catch(e) {
       console.warn('[photo resolve] loadPhotosFromFirestore failed:', e.message);
     }
@@ -3910,7 +4081,13 @@ async function _resolveDetailPhotos(ticketId, attempt = 0) {
         };
         // BUG FIX (Bug 2): timeout กัน URL ที่ค้างนาน
         setTimeout(() => { if (img.style.opacity !== '1') { pendingRetry = true; resolve(); } }, 8000);
-        tester.src = src;
+        // guard: ป้องกัน URL ที่มี "undefined" ทำให้เกิด 404
+        if (typeof src === 'string' && !src.includes('undefined')) {
+          tester.src = src;
+        } else {
+          if (spin) spin.innerHTML = attempt < MAX_RETRY ? '⏳' : '🖼️';
+          pendingRetry = true;
+        }
       });
     } else {
       if (spin) spin.innerHTML = attempt < MAX_RETRY ? '⏳' : '🖼️';
@@ -3951,7 +4128,8 @@ function _resolveAndLightbox(el) {
     if (lbImg) lbImg.src = '';
     document.getElementById('lightbox')?.classList.add('open');
     resolvePhotoUrl(key, tid).then(resolved => {
-      if (resolved && lbImg) {
+      // guard: ป้องกัน URL ที่ได้ undefined ไม่ให้ยิง 404
+      if (resolved && lbImg && typeof resolved === 'string' && !resolved.includes('undefined')) {
         lbImg.src = resolved;
         // อัปเดต thumbnail ด้วยเพื่อครั้งต่อไป
         if (img) { img.src = resolved; img.style.opacity = '1'; }

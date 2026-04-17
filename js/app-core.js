@@ -3690,6 +3690,8 @@ async function syncMachine(m){const url=db.gsUrl;if(!url)return;_showSyncDot();t
 function toggleSidebar() {
   const app = document.getElementById('app');
   if (!app) return;
+  // ป้องกัน: ไม่ให้ toggle บน landscape mobile (ใช้ bottom nav แทน)
+  if (typeof _isLandscapeMobile === 'function' && _isLandscapeMobile()) return;
   const collapsed = app.classList.toggle('sidebar-collapsed');
   localStorage.setItem('aircon_sidebar_collapsed', collapsed ? '1' : '0');
   const icon = document.getElementById('sidebar-toggle-icon');
@@ -3701,15 +3703,53 @@ function toggleSidebar() {
   }
 }
 
+function _isLandscapeMobile() {
+  // ตรงกับ CSS: (orientation: landscape) and (max-width: 767px)
+  return window.matchMedia('(orientation: landscape) and (max-width: 767px)').matches;
+}
+
+function _isLandscapeTablet() {
+  // ตรงกับ CSS: (orientation: landscape) and (min-width: 768px)
+  return window.matchMedia('(orientation: landscape) and (min-width: 768px)').matches;
+}
+
 function initSidebarState() {
   const app = document.getElementById('app');
   if (!app) return;
-  // landscape มือถือ — ไม่ต้องใช้ sidebar เลย ใช้ bottom nav แทน
-  if (window.innerHeight < 600 && window.innerWidth > window.innerHeight) return;
+
+  // มือถือ landscape → ใช้ bottom nav เท่านั้น ไม่ต้องจัดการ sidebar
+  if (_isLandscapeMobile()) return;
+
+  // restore state จาก localStorage เฉพาะเมื่อเป็น tablet landscape หรือ portrait
   if (localStorage.getItem('aircon_sidebar_collapsed') === '1') {
     app.classList.add('sidebar-collapsed');
     const icon = document.getElementById('sidebar-toggle-icon');
-    if (icon) icon.innerHTML = '<polyline points="9 18 15 12 9 6"/>'; // ชี้ขวา = ขยายได้
+    if (icon) icon.innerHTML = '<polyline points="9 18 15 12 9 6"/>'; // ชี้ขวา = expand
+  }
+
+  // ฟัง orientation change — reset sidebar state เมื่อหมุนจาก landscape mobile → tablet/portrait
+  if (!window._sidebarOrientationListenerAdded) {
+    window._sidebarOrientationListenerAdded = true;
+    window.matchMedia('(orientation: landscape) and (max-width: 767px)')
+      .addEventListener('change', (e) => {
+        if (!e.matches) {
+          // หมุนกลับมาแล้ว → restore state จาก localStorage
+          const savedCollapsed = localStorage.getItem('aircon_sidebar_collapsed') === '1';
+          const app2 = document.getElementById('app');
+          if (!app2) return;
+          if (savedCollapsed) {
+            app2.classList.add('sidebar-collapsed');
+          } else {
+            app2.classList.remove('sidebar-collapsed');
+          }
+          const icon = document.getElementById('sidebar-toggle-icon');
+          if (icon) {
+            icon.innerHTML = savedCollapsed
+              ? '<polyline points="9 18 15 12 9 6"/>'
+              : '<polyline points="15 18 9 12 15 6"/>';
+          }
+        }
+      });
   }
 }
 

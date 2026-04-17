@@ -112,25 +112,25 @@ function renderHome() {
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1.5px solid #f5e8e8">
         <!-- รอจ่ายงาน -->
         <div onclick="setFilter('status','new');goPage('tickets')" style="padding:14px 8px 12px;background:#f8f8f8;border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f3f4f6;border:1.5px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:1.05rem">📋</div>
+          <div style="width:36px;height:36px;border-radius:10px;background:#f3f4f6;border:1.5px solid #e5e7eb;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h-1a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1"/><path d="M9 12h6M9 16h4"/></svg></div>
           <div style="font-size:1.7rem;font-weight:900;color:#374151;line-height:1">${nNew}</div>
           <div style="font-size:0.6rem;font-weight:800;color:#374151;text-align:center;line-height:1.3;opacity:.85">รอนำงาน</div>
         </div>
         <!-- กำลังดำเนินการ -->
         <div onclick="setFilter('status','');goPage('tickets')" style="padding:14px 8px 12px;background:#fff7ed;border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
-          <div style="width:36px;height:36px;border-radius:10px;background:#ffedd5;border:1.5px solid #fed7aa;display:flex;align-items:center;justify-content:center;font-size:1.05rem">😊</div>
+          <div style="width:36px;height:36px;border-radius:10px;background:#ffedd5;border:1.5px solid #fed7aa;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
           <div style="font-size:1.7rem;font-weight:900;color:#c2410c;line-height:1">${nProg}</div>
           <div style="font-size:0.6rem;font-weight:800;color:#c2410c;text-align:center;line-height:1.3;opacity:.85">กำลังดำเนินการ</div>
         </div>
         <!-- รอคิวอะไหล่ -->
         <div onclick="goPage('tracking')" style="padding:14px 8px 12px;background:#fef2f2;border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
-          <div style="width:36px;height:36px;border-radius:10px;background:#ffe4e6;border:1.5px solid #fecaca;display:flex;align-items:center;justify-content:center;font-size:1.05rem">👷</div>
+          <div style="width:36px;height:36px;border-radius:10px;background:#ffe4e6;border:1.5px solid #fecaca;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="#e11d48" stroke="none"/></svg></div>
           <div style="font-size:1.7rem;font-weight:900;color:#be123c;line-height:1">${nWait}</div>
           <div style="font-size:0.6rem;font-weight:800;color:#be123c;text-align:center;line-height:1.3;opacity:.85">รอคิวอะไหล่</div>
         </div>
         <!-- เสร็จแล้ว -->
         <div onclick="setFilter('status','done');goPage('tickets')" style="padding:14px 8px 12px;background:#f0fdf4;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
-          <div style="width:36px;height:36px;border-radius:10px;background:#dcfce7;border:1.5px solid #bbf7d0;display:flex;align-items:center;justify-content:center;font-size:1.05rem">✅</div>
+          <div style="width:36px;height:36px;border-radius:10px;background:#dcfce7;border:1.5px solid #bbf7d0;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="9 12 11.5 14.5 15.5 9.5"/></svg></div>
           <div style="font-size:1.7rem;font-weight:900;color:#15803d;line-height:1">${doneAll}</div>
           <div style="font-size:0.6rem;font-weight:800;color:#15803d;text-align:center;line-height:1.3;opacity:.85">เสร็จแล้ว</div>
           ${doneAll>0?`<div style="position:absolute;top:6px;right:4px;background:#22c55e;color:white;font-size:0.45rem;font-weight:800;border-radius:99px;padding:1px 5px">✓ เดือนนี้</div>`:''}
@@ -1698,6 +1698,14 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
           ${t.assignee?`<span style="margin-left:auto;color:#64748b;font-size:0.58rem">👷 ${t.assignee.split(' ')[0]}</span>`:`<span style="margin-left:auto;font-size:0.55rem;color:#cbd5e1">${(t.createdAt||'').substring(0,10)}</span>`}
         </div>
         ${prBadge||adminTechBadge?`<div style="padding:4px 0 2px;display:flex;gap:4px;flex-wrap:wrap">${prBadge}${adminTechBadge}</div>`:''}
+        ${!hasPics ? `<div style="margin-top:6px;padding:7px 10px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;display:flex;flex-direction:column;gap:5px">
+          ${(t.detail||t.note) ? `<div style="font-size:0.68rem;color:#374151;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><span style="display:inline-block;width:14px;height:14px;margin-right:4px;vertical-align:-2px"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>${escapeHtml(t.detail||t.note)}</div>` : ''}
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            ${mac?.location ? `<span style="font-size:0.62rem;color:#64748b;display:flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"><path d="M12 22s-8-7.5-8-13a8 8 0 1 1 16 0c0 5.5-8 13-8 13z"/><circle cx="12" cy="9" r="2.5"/></svg>${escapeHtml(mac.location)}</span>` : ''}
+            ${t.contact ? `<span style="font-size:0.62rem;color:#64748b;display:flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 9.82 19.79 19.79 0 0 1 1 1.18 2 2 0 0 1 2.95 1h3.08a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z"/></svg>${escapeHtml(t.contact)}</span>` : ''}
+            ${t.createdAt ? `<span style="font-size:0.62rem;color:#94a3b8;display:flex;align-items:center;gap:3px;margin-left:auto"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>${(t.createdAt||'').substring(0,10)}</span>` : ''}
+          </div>
+        </div>` : ''}
         ${hasPics ? `<div style="display:flex;gap:4px;padding:6px 0 2px;overflow-x:auto">
           ${[...(t.photosBefore||[]).slice(0,2).map(p=>{
             if (!p) return '';

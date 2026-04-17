@@ -3676,77 +3676,198 @@ window._liffLandingUpdateCard = liffUpdateCard;
 
 <!-- Complete Sheet -->
 <!-- ========== COMPLETE SHEET (native dialog) ========== -->
-<div id="complete-sheet" style="display:none;position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;overflow:hidden">
-<div style="background:#f8fafc;border-radius:24px 24px 0 0;width:100%;max-width:640px;max-height:calc(94vh - env(safe-area-inset-top,0px));display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1);overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,0.18)">
-  <!-- Handle -->
-  <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;background:#f8fafc">
-    <div style="width:40px;height:4px;background:#d1d5db;border-radius:99px"></div>
-  </div>
+<div id="complete-sheet" style="display:none;position:fixed;inset:0;z-index:9800;background:rgba(15,23,42,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;overflow:hidden;padding:0">
+<div style="background:#f8fafc;width:100%;max-width:900px;height:100%;max-height:100vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1);overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,0.18);border-radius:0">
 
-  <!-- Header — Light -->
-  <div style="background:white;border-bottom:2px solid #f1f5f9;padding:12px 16px 14px;flex-shrink:0;position:relative">
-    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c8102e,#e63950,#f59e0b);border-radius:20px 20px 0 0"></div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;margin-top:4px">
-      <div style="width:38px;height:38px;background:linear-gradient(135deg,#c8102e,#e63950);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;box-shadow:0 4px 12px rgba(200,16,46,0.25)">🔧</div>
+  <!-- Header -->
+  <div style="background:white;border-bottom:2px solid #f1f5f9;padding:10px 16px 12px;flex-shrink:0;position:relative">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c8102e,#e63950,#f59e0b)"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#c8102e,#e63950);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;box-shadow:0 4px 12px rgba(200,16,46,0.25)">🔧</div>
       <div style="flex:1;min-width:0">
-        <div style="color:#0f172a;font-size:0.92rem;font-weight:900">บันทึกผลการซ่อม</div>
-        <div style="color:#94a3b8;font-size:0.68rem;margin-top:1px" id="c-header-sub">กรอกข้อมูลให้ครบถ้วน</div>
+        <div style="color:#0f172a;font-size:0.95rem;font-weight:900" data-i18n="บันทึกผลการซ่อม">บันทึกผลการซ่อม</div>
+        <div id="c-header-sub" style="color:#94a3b8;font-size:0.68rem;margin-top:1px">กรอกข้อมูลให้ครบถ้วน</div>
       </div>
-      <button type="button" onclick="closeCompleteSheet()" style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;color:#64748b;font-size:0.95rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:manipulation">✕</button>
+      <div id="c-job-strip" style="flex:2;min-width:0;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:6px 10px"></div>
+      <button type="button" onclick="closeCompleteSheet()" style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;color:#64748b;font-size:0.95rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <!-- Job info strip -->
-    <div id="c-job-strip" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 12px"></div>
   </div>
 
-  <!-- Scrollable body -->
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 14px 8px">
+  <!-- Body: scrollable -->
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 14px 8px">
     <input type="hidden" id="c-tid"/>
 
-    <!-- 1. รายการงาน -->
-    <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:12px">
-      <div style="background:#0f172a;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="background:rgba(255,255,255,.2);color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:900">1</span>
-          <span style="color:white;font-size:0.85rem;font-weight:800" data-i18n="รายการงานที่ดำเนินการ">รายการงานที่ดำเนินการ</span>
-        </div>
-        <span id="c-repair-count" style="background:rgba(255,255,255,.2);color:white;border-radius:99px;padding:2px 10px;font-size:0.65rem;font-weight:800">0 รายการ</span>
-      </div>
-      <div id="c-repair-tags" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;min-height:40px"></div>
-      <div style="padding:0 12px 12px">
-        <button onclick="openRepairPicker()" style="width:100%;padding:13px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;font-size:0.85rem;font-weight:700;color:#475569;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
-          <span style="font-size:1.1rem">＋</span> เลือกรายการงาน
-        </button>
-      </div>
-    </div>
+    <!-- ── Row 1: Task Picker (left) + Selected (right) ── -->
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:12px;margin-bottom:12px;align-items:start">
 
-    <!-- 2. วัสดุ -->
-    <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:12px">
-      <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px;background:#f8fafc">
-        <span style="background:#0f172a;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:900">2</span>
-        <span style="font-size:0.85rem;font-weight:800;color:#0f172a" data-i18n="วัสดุที่ใช้">วัสดุที่ใช้</span>
-      </div>
-      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
-        <!-- น้ำยาแอร์ถูกย้ายไปใน repair list แล้ว -->
-        <div id="c-refrig-list" style="display:none"></div>
-        <!-- อะไหล่ที่เปลี่ยน — แสดงเฉพาะมีงานเปลี่ยน/ซื้อ -->
-        <div id="c-parts-block" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px 12px">
-          <div style="font-size:0.78rem;font-weight:800;color:#92400e;margin-bottom:8px" data-i18n="🔩 อะไหล่ที่เปลี่ยน">🔩 อะไหล่ที่เปลี่ยน</div>
-          <div id="c-parts-list" style="display:flex;flex-direction:column;gap:7px">
-            <div style="display:flex;gap:7px;align-items:center">
-              <input type="text" placeholder="ชื่ออะไหล่..." class="c-part-name" style="flex:3;font-size:0.85rem;padding:9px 10px;border:1.5px solid #fde68a;border-radius:9px;font-family:inherit"/>
-              <input type="number" placeholder="จำนวน" class="c-part-qty" style="width:80px;font-size:0.85rem;padding:9px 8px;border:1.5px solid #fde68a;border-radius:9px;font-family:inherit;text-align:center"/>
-            </div>
+      <!-- LEFT: เลือกรายการงาน inline -->
+      <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden">
+        <div style="background:#0f172a;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:rgba(255,255,255,.2);color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:900">1</span>
+            <span style="color:white;font-size:0.85rem;font-weight:800" data-i18n="เลือกรายการงาน">เลือกรายการงาน</span>
           </div>
-          <button onclick="addPartRow()" style="margin-top:9px;font-size:0.75rem;color:#92400e;background:transparent;border:1.5px dashed #fbbf24;border-radius:9px;padding:8px 12px;width:100%;cursor:pointer;font-family:inherit;font-weight:700">+ เพิ่มรายการ</button>
+          <div id="c-rp-machine-info" style="display:flex;align-items:center;gap:5px"></div>
+        </div>
+        <!-- Search + filter bar -->
+        <div style="padding:8px 12px;background:#f8fafc;border-bottom:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
+          <div style="flex:1;background:white;border:1.5px solid #e2e8f0;border-radius:9px;padding:0 10px;display:flex;align-items:center;gap:6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="c-rp-search" placeholder="ค้นหารายการ..." oninput="renderInlineRepairPicker()" style="flex:1;border:none;outline:none;font-size:0.8rem;padding:7px 0;font-family:inherit;background:none"/>
+          </div>
+          <div style="position:relative;min-width:110px">
+            <select id="c-rp-grp-select" onchange="renderInlineRepairPicker()" style="width:100%;padding:8px 28px 8px 10px;background:white;border:1.5px solid #e2e8f0;border-radius:9px;font-size:0.78rem;font-weight:700;font-family:inherit;color:#0f172a;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer"></select>
+            <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:0.7rem">▼</div>
+          </div>
+        </div>
+        <!-- Items grid -->
+        <div id="c-rp-body" style="max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:6px 0 8px"></div>
+      </div>
+
+      <!-- RIGHT: รายการที่เลือก -->
+      <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;position:sticky;top:0">
+        <div style="background:#f8fafc;border-bottom:1px solid #f1f5f9;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:0.82rem;font-weight:800;color:#0f172a">รายการที่เลือก</span>
+          <span id="c-repair-count" style="background:#c8102e;color:white;border-radius:99px;padding:2px 9px;font-size:0.62rem;font-weight:800">0</span>
+        </div>
+        <div id="c-repair-tags" style="display:flex;flex-direction:column;gap:4px;padding:8px 10px;min-height:60px;max-height:240px;overflow-y:auto"></div>
+        <!-- Total row -->
+        <div style="border-top:1px solid #f1f5f9;padding:8px 12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:0.72rem;color:#64748b;font-weight:600">รวมรายการงาน</span>
+            <span id="c-repair-total-price" style="font-size:0.85rem;font-weight:900;color:#0f172a">฿0</span>
+          </div>
+          <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:8px 12px;text-align:center">
+            <div style="font-size:0.62rem;color:#16a34a;font-weight:700;margin-bottom:2px">รวมทั้งสิ้น (โดยประมาณ)</div>
+            <div id="c-grand-total" style="font-size:1.4rem;font-weight:900;color:#15803d">฿0</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 3. ค่าวัด -->
+    <!-- ── Row 2: วัสดุที่ใช้ (left) + ค่าแรง (right) ── -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;align-items:start">
+
+      <!-- วัสดุที่ใช้ -->
+      <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px;background:#f8fafc">
+          <span style="background:#f59e0b;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem">📦</span>
+          <span style="font-size:0.85rem;font-weight:800;color:#0f172a" data-i18n="วัสดุที่ใช้">วัสดุที่ใช้</span>
+        </div>
+        <div style="padding:10px 14px">
+          <!-- hidden legacy compat divs -->
+          <div id="c-refrig-list" style="display:none"></div>
+          <div id="c-parts-block" style="display:block">
+            <!-- Table header -->
+            <div style="display:grid;grid-template-columns:1fr 60px 60px 70px 28px;gap:4px;padding:4px 0 6px;border-bottom:1.5px solid #f1f5f9;margin-bottom:4px">
+              <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em">รายการวัสดุ</div>
+              <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-align:center">จำนวน</div>
+              <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-align:center">หน่วย</div>
+              <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-align:right">ราคา</div>
+              <div></div>
+            </div>
+            <div id="c-parts-list" style="display:flex;flex-direction:column;gap:5px">
+              <div style="display:grid;grid-template-columns:1fr 60px 60px 70px 28px;gap:4px;align-items:center">
+                <input type="text" placeholder="ชื่อวัสดุ..." class="c-part-name" style="font-size:0.8rem;padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;width:100%;box-sizing:border-box"/>
+                <input type="number" placeholder="0" class="c-part-qty" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+                <input type="text" placeholder="กก." class="c-part-unit" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+                <input type="number" placeholder="0" class="c-part-price" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:right;width:100%;box-sizing:border-box"/>
+                <button type="button" onclick="this.closest('div').remove()" style="width:24px;height:24px;border-radius:6px;background:#fee2e2;border:none;color:#dc2626;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🗑</button>
+              </div>
+            </div>
+            <button onclick="addPartRow()" style="margin-top:8px;font-size:0.75rem;color:#64748b;background:transparent;border:1.5px dashed #cbd5e1;border-radius:8px;padding:7px 12px;width:100%;cursor:pointer;font-family:inherit;font-weight:700">+ เพิ่มวัสดุ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ค่าแรง -->
+      <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px;background:#f8fafc">
+          <span style="background:#10b981;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem">👷</span>
+          <span style="font-size:0.85rem;font-weight:800;color:#0f172a">ค่าแรง</span>
+        </div>
+        <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+          <div style="position:relative">
+            <select id="c-wage-select" onchange="document.getElementById('c-wage-val').textContent='฿'+(this.value?Number(this.value).toLocaleString():'0')" style="width:100%;padding:10px 28px 10px 12px;background:white;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-weight:600;font-family:inherit;color:#0f172a;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer">
+              <option value="">เลือกค่าแรง</option>
+            </select>
+            <div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8;font-size:0.75rem">▼</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px">
+            <span style="font-size:0.78rem;color:#64748b;font-weight:600">ค่าแรง</span>
+            <span id="c-wage-val" style="font-size:1rem;font-weight:900;color:#0f172a">฿0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- อะไหล่จาก PR -->
+    <div id="c-purchase-block" style="display:none;margin-bottom:12px"></div>
+
+    <!-- ── สรุปผลการดำเนินการ + รูปถ่าย: two-column ── -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;align-items:start">
+
+      <!-- สรุปผล -->
+      <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px;background:#f8fafc">
+          <span style="background:#6366f1;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem">📝</span>
+          <span style="font-size:0.85rem;font-weight:800;color:#0f172a" data-i18n="สรุปผลการดำเนินการ">สรุปผลการดำเนินการ</span>
+          <span style="font-size:0.68rem;color:#c8102e;font-weight:700">* จำเป็น</span>
+        </div>
+        <div style="padding:12px 14px">
+          <textarea id="c-sum" rows="5" placeholder="อธิบายรายละเอียดที่ซ่อม เช่น เติมน้ำยา R32 2 กก., เปลี่ยน capacitor..." oninput="if(typeof _clearAutoFilled==='function')_clearAutoFilled()" style="width:100%;font-size:0.85rem;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-family:inherit;resize:none;box-sizing:border-box;line-height:1.6"></textarea>
+        </div>
+      </div>
+
+      <!-- รูปถ่าย -->
+      <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:#3b82f6;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem">📷</span>
+            <span style="font-size:0.85rem;font-weight:800;color:#0f172a" data-i18n="รูปถ่าย">รูปถ่าย</span>
+          </div>
+          <span style="font-size:0.68rem;color:#94a3b8">สูงสุด 3 รูป / ประเภท</span>
+        </div>
+        <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+          <!-- ก่อนซ่อม -->
+          <div id="c-before-section" style="display:block">
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+              <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:5px;padding:2px 7px;font-size:0.66rem;font-weight:800">📸 ก่อนซ่อม</span>
+            </div>
+            <span id="c-before-label" style="font-size:0.62rem;color:#94a3b8;display:block;margin-bottom:4px">ถ่ายรูปก่อนเริ่มซ่อม</span>
+            <div class="photo-upload" onclick="document.getElementById('c-pics-before').click()" style="border-radius:10px;padding:8px">
+              <input type="file" id="c-pics-before" accept="image/*" multiple onchange="previewPics(this,'c-grid-before','before')"/>
+              <div style="font-size:1rem">📷</div>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">แตะเพื่อเพิ่มรูป</div>
+            </div>
+            <div class="photo-grid" id="c-grid-before" style="margin-top:5px"></div>
+          </div>
+
+          <!-- หลังซ่อม -->
+          <div>
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+              <span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:5px;padding:2px 7px;font-size:0.66rem;font-weight:800">✅ หลังซ่อม</span>
+            </div>
+            <div style="font-size:0.62rem;color:#94a3b8;margin-bottom:4px">&nbsp;</div>
+            <div class="photo-upload" onclick="openPhotoAfterSheet()" style="border-radius:10px;padding:8px">
+              <input type="file" id="c-pics" accept="image/*" multiple onchange="previewPics(this,'c-grid','after')"/>
+              <input type="file" id="c-pics-cam" accept="image/*" capture="environment" onchange="previewPics(this,'c-grid','after')" style="display:none"/>
+              <div style="font-size:1rem">📷</div>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">แตะเพื่อเลือกรูป</div>
+            </div>
+            <div class="photo-grid" id="c-grid" style="margin-top:5px"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ค่าวัด (collapsible, full width) -->
     <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:12px">
       <button onclick="toggleMeasure()" style="width:100%;padding:10px 14px;background:#f8fafc;border:none;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="background:#0f172a;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:900">3</span>
+          <span style="background:#0f172a;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:900">📊</span>
           <span style="font-size:0.85rem;font-weight:800;color:#0f172a" data-i18n="ค่าวัด">ค่าวัด</span>
           <span style="font-size:0.68rem;color:#94a3b8">ไม่บังคับ</span>
         </div>
@@ -3783,70 +3904,15 @@ window._liffLandingUpdateCard = liffUpdateCard;
       </div>
     </div>
 
-    <!-- อะไหล่จาก PR -->
-    <div id="c-purchase-block" style="display:none;margin-bottom:12px"></div>
-
-    <!-- 4. สรุปผล -->
-    <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:12px">
-      <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px;background:#f8fafc">
-        <span style="background:#0f172a;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:900">4</span>
-        <span style="font-size:0.85rem;font-weight:800;color:#0f172a" data-i18n="สรุปผลการดำเนินการ">สรุปผลการดำเนินการ</span>
-        <span style="font-size:0.68rem;color:#c8102e;font-weight:700">* จำเป็น</span>
-      </div>
-      <div style="padding:12px 14px">
-        <textarea id="c-sum" rows="6" placeholder="อธิบายรายละเอียดที่ซ่อม เช่น เติมน้ำยา R32 2 กก., เปลี่ยน capacitor..." oninput="if(typeof _clearAutoFilled==='function')_clearAutoFilled()" style="width:100%;font-size:0.88rem;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:inherit;resize:none;box-sizing:border-box;line-height:1.6"></textarea>
-
-      </div>
-    </div>
-
-    <!-- 5. รูปถ่าย -->
-    <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:8px">
-      <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="background:#0f172a;color:white;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:900">5</span>
-          <span style="font-size:0.85rem;font-weight:800;color:#0f172a" data-i18n="รูปถ่าย">รูปถ่าย</span>
-        </div>
-        <span style="font-size:0.68rem;color:#94a3b8">สูงสุด 3 รูป / ประเภท</span>
-      </div>
-      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
-
-        <!-- ก่อนซ่อม — ซ่อนไว้ ผู้แจ้งส่งมาแล้ว -->
-        <div id="c-before-section" style="display:block">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
-            <span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:2px 9px;font-size:0.7rem;font-weight:800">📸 ก่อนซ่อม</span>
-            <span id="c-before-label" style="font-size:0.65rem;color:#94a3b8">ถ่ายรูปก่อนเริ่มซ่อม</span>
-          </div>
-          <div class="photo-upload" onclick="document.getElementById('c-pics-before').click()" style="border-radius:12px;padding:10px">
-            <input type="file" id="c-pics-before" accept="image/*" multiple onchange="previewPics(this,'c-grid-before','before')"/>
-            <div style="font-size:1.2rem">📷</div>
-            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">แตะเพื่อเพิ่มรูปก่อนซ่อม</div>
-          </div>
-          <div class="photo-grid" id="c-grid-before" style="margin-top:6px"></div>
-        </div>
-
-        <!-- หลังซ่อม -->
-        <div>
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
-            <span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:6px;padding:2px 9px;font-size:0.7rem;font-weight:800">✅ หลังซ่อม</span>
-          </div>
-          <div class="photo-upload" onclick="openPhotoAfterSheet()" style="border-radius:12px;padding:10px">
-            <input type="file" id="c-pics" accept="image/*" multiple onchange="previewPics(this,'c-grid','after')"/>
-            <input type="file" id="c-pics-cam" accept="image/*" capture="environment" onchange="previewPics(this,'c-grid','after')" style="display:none"/>
-            <div style="font-size:1.2rem">📷</div>
-            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">แตะเพื่อเลือกรูปหลังซ่อม</div>
-          </div>
-          <div class="photo-grid" id="c-grid" style="margin-top:6px"></div>
-        </div>
-
-      </div>
-    </div>
   </div>
 
   <!-- Footer -->
-  <div style="padding:10px 14px calc(var(--safe-bot,0px) + 24px);border-top:1px solid #e5e7eb;background:#f8fafc;flex-shrink:0;display:flex;gap:8px;position:relative;z-index:10">
-    <button type="button" onclick="closeCompleteSheet()" style="flex:1;padding:14px;background:white;border:1.5px solid #e5e7eb;color:#374151;border-radius:14px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation">ยกเลิก</button>
-    <button type="button" id="btn-do-complete" onclick="confirmBeforeComplete()" style="flex:3;padding:14px;background:linear-gradient(135deg,#0f172a,#1e293b);color:white;border:none;border-radius:14px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
-      💾 ส่งผลการซ่อม
+  <div style="padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:2px solid #e5e7eb;background:white;flex-shrink:0;display:flex;gap:10px;position:relative;z-index:10">
+    <button type="button" onclick="closeCompleteSheet()" style="flex:1;padding:13px;background:white;border:1.5px solid #e2e8f0;color:#374151;border-radius:12px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
+      ✕ ยกเลิก
+    </button>
+    <button type="button" id="btn-do-complete" onclick="confirmBeforeComplete()" style="flex:3;padding:13px;background:linear-gradient(135deg,#1e3a5f,#1d4ed8);color:white;border:none;border-radius:12px;font-size:0.92rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(29,78,216,0.3)">
+      💾 บันทึก / ส่งงาน
     </button>
   </div>
 </div>
