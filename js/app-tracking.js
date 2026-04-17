@@ -2010,10 +2010,13 @@ function updateInlineTotals() {
 }
 function _autoFillSummaryFromTags() {
   var sumEl=document.getElementById('c-sum');
-  if(!sumEl||sumEl.dataset.autoFilled==='1') return;
+  if(!sumEl) return;
   var tags=[...document.querySelectorAll('#c-repair-tags .rtag')];
   if(!tags.length) return;
-  sumEl.value=tags.map(function(t){return '- '+t.dataset.val;}).join('\n');
+  sumEl.value=tags.map(function(t){
+    var qty=parseInt(t.dataset.qty||1);
+    return '- '+t.dataset.val+(qty>1?' ×'+qty:'');
+  }).join('\n');
   sumEl.dataset.autoFilled='1';
 }
 
@@ -3025,9 +3028,11 @@ async function doComplete( /* PATCH v67 */) {
   }).filter(Boolean);
 
   // อะไหล่
-  const partNames = [...document.querySelectorAll('.c-part-name')].map(el=>el.value.trim()).filter(Boolean);
-  const partQtys  = [...document.querySelectorAll('.c-part-qty')].map(el=>el.value.trim());
-  const partsList = partNames.map((n,i)=>n+(partQtys[i]?` x${partQtys[i]}`:'')).join(', ');
+  const partNames  = [...document.querySelectorAll('.c-part-name')].map(el=>el.value.trim()).filter(Boolean);
+  const partQtys   = [...document.querySelectorAll('.c-part-qty')].map(el=>el.value.trim());
+  const partUnits  = [...document.querySelectorAll('.c-part-unit')].map(el=>el.value.trim());
+  const partPrices = [...document.querySelectorAll('.c-part-price')].map(el=>Number(el.value)||0);
+  const partsList  = partNames.map((n,i)=>n+(partQtys[i]?` x${partQtys[i]}`:'')).join(', ');
 
   // น้ำยา
   const refrigPairs = [...document.querySelectorAll('#c-refrig-list .c-refrig-row')].map(row => {
@@ -3581,226 +3586,236 @@ function openDetail(tid) {
     });
   })();
 
+  // ── Parts table from purchaseOrder ──
+  const _poRows = t.purchaseOrder?.rows || [];
+  const _hasPartsTable = _poRows.length > 0;
+  const _partsTotal = Number(t.partsCost||0);
+  const _wageTotal  = Number(t.repairCost||0);
+  // ── Labor label from repair tags via repairCost ──
+  const _wageLabel = t.wageLabel || (t.repairCost > 0 ? 'ตรวจเช็คและล้างระบบ' : '—');
+
   document.getElementById('detail-body').innerHTML = `
 
-  <!-- HERO HEADER -->
-  <div>
-
-    <!-- Machine banner -->
-    <div style="background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(200,16,46,0.08);border-radius:50%"></div>
-
-      <!-- ID + close row -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:6px">
-          <div style="width:3px;height:16px;background:#c8102e;border-radius:2px"></div>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:#64748b;letter-spacing:.1em">${t.id}</span>
-        </div>
-        <button onclick="closeSheet('detail')" style="width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
-      </div>
-
-      <!-- Machine name -->
-      <div style="font-size:0.95rem;font-weight:900;color:white;line-height:1.25;margin-bottom:2px">${escapeHtml(t.machine||'—')}</div>
-      ${_m?.location?`<div style="font-size:0.65rem;color:#64748b;margin-bottom:8px">📍 ${escapeHtml(_m.location)}</div>`:`<div style="margin-bottom:8px"></div>`}
-
-      <!-- Machine specs -->
-      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
-        ${_serial?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:#94a3b8;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${_serial}</span>`:''}
-        ${t.btuActual?`<span style="font-size:0.58rem;color:#34d399;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #065f46;font-weight:800">${Number(t.btuActual).toLocaleString()} BTU ✓จริง</span>`:(_m?.btu?`<span style="font-size:0.58rem;color:#7dd3fc;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${Number(_m.btu).toLocaleString()} BTU</span>`:'')}
-        ${_m?.refrigerant?`<span style="font-size:0.58rem;color:#fca5a5;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${_m.refrigerant}</span>`:''}
-        ${_m?.vendor?`<span style="font-size:0.58rem;color:#a5b4fc;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155;font-weight:700">${_m.vendor}</span>`:''}
-      </div>
-
-      <!-- Status + priority + cost -->
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <span style="background:${st.bg};color:${st.cl};border:1px solid ${st.bc};border-radius:20px;padding:3px 10px;font-size:0.68rem;font-weight:700">${st.label}</span>
-        <span style="background:${pr.bg};color:${pr.cl};border-radius:20px;padding:3px 10px;font-size:0.68rem;font-weight:600">${pr.label}</span>
-        ${totalCost?`<span style="background:rgba(253,211,77,0.15);color:#fcd34d;border:1px solid rgba(253,211,77,0.3);border-radius:20px;padding:3px 10px;font-size:0.7rem;font-weight:800;margin-left:auto;font-family:'JetBrains Mono',monospace">฿${totalCost.toLocaleString()}</span>`:''}
-      </div>
+  <!-- TOP HEADER bar (like image 4) -->
+  <div style="background:#1a2744;padding:12px 14px 10px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10">
+    <button onclick="closeSheet('detail')" style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:0.62rem;color:#94a3b8;font-weight:700">รายละเอียดงาน</div>
+      <div style="font-size:0.9rem;font-weight:900;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.machine||'—')}</div>
     </div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      ${CU.role==='admin'?`<button onclick="closeSheet('detail');openAssignSheet('${t.id}')" style="padding:7px 12px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit">✏️ แก้ไขงาน</button>`:''}
+      ${(['inprogress','accepted'].includes(t.status) && CU.role==='tech' && t.assigneeId===CU.id)?`<button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),200)" style="padding:7px 12px;background:#16a34a;border:none;color:white;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit">✅ บันทึกผลซ่อม</button>`:''}
+    </div>
+  </div>
 
-    <!-- Problem pill -->
-    <div style="background:white;border-bottom:1px solid #f1f5f9;padding:9px 16px;display:flex;align-items:center;gap:8px">
-      <div style="width:6px;height:6px;border-radius:50%;background:#c8102e;flex-shrink:0"></div>
-      <span style="font-size:0.8rem;font-weight:700;color:#0f172a;flex:1">${escapeHtml(t.problem)}</span>
+  <!-- Machine card -->
+  <div style="background:white;padding:14px 16px 12px;border-bottom:1px solid #f1f5f9">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="width:48px;height:48px;background:#e0f2fe;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem">❄️</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.6rem;color:#94a3b8;font-weight:700;margin-bottom:1px">${t.id}</div>
+        <div style="font-size:0.95rem;font-weight:900;color:#0f172a;line-height:1.2;margin-bottom:4px">${escapeHtml(t.machine||'—')}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          ${_serial?`<span style="background:#f1f5f9;color:#475569;border-radius:4px;padding:2px 7px;font-size:0.6rem;font-weight:700">${_serial}</span>`:''}
+          ${t.btuActual?`<span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:2px 7px;font-size:0.6rem;font-weight:800">${Number(t.btuActual).toLocaleString()} BTU</span>`:(_m?.btu?`<span style="background:#dbeafe;color:#1d4ed8;border-radius:4px;padding:2px 7px;font-size:0.6rem;font-weight:700">${Number(_m.btu).toLocaleString()} BTU</span>`:'')}
+          ${_m?.refrigerant?`<span style="background:#fce7f3;color:#be185d;border-radius:4px;padding:2px 7px;font-size:0.6rem;font-weight:700">${_m.refrigerant}</span>`:''}
+          ${_m?.vendor?`<span style="background:#ede9fe;color:#6d28d9;border-radius:4px;padding:2px 7px;font-size:0.6rem;font-weight:700">${_m.vendor}</span>`:''}
+        </div>
+      </div>
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span style="background:${st.bg};color:${st.cl};border:1px solid ${st.bc};border-radius:20px;padding:3px 10px;font-size:0.65rem;font-weight:700">${st.label}</span>
+        <span style="background:${pr.bg};color:${pr.cl};border-radius:20px;padding:3px 9px;font-size:0.62rem;font-weight:600">${pr.label}</span>
+      </div>
     </div>
   </div>
 
   <!-- BODY -->
-  <div class="detail-inner-body" style="padding:12px 14px 12px">
+  <div style="padding:12px 14px;background:#f8fafc;display:flex;flex-direction:column;gap:10px">
 
-    <!-- Info grid -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px">
-        <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">👤 ผู้แจ้ง</div>
-        <div style="font-size:0.8rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.reporter||'—')}</div>
-        <div style="font-size:0.62rem;color:#64748b;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(_dept)}</div>
-        ${t.contact?`<a href="tel:${escapeHtml(t.contact)}" style="font-size:0.62rem;color:#3b82f6;font-weight:600;text-decoration:none;display:block;margin-top:1px">📞 ${escapeHtml(t.contact)}</a>`:''}
+    <!-- ผู้เกี่ยวข้อง section -->
+    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #f1f5f9">
+        <div style="padding:11px 13px;border-right:1px solid #f1f5f9">
+          <div style="font-size:0.5rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">👤 ผู้แจ้ง</div>
+          <div style="font-size:0.82rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.reporter||'—')}</div>
+          <div style="font-size:0.65rem;color:#64748b;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(_dept)}</div>
+          ${t.contact?`<a href="tel:${escapeHtml(t.contact)}" style="font-size:0.62rem;color:#3b82f6;font-weight:600;text-decoration:none;display:block;margin-top:2px">📞 ${escapeHtml(t.contact)}</a>`:''}
+        </div>
+        <div style="padding:11px 13px">
+          <div style="font-size:0.5rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">🔧 ช่างผู้รับผิดชอบ</div>
+          <div style="font-size:0.82rem;font-weight:800;color:${t.assignee?'#0f172a':'#94a3b8'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.assignee||'ยังไม่มอบหมาย')}</div>
+          <div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">—</div>
+        </div>
       </div>
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px">
-        <div style="font-size:0.52rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">🔧 ช่าง</div>
-        <div style="font-size:0.8rem;font-weight:700;color:${t.assignee?'#0f172a':'#94a3b8'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.assignee||'ยังไม่มอบหมาย')}</div>
-        ${t.scheduledAt?`<div style="font-size:0.62rem;color:#7c3aed;margin-top:1px">📅 ${t.scheduledAt}</div>`:`<div style="font-size:0.62rem;color:#d1d5db;margin-top:1px">—</div>`}
-      </div>
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:7px 11px">
-        <div style="font-size:0.5rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">📅 วันที่แจ้ง</div>
-        <div style="font-size:0.7rem;font-weight:600;color:#374151">${fmtDT(t.createdAt)}</div>
-      </div>
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:7px 11px">
-        <div style="font-size:0.5rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">🔄 อัปเดต</div>
-        <div style="font-size:0.7rem;font-weight:600;color:#374151">${fmtDT(t.updatedAt)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr">
+        <div style="padding:9px 13px;border-right:1px solid #f1f5f9">
+          <div style="font-size:0.5rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">📅 วันที่สร้างงาน</div>
+          <div style="font-size:0.72rem;font-weight:600;color:#374151">${fmtDT(t.createdAt)}</div>
+        </div>
+        <div style="padding:9px 13px">
+          <div style="font-size:0.5rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">🔄 อัปเดตล่าสุด</div>
+          <div style="font-size:0.72rem;font-weight:600;color:#374151">${fmtDT(t.updatedAt)}</div>
+        </div>
       </div>
     </div>
 
-    <!-- Problem detail -->
-    ${t.detail?`
-    <div style="border-radius:10px;border:1px solid #fee2e2;border-left:3px solid #c8102e;padding:9px 13px;margin-bottom:12px;background:#fff8f8">
-      <div style="font-size:0.52rem;font-weight:700;color:#c8102e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">รายละเอียดปัญหา</div>
-      <div style="color:#374151;font-size:0.8rem;line-height:1.65">${escapeHtml(t.detail)}</div>
-    </div>`:''}
-
-    ${(t.waitPart && !t.purchaseOrder)?renderWaitPartBlock(t):''}
-    ${t.purchaseOrder?renderPOBlock(t):''}
-
-    <!-- SUMMARY BLOCK (deduped) -->
-    ${_dedupLines.length>0?`
-    <div style="border-radius:14px;overflow:hidden;margin-bottom:12px;border:1px solid #bbf7d0;box-shadow:0 1px 8px rgba(21,128,61,0.08)">
-      <div style="background:#15803d;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:7px">
-          <span style="font-size:1rem">✅</span>
-          <span style="color:white;font-size:0.82rem;font-weight:800">ผลการซ่อม</span>
-          <span style="background:rgba(255,255,255,0.15);color:white;border-radius:20px;padding:1px 7px;font-size:0.6rem;font-weight:700">${_dedupLines.length} รายการ</span>
+    <!-- รายละเอียดอาการ / งานที่ต้องทำ -->
+    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="padding:10px 13px;border-bottom:1px solid #f8fafc">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="font-size:0.75rem">🔎</span>
+          <span style="font-size:0.72rem;font-weight:800;color:#0f172a">รายละเอียดอาการ / งานที่ต้องทำ</span>
         </div>
-        ${totalCost?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.88rem;font-weight:900;color:#bbf7d0">฿${totalCost.toLocaleString()}</span>`:''}
+        <div style="background:#f8fafc;border-radius:8px;padding:9px 11px">
+          <div style="font-size:0.8rem;font-weight:600;color:#374151;line-height:1.7">${escapeHtml(t.problem||'—')}${t.detail?'\n'+t.detail:''}</div>
+        </div>
       </div>
-      <div style="background:white;padding:10px 12px">
-        ${_dedupLines.map((line,i)=>`
-        <div style="display:flex;align-items:flex-start;gap:9px;padding:${i===0?'0':'7px'} 0 7px;${i>0?'border-top:1px solid #f0fdf4':''}">
-          <div style="width:18px;height:18px;border-radius:5px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+
+    ${(t.waitPart && !t.purchaseOrder)?`<div style="margin-bottom:0">${renderWaitPartBlock(t)}</div>`:''}
+    ${t.purchaseOrder?`<div style="margin-bottom:0">${renderPOBlock(t)}</div>`:''}
+
+    <!-- รูปก่อน/หลังซ่อม 2 column -->
+    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="padding:10px 13px;border-bottom:1px solid #f8fafc;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:0.75rem">📷</span>
+          <span style="font-size:0.72rem;font-weight:800;color:#0f172a">รูปภาพเปรียบเทียบ</span>
+        </div>
+        <span style="font-size:0.6rem;color:#94a3b8;font-weight:600">สูงสุด 3 รูป / ประเภท</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f1f5f9">
+        <div style="background:white;padding:8px">
+          <div style="background:#f59e0b;color:white;border-radius:6px;padding:4px 8px;font-size:0.65rem;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:4px">
+            🔴 ก่อนซ่อม
+            ${hasBefore?`<span style="background:rgba(255,255,255,0.3);border-radius:10px;padding:1px 6px;font-size:0.55rem;margin-left:auto">${t.photosBefore.length} รูป</span>`:''}
           </div>
-          <span style="font-size:0.8rem;color:#1e293b;font-weight:600;line-height:1.5;flex:1">${escapeHtml(line)}</span>
+          ${hasBefore?`
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            ${t.photosBefore.slice(0,4).map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.1rem">⏳</div>`}</div>`;}).join('')}
+          </div>`:`
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 8px;gap:6px">
+            <div style="font-size:1.6rem;opacity:0.25">📷</div>
+            <div style="font-size:0.65rem;color:#d97706;font-weight:600;text-align:center">ยังไม่มีรูป<br>ก่อนซ่อม</div>
+          </div>`}
+        </div>
+        <div style="background:white;padding:8px">
+          <div style="background:#22c55e;color:white;border-radius:6px;padding:4px 8px;font-size:0.65rem;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:4px">
+            ✅ หลังซ่อม
+            ${hasAfter?`<span style="background:rgba(255,255,255,0.3);border-radius:10px;padding:1px 6px;font-size:0.55rem;margin-left:auto">${t.photosAfter.length} รูป</span>`:''}
+          </div>
+          ${hasAfter?`
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            ${t.photosAfter.slice(0,4).map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.1rem">⏳</div>`}</div>`;}).join('')}
+          </div>`:`
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 8px;gap:6px">
+            <div style="font-size:1.6rem;opacity:0.25">📷</div>
+            <div style="font-size:0.65rem;color:#16a34a;font-weight:600;text-align:center">ยังไม่มีรูป<br>หลังซ่อม</div>
+          </div>`}
+        </div>
+      </div>
+    </div>
+
+    <!-- วัสดุ / อะไหล่ที่ใช้ -->
+    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="padding:10px 13px;border-bottom:1px solid #f8fafc;display:flex;align-items:center;gap:6px">
+        <span style="font-size:0.75rem">🔩</span>
+        <span style="font-size:0.72rem;font-weight:800;color:#0f172a">วัสดุ / อะไหล่ที่ใช้</span>
+      </div>
+      ${_hasPartsTable?`
+      <div style="padding:4px 0">
+        <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0;font-size:0.6rem;font-weight:800;color:#94a3b8;text-transform:uppercase;padding:6px 13px;border-bottom:1px solid #f8fafc">
+          <span>รายการวัสดุ</span><span style="text-align:center;padding:0 8px">จำนวน</span><span style="text-align:center;padding:0 8px">หน่วย</span><span style="text-align:right">ราคา/หน่วย</span>
+        </div>
+        ${_poRows.map((r,i)=>`
+        <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0;padding:8px 13px;border-bottom:${i<_poRows.length-1?'1px solid #f8fafc':'none'};background:${i%2===0?'white':'#fafafa'}">
+          <span style="font-size:0.76rem;font-weight:600;color:#1e293b">${escapeHtml(r.name||'')}</span>
+          <span style="font-size:0.76rem;font-weight:700;color:#374151;text-align:center;padding:0 10px">${r.qty||1}</span>
+          <span style="font-size:0.72rem;color:#94a3b8;text-align:center;padding:0 8px">—</span>
+          <span style="font-size:0.76rem;font-weight:700;color:#374151;text-align:right">${(r.price||0).toLocaleString()}</span>
         </div>`).join('')}
-        ${t.parts?`
-        <div style="margin-top:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:7px 10px;display:flex;gap:7px;align-items:flex-start">
-          <span style="font-size:0.85rem">🔩</span>
-          <div>
-            <div style="font-size:0.52rem;color:#15803d;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:1px">อะไหล่ที่ใช้</div>
-            <div style="font-size:0.76rem;color:#166534;font-weight:600">${escapeHtml(t.parts)}</div>
-          </div>
-        </div>`:''}
-        ${(rc||pc)?`
-        <div style="display:grid;grid-template-columns:${rc&&pc?'1fr 1fr':'1fr'};gap:7px;margin-top:8px">
-          ${rc?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;text-align:center">
-            <div style="font-size:0.52rem;color:#1d4ed8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">ค่าแรงซ่อม</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:900;color:#1d4ed8">฿${rc.toLocaleString()}</div>
-          </div>`:''}
-          ${pc?`<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;text-align:center">
-            <div style="font-size:0.52rem;color:#c2410c;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">ค่าอะไหล่</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:900;color:#c2410c">฿${pc.toLocaleString()}</div>
-          </div>`:''}
-          ${(rc&&pc)?`<div style="grid-column:1/-1;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between">
-            <span style="font-size:0.7rem;font-weight:700;color:#166534">💰 รวมทั้งหมด</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:900;color:#15803d">฿${totalCost.toLocaleString()}</span>
-          </div>`:''}\
-        </div>`:''}\
-      </div>
-    </div>`:''}\
-
-    <!-- Photos — responsive compare (แสดงเสมอ) -->
-    <div style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-        <div style="height:1px;flex:1;background:#e5e7eb"></div>
-        <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📷 รูปภาพเปรียบเทียบ</span>
-        <div style="height:1px;flex:1;background:#e5e7eb"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <!-- ก่อนซ่อม -->
-        <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:8px 12px;display:flex;align-items:center;gap:6px">
-            <span style="font-size:0.85rem">🔴</span>
-            <span style="font-size:0.78rem;font-weight:800;color:white;letter-spacing:.04em">ก่อนซ่อม</span>
-            ${hasBefore?`<span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:2px 8px;font-size:0.65rem;font-weight:700;margin-left:auto">${t.photosBefore.length} รูป</span>`:''}
-          </div>
-          <div style="padding:8px">
-            ${hasBefore?`
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px">
-              ${t.photosBefore.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div>`}</div>`;}).join('')}
-            </div>`:`
-            <div style="display:flex;align-items:center;justify-content:center;padding:16px 8px;gap:10px">
-              <div style="font-size:1.8rem;opacity:0.3">📷</div>
-              <div style="font-size:0.75rem;color:#d97706;font-weight:600;line-height:1.4">ยังไม่มีรูปก่อนซ่อม</div>
-              ${['inprogress','accepted','assigned'].includes(t.status) && CU?.role==='tech' && t.assigneeId===CU?.id?`
-              <button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),300)"
-                style="font-size:0.72rem;padding:6px 12px;background:#f59e0b;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap">
-                + ถ่ายรูป
-              </button>`:''}
-            </div>`}
-          </div>
+        <div style="padding:8px 13px;background:#f0fdf4;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.7rem;color:#15803d;font-weight:700">รวมค่าวัสดุ</span>
+          <span style="font-size:0.82rem;font-weight:900;color:#15803d">฿${_partsTotal.toLocaleString()}</span>
         </div>
-        <!-- หลังซ่อม -->
-        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:8px 12px;display:flex;align-items:center;gap:6px">
-            <span style="font-size:0.85rem">🟢</span>
-            <span style="font-size:0.78rem;font-weight:800;color:white;letter-spacing:.04em">หลังซ่อม</span>
-            ${hasAfter?`<span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:2px 8px;font-size:0.65rem;font-weight:700;margin-left:auto">${t.photosAfter.length} รูป</span>`:''}
-          </div>
-          <div style="padding:8px">
-            ${hasAfter?`
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px">
-              ${t.photosAfter.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div>`}</div>`;}).join('')}
-            </div>`:`
-            <div style="display:flex;align-items:center;justify-content:center;padding:16px 8px;gap:10px">
-              <div style="font-size:1.8rem;opacity:0.3">📷</div>
-              <div style="font-size:0.75rem;color:#16a34a;font-weight:600;line-height:1.4">ยังไม่มีรูปหลังซ่อม</div>
-              ${['inprogress','accepted'].includes(t.status) && CU?.role==='tech' && t.assigneeId===CU?.id?`
-              <button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),300)"
-                style="font-size:0.72rem;padding:6px 12px;background:#22c55e;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap">
-                + ถ่ายรูป
-              </button>`:''}
-            </div>`}
-          </div>
-        </div>
-      </div>
-    </div>\
-
-    <!-- Timeline -->
-    <div style="margin-bottom:6px">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-        <div style="height:1px;flex:1;background:#e5e7eb"></div>
-        <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📋 ประวัติดำเนินการ</span>
-        <div style="height:1px;flex:1;background:#e5e7eb"></div>
-      </div>
-      <div class="tl">${(t.history||[]).map((h,i)=>{
-        const cfg=(act=>{
-          if(act.includes('แจ้งงาน'))   return {icon:'📢',bg:'#fef9c3',cl:'#854d0e'};
-          if(act.includes('จ่ายงาน'))   return {icon:'📋',bg:'#ede9fe',cl:'#5b21b6'};
-          if(act.includes('รับงาน'))    return {icon:'✋',bg:'#dbeafe',cl:'#1d4ed8'};
-          if(act.includes('เริ่มซ่อม')) return {icon:'🔧',bg:'#fee2e2',cl:'#b91c1c'};
-          if(act.includes('รออะไหล่')) return {icon:'⏳',bg:'#ffedd5',cl:'#c2410c'};
-          if(act.includes('อะไหล่มา')) return {icon:'📦',bg:'#d1fae5',cl:'#065f46'};
-          if(act.includes('ซ่อมเสร็จ')||act.includes('บันทึกผล')) return {icon:'✅',bg:'#d1fae5',cl:'#065f46'};
-          if(act.includes('ตรวจรับ'))  return {icon:'🔍',bg:'#cffafe',cl:'#0e7490'};
-          if(act.includes('ปิดงาน'))   return {icon:'🔒',bg:'#f1f5f9',cl:'#475569'};
-          if(act.includes('เปลี่ยนช่าง')) return {icon:'🔄',bg:'#ede9fe',cl:'#5b21b6'};
-          if(act.includes('ออก PR')||act.includes('สั่งซื้อ')||act.includes('PR')||act.includes('PO')) return {icon:'🛒',bg:'#fff7ed',cl:'#c2410c'};
-          if(act.includes('แก้ไขใบ')) return {icon:'✏️',bg:'#f5f3ff',cl:'#6d28d9'};
-          if(act.includes('ช่างเซ็น')||act.includes('ยืนยัน')) return {icon:'✍️',bg:'#ecfdf5',cl:'#065f46'};
-          if(act.includes('ยกเลิก')||act.includes('ไม่ผ่าน')) return {icon:'❌',bg:'#fee2e2',cl:'#b91c1c'};
-          if(act.includes('ให้คะแนน')) return {icon:'⭐',bg:'#fef9c3',cl:'#92400e'};
-          return {icon:'💬',bg:'#f3f4f6',cl:'#6b7280'};
-        })(h.act||'');
-        return `<div class="tl-item">
-          <div class="tl-dot" style="background:${cfg.bg}">${cfg.icon}</div>
-          <div class="tl-body">
-            <div class="tl-t" style="color:${cfg.cl}">${h.act}</div>
-            ${h.detail?(()=>{ var _d=h.detail; var _sep=_d.indexOf(' — '); var _desc=_sep>=0?_d.slice(_sep+3).replace(/^[-\s]+/,'').trim():_d; return _desc?`<div class="tl-d">${_desc}</div>`:''; })():''}
-            <div class="tl-time">👤 ${h.by} &nbsp;·&nbsp; 🕐 ${h.at}</div>
-          </div>
-        </div>`;
-      }).join('')}</div>
+      </div>`:`
+      <div style="padding:14px 13px;color:#94a3b8;font-size:0.75rem;text-align:center">ยังไม่มีรายการวัสดุ</div>`}
     </div>
-  </div>
+
+    <!-- ค่าแรง -->
+    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="padding:10px 13px;border-bottom:1px solid #f8fafc;display:flex;align-items:center;gap:6px">
+        <span style="font-size:0.75rem">👷</span>
+        <span style="font-size:0.72rem;font-weight:800;color:#0f172a">ค่าแรง</span>
+      </div>
+      <div style="padding:10px 13px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.8rem;color:#374151;font-weight:600">${escapeHtml(_wageLabel)}</span>
+        <span style="font-size:0.88rem;font-weight:900;color:${_wageTotal?'#1d4ed8':'#94a3b8'}">฿${_wageTotal.toLocaleString()}</span>
+      </div>
+    </div>
+
+    <!-- สรุปรายการ -->
+    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="padding:10px 13px;border-bottom:1px solid #f8fafc;display:flex;align-items:center;gap:6px">
+        <span style="font-size:0.75rem">🧾</span>
+        <span style="font-size:0.72rem;font-weight:800;color:#0f172a">สรุปรายการ</span>
+      </div>
+      <div style="padding:0">
+        <div style="display:grid;grid-template-columns:1fr auto;padding:9px 13px;border-bottom:1px solid #f8fafc">
+          <span style="font-size:0.72rem;color:#64748b;font-weight:600">รวมค่าวัสดุ</span>
+          <span style="font-size:0.78rem;font-weight:800;color:#374151">฿${_partsTotal.toLocaleString()}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto;padding:9px 13px;border-bottom:1px solid #f8fafc">
+          <span style="font-size:0.72rem;color:#64748b;font-weight:600">รวมค่าแรง</span>
+          <span style="font-size:0.78rem;font-weight:800;color:#374151">฿${_wageTotal.toLocaleString()}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto;padding:12px 13px;background:#f0fdf4">
+          <span style="font-size:0.8rem;color:#15803d;font-weight:800">รวมทั้งสิ้น (โดยประมาณ)</span>
+          <span style="font-size:1.05rem;font-weight:900;color:#15803d">฿${totalCost.toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ประวัติดำเนินการ -->
+    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="padding:10px 13px;border-bottom:1px solid #f8fafc;display:flex;align-items:center;gap:6px">
+        <span style="font-size:0.75rem">📋</span>
+        <span style="font-size:0.72rem;font-weight:800;color:#0f172a">ประวัติดำเนินการ</span>
+      </div>
+      <div style="padding:10px 13px">
+        <div class="tl">${(t.history||[]).map((h,i)=>{
+          const cfg=(act=>{
+            if(act.includes('แจ้งงาน'))   return {icon:'📢',bg:'#fef9c3',cl:'#854d0e'};
+            if(act.includes('จ่ายงาน'))   return {icon:'📋',bg:'#ede9fe',cl:'#5b21b6'};
+            if(act.includes('รับงาน'))    return {icon:'✋',bg:'#dbeafe',cl:'#1d4ed8'};
+            if(act.includes('เริ่มซ่อม')) return {icon:'🔧',bg:'#fee2e2',cl:'#b91c1c'};
+            if(act.includes('รออะไหล่')) return {icon:'⏳',bg:'#ffedd5',cl:'#c2410c'};
+            if(act.includes('อะไหล่มา')) return {icon:'📦',bg:'#d1fae5',cl:'#065f46'};
+            if(act.includes('ซ่อมเสร็จ')||act.includes('บันทึกผล')) return {icon:'✅',bg:'#d1fae5',cl:'#065f46'};
+            if(act.includes('ตรวจรับ'))  return {icon:'🔍',bg:'#cffafe',cl:'#0e7490'};
+            if(act.includes('ปิดงาน'))   return {icon:'🔒',bg:'#f1f5f9',cl:'#475569'};
+            if(act.includes('เปลี่ยนช่าง')) return {icon:'🔄',bg:'#ede9fe',cl:'#5b21b6'};
+            if(act.includes('ออก PR')||act.includes('สั่งซื้อ')||act.includes('PR')||act.includes('PO')) return {icon:'🛒',bg:'#fff7ed',cl:'#c2410c'};
+            if(act.includes('แก้ไขใบ')) return {icon:'✏️',bg:'#f5f3ff',cl:'#6d28d9'};
+            if(act.includes('ช่างเซ็น')||act.includes('ยืนยัน')) return {icon:'✍️',bg:'#ecfdf5',cl:'#065f46'};
+            if(act.includes('ยกเลิก')||act.includes('ไม่ผ่าน')) return {icon:'❌',bg:'#fee2e2',cl:'#b91c1c'};
+            if(act.includes('ให้คะแนน')) return {icon:'⭐',bg:'#fef9c3',cl:'#92400e'};
+            return {icon:'💬',bg:'#f3f4f6',cl:'#6b7280'};
+          })(h.act||'');
+          return `<div class="tl-item">
+            <div class="tl-dot" style="background:${cfg.bg}">${cfg.icon}</div>
+            <div class="tl-body">
+              <div class="tl-t" style="color:${cfg.cl}">${h.act}</div>
+              ${h.detail?(()=>{ var _d=h.detail; var _sep=_d.indexOf(' — '); var _desc=_sep>=0?_d.slice(_sep+3).replace(/^[-\s]+/,'').trim():_d; return _desc?`<div class="tl-d">${_desc}</div>`:''; })():''}
+              <div class="tl-time">👤 ${h.by} &nbsp;·&nbsp; 🕐 ${h.at}</div>
+            </div>
+          </div>`;
+        }).join('')}</div>
+      </div>
+    </div>
+
+  </div><!-- end BODY -->
   `
 ;
 
