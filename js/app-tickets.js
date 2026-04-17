@@ -1539,7 +1539,7 @@ function tkCard(t) {
 
   const mac = getMacMap().get(t.machineId);
   const serial = mac?.serial || '';
-  const btu    = mac?.btu ? Number(mac.btu).toLocaleString()+' BTU' : '';
+  const btu    = t.btuActual ? Number(t.btuActual).toLocaleString()+' BTU ✓' : (mac?.btu ? Number(mac.btu).toLocaleString()+' BTU' : '');
   const vendor = mac?.vendor || '';
   const isArrived    = t.purchaseOrder?.receiveStatus === 'received';
   const isPurchasing = t.purchaseOrder?.purchasing && !isArrived;

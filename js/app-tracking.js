@@ -1953,17 +1953,30 @@ function renderInlineRepairPicker() {
         var existing = [...tags.querySelectorAll('.rtag')].find(function(t){return t.dataset.val===it.name;});
         if (existing) {
           existing.remove();
+          updateRepairCount();updateInlineTotals();renderInlineRepairPicker();
+          _autoFillSummaryFromTags();
+          return;
         } else {
           var tag = document.createElement('div');
           tag.className='rtag'; tag.dataset.val=it.name; tag.dataset.qty='1';
-          tag.style.cssText='display:flex;align-items:center;gap:6px;background:#fff0f2;border:1.5px solid #fecdd3;border-radius:8px;padding:6px 10px;font-size:0.72rem;font-weight:700;color:#c8102e';
-          var ico=document.createElement('span');ico.textContent=icon||'🔧';ico.style.cssText='font-size:0.88rem;flex-shrink:0';
-          var txt=document.createElement('span');txt.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';txt.textContent=it.name;
-          var ps=document.createElement('span');ps.style.cssText='color:#15803d;font-size:0.65rem;font-weight:800;flex-shrink:0';ps.textContent=price>0?'฿'+price.toLocaleString():'';
+          tag.style.cssText='display:flex;align-items:center;gap:5px;background:#fff0f2;border:1.5px solid #fecdd3;border-radius:8px;padding:5px 8px;font-size:0.72rem;font-weight:700;color:#c8102e';
+          var ico=document.createElement('span');ico.textContent=icon||'🔧';ico.style.cssText='font-size:0.82rem;flex-shrink:0';
+          var txt=document.createElement('span');txt.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.7rem';txt.textContent=it.name;
+          var ps=document.createElement('span');ps.className='rtag-price';ps.style.cssText='color:#15803d;font-size:0.63rem;font-weight:800;flex-shrink:0';ps.textContent=price>0?'฿'+price.toLocaleString():'';
+          // Qty controls
+          var qtyWrap=document.createElement('div');qtyWrap.style.cssText='display:flex;align-items:center;gap:2px;flex-shrink:0;border-left:1px solid #fecdd3;margin-left:2px;padding-left:5px';
+          var btnM=document.createElement('button');btnM.type='button';btnM.innerHTML='−';
+          btnM.style.cssText='width:18px;height:18px;border-radius:4px;background:#fee2e2;border:none;cursor:pointer;color:#c8102e;font-size:0.75rem;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0';
+          var qtySpan=document.createElement('span');qtySpan.className='rtag-qty-num';qtySpan.style.cssText='font-size:0.7rem;font-weight:900;color:#c8102e;min-width:14px;text-align:center';qtySpan.textContent='1';
+          var btnP=document.createElement('button');btnP.type='button';btnP.innerHTML='+';
+          btnP.style.cssText='width:18px;height:18px;border-radius:4px;background:#fee2e2;border:none;cursor:pointer;color:#c8102e;font-size:0.75rem;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0';
           var del=document.createElement('button');del.type='button';del.innerHTML='✕';
-          del.style.cssText='background:none;border:none;cursor:pointer;color:#ef4444;font-size:0.7rem;padding:0;flex-shrink:0';
+          del.style.cssText='background:none;border:none;cursor:pointer;color:#ef4444;font-size:0.65rem;padding:0;flex-shrink:0;margin-left:1px';
+          btnM.onclick=function(e){e.stopPropagation();var q=parseInt(tag.dataset.qty||1);if(q<=1){tag.remove();updateRepairCount();updateInlineTotals();renderInlineRepairPicker();return;}tag.dataset.qty=String(q-1);qtySpan.textContent=String(q-1);if(ps&&price>0)ps.textContent='฿'+(price*(q-1)).toLocaleString();updateRepairCount();updateInlineTotals();renderInlineRepairPicker();};
+          btnP.onclick=function(e){e.stopPropagation();var q=parseInt(tag.dataset.qty||1);tag.dataset.qty=String(q+1);qtySpan.textContent=String(q+1);if(ps&&price>0)ps.textContent='฿'+(price*(q+1)).toLocaleString();updateRepairCount();updateInlineTotals();renderInlineRepairPicker();};
           del.onclick=function(e){e.stopPropagation();tag.remove();updateRepairCount();updateInlineTotals();renderInlineRepairPicker();};
-          tag.append(ico,txt,ps,del);
+          qtyWrap.append(btnM,qtySpan,btnP);
+          tag.append(ico,txt,ps,qtyWrap,del);
           tags.appendChild(tag);
         }
         updateRepairCount();updateInlineTotals();renderInlineRepairPicker();
@@ -1979,9 +1992,12 @@ function updateInlineTotals() {
   var groups = _getRepairGroups();
   var tags = [...document.querySelectorAll('#c-repair-tags .rtag')];
   var repairTotal = 0;
+  var totalQty = 0;
   tags.forEach(function(t){
     var name=t.dataset.val;
-    for(var i=0;i<groups.length;i++){var it=groups[i].items&&groups[i].items.find(function(x){return x.name===name;});if(it){repairTotal+=(it.price||REPAIR_PRICE[name]||0);break;}}
+    var qty=parseInt(t.dataset.qty||1);
+    totalQty += qty;
+    for(var i=0;i<groups.length;i++){var it=groups[i].items&&groups[i].items.find(function(x){return x.name===name;});if(it){repairTotal+=(it.price||REPAIR_PRICE[name]||0)*qty;break;}}
   });
   var wage = Number((document.getElementById('c-wage-select')||{value:0}).value||0);
   var grand = repairTotal + wage;
@@ -1990,7 +2006,7 @@ function updateInlineTotals() {
   if(rtEl) rtEl.textContent='฿'+repairTotal.toLocaleString();
   if(gtEl) gtEl.textContent='฿'+grand.toLocaleString();
   var cnt=document.getElementById('c-repair-count');
-  if(cnt) cnt.textContent=tags.length+' รายการ';
+  if(cnt) cnt.textContent=totalQty+' รายการ';
 }
 function _autoFillSummaryFromTags() {
   var sumEl=document.getElementById('c-sum');
@@ -2637,6 +2653,9 @@ function openCompleteSheet(tid) {
   if (_gt) _gt.textContent = '฿0';
   const _rps = document.getElementById('c-rp-search');
   if (_rps) _rps.value = '';
+  // reset BTU actual
+  const _btuA = document.getElementById('c-btu-actual');
+  if (_btuA) _btuA.value = '';
   // re-enable options ที่ disabled ค้างจากครั้งก่อน
   document.querySelectorAll('#c-repair-item option').forEach(o => { o.disabled=false; o.style.color=''; });
   // init chip groups
@@ -2654,7 +2673,11 @@ function openCompleteSheet(tid) {
   const strip = document.getElementById('c-job-strip');
   if (strip) {
     const _csMac = getMacMap().get(t.machineId);
-    const _csBtu = _csMac?.btu ? Number(_csMac.btu).toLocaleString() + ' BTU' : '';
+    const _csBtuReg = _csMac?.btu ? Number(_csMac.btu) : 0;
+    const _csBtuActual = t.btuActual ? Number(t.btuActual) : 0;
+    const _csBtu = (_csBtuActual > 0)
+      ? Number(_csBtuActual).toLocaleString() + ' BTU (จริง)'
+      : (_csBtuReg > 0 ? Number(_csBtuReg).toLocaleString() + ' BTU' : '');
     const _csDept = _csMac?.dept || t.dept || '';
     const _csVendor = _csMac?.vendor || t.vendor || '';
     // compact single-row layout — ป้องกัน header ล้นจอ
@@ -2862,6 +2885,16 @@ function openCompleteSheet(tid) {
     // ถ้าไม่มีรูปผู้แจ้ง → pendingPhotos.before = [] รอช่างถ่ายเอง (ตั้งค่าแล้วข้างบน)
   }
 
+  // ── Pre-fill BTU actual from machine record ──
+  const _btuActualEl = document.getElementById('c-btu-actual');
+  if (_btuActualEl) {
+    const _csMac2 = getMacMap ? getMacMap().get(t.machineId) : null;
+    if (t.btuActual) {
+      _btuActualEl.value = t.btuActual;
+    } else if (_csMac2?.btu) {
+      _btuActualEl.value = _csMac2.btu;
+    }
+  }
   // ── Init inline picker & wage dropdown ──
   if (typeof initInlineRepairPicker === 'function') initInlineRepairPicker();
 
@@ -3053,6 +3086,9 @@ async function doComplete( /* PATCH v67 */) {
     t.summary = repairStr ? repairStr + (manualNote ? '\n' + manualNote : '') : sum;
   }
   t.parts   = allParts;
+  // บันทึก BTU จริงที่ช่างกรอก
+  const _btuActualVal = document.getElementById('c-btu-actual')?.value;
+  if (_btuActualVal && Number(_btuActualVal) > 0) t.btuActual = Number(_btuActualVal);
   // คำนวณ repairCost จาก price list
   const _rg = _getRepairGroups ? _getRepairGroups() : (db.repairGroups||[]);
   let _rc = 0;
@@ -3570,7 +3606,7 @@ function openDetail(tid) {
       <!-- Machine specs -->
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
         ${_serial?`<span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:#94a3b8;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${_serial}</span>`:''}
-        ${_m?.btu?`<span style="font-size:0.58rem;color:#7dd3fc;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${Number(_m.btu).toLocaleString()} BTU</span>`:''}
+        ${t.btuActual?`<span style="font-size:0.58rem;color:#34d399;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #065f46;font-weight:800">${Number(t.btuActual).toLocaleString()} BTU ✓จริง</span>`:(_m?.btu?`<span style="font-size:0.58rem;color:#7dd3fc;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${Number(_m.btu).toLocaleString()} BTU</span>`:'')}
         ${_m?.refrigerant?`<span style="font-size:0.58rem;color:#fca5a5;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155">${_m.refrigerant}</span>`:''}
         ${_m?.vendor?`<span style="font-size:0.58rem;color:#a5b4fc;background:#1e293b;padding:2px 7px;border-radius:4px;border:1px solid #334155;font-weight:700">${_m.vendor}</span>`:''}
       </div>
