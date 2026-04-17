@@ -3965,14 +3965,6 @@ function openDetail(tid) {
   if (CU.role==='admin' && !t.assigneeId) {
     acts.push(`<button class="btn btn-full" style="background:#fff5f5;color:#dc2626;border:1.5px solid #fecaca" onclick="deleteTicket('${t.id}')">🗑️ ลบงานนี้</button>`);
   }
-  // ✅ FIX: ปุ่มตรวจรับงาน — reporter เจ้าของงาน หรือ admin เมื่อ status = 'done'
-  if (t.status === 'done') {
-    const isOwner = CU.role === 'reporter' && t.reporterId === CU.id;
-    const isAdmin = CU.role === 'admin';
-    if (isOwner || isAdmin) {
-      acts.push(`<button class="btn btn-ok btn-full" onclick="openVerifySheet('${t.id}')">🔵 ตรวจรับงาน</button>`);
-    }
-  }
   document.getElementById('detail-actions').innerHTML = acts.join('');
   openSheet('detail');
   // ── BUG FIX (Bug 5): ป้องกัน _resolveDetailPhotos ทำงาน 2 instance พร้อมกัน ──

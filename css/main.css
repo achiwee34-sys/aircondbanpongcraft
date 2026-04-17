@@ -1010,13 +1010,8 @@ html, body { height: 100%; margin: 0; padding: 0; overflow-x: hidden !important;
 .sheet.open { display: flex; flex-direction: column; overflow-y: hidden; }
 .sheet.open .sheet-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 /* Bug-fix: verify-sheet keyboard-safe max-height */
-/* FIX z-index: verify must be above detail-fullpage (502) and its overlay (501) */
 #verify-sheet {
   max-height: calc(96dvh - env(safe-area-inset-top, 0px)) !important;
-  z-index: 510 !important;
-}
-#verify-overlay {
-  z-index: 509 !important;
 }
 #verify-sheet .sheet-body {
   overflow-y: auto;

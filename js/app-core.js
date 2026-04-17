@@ -3315,11 +3315,8 @@ function openSheet(name){
     if (navigator.vibrate) navigator.vibrate(30);
     return;
   }
-  // FIX: sheets ที่เปิดซ้อนบน detail (verify/assign/complete) ไม่ควรปิด detail-fullpage
-  const _keepDetailOpen = ['verify','assign','complete'].includes(name);
   document.querySelectorAll('.sheet').forEach(s => {
     if (s.id !== name+'-sheet') {
-      if (_keepDetailOpen && s.id === 'detail-sheet') return; // อย่าปิด detail
       s.classList.remove('open');
       s.style.visibility = ''; s.style.pointerEvents = '';
       if (s._kbHandler) { s.removeEventListener('focusin', s._kbHandler); delete s._kbHandler; }
@@ -3327,7 +3324,6 @@ function openSheet(name){
   });
   document.querySelectorAll('.sheet-overlay').forEach(o => {
     if (o.id !== name+'-overlay') {
-      if (_keepDetailOpen && o.id === 'detail-overlay') return; // อย่าปิด detail overlay
       o.classList.remove('open'); o.style.display = '';
     }
   });
