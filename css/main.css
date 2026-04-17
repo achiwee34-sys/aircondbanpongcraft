@@ -251,29 +251,9 @@ body.dark-mode .sheet [style*="background:#eef2ff"] { background:#0c1228 !import
 body.dark-mode .sheet [style*="background:#fffbeb"] { background:#160f00 !important; }
 
 /* ─ complete-sheet ─ */
-body.dark-mode #complete-sheet { background:#0f172a !important; }
-body.dark-mode #complete-sheet > div { background:#0f172a !important; }
-body.dark-mode #complete-sheet .sheet-body { background:#0f172a !important; }
-
-/* complete-sheet: full-page display */
-#complete-sheet { display:none; flex-direction:column; }
-#complete-sheet.open { display:flex !important; }
-
-/* complete-sheet mobile: collapse all 2-col grids to 1 col */
-@media (max-width: 767px) {
-  #complete-sheet [style*="grid-template-columns:1fr 280px"],
-  #complete-sheet [style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-  #complete-sheet [style*="grid-template-columns:1fr 1fr"][style*="gap:12px"] {
-    grid-template-columns: 1fr !important;
-  }
-  #complete-sheet [style*="max-height:340px"] {
-    max-height: 260px !important;
-  }
-  /* job strip hidden on narrow screens */
-  #c-job-strip { display:none !important; }
-}
+body.dark-mode #complete-sheet { background:rgba(0,0,0,0.75) !important; }
+body.dark-mode #complete-sheet > div { background:#111827 !important; }
+body.dark-mode #complete-sheet .sheet-body { background:#111827 !important; }
 body.dark-mode #detail-sheet > div:nth-child(2) { background:#111827 !important; border-bottom-color:#1e2d45 !important; }
 body.dark-mode #detail-title { color:#e2e8f0 !important; }
 
