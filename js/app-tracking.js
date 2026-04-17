@@ -2596,14 +2596,13 @@ function _showCompleteDialog() {
   const el = document.getElementById('complete-sheet');
   if (!el) return;
   el.style.display = 'flex';
-  el._backdropHandler = (e) => { if (e.target === el) closeCompleteSheet(); };
-  el.addEventListener('click', el._backdropHandler);
+  if (typeof lockBodyScroll === 'function') lockBodyScroll();
 }
 function closeCompleteSheet() {
   const el = document.getElementById('complete-sheet');
   if (!el) return;
   el.style.display = 'none';
-  if (el._backdropHandler) el.removeEventListener('click', el._backdropHandler);
+  if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
   const bgrid = document.getElementById('c-grid-before');
   if (bgrid) bgrid.innerHTML = '';
   if (typeof pendingPhotos !== 'undefined') pendingPhotos.before = [];
@@ -3653,7 +3652,7 @@ function openDetail(tid) {
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0">
       ${CU.role==='admin'?`<button onclick="closeSheet('detail');openAssignSheet('${t.id}')" style="padding:7px 12px;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);color:white;border-radius:9px;font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px">✏️ แก้ไขงาน</button>`:''}
-      ${(['inprogress','accepted'].includes(t.status) && CU.role==='tech' && t.assigneeId===CU.id)?`<button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),200)" style="padding:7px 12px;background:#16a34a;border:none;color:white;border-radius:9px;font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit">✅ บันทึกผลซ่อม</button>`:''}
+      ${(['inprogress','accepted'].includes(t.status) && CU.role==='tech' && t.assigneeId===CU.id)?`<button onclick="openCompleteSheet('${t.id}')" style="padding:7px 12px;background:#16a34a;border:none;color:white;border-radius:9px;font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit">✅ บันทึกผลซ่อม</button>`:''}
     </div>
   </div>
 
@@ -3914,7 +3913,7 @@ function openDetail(tid) {
     acts.push(`<button class="btn btn-primary btn-full" onclick="this.disabled=true;this.textContent='⏳ กำลังรับงาน...';closeSheet('detail');doAccept('${t.id}')">✋ รับงาน</button>`); // ✅ H4 fix
   }
   if (CU.role==='tech' && t.assigneeId===CU.id && ['accepted','inprogress'].includes(t.status)) {
-    acts.push(`<button class="btn btn-ok btn-full" onclick="closeSheet('detail');openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);
+    acts.push(`<button class="btn btn-ok btn-full" onclick="openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);
   }
   if (CU.role==='tech' && t.assigneeId===CU.id && t.status==='waiting_part') {
     const arrived = t.purchaseOrder?.receiveStatus === 'received';
@@ -3922,7 +3921,7 @@ function openDetail(tid) {
     const poNum = t.purchaseOrder?.po || '';
     const hasPO = !!(t.purchaseOrder);
     if (arrived) {
-      acts.push(`<button class="btn btn-ok btn-full" onclick="closeSheet('detail');openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);
+      acts.push(`<button class="btn btn-ok btn-full" onclick="openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);
     } else {
       const prLine = prNum
         ? `<div style="margin-top:6px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap">
@@ -3964,6 +3963,14 @@ function openDetail(tid) {
   }
   if (CU.role==='admin' && !t.assigneeId) {
     acts.push(`<button class="btn btn-full" style="background:#fff5f5;color:#dc2626;border:1.5px solid #fecaca" onclick="deleteTicket('${t.id}')">🗑️ ลบงานนี้</button>`);
+  }
+  // ✅ FIX: ปุ่มตรวจรับงาน — reporter เจ้าของงาน หรือ admin เมื่อ status = 'done'
+  if (t.status === 'done') {
+    const isOwner = CU.role === 'reporter' && t.reporterId === CU.id;
+    const isAdmin = CU.role === 'admin';
+    if (isOwner || isAdmin) {
+      acts.push(`<button class="btn btn-ok btn-full" onclick="openVerifySheet('${t.id}')">🔵 ตรวจรับงาน</button>`);
+    }
   }
   document.getElementById('detail-actions').innerHTML = acts.join('');
   openSheet('detail');
