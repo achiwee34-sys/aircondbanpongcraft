@@ -1633,7 +1633,7 @@ select:not(#pur-po-panel select):not(#pur-po-panel *) {
 @media (min-width: 768px) {
   #detail-sheet.detail-fullpage,
   #detail-sheet.detail-fullpage.open {
-    max-width: 600px !important;
+    max-width: 800px !important;
     left: 50% !important;
     transform: translateX(calc(-50% + 50vw - 50% + 100%)) !important;
   }

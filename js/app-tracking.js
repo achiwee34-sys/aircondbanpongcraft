@@ -3105,6 +3105,14 @@ async function doComplete( /* PATCH v67 */) {
     _rc += price*qty;
   });
   t.repairCost = _rc;
+  // Bug 2 fix: save wage dropdown label so detail page shows correct label
+  const _wageSelEl = document.getElementById('c-wage-select');
+  if (_wageSelEl && _wageSelEl.value) {
+    const _wageOpt = _wageSelEl.options[_wageSelEl.selectedIndex];
+    t.wageLabel = _wageOpt ? _wageOpt.text.split(' — ')[0].trim() : '';
+  } else {
+    t.wageLabel = '';
+  }
   // partsCost = PO total (ใช้ค่าล่าสุด ไม่ให้ 0 ทับค่าเดิมที่บันทึกไว้)
   const _poTotal = Number(t.purchaseOrder?.total || 0);
   t.partsCost = Math.max(_poTotal, Number(t.partsCost || 0));
@@ -3653,7 +3661,7 @@ function openDetail(tid) {
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0">
       ${CU.role==='admin'?`<button onclick="closeSheet('detail');openAssignSheet('${t.id}')" style="padding:7px 12px;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);color:white;border-radius:9px;font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px">✏️ แก้ไขงาน</button>`:''}
-      ${(['inprogress','accepted'].includes(t.status) && CU.role==='tech' && t.assigneeId===CU.id)?`<button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),200)" style="padding:7px 12px;background:#16a34a;border:none;color:white;border-radius:9px;font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit">✅ บันทึกผลซ่อม</button>`:''}
+      ${(['inprogress','accepted'].includes(t.status) && CU.role==='tech' && t.assigneeId===CU.id)?`<button onclick="openCompleteSheet('${t.id}')" style="padding:7px 12px;background:#16a34a;border:none;color:white;border-radius:9px;font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit">✅ บันทึกผลซ่อม</button>`:''}
     </div>
   </div>
 
@@ -3786,6 +3794,19 @@ function openDetail(tid) {
         </div>
       </div>
     </div>
+
+    <!-- สรุปผลการดำเนินการ (repair tags) -->
+    ${_dedupLines.length ? `
+    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+      <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
+        <span style="font-size:0.75rem">🔧</span>
+        <span style="font-size:0.75rem;font-weight:800;color:#0f172a">สรุปผลการดำเนินการ</span>
+        <span style="margin-left:auto;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;padding:2px 9px;font-size:0.6rem;font-weight:800">${_dedupLines.length} รายการ</span>
+      </div>
+      <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px">
+        ${_dedupLines.map(line=>`<span style="background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0;border-radius:20px;padding:5px 13px;font-size:0.72rem;font-weight:700;line-height:1.3">${escapeHtml(line)}</span>`).join('')}
+      </div>
+    </div>` : ''}
 
     <!-- วัสดุ / อะไหล่ที่ใช้ + ค่าแรง (2 column) -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
