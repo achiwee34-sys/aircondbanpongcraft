@@ -3584,7 +3584,7 @@ function openDetail(tid) {
   document.getElementById('detail-body').innerHTML = `
 
   <!-- HERO HEADER -->
-  <div style="margin:-12px -16px 0">
+  <div>
 
     <!-- Machine banner -->
     <div style="background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
@@ -3627,7 +3627,7 @@ function openDetail(tid) {
   </div>
 
   <!-- BODY -->
-  <div style="padding:14px 0 12px">
+  <div class="detail-inner-body" style="padding:12px 14px 12px">
 
     <!-- Info grid -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -3707,32 +3707,32 @@ function openDetail(tid) {
       </div>
     </div>`:''}\
 
-    <!-- Photos — side-by-side compare (แสดงเสมอ) -->
+    <!-- Photos — responsive compare (แสดงเสมอ) -->
     <div style="margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
         <span style="font-size:0.55rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em">📷 รูปภาพเปรียบเทียบ</span>
         <div style="height:1px;flex:1;background:#e5e7eb"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:8px">
         <!-- ก่อนซ่อม -->
         <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:6px 10px;display:flex;align-items:center;gap:5px">
-            <span style="font-size:0.7rem">🔴</span>
-            <span style="font-size:0.65rem;font-weight:800;color:white;letter-spacing:.04em">ก่อนซ่อม</span>
-            ${hasBefore?`<span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:1px 6px;font-size:0.55rem;font-weight:700;margin-left:auto">${t.photosBefore.length} รูป</span>`:''}
+          <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:8px 12px;display:flex;align-items:center;gap:6px">
+            <span style="font-size:0.85rem">🔴</span>
+            <span style="font-size:0.78rem;font-weight:800;color:white;letter-spacing:.04em">ก่อนซ่อม</span>
+            ${hasBefore?`<span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:2px 8px;font-size:0.65rem;font-weight:700;margin-left:auto">${t.photosBefore.length} รูป</span>`:''}
           </div>
-          <div style="padding:6px">
+          <div style="padding:8px">
             ${hasBefore?`
-            <div style="display:grid;grid-template-columns:${t.photosBefore.length===1?'1fr':'1fr 1fr'};gap:4px">
-              ${t.photosBefore.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px">
+              ${t.photosBefore.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#fef3c7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div>`}</div>`;}).join('')}
             </div>`:`
-            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px">
-              <div style="font-size:1.4rem;opacity:0.35">📷</div>
-              <div style="font-size:0.6rem;color:#d97706;font-weight:600;text-align:center;line-height:1.4">ยังไม่มีรูป<br>ก่อนซ่อม</div>
+            <div style="display:flex;align-items:center;justify-content:center;padding:16px 8px;gap:10px">
+              <div style="font-size:1.8rem;opacity:0.3">📷</div>
+              <div style="font-size:0.75rem;color:#d97706;font-weight:600;line-height:1.4">ยังไม่มีรูปก่อนซ่อม</div>
               ${['inprogress','accepted','assigned'].includes(t.status) && CU?.role==='tech' && t.assigneeId===CU?.id?`
               <button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),300)"
-                style="margin-top:4px;font-size:0.6rem;padding:4px 8px;background:#f59e0b;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit">
+                style="font-size:0.72rem;padding:6px 12px;background:#f59e0b;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap">
                 + ถ่ายรูป
               </button>`:''}
             </div>`}
@@ -3740,22 +3740,22 @@ function openDetail(tid) {
         </div>
         <!-- หลังซ่อม -->
         <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:6px 10px;display:flex;align-items:center;gap:5px">
-            <span style="font-size:0.7rem">🟢</span>
-            <span style="font-size:0.65rem;font-weight:800;color:white;letter-spacing:.04em">หลังซ่อม</span>
-            ${hasAfter?`<span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:1px 6px;font-size:0.55rem;font-weight:700;margin-left:auto">${t.photosAfter.length} รูป</span>`:''}
+          <div style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:8px 12px;display:flex;align-items:center;gap:6px">
+            <span style="font-size:0.85rem">🟢</span>
+            <span style="font-size:0.78rem;font-weight:800;color:white;letter-spacing:.04em">หลังซ่อม</span>
+            ${hasAfter?`<span style="background:rgba(255,255,255,0.25);color:white;border-radius:10px;padding:2px 8px;font-size:0.65rem;font-weight:700;margin-left:auto">${t.photosAfter.length} รูป</span>`:''}
           </div>
-          <div style="padding:6px">
+          <div style="padding:8px">
             ${hasAfter?`
-            <div style="display:grid;grid-template-columns:${t.photosAfter.length===1?'1fr':'1fr 1fr'};gap:4px">
-              ${t.photosAfter.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.2rem">⏳</div>`}</div>`;}).join('')}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px">
+              ${t.photosAfter.map((p,i)=>{const isUrl=p&&(p.startsWith('https://')||p.startsWith('http://')||p.startsWith('data:'));const isFsKey=p&&p.startsWith('fs:');return`<div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#dcfce7" data-photo-key="${p}" data-tid="${t.id}" onclick="${isFsKey?'_resolveAndLightbox(this)':`openLightbox('${p}')`}"><img loading="lazy" decoding="async" src="${isUrl?p:'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}" style="width:100%;height:100%;object-fit:cover;${isUrl?'opacity:1':'opacity:0;transition:opacity 0.3s'}"/>${isUrl?'':`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.4rem">⏳</div>`}</div>`;}).join('')}
             </div>`:`
-            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px">
-              <div style="font-size:1.4rem;opacity:0.35">📷</div>
-              <div style="font-size:0.6rem;color:#16a34a;font-weight:600;text-align:center;line-height:1.4">ยังไม่มีรูป<br>หลังซ่อม</div>
+            <div style="display:flex;align-items:center;justify-content:center;padding:16px 8px;gap:10px">
+              <div style="font-size:1.8rem;opacity:0.3">📷</div>
+              <div style="font-size:0.75rem;color:#16a34a;font-weight:600;line-height:1.4">ยังไม่มีรูปหลังซ่อม</div>
               ${['inprogress','accepted'].includes(t.status) && CU?.role==='tech' && t.assigneeId===CU?.id?`
               <button onclick="closeSheet('detail');setTimeout(()=>openCompleteSheet('${t.id}'),300)"
-                style="margin-top:4px;font-size:0.6rem;padding:4px 8px;background:#22c55e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit">
+                style="font-size:0.72rem;padding:6px 12px;background:#22c55e;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap">
                 + ถ่ายรูป
               </button>`:''}
             </div>`}

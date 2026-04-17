@@ -1049,6 +1049,28 @@ html, body { height: 100%; margin: 0; padding: 0; overflow-x: hidden !important;
 #users-list { position: relative; z-index: 1; pointer-events: auto; }
 #users-list * { pointer-events: auto; }
 /* Bug3-fix: detail card centres vertically on mobile — ไม่ต้อง display:none (ใช้ .sheet default แล้ว) */
+/* ── detail-sheet: full-screen on mobile for better viewing ── */
+#detail-sheet {
+  max-height: calc(96vh - env(safe-area-inset-top, 0px)) !important;
+  max-height: calc(96dvh - env(safe-area-inset-top, 0px)) !important;
+}
+#detail-body {
+  padding: 0 !important;
+}
+#detail-body > div:first-child {
+  /* hero header — stretch edge to edge */
+  margin: 0 !important;
+}
+/* Body inner padding (after hero header) */
+#detail-body .detail-inner-body {
+  padding: 12px 14px;
+}
+@media (max-width: 767px) {
+  #detail-sheet {
+    max-height: calc(97dvh - env(safe-area-inset-top, 0px)) !important;
+    border-radius: 22px 22px 0 0 !important;
+  }
+}
 /* ── complete sheet (div overlay) ── */
 #complete-sheet { display:none; }
 #complete-sheet > div input, #complete-sheet > div select,
