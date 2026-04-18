@@ -1259,8 +1259,9 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
   :root { --head-h: 40px; }
 }
 
-/* Tablet landscape (768px+, height > 600px) — sidebar แสดงปกติ */
-@media (orientation: landscape) and (min-height: 601px) and (min-width: 768px) {
+/* ── LANDSCAPE ทุก device ที่ width >= 768px — ใช้ sidebar ข้างซ้ายเสมอ ──
+   ครอบคลุม: iPhone landscape (896x414), tablet ทุกขนาด */
+@media (orientation: landscape) and (min-width: 768px) {
   /* sidebar แสดงปกติ ไม่หาย — ต้องมีทั้ง display และ width/flex-direction */
   .bottom-nav {
     display: flex !important;
@@ -1269,63 +1270,47 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
     flex-direction: column !important;
     height: 100% !important;
     min-height: 100% !important;
-    border-right: 1px solid #e5e7eb !important;
+    border-right: 1px solid rgba(255,255,255,0.1) !important;
     border-top: none !important;
     order: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
-  #app { flex-direction: row !important; }
-  #main-col { order: 2 !important; flex: 1 1 0 !important; }
+  #app { flex-direction: row !important; overflow: hidden !important; }
+  #main-col { order: 2 !important; flex: 1 1 0 !important; min-height: 0 !important; overflow: hidden !important; }
+  .content-area { flex: 1 1 0 !important; overflow: hidden !important; min-height: 0 !important; position: relative !important; }
+  .content-area > .page { overflow-y: auto !important; overflow-x: hidden !important; padding: 12px 16px 16px !important; }
   #app.sidebar-collapsed .bottom-nav {
     width: 56px !important;
     min-width: 56px !important;
   }
-}
-
-/* ── LANDSCAPE มือถือ/tablet ขนาดกลาง (width >= 768px, height <= 600px) ──
-   เช่น มือถือ landscape, tablet เล็กๆ — ใช้ bottom nav แนวนอน */
-@media (orientation: landscape) and (max-height: 600px) and (min-width: 768px) {
-  :root { --nav-h: 48px; }
-  #app { flex-direction: column !important; overflow: hidden !important; }
-  .bottom-nav {
-    order: 2 !important;
-    width: 100% !important; min-width: 100% !important;
-    height: auto !important; min-height: var(--nav-h) !important;
-    flex-direction: row !important;
-    border-top: 1px solid #e5e7eb !important;
-    border-right: none !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    flex-shrink: 0 !important;
-    display: flex !important;
-    background: #111827 !important;
-  }
-  #main-col { order: 1 !important; flex: 1 1 0 !important; min-height: 0 !important; overflow: hidden !important; }
-  .content-area { flex: 1 1 0 !important; overflow: hidden !important; min-height: 0 !important; position: relative !important; }
-  .content-area > .page:not(#pg-purchase) { overflow-y: auto !important; overflow-x: hidden !important; padding: 12px 16px calc(var(--nav-h, 48px) + var(--safe-bot, 0px) + 8px) !important; }
+  /* bn-item แนวตั้งแบบ sidebar row */
   .bn-item {
-    flex-direction: column !important;
-    justify-content: center !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
     align-items: center !important;
-    gap: 1px !important;
-    padding: 4px 2px !important;
-    margin: 0 !important;
-    border-radius: 0 !important;
-    flex: 1 1 0 !important;
-    width: auto !important;
-    overflow: visible !important;
+    gap: 10px !important;
+    padding: 10px 16px !important;
+    border-radius: 8px !important;
+    margin: 1px 6px !important;
+    width: calc(100% - 12px) !important;
+    flex: 0 0 auto !important;
   }
-  .bn-item:not(.active) .bn-icon { color: #64748b !important; }
-  .bn-item:not(.active) .bn-icon svg { stroke: #64748b !important; }
-  .bn-icon { width: 18px !important; height: 18px !important; }
-  .bn-icon svg { width: 18px !important; height: 18px !important; }
-  .bn-label { font-size: 0.45rem !important; display: block !important; opacity: 1 !important; max-width: 100% !important; white-space: nowrap !important; color: #64748b !important; }
+  .bn-icon { width: 20px !important; height: 20px !important; flex-shrink: 0 !important; }
+  .bn-icon svg { width: 20px !important; height: 20px !important; }
+  .bn-label { font-size: 0.72rem !important; display: block !important; opacity: 1 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; text-align: left !important; color: #94a3b8 !important; }
   .bn-item.active .bn-label { color: #ffffff !important; }
   .bn-item.active .bn-icon { color: #ffffff !important; }
   .bn-item.active .bn-icon svg { stroke: #ffffff !important; }
-  .bn-item.active::after { top: 0 !important; left: 15% !important; right: 15% !important; height: 2px !important; bottom: auto !important; }
-  .topbar { height: 40px !important; padding-top: 0 !important; }
-  :root { --head-h: 40px; }
+  .bn-item:not(.active) .bn-icon { color: #64748b !important; }
+  .bn-item:not(.active) .bn-icon svg { stroke: #64748b !important; }
+  .bn-item.active::after { display: none !important; }
+  #app.sidebar-collapsed .bn-label { display: none !important; }
+  #app.sidebar-collapsed .bn-item { justify-content: center !important; padding: 10px !important; margin: 1px auto !important; width: 40px !important; }
 }
+
+/* ── LANDSCAPE มือถือ/tablet ขนาดกลาง (width >= 768px, height <= 600px) ──
+   REMOVED — ตอนนี้ใช้ sidebar ทุก device landscape width >= 768px */
 
 
 .sc-card { background:white; border:1px solid #e5e7eb; border-radius:10px; padding:8px 4px 6px; text-align:center; cursor:pointer; flex:1 1 0; min-width:0; transition:all 0.12s; box-shadow:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
@@ -1626,7 +1611,7 @@ select:not(#pur-po-panel select):not(#pur-po-panel *) {
   display: none; /* ซ่อนโดย default */
 }
 
-@media (orientation: landscape) and (min-height: 601px) and (min-width: 768px) {
+@media (orientation: landscape) and (min-width: 768px) {
   #sidebar-toggle-btn {
     display: flex;
     align-items: center;
