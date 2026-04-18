@@ -1034,6 +1034,12 @@ html, body { height: 100%; margin: 0; padding: 0; overflow-x: hidden !important;
 #verify-sheet {
   max-height: calc(96dvh - env(safe-area-inset-top, 0px)) !important;
   z-index: 510 !important;
+  overflow: hidden !important;
+}
+#verify-sheet.open {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
 #verify-overlay {
   z-index: 509 !important;
