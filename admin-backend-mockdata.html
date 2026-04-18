@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCG AirCon — Admin Backend (Mock Data)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --surface3: #212d40;
+  --border: #243047;
+  --border2: #2d3f5a;
+  --text: #e8eef8;
+  --muted: #7a90b0;
+  --accent: #2563eb;
+  --accent2: #3b82f6;
+  --green: #10b981;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+  --orange: #f97316;
+  --nav-w: 220px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans Thai', sans-serif; overflow: hidden; }
+
+.shell { display: flex; height: 100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--nav-w); flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 900; color: white;
+  flex-shrink: 0;
+}
+.logo-text { font-size: 0.78rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+.logo-sub { font-size: 0.6rem; color: var(--muted); font-weight: 400; }
+.nav-section { font-size: 0.55rem; font-weight: 700; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; padding: 14px 18px 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; cursor: pointer; transition: all .15s;
+  font-size: 0.78rem; font-weight: 500; color: var(--muted);
+  border-left: 3px solid transparent; position: relative;
+}
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active { color: var(--accent2); background: rgba(59,130,246,.08); border-left-color: var(--accent2); font-weight: 600; }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--red); color: white;
+  border-radius: 99px; font-size: 0.55rem; font-weight: 700;
+  padding: 1px 6px; min-width: 18px; text-align: center;
+}
+.nav-badge.green { background: var(--green); }
+.nav-badge.yellow { background: var(--yellow); color: #0a0e1a; }
+.nav-badge.blue { background: var(--accent); }
+.sidebar-nav { flex: 1; overflow-y: auto; padding-bottom: 16px; }
+.sidebar-nav::-webkit-scrollbar { width: 3px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+.sidebar-footer {
+  padding: 12px 18px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.avatar-sm {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, #c8102e, #e63950);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700; color: white; flex-shrink: 0;
+}
+.footer-info { font-size: 0.68rem; color: var(--muted); flex: 1; }
+.footer-name { color: var(--text); font-weight: 600; font-size: 0.72rem; }
+
+/* TOPBAR */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar {
+  height: 56px; flex-shrink: 0;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; gap: 16px;
+}
+.topbar-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+.topbar-sub { font-size: 0.68rem; color: var(--muted); margin-top: 1px; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.topbar-btn {
+  padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border2);
+  background: var(--surface2); color: var(--text); font-size: 0.72rem;
+  font-weight: 600; cursor: pointer; font-family: inherit; display: flex;
+  align-items: center; gap: 6px; transition: all .15s;
+}
+.topbar-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.topbar-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+.topbar-btn.primary:hover { background: var(--accent2); }
+.topbar-btn.success { background: rgba(16,185,129,.15); border-color: var(--green); color: var(--green); }
+
+/* CONTENT */
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+.content::-webkit-scrollbar { width: 6px; }
+.content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+/* KPI GRID */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.kpi-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 16px; position: relative; overflow: hidden;
+  cursor: pointer; transition: border-color .15s, transform .15s;
+}
+.kpi-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.kpi-card::before { content:''; position:absolute; inset:0; opacity:.05; }
+.kpi-card.blue::before { background: var(--accent2); }
+.kpi-card.green::before { background: var(--green); }
+.kpi-card.yellow::before { background: var(--yellow); }
+.kpi-card.red::before { background: var(--red); }
+.kpi-icon { font-size: 1.4rem; margin-bottom: 10px; }
+.kpi-val { font-size: 2.2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; margin-bottom: 4px; }
+.kpi-card.blue .kpi-val { color: var(--accent2); }
+.kpi-card.green .kpi-val { color: var(--green); }
+.kpi-card.yellow .kpi-val { color: var(--yellow); }
+.kpi-card.red .kpi-val { color: var(--red); }
+.kpi-lbl { font-size: 0.68rem; color: var(--muted); font-weight: 500; }
+.kpi-trend { position: absolute; top: 14px; right: 14px; font-size: 0.65rem; color: var(--green); font-weight: 700; }
+
+/* SECTION HEADER */
+.sec-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.sec-title { font-size: 0.85rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.sec-title::before { content:''; width: 3px; height: 16px; background: var(--accent2); border-radius: 99px; }
+.sec-actions { display: flex; gap: 8px; }
+
+/* TABLE */
+.tbl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.tbl-scroll { overflow-x: auto; }
+.tbl-scroll::-webkit-scrollbar { height: 5px; }
+.tbl-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 0.62rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 11px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+td { font-size: 0.75rem; color: var(--text); padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; }
+
+/* BADGES */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 0.6rem; font-weight: 700; }
+.badge.new { background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.25); }
+.badge.open { background: rgba(245,158,11,.15); color: #fbbf24; border: 1px solid rgba(245,158,11,.25); }
+.badge.done { background: rgba(16,185,129,.15); color: #34d399; border: 1px solid rgba(16,185,129,.25); }
+.badge.red { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+.badge.purple { background: rgba(139,92,246,.15); color: #a78bfa; border: 1px solid rgba(139,92,246,.25); }
+.badge.muted { background: rgba(122,144,176,.1); color: var(--muted); border: 1px solid var(--border); }
+.badge.cyan { background: rgba(6,182,212,.15); color: #67e8f9; border: 1px solid rgba(6,182,212,.25); }
+.badge.orange { background: rgba(249,115,22,.15); color: #fb923c; border: 1px solid rgba(249,115,22,.25); }
+
+/* SEARCH */
+.search-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.search-box {
+  flex: 1; min-width: 200px; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; color: var(--text); font-size: 0.78rem; font-family: inherit; outline: none;
+}
+.search-box::placeholder { color: var(--muted); }
+.search-box:focus { border-color: var(--accent2); }
+.filter-btn {
+  padding: 8px 14px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; color: var(--muted); font-size: 0.72rem; cursor: pointer;
+  font-family: inherit; transition: all .15s; white-space: nowrap;
+}
+.filter-btn:hover, .filter-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(59,130,246,.08); }
+
+/* STAT ROW */
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-row-4 { grid-template-columns: repeat(4, 1fr); }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.stat-num { font-size: 1.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.stat-lbl { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+/* PROGRESS BAR */
+.prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.prog-label { font-size: 0.72rem; color: var(--muted); width: 120px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prog-bar-wrap { flex: 1; background: var(--surface3); border-radius: 99px; height: 6px; overflow: hidden; }
+.prog-bar { height: 100%; border-radius: 99px; background: var(--accent2); transition: width .6s ease; }
+.prog-val { font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; color: var(--text); width: 32px; text-align: right; flex-shrink: 0; }
+
+/* CHART */
+.chart-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; height: 180px; display: flex; align-items: flex-end; gap: 6px; overflow: hidden; }
+.bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.bar { border-radius: 4px 4px 0 0; width: 100%; transition: height .6s ease; }
+.bar-lbl { font-size: 0.55rem; color: var(--muted); }
+
+/* INNER TABS */
+.inner-tabs { display: flex; gap: 4px; background: var(--surface2); border-radius: 10px; padding: 4px; margin-bottom: 16px; border: 1px solid var(--border); }
+.inner-tab { flex: 1; padding: 7px 10px; border-radius: 7px; font-size: 0.72rem; font-weight: 600; cursor: pointer; border: none; background: none; color: var(--muted); transition: all .15s; font-family: inherit; text-align: center; }
+.inner-tab.active { background: var(--accent); color: white; }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 1000; display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 18px; width: min(580px, 95vw); max-height: 85vh; overflow-y: auto; padding: 24px; }
+.modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+.modal-close { cursor: pointer; color: var(--muted); font-size: 1.2rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 0.65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.form-input { padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 0.78rem; font-family: inherit; outline: none; }
+.form-input:focus { border-color: var(--accent2); }
+.form-select { padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 0.78rem; font-family: inherit; outline: none; }
+.form-select:focus { border-color: var(--accent2); }
+.form-textarea { padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: 0.78rem; font-family: inherit; outline: none; resize: vertical; }
+.form-textarea:focus { border-color: var(--accent2); }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.btn { padding: 8px 18px; border-radius: 9px; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all .15s; }
+.btn-secondary { background: var(--surface2); border: 1px solid var(--border2); color: var(--muted); }
+.btn-secondary:hover { color: var(--text); }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-danger { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); color: #f87171; }
+.btn-danger:hover { background: rgba(239,68,68,.25); }
+.btn-success { background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3); color: #34d399; }
+
+/* EMPTY */
+.empty { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 0.82rem; }
+.empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+/* TOAST */
+#toast { position: fixed; bottom: 24px; right: 24px; background: #1e2a3a; border: 1px solid var(--border2); border-radius: 10px; padding: 12px 18px; font-size: 0.78rem; color: var(--text); z-index: 9999; transform: translateY(80px); opacity: 0; transition: all .3s; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+#toast.show { transform: translateY(0); opacity: 1; }
+
+/* MOCK BANNER */
+.mock-banner { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); border-radius: 10px; padding: 10px 16px; margin-bottom: 20px; font-size: 0.72rem; color: #fbbf24; display: flex; align-items: center; gap: 8px; }
+
+/* DETAIL CARD */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.detail-card-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.75rem; }
+.detail-row:last-child { border-bottom: none; }
+.detail-key { color: var(--muted); }
+.detail-val { color: var(--text); font-weight: 500; }
+
+/* PAGER */
+.pager { text-align: center; padding: 12px; font-size: 0.7rem; color: var(--muted); }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+@media print {
+  .sidebar, .topbar, .sec-actions, .search-row, .topbar-btn, .mock-banner { display: none !important; }
+  .main { overflow: visible; }
+  .content { overflow: visible; padding: 0; }
+  .shell { display: block; }
+  body { background: white; color: black; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">❄</div>
+    <div>
+      <div class="logo-text">SCG AirCon</div>
+      <div class="logo-sub">Admin Backend v3.0</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">ภาพรวม</div>
+    <div class="nav-item active" onclick="goTo('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+
+    <div class="nav-section">เครื่องแอร์</div>
+    <div class="nav-item" onclick="goTo('machines')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5M12 11v9M17 11v5"/></svg>
+      ทะเบียนเครื่องแอร์
+      <span class="nav-badge blue" id="nav-mac-cnt">—</span>
+    </div>
+    <div class="nav-item" onclick="goTo('qr')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M16 16h2v2h-2zM18 18h2v2h-2zM14 16h2v2h-2z"/></svg>
+      QR Code
+    </div>
+
+    <div class="nav-section">ใบงาน</div>
+    <div class="nav-item" onclick="goTo('tickets')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      ใบงานซ่อม
+      <span class="nav-badge" id="nav-ticket-cnt">—</span>
+    </div>
+    <div class="nav-item" onclick="goTo('tracking')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ติดตามงาน
+    </div>
+    <div class="nav-item" onclick="goTo('purchase')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      สั่งซื้ออะไหล่
+      <span class="nav-badge yellow" id="nav-pur-cnt">—</span>
+    </div>
+
+    <div class="nav-section">PM</div>
+    <div class="nav-item" onclick="goTo('pm')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      แผน PM
+    </div>
+    <div class="nav-item" onclick="goTo('calendar')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      ปฏิทิน PM
+    </div>
+
+    <div class="nav-section">ผู้ใช้</div>
+    <div class="nav-item" onclick="goTo('users')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      ผู้ใช้งานทั้งหมด
+      <span class="nav-badge yellow" id="nav-user-cnt">—</span>
+    </div>
+
+    <div class="nav-section">รายงาน</div>
+    <div class="nav-item" onclick="goTo('report')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      สรุปรายงาน
+    </div>
+    <div class="nav-item" onclick="goTo('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      ตั้งค่าระบบ
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar-sm">A</div>
+    <div class="footer-info">
+      <div class="footer-name">ผู้ดูแลระบบ</div>
+      Mock Data Mode
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-sub" id="topbar-sub">ภาพรวมระบบ SCG Aircondition</div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn success" onclick="resetMockData()">🔄 รีเซ็ต Mock Data</button>
+      <button class="topbar-btn" onclick="exportCSV()">📥 Export CSV</button>
+      <button class="topbar-btn primary" onclick="window.print()">🖨️ พิมพ์</button>
+    </div>
+  </div>
+
+  <div class="content" id="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="pg-dashboard">
+      <div class="mock-banner">⚡ Mock Data Mode — ข้อมูลจำลองสำหรับทดสอบระบบ ไม่ได้เชื่อมต่อ Firebase</div>
+      <div class="kpi-grid" id="dash-kpi"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+        <div>
+          <div class="sec-hd"><div class="sec-title">สถานะใบงาน</div></div>
+          <div class="chart-box" id="status-chart"></div>
+        </div>
+        <div>
+          <div class="sec-hd"><div class="sec-title">ภาระงานช่าง</div></div>
+          <div class="tbl-wrap" id="tech-workload" style="padding:14px"></div>
+        </div>
+      </div>
+      <div class="sec-hd">
+        <div class="sec-title">เครื่องแอร์แยกแผนก</div>
+      </div>
+      <div class="tbl-wrap tbl-scroll">
+        <table>
+          <thead><tr><th>แผนก / Zone</th><th>จำนวนเครื่อง</th><th>สัดส่วน</th><th>ใบงานค้าง</th><th>Zone</th></tr></thead>
+          <tbody id="dept-summary-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MACHINES -->
+    <div class="page" id="pg-machines">
+      <div class="search-row">
+        <input class="search-box" id="mac-search" placeholder="🔍 ค้นหา รหัส / ชื่อห้อง / ยี่ห้อ / แผนก..." oninput="renderMachines()">
+        <select class="filter-btn" id="mac-dept-filter" onchange="renderMachines()" style="min-width:130px">
+          <option value="">ทุกแผนก</option>
+        </select>
+        <select class="filter-btn" id="mac-zone-filter" onchange="renderMachines()" style="min-width:110px">
+          <option value="">ทุก Zone</option>
+          <option value="process">Process</option>
+          <option value="office">Office</option>
+        </select>
+        <button class="topbar-btn primary" onclick="openMachineModal()">➕ เพิ่มเครื่อง</button>
+      </div>
+      <div class="stat-row" id="mac-stat-row"></div>
+      <div class="tbl-wrap tbl-scroll">
+        <table>
+          <thead><tr><th>รหัส Air</th><th>ชื่อห้อง / Location</th><th>ยี่ห้อ / รุ่น</th><th>BTU</th><th>แผนก</th><th>Zone</th><th>Function Location</th><th>Equipment No.</th><th>PM ทุก</th><th>QR</th><th>จัดการ</th></tr></thead>
+          <tbody id="machine-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pager" id="mac-pager"></div>
+    </div>
+
+    <!-- QR CODE -->
+    <div class="page" id="pg-qr">
+      <div class="search-row">
+        <input class="search-box" id="qr-search" placeholder="🔍 ค้นหาเครื่อง..." oninput="renderQR()">
+        <select class="filter-btn" id="qr-dept" onchange="renderQR()" style="min-width:130px">
+          <option value="">ทุกแผนก</option>
+        </select>
+        <button class="topbar-btn primary" onclick="window.print()">🖨️ พิมพ์ QR ทั้งหมด</button>
+      </div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:12px" id="qr-count">—</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px" id="qr-grid"></div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="page" id="pg-tickets">
+      <div class="search-row">
+        <input class="search-box" id="tk-search" placeholder="🔍 ค้นหาใบงาน..." oninput="renderTickets()">
+        <select class="filter-btn" id="tk-status" onchange="renderTickets()" style="min-width:130px">
+          <option value="">ทุกสถานะ</option>
+          <option value="new">รอจ่ายงาน</option>
+          <option value="assigned">จ่ายงานแล้ว</option>
+          <option value="accepted">รับงานแล้ว</option>
+          <option value="inprogress">กำลังซ่อม</option>
+          <option value="waiting_part">รออะไหล่</option>
+          <option value="done">เสร็จแล้ว</option>
+          <option value="verified">ตรวจรับแล้ว</option>
+          <option value="closed">ปิดงาน</option>
+        </select>
+        <select class="filter-btn" id="tk-priority" onchange="renderTickets()" style="min-width:110px">
+          <option value="">ทุกความเร่งด่วน</option>
+          <option value="high">🔴 ด่วนมาก</option>
+          <option value="mid">🟡 ปานกลาง</option>
+          <option value="low">🟢 ปกติ</option>
+        </select>
+        <button class="topbar-btn primary" onclick="openTicketModal()">➕ สร้างใบงาน</button>
+      </div>
+      <div class="stat-row" id="tk-stat-row"></div>
+      <div class="tbl-wrap tbl-scroll">
+        <table>
+          <thead><tr><th>เลขที่ใบงาน</th><th>ปัญหา</th><th>เครื่อง</th><th>แผนก</th><th>ผู้แจ้ง</th><th>ช่าง</th><th>ความเร่งด่วน</th><th>สถานะ</th><th>วันที่แจ้ง</th><th>ค่าใช้จ่าย</th><th>จัดการ</th></tr></thead>
+          <tbody id="ticket-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pager" id="tk-pager"></div>
+    </div>
+
+    <!-- TRACKING -->
+    <div class="page" id="pg-tracking">
+      <div class="sec-hd"><div class="sec-title">ภาระงานช่าง (Real-time)</div></div>
+      <div id="tracking-tech-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px"></div>
+      <div class="sec-hd"><div class="sec-title">ใบงานรออะไหล่</div></div>
+      <div class="tbl-wrap tbl-scroll">
+        <table>
+          <thead><tr><th>ใบงาน</th><th>ปัญหา</th><th>เครื่อง</th><th>ช่าง</th><th>อะไหล่</th><th>วันที่</th></tr></thead>
+          <tbody id="waiting-part-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PURCHASE -->
+    <div class="page" id="pg-purchase">
+      <div class="search-row">
+        <input class="search-box" id="pur-search" placeholder="🔍 ค้นหาใบสั่งซื้อ..." oninput="renderPurchase()">
+        <select class="filter-btn" id="pur-status" onchange="renderPurchase()" style="min-width:130px">
+          <option value="">ทุกสถานะ</option>
+          <option value="pending">รออนุมัติ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="ordered">สั่งซื้อแล้ว</option>
+          <option value="received">รับแล้ว</option>
+        </select>
+        <button class="topbar-btn primary" onclick="openPurchaseModal()">➕ สร้าง PR</button>
+      </div>
+      <div class="tbl-wrap tbl-scroll">
+        <table>
+          <thead><tr><th>เลขที่ PR</th><th>รายการ</th><th>จำนวน</th><th>ราคา/หน่วย</th><th>รวม</th><th>ผู้ขอ</th><th>ใบงาน</th><th>สถานะ</th><th>วันที่</th><th>จัดการ</th></tr></thead>
+          <tbody id="purchase-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PM -->
+    <div class="page" id="pg-pm">
+      <div class="inner-tabs">
+        <button class="inner-tab active" onclick="switchPMTab('plan',this)">📋 แผน PM</button>
+        <button class="inner-tab" onclick="switchPMTab('history',this)">📊 ประวัติ PM</button>
+        <button class="inner-tab" onclick="switchPMTab('due',this)">⏰ ถึงกำหนด</button>
+      </div>
+      <div id="pm-plan-wrap"></div>
+      <div id="pm-history-wrap" style="display:none"></div>
+      <div id="pm-due-wrap" style="display:none"></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="page" id="pg-calendar">
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:20px">
+        <div>
+          <div class="sec-hd">
+            <div class="sec-title" id="cal-title">—</div>
+            <div class="sec-actions">
+              <button class="topbar-btn" onclick="calNav(-1)">‹</button>
+              <button class="topbar-btn" onclick="calToday()">วันนี้</button>
+              <button class="topbar-btn" onclick="calNav(1)">›</button>
+            </div>
+          </div>
+          <div id="cal-grid" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden"></div>
+        </div>
+        <div>
+          <div class="sec-hd"><div class="sec-title">กิจกรรมเดือนนี้</div></div>
+          <div id="cal-events" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="pg-users">
+      <div class="search-row">
+        <input class="search-box" id="user-search" placeholder="🔍 ค้นหาผู้ใช้..." oninput="renderUsers()">
+        <select class="filter-btn" id="user-role" onchange="renderUsers()" style="min-width:120px">
+          <option value="">ทุก Role</option>
+          <option value="admin">Admin</option>
+          <option value="tech">ช่าง</option>
+          <option value="reporter">ผู้แจ้ง</option>
+          <option value="executive">Executive</option>
+        </select>
+        <button class="topbar-btn primary" onclick="openUserModal()">➕ เพิ่มผู้ใช้</button>
+      </div>
+      <div class="stat-row" id="user-stat-row"></div>
+      <div class="tbl-wrap tbl-scroll">
+        <table>
+          <thead><tr><th>ชื่อ</th><th>Username</th><th>Role</th><th>แผนก</th><th>เบอร์โทร</th><th>งานค้าง</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+          <tbody id="user-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div class="page" id="pg-report">
+      <div class="inner-tabs">
+        <button class="inner-tab active" onclick="switchReportTab('summary',this)">📊 ภาพรวม</button>
+        <button class="inner-tab" onclick="switchReportTab('monthly',this)">📅 รายเดือน</button>
+        <button class="inner-tab" onclick="switchReportTab('tech',this)">👷 ช่าง</button>
+        <button class="inner-tab" onclick="switchReportTab('dept',this)">🏭 แผนก</button>
+        <button class="inner-tab" onclick="switchReportTab('cost',this)">💰 ค่าใช้จ่าย</button>
+      </div>
+      <div id="report-content"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="pg-settings">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="sec-hd"><div class="sec-title">Firebase Config</div></div>
+          <div class="tbl-wrap" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div class="form-group">
+              <div class="form-label">Project ID</div>
+              <input class="form-input" value="scg-aircon-prod" placeholder="firebase project id">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Firestore Collection</div>
+              <input class="form-input" value="aircon_data" placeholder="collection name">
+            </div>
+            <button class="btn btn-primary" onclick="showToast('💾 บันทึกแล้ว')">บันทึก Config</button>
+          </div>
+          <div class="sec-hd" style="margin-top:20px"><div class="sec-title">LINE Notify</div></div>
+          <div class="tbl-wrap" style="padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div class="form-group">
+              <div class="form-label">Token Admin</div>
+              <input class="form-input" type="password" placeholder="LINE Notify Token">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Token ช่าง</div>
+              <input class="form-input" type="password" placeholder="LINE Notify Token">
+            </div>
+            <button class="btn btn-primary" onclick="showToast('💾 บันทึก Token แล้ว')">บันทึก Token</button>
+          </div>
+        </div>
+        <div>
+          <div class="sec-hd"><div class="sec-title">ข้อมูลระบบ</div></div>
+          <div class="tbl-wrap" style="padding:18px">
+            <table>
+              <tbody>
+                <tr><td style="color:var(--muted)">เครื่องแอร์</td><td class="mono" id="cfg-mac-cnt">—</td></tr>
+                <tr><td style="color:var(--muted)">ผู้ใช้งาน</td><td class="mono" id="cfg-user-cnt">—</td></tr>
+                <tr><td style="color:var(--muted)">ใบงานทั้งหมด</td><td class="mono" id="cfg-tk-cnt">—</td></tr>
+                <tr><td style="color:var(--muted)">ใบสั่งซื้อ</td><td class="mono" id="cfg-pur-cnt">—</td></tr>
+                <tr><td style="color:var(--muted)">Version App</td><td class="mono">v20260418</td></tr>
+                <tr><td style="color:var(--muted)">Data Mode</td><td><span class="badge yellow">Mock Data</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="sec-hd" style="margin-top:20px"><div class="sec-title">จัดการข้อมูล</div></div>
+          <div class="tbl-wrap" style="padding:18px;display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-secondary" onclick="exportAllJSON()">📤 Export ข้อมูลทั้งหมด (JSON)</button>
+            <button class="btn btn-secondary" onclick="exportCSV()">📥 Export เครื่องแอร์ (CSV)</button>
+            <button class="btn btn-secondary" onclick="exportTicketsCSV()">📥 Export ใบงาน (CSV)</button>
+            <button class="btn btn-danger" onclick="resetMockData()">🔄 รีเซ็ต Mock Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-machine">
+  <div class="modal">
+    <div class="modal-title">➕ เพิ่ม / แก้ไขเครื่องแอร์ <span class="modal-close" onclick="closeModal('modal-machine')">✕</span></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">รหัส Air *</div><input class="form-input" id="m-id" placeholder="เช่น RAW026"></div>
+      <div class="form-group"><div class="form-label">Zone</div><select class="form-select" id="m-zone"><option value="process">Process</option><option value="office">Office</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">ยี่ห้อ</div><input class="form-input" id="m-brand" placeholder="Daikin, Mitsubishi..."></div>
+      <div class="form-group"><div class="form-label">รุ่น</div><input class="form-input" id="m-model" placeholder="รุ่นเครื่อง"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">BTU</div><input class="form-input" id="m-btu" placeholder="เช่น 12000"></div>
+      <div class="form-group"><div class="form-label">PM ทุก (เดือน)</div><input class="form-input" id="m-pm" placeholder="3" type="number"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><div class="form-label">ชื่อห้อง / ตำแหน่ง</div><input class="form-input" id="m-room" placeholder="ห้อง PLC ROOM..."></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">แผนก</div><input class="form-input" id="m-dept" placeholder="PM1, PM3, Energy..."></div>
+      <div class="form-group"><div class="form-label">Function Location</div><input class="form-input" id="m-fl" placeholder="7751X1-AIR-CND-..."></div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><div class="form-label">Equipment No.</div><input class="form-input" id="m-eq" placeholder="E70751E-580-..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-machine')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveMachine()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ticket">
+  <div class="modal">
+    <div class="modal-title">🔧 สร้าง / แก้ไขใบงาน <span class="modal-close" onclick="closeModal('modal-ticket')">✕</span></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">เครื่องแอร์ *</div><select class="form-select" id="tk-machine"><option value="">เลือกเครื่อง</option></select></div>
+      <div class="form-group"><div class="form-label">ความเร่งด่วน</div>
+        <select class="form-select" id="tk-prio">
+          <option value="low">🟢 ปกติ</option>
+          <option value="mid">🟡 ปานกลาง</option>
+          <option value="high">🔴 ด่วนมาก</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">ผู้แจ้ง</div><input class="form-input" id="tk-reporter" placeholder="ชื่อผู้แจ้ง"></div>
+      <div class="form-group"><div class="form-label">ช่างที่รับผิดชอบ</div><select class="form-select" id="tk-assignee"><option value="">เลือกช่าง</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><div class="form-label">อาการปัญหา *</div><textarea class="form-textarea" id="tk-problem" placeholder="อธิบายอาการปัญหา..." rows="3"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">สถานะ</div>
+        <select class="form-select" id="tk-stat">
+          <option value="new">รอจ่ายงาน</option>
+          <option value="assigned">จ่ายงานแล้ว</option>
+          <option value="inprogress">กำลังซ่อม</option>
+          <option value="waiting_part">รออะไหล่</option>
+          <option value="done">เสร็จแล้ว</option>
+          <option value="closed">ปิดงาน</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">ค่าใช้จ่าย (฿)</div><input class="form-input" id="tk-cost" placeholder="0" type="number"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-ticket')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTicket()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-user">
+  <div class="modal">
+    <div class="modal-title">👤 เพิ่ม / แก้ไขผู้ใช้ <span class="modal-close" onclick="closeModal('modal-user')">✕</span></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">ชื่อ-นามสกุล *</div><input class="form-input" id="u-name" placeholder="ชื่อเต็ม"></div>
+      <div class="form-group"><div class="form-label">Username *</div><input class="form-input" id="u-username" placeholder="username"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Role</div>
+        <select class="form-select" id="u-role">
+          <option value="tech">ช่าง (tech)</option>
+          <option value="reporter">ผู้แจ้ง (reporter)</option>
+          <option value="admin">Admin</option>
+          <option value="executive">Executive</option>
+        </select>
+      </div>
+      <div class="form-group"><div class="form-label">แผนก</div><input class="form-input" id="u-dept" placeholder="แผนก"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">เบอร์โทร</div><input class="form-input" id="u-tel" placeholder="0812345678"></div>
+      <div class="form-group"><div class="form-label">Password</div><input class="form-input" type="password" id="u-pass" placeholder="รหัสผ่าน"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-user')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveUser()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-purchase">
+  <div class="modal">
+    <div class="modal-title">🛒 สร้าง / แก้ไขใบสั่งซื้อ <span class="modal-close" onclick="closeModal('modal-purchase')">✕</span></div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">รายการอะไหล่ *</div><input class="form-input" id="pur-item" placeholder="ชื่ออะไหล่"></div>
+      <div class="form-group"><div class="form-label">ใบงานที่เกี่ยวข้อง</div><input class="form-input" id="pur-ticket" placeholder="TK-..."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">จำนวน</div><input class="form-input" id="pur-qty" type="number" placeholder="1"></div>
+      <div class="form-group"><div class="form-label">ราคา/หน่วย (฿)</div><input class="form-input" id="pur-price" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">ผู้ขอซื้อ</div><input class="form-input" id="pur-requester" placeholder="ชื่อผู้ขอ"></div>
+      <div class="form-group"><div class="form-label">สถานะ</div>
+        <select class="form-select" id="pur-stat">
+          <option value="pending">รออนุมัติ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="ordered">สั่งซื้อแล้ว</option>
+          <option value="received">รับแล้ว</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-purchase')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="savePurchase()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// MOCK DATA GENERATOR
+// ══════════════════════════════════════════════════
+function generateMockData() {
+  const brands = ['Daikin','Mitsubishi','Carrier','York','Trane','Fujitsu','Panasonic','LG'];
+  const models = ['FTK25TV','MSY-GE13VA','42XEW035V','YCJD090A','TTR904FA','ASYA12LFC','CS-S13PKH','S12EJ'];
+  const depts = ['PM1','PM3','PM5','PM7','Energy','Utility','Logistic','QC','Engineering','HR','Finance','IT'];
+  const zones = ['process','office'];
+  const problems = ['น้ำหยดจาก IDU','เสียงดังผิดปกติ','แอร์ไม่เย็น','รีโมทไม่ทำงาน','ไฟสัญญาณกะพริบ','กลิ่นไหม้','คอมแพรสเซอร์ไม่ทำงาน','PM ประจำปี','ท่อน้ำทิ้งอุดตัน','แผงวงจรเสีย'];
+  const parts = ['Filter แอร์','คาปาซิเตอร์','Fan Motor','Contactor','แผง PCB','น้ำยาแอร์ R32','ท่อน้ำทิ้ง','Belt ลูกรอก','Thermostat','Drain Pump'];
+  const techNames = ['สมชาย ใจดี','ประเสริฐ ทำงานดี','วิชัย ซ่อมเก่ง','สุรชัย ขยัน','ธนพล มีฝีมือ','ชัยวัฒน์ เก่งงาน'];
+  const reporterNames = ['สุมาลี แจ้งเรื่อง','ปวีณา รายงาน','กมล ผู้แจ้ง','นิภา บันทึก','พิชัย แจ้งซ่อม','รัตนา ผู้ใช้'];
+  const statuses = ['new','assigned','accepted','inprogress','waiting_part','done','done','verified','closed','closed'];
+  const priorities = ['low','low','mid','mid','mid','high'];
+
+  // Machines
+  const macPrefixes = [
+    {pre:'RAW',dept:'PM1',zone:'process',fl:'7751X1-AIR-CND-1008'},
+    {pre:'WH',dept:'PM3',zone:'process',fl:'7751X1-AIR-CND-0501'},
+    {pre:'PM16',dept:'Logistic',zone:'office',fl:'7751X1-AIR-CND-0404'},
+    {pre:'MntK',dept:'Engineering',zone:'process',fl:'7751X1-AIR-CND-0801'},
+    {pre:'OFF',dept:'HR',zone:'office',fl:'7751X1-AIR-CND-0201'},
+    {pre:'QC',dept:'QC',zone:'process',fl:'7751X1-AIR-CND-0301'},
+    {pre:'IT',dept:'IT',zone:'office',fl:'7751X1-AIR-CND-0601'},
+    {pre:'UTL',dept:'Utility',zone:'process',fl:'7751X1-AIR-CND-0701'},
+    {pre:'ENG',dept:'Engineering',zone:'office',fl:'7751X1-AIR-CND-0901'},
+    {pre:'FIN',dept:'Finance',zone:'office',fl:'7751X1-AIR-CND-1101'},
+  ];
+  const machines = [];
+  let eqNum = 1295;
+  macPrefixes.forEach(p => {
+    const count = Math.floor(Math.random()*8)+5;
+    for (let i=1;i<=count;i++) {
+      const brand = brands[Math.floor(Math.random()*brands.length)];
+      const btuOpts = [9000,12000,18000,24000,36000,48000];
+      machines.push({
+        id: p.pre + String(i).padStart(3,'0'),
+        brand, model: models[Math.floor(Math.random()*models.length)],
+        btu: btuOpts[Math.floor(Math.random()*btuOpts.length)],
+        pmInterval: [2,3,4,6][Math.floor(Math.random()*4)],
+        room: `ห้อง ${p.dept} #${i}`,
+        dept: p.dept,
+        zone: p.zone,
+        fl: p.fl,
+        eq: `E70751E-580-${String(eqNum++).padStart(6,'0')}`,
+        createdAt: randomDate('2024-01-01','2025-06-01')
+      });
+    }
+  });
+
+  // Users
+  const users = [
+    {id:'U001',name:'สมชาย ใจดี',username:'somchai',role:'tech',dept:'Engineering',tel:'0812341001',active:true},
+    {id:'U002',name:'ประเสริฐ ทำงานดี',username:'prasert',role:'tech',dept:'Engineering',tel:'0812341002',active:true},
+    {id:'U003',name:'วิชัย ซ่อมเก่ง',username:'wichai',role:'tech',dept:'Engineering',tel:'0812341003',active:true},
+    {id:'U004',name:'สุรชัย ขยัน',username:'surachai',role:'tech',dept:'PM1',tel:'0812341004',active:true},
+    {id:'U005',name:'ธนพล มีฝีมือ',username:'thanaphol',role:'tech',dept:'PM3',tel:'0812341005',active:true},
+    {id:'U006',name:'ชัยวัฒน์ เก่งงาน',username:'chaiwat',role:'tech',dept:'Utility',tel:'0812341006',active:false},
+    {id:'U007',name:'สุมาลี แจ้งเรื่อง',username:'sumalee',role:'reporter',dept:'HR',tel:'0812341007',active:true},
+    {id:'U008',name:'ปวีณา รายงาน',username:'pawina',role:'reporter',dept:'Finance',tel:'0812341008',active:true},
+    {id:'U009',name:'กมล ผู้แจ้ง',username:'kamol',role:'reporter',dept:'QC',tel:'0812341009',active:true},
+    {id:'U010',name:'ผู้ดูแลระบบ',username:'admin',role:'admin',dept:'IT',tel:'0812341010',active:true},
+    {id:'U011',name:'ผู้บริหาร',username:'exec',role:'executive',dept:'Management',tel:'0812341011',active:true},
+  ];
+
+  // Tickets
+  const tickets = [];
+  const techs = users.filter(u=>u.role==='tech');
+  const reporters = users.filter(u=>u.role==='reporter'||u.role==='admin');
+  let tkSeq = 1;
+  for (let i=0;i<80;i++) {
+    const mac = machines[Math.floor(Math.random()*machines.length)];
+    const tech = techs[Math.floor(Math.random()*techs.length)];
+    const reporter = reporters[Math.floor(Math.random()*reporters.length)];
+    const status = statuses[Math.floor(Math.random()*statuses.length)];
+    const priority = priorities[Math.floor(Math.random()*priorities.length)];
+    const problem = problems[Math.floor(Math.random()*problems.length)];
+    const isWaitPart = status==='waiting_part';
+    const isDone = ['done','verified','closed'].includes(status);
+    const createdAt = randomDate('2025-01-01','2026-04-15');
+    tickets.push({
+      id: `TK-${String(tkSeq++).padStart(5,'0')}`,
+      machineId: mac.id, machine: mac.id+' ('+mac.room+')',
+      dept: mac.dept, problem, reporter: reporter.name,
+      assigneeId: tech.id, assignee: tech.name,
+      priority, status, type: problem.includes('PM')?'pm':'repair',
+      createdAt,
+      cost: isDone ? Math.floor(Math.random()*5000+200) : 0,
+      waitingPart: isWaitPart ? parts[Math.floor(Math.random()*parts.length)] : '',
+    });
+  }
+
+  // Purchases
+  const purchases = [];
+  let prSeq = 1;
+  const purStatuses = ['pending','pending','approved','approved','ordered','received'];
+  for (let i=0;i<25;i++) {
+    const tech = techs[Math.floor(Math.random()*techs.length)];
+    const qty = Math.floor(Math.random()*5)+1;
+    const unitPrice = [500,800,1200,2500,3800,5500,8000][Math.floor(Math.random()*7)];
+    const relTicket = tickets[Math.floor(Math.random()*tickets.length)];
+    purchases.push({
+      id:`PR-${String(prSeq++).padStart(4,'0')}`,
+      item: parts[Math.floor(Math.random()*parts.length)],
+      qty, unitPrice, total: qty*unitPrice,
+      requester: tech.name,
+      ticketId: relTicket.id,
+      status: purStatuses[Math.floor(Math.random()*purStatuses.length)],
+      createdAt: randomDate('2025-06-01','2026-04-15'),
+    });
+  }
+
+  // PM Plans
+  const pmPlans = [];
+  const pmTypes = ['PM ประจำเดือน','PM 3 เดือน','PM 6 เดือน','PM ประจำปี'];
+  let pmSeq=1;
+  machines.slice(0,30).forEach(m=>{
+    const tech = techs[Math.floor(Math.random()*techs.length)];
+    const done = Math.random()>0.4;
+    const d = new Date(2026,3+Math.floor(Math.random()*3),Math.floor(Math.random()*28)+1);
+    pmPlans.push({
+      id:`PM-${String(pmSeq++).padStart(4,'0')}`,
+      date: d.toISOString().slice(0,10),
+      type: pmTypes[Math.floor(Math.random()*pmTypes.length)],
+      techId: tech.id, tech: tech.name,
+      dept: m.dept, machineId: m.id,
+      status: done?'done':'pending',
+      frequency: m.pmInterval||3,
+    });
+  });
+
+  // Calendar Events
+  const calEvents = [];
+  for(let i=0;i<15;i++){
+    const m = machines[Math.floor(Math.random()*machines.length)];
+    const tech = techs[Math.floor(Math.random()*techs.length)];
+    const d = new Date(2026,3,Math.floor(Math.random()*30)+1);
+    calEvents.push({
+      id:`EV-${i+1}`, date: d.toISOString().slice(0,10),
+      title:`PM ${m.id}`, machineId:m.id, dept:m.dept, tech:tech.name,
+      color:['#3b82f6','#10b981','#f59e0b','#8b5cf6'][Math.floor(Math.random()*4)]
+    });
+  }
+
+  return { machines, users, tickets, purchases, pmPlans, calEvents, _seq: tkSeq };
+}
+
+function randomDate(from, to) {
+  const f = new Date(from).getTime(), t = new Date(to).getTime();
+  return new Date(f + Math.random()*(t-f)).toISOString();
+}
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+const STORAGE_KEY = 'scg_aircon_mock';
+let db = {};
+
+function resetMockData() {
+  db = generateMockData();
+  saveDB();
+  updateNavBadges();
+  renderPage(_currentPage);
+  showToast('🔄 Mock Data รีเซ็ตแล้ว');
+}
+
+function saveDB() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch(e){}
+}
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { db = JSON.parse(raw); return true; }
+  } catch(e){}
+  return false;
+}
+
+// ══════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════
+const PAGE_INFO = {
+  dashboard:{title:'Dashboard',sub:'ภาพรวมระบบ SCG Aircondition'},
+  machines:{title:'ทะเบียนเครื่องแอร์',sub:'รายการเครื่องแอร์ทั้งหมด'},
+  qr:{title:'QR Code',sub:'QR Code เครื่องแอร์ทุกเครื่อง'},
+  tickets:{title:'ใบงานซ่อม',sub:'จัดการใบงานซ่อมบำรุง'},
+  tracking:{title:'ติดตามงาน',sub:'ภาระงานช่างและสถานะ'},
+  purchase:{title:'สั่งซื้ออะไหล่',sub:'ใบสั่งซื้อและ PR'},
+  pm:{title:'แผน PM',sub:'Preventive Maintenance'},
+  calendar:{title:'ปฏิทิน PM',sub:'ตารางบำรุงรักษาประจำเดือน'},
+  users:{title:'ผู้ใช้งาน',sub:'จัดการสิทธิ์และข้อมูลผู้ใช้'},
+  report:{title:'รายงาน',sub:'สถิติและสรุปผล'},
+  settings:{title:'ตั้งค่าระบบ',sub:'การตั้งค่าและจัดการข้อมูล'},
+};
+let _currentPage = 'dashboard';
+
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pg-'+page)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.toggle('active', n.getAttribute('onclick')?.includes(`'${page}'`));
+  });
+  const info = PAGE_INFO[page]||{title:page,sub:''};
+  document.getElementById('topbar-title').textContent = info.title;
+  document.getElementById('topbar-sub').textContent = info.sub;
+  _currentPage = page;
+  renderPage(page);
+}
+
+function renderPage(page) {
+  const map = {
+    dashboard:renderDashboard, machines:renderMachines, qr:renderQR,
+    tickets:renderTickets, tracking:renderTracking, purchase:renderPurchase,
+    pm:renderPM, calendar:renderCalendar, users:renderUsers,
+    report:()=>renderReport(_currentReportTab||'summary'),
+    settings:renderSettings,
+  };
+  if (map[page]) map[page]();
+}
+
+function updateNavBadges() {
+  const M=db.machines||[], T=db.tickets||[], U=db.users||[], P=db.purchases||[];
+  document.getElementById('nav-mac-cnt').textContent = M.length||'';
+  const open = T.filter(t=>!['done','verified','closed'].includes(t.status)).length;
+  document.getElementById('nav-ticket-cnt').textContent = open||'';
+  document.getElementById('nav-user-cnt').textContent = U.length||'';
+  const purPending = P.filter(p=>p.status==='pending').length;
+  document.getElementById('nav-pur-cnt').textContent = purPending||'';
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════
+function renderDashboard() {
+  const T=db.tickets||[], M=db.machines||[], U=db.users||[];
+  const active=T.filter(t=>!['done','verified','closed'].includes(t.status));
+  const techs=U.filter(u=>u.role==='tech');
+  const pmTks=T.filter(t=>t.type==='pm');
+  const pmDone=pmTks.filter(t=>['done','verified','closed'].includes(t.status)).length;
+  const depts=[...new Set(M.map(m=>m.dept||'—'))];
+
+  document.getElementById('dash-kpi').innerHTML = `
+    <div class="kpi-card blue" onclick="goTo('machines')">
+      <div class="kpi-icon">❄️</div>
+      <div class="kpi-val">${M.length}</div>
+      <div class="kpi-lbl">เครื่องแอร์ทั้งหมด</div>
+      <div class="kpi-trend">${depts.length} แผนก</div>
+    </div>
+    <div class="kpi-card yellow" onclick="goTo('tickets')">
+      <div class="kpi-icon">🔧</div>
+      <div class="kpi-val">${active.length}</div>
+      <div class="kpi-lbl">ใบงานค้าง</div>
+      <div class="kpi-trend">ทั้งหมด ${T.length}</div>
+    </div>
+    <div class="kpi-card green" onclick="goTo('users')">
+      <div class="kpi-icon">👷</div>
+      <div class="kpi-val">${techs.length}</div>
+      <div class="kpi-lbl">ช่างซ่อม</div>
+      <div class="kpi-trend">ผู้ใช้ ${U.length} คน</div>
+    </div>
+    <div class="kpi-card red" onclick="goTo('pm')">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-val">${pmTks.length}</div>
+      <div class="kpi-lbl">ใบงาน PM ทั้งหมด</div>
+      <div class="kpi-trend">เสร็จ ${pmDone}</div>
+    </div>`;
+
+  // Status chart
+  const statuses = [
+    {k:'new',lbl:'รอจ่าย',c:'#3b82f6'},
+    {k:'assigned',lbl:'จ่ายงาน',c:'#8b5cf6'},
+    {k:'inprogress',lbl:'ซ่อม',c:'#f59e0b'},
+    {k:'waiting_part',lbl:'รออะไหล่',c:'#ef4444'},
+    {k:'done',lbl:'เสร็จ',c:'#10b981'},
+    {k:'closed',lbl:'ปิดงาน',c:'#6b7280'},
+  ];
+  const maxN = Math.max(1,...statuses.map(s=>T.filter(t=>t.status===s.k).length));
+  document.getElementById('status-chart').innerHTML = statuses.map(s=>{
+    const n=T.filter(t=>t.status===s.k).length;
+    const h=Math.max(4,Math.round((n/maxN)*140));
+    return `<div class="bar-wrap">
+      <div class="bar" style="height:${h}px;background:${s.c}33;border:1px solid ${s.c}"></div>
+      <div style="font-size:0.75rem;font-weight:700;color:${s.c};font-family:monospace">${n}</div>
+      <div class="bar-lbl">${s.lbl}</div></div>`;
+  }).join('');
+
+  // Tech workload
+  const twEl = document.getElementById('tech-workload');
+  if(!techs.length){twEl.innerHTML='<div class="empty" style="padding:8px">ไม่มีช่าง</div>';return;}
+  const maxW=Math.max(1,...techs.map(u=>T.filter(t=>t.assigneeId===u.id&&!['done','verified','closed'].includes(t.status)).length));
+  twEl.innerHTML=techs.map(u=>{
+    const cnt=T.filter(t=>t.assigneeId===u.id&&!['done','verified','closed'].includes(t.status)).length;
+    const pct=Math.round(cnt/(maxW||1)*100);
+    const c=cnt>4?'var(--red)':cnt>2?'var(--yellow)':'var(--green)';
+    return `<div class="prog-row">
+      <div class="prog-label" title="${u.name}">${u.name}</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" style="width:${pct}%;background:${c}"></div></div>
+      <div class="prog-val">${cnt}</div></div>`;
+  }).join('');
+
+  // Dept summary
+  const deptMap={};
+  M.forEach(m=>{
+    const d=m.dept||'—';
+    if(!deptMap[d])deptMap[d]={cnt:0,open:0,zone:m.zone};
+    deptMap[d].cnt++;
+    if(T.some(t=>t.machineId===m.id&&!['done','verified','closed'].includes(t.status)))deptMap[d].open++;
+  });
+  const total=M.length||1;
+  document.getElementById('dept-summary-body').innerHTML=Object.entries(deptMap).sort((a,b)=>b[1].cnt-a[1].cnt).map(([d,v])=>`
+    <tr>
+      <td><span style="font-weight:600">${d}</span></td>
+      <td><span class="mono" style="color:var(--accent2)">${v.cnt}</span></td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="prog-bar-wrap" style="width:80px"><div class="prog-bar" style="width:${Math.round(v.cnt/total*100)}%"></div></div>
+        <span style="font-size:0.65rem;color:var(--muted)">${Math.round(v.cnt/total*100)}%</span>
+      </div></td>
+      <td>${v.open?`<span class="badge red">${v.open} งาน</span>`:'<span class="badge muted">—</span>'}</td>
+      <td><span class="badge ${v.zone==='process'?'open':'purple'}">${v.zone||'—'}</span></td>
+    </tr>`).join('')||'<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>';
+}
+
+// ══════════════════════════════════════════════════
+// MACHINES
+// ══════════════════════════════════════════════════
+let _macPage=0; const MAC_PER=30;
+let _editMachineId=null;
+
+function renderMachines() {
+  const M=db.machines||[];
+  const q=(document.getElementById('mac-search')?.value||'').toLowerCase();
+  const deptF=document.getElementById('mac-dept-filter')?.value||'';
+  const zoneF=document.getElementById('mac-zone-filter')?.value||'';
+  const depts=[...new Set(M.map(m=>m.dept||'—'))].sort();
+  const sel=document.getElementById('mac-dept-filter');
+  if(sel&&sel.options.length===1) depts.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o);});
+  const qrSel=document.getElementById('qr-dept');
+  if(qrSel&&qrSel.options.length===1) depts.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;qrSel.appendChild(o);});
+
+  const filtered=M.filter(m=>{
+    const txt=[m.id,m.room,m.brand,m.model,m.dept,m.fl,m.eq].join(' ').toLowerCase();
+    return(!q||txt.includes(q))&&(!deptF||(m.dept||'—')===deptF)&&(!zoneF||m.zone===zoneF);
+  });
+  document.getElementById('mac-stat-row').innerHTML=`
+    <div class="stat-box"><div class="stat-num" style="color:var(--accent2)">${M.length}</div><div class="stat-lbl">เครื่องทั้งหมด</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${M.filter(m=>m.zone==='process').length}</div><div class="stat-lbl">Zone Process</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--purple)">${M.filter(m=>m.zone==='office').length}</div><div class="stat-lbl">Zone Office</div></div>`;
+  const page=filtered.slice(_macPage*MAC_PER,(_macPage+1)*MAC_PER);
+  document.getElementById('machine-tbody').innerHTML=page.map(m=>`
+    <tr>
+      <td><span class="mono" style="color:var(--accent2)">${m.id||'—'}</span></td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.room||'—'}</td>
+      <td>${m.brand||'—'}${m.model?' / '+m.model:''}</td>
+      <td><span class="mono">${(m.btu||'—').toLocaleString()}</span></td>
+      <td>${m.dept||'—'}</td>
+      <td><span class="badge ${m.zone==='process'?'open':'purple'}">${m.zone||'—'}</span></td>
+      <td class="mono" style="font-size:0.62rem">${m.fl||'—'}</td>
+      <td class="mono" style="font-size:0.62rem">${m.eq||'—'}</td>
+      <td>${m.pmInterval||'—'} เดือน</td>
+      <td><img src="https://api.qrserver.com/v1/create-qr-code/?size=40x40&data=${encodeURIComponent(m.id)}&margin=1" width="40" height="40" style="border-radius:4px"></td>
+      <td>
+        <button class="filter-btn" style="padding:3px 8px;font-size:0.62rem" onclick="editMachine('${m.id}')">✏️</button>
+        <button class="filter-btn" style="padding:3px 8px;font-size:0.62rem;color:var(--red)" onclick="delMachine('${m.id}')">🗑️</button>
+      </td>
+    </tr>`).join('')||'<tr><td colspan="11" class="empty">ไม่พบเครื่อง</td></tr>';
+  const totalPages=Math.ceil(filtered.length/MAC_PER);
+  document.getElementById('mac-pager').innerHTML=totalPages>1?
+    `หน้า ${_macPage+1}/${totalPages} &nbsp;
+     <button class="filter-btn" style="padding:4px 10px" onclick="_macPage=Math.max(0,_macPage-1);renderMachines()" ${_macPage===0?'disabled':''}>‹</button>
+     <button class="filter-btn" style="padding:4px 10px" onclick="_macPage=Math.min(${totalPages-1},_macPage+1);renderMachines()" ${_macPage>=totalPages-1?'disabled':''}>›</button>
+     &nbsp; แสดง ${filtered.length} เครื่อง`
+    :`แสดง ${filtered.length} จาก ${M.length} เครื่อง`;
+}
+
+function openMachineModal(){ _editMachineId=null; ['m-id','m-brand','m-model','m-btu','m-pm','m-room','m-dept','m-fl','m-eq'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); document.getElementById('m-zone').value='process'; openModal('modal-machine'); }
+function editMachine(id){ const m=db.machines.find(x=>x.id===id); if(!m)return; _editMachineId=id; document.getElementById('m-id').value=m.id||''; document.getElementById('m-brand').value=m.brand||''; document.getElementById('m-model').value=m.model||''; document.getElementById('m-btu').value=m.btu||''; document.getElementById('m-pm').value=m.pmInterval||''; document.getElementById('m-room').value=m.room||''; document.getElementById('m-dept').value=m.dept||''; document.getElementById('m-fl').value=m.fl||''; document.getElementById('m-eq').value=m.eq||''; document.getElementById('m-zone').value=m.zone||'process'; openModal('modal-machine'); }
+function delMachine(id){ if(!confirm(`ลบเครื่อง ${id}?`))return; db.machines=db.machines.filter(m=>m.id!==id); saveDB(); renderMachines(); updateNavBadges(); showToast('🗑️ ลบแล้ว'); }
+function saveMachine(){
+  const id=document.getElementById('m-id').value.trim(); if(!id){showToast('⚠️ กรุณาใส่รหัส Air');return;}
+  const data={id,brand:document.getElementById('m-brand').value.trim(),model:document.getElementById('m-model').value.trim(),btu:document.getElementById('m-btu').value.trim(),pmInterval:document.getElementById('m-pm').value.trim(),room:document.getElementById('m-room').value.trim(),dept:document.getElementById('m-dept').value.trim(),fl:document.getElementById('m-fl').value.trim(),eq:document.getElementById('m-eq').value.trim(),zone:document.getElementById('m-zone').value,updatedAt:new Date().toISOString()};
+  if(_editMachineId){const idx=db.machines.findIndex(m=>m.id===_editMachineId);if(idx>=0)db.machines[idx]={...db.machines[idx],...data};}
+  else{if(db.machines.find(m=>m.id===id)){showToast('⚠️ รหัสนี้มีอยู่แล้ว');return;}db.machines.push({...data,createdAt:new Date().toISOString()});}
+  saveDB(); closeModal('modal-machine'); renderMachines(); updateNavBadges(); showToast('💾 บันทึกแล้ว');
+}
+
+// ══════════════════════════════════════════════════
+// QR CODE
+// ══════════════════════════════════════════════════
+function renderQR() {
+  const M=db.machines||[];
+  const q=(document.getElementById('qr-search')?.value||'').toLowerCase();
+  const deptF=document.getElementById('qr-dept')?.value||'';
+  const filtered=M.filter(m=>{
+    const txt=[m.id,m.room,m.dept].join(' ').toLowerCase();
+    return(!q||txt.includes(q))&&(!deptF||(m.dept||'—')===deptF);
+  });
+  document.getElementById('qr-count').textContent=`แสดง ${filtered.length} เครื่อง`;
+  document.getElementById('qr-grid').innerHTML=filtered.map(m=>`
+    <div style="background:white;border-radius:10px;padding:12px 8px;text-align:center;border:2px solid transparent;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='transparent'">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(m.id+'|'+m.room+'|'+m.dept)}&margin=2" width="100" height="100" style="margin-bottom:6px">
+      <div style="font-family:monospace;font-size:0.65rem;font-weight:700;color:#0f172a">${m.id}</div>
+      <div style="font-size:0.55rem;color:#64748b;line-height:1.3">${m.room||'—'}</div>
+      <div style="font-size:0.52rem;color:#94a3b8">${m.dept||'—'}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+// TICKETS
+// ══════════════════════════════════════════════════
+let _tkPage=0; const TK_PER=25;
+let _editTicketId=null;
+
+function renderTickets() {
+  const T=db.tickets||[];
+  const q=(document.getElementById('tk-search')?.value||'').toLowerCase();
+  const sF=document.getElementById('tk-status')?.value||'';
+  const pF=document.getElementById('tk-priority')?.value||'';
+  const filtered=T.filter(t=>{
+    const txt=[t.id,t.problem,t.machine,t.dept,t.reporter,t.assignee].join(' ').toLowerCase();
+    return(!q||txt.includes(q))&&(!sF||t.status===sF)&&(!pF||t.priority===pF);
+  }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const open=filtered.filter(t=>!['done','verified','closed'].includes(t.status));
+  const done=filtered.filter(t=>['done','verified','closed'].includes(t.status));
+  const wait=filtered.filter(t=>t.status==='waiting_part');
+  document.getElementById('tk-stat-row').innerHTML=`
+    <div class="stat-box"><div class="stat-num" style="color:var(--red)">${open.length}</div><div class="stat-lbl">ค้างอยู่</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${done.length}</div><div class="stat-lbl">เสร็จแล้ว</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--yellow)">${wait.length}</div><div class="stat-lbl">รออะไหล่</div></div>`;
+  const page=filtered.slice(_tkPage*TK_PER,(_tkPage+1)*TK_PER);
+  const prioMap={high:'<span class="badge red">🔴 ด่วนมาก</span>',mid:'<span class="badge open">🟡 ปานกลาง</span>',low:'<span class="badge muted">🟢 ปกติ</span>'};
+  const statMap={new:'<span class="badge new">รอจ่ายงาน</span>',assigned:'<span class="badge purple">จ่ายงานแล้ว</span>',accepted:'<span class="badge cyan">รับงานแล้ว</span>',inprogress:'<span class="badge open">กำลังซ่อม</span>',waiting_part:'<span class="badge red">รออะไหล่</span>',done:'<span class="badge done">เสร็จแล้ว</span>',verified:'<span class="badge done">ตรวจรับแล้ว</span>',closed:'<span class="badge muted">ปิดงาน</span>'};
+  document.getElementById('ticket-tbody').innerHTML=page.map(t=>`
+    <tr>
+      <td><span class="mono" style="color:var(--accent2)">${t.id}</span></td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.problem||'—'}</td>
+      <td><span class="mono" style="font-size:0.68rem">${t.machineId||'—'}</span></td>
+      <td>${t.dept||'—'}</td>
+      <td>${t.reporter||'—'}</td>
+      <td>${t.assignee||'—'}</td>
+      <td>${prioMap[t.priority]||t.priority||'—'}</td>
+      <td>${statMap[t.status]||t.status||'—'}</td>
+      <td class="mono" style="font-size:0.68rem">${(t.createdAt||'').slice(0,10)}</td>
+      <td class="mono" style="color:var(--yellow)">${t.cost?'฿'+Number(t.cost).toLocaleString():'—'}</td>
+      <td>
+        <button class="filter-btn" style="padding:3px 8px;font-size:0.62rem" onclick="editTicket('${t.id}')">✏️</button>
+        <button class="filter-btn" style="padding:3px 8px;font-size:0.62rem;color:var(--red)" onclick="delTicket('${t.id}')">🗑️</button>
+      </td>
+    </tr>`).join('')||'<tr><td colspan="11" class="empty">ไม่พบใบงาน</td></tr>';
+  const totalPages=Math.ceil(filtered.length/TK_PER);
+  document.getElementById('tk-pager').innerHTML=totalPages>1?`หน้า ${_tkPage+1}/${totalPages} &nbsp;
+    <button class="filter-btn" style="padding:4px 10px" onclick="_tkPage=Math.max(0,_tkPage-1);renderTickets()" ${_tkPage===0?'disabled':''}>‹</button>
+    <button class="filter-btn" style="padding:4px 10px" onclick="_tkPage=Math.min(${totalPages-1},_tkPage+1);renderTickets()" ${_tkPage>=totalPages-1?'disabled':''}>›</button>
+    &nbsp; แสดง ${filtered.length} ใบงาน`:`แสดง ${filtered.length} จาก ${T.length} ใบงาน`;
+}
+
+function openTicketModal(){
+  _editTicketId=null;
+  ['tk-reporter','tk-problem','tk-cost'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const ms=document.getElementById('tk-machine'); ms.innerHTML='<option value="">เลือกเครื่อง</option>';
+  (db.machines||[]).forEach(m=>{const o=document.createElement('option');o.value=m.id;o.textContent=`${m.id} — ${m.room||''} (${m.dept||''})`;ms.appendChild(o);});
+  const as=document.getElementById('tk-assignee'); as.innerHTML='<option value="">เลือกช่าง</option>';
+  (db.users||[]).filter(u=>u.role==='tech').forEach(u=>{const o=document.createElement('option');o.value=u.id;o.textContent=u.name;as.appendChild(o);});
+  openModal('modal-ticket');
+}
+function editTicket(id){
+  const t=db.tickets.find(x=>x.id===id); if(!t)return; _editTicketId=id;
+  openTicketModal();
+  setTimeout(()=>{
+    document.getElementById('tk-machine').value=t.machineId||'';
+    document.getElementById('tk-prio').value=t.priority||'low';
+    document.getElementById('tk-reporter').value=t.reporter||'';
+    document.getElementById('tk-assignee').value=t.assigneeId||'';
+    document.getElementById('tk-problem').value=t.problem||'';
+    document.getElementById('tk-stat').value=t.status||'new';
+    document.getElementById('tk-cost').value=t.cost||'';
+  },50);
+}
+function delTicket(id){ if(!confirm('ลบใบงาน?'))return; db.tickets=db.tickets.filter(t=>t.id!==id); saveDB(); renderTickets(); updateNavBadges(); showToast('🗑️ ลบใบงานแล้ว'); }
+function saveTicket(){
+  const macId=document.getElementById('tk-machine').value; if(!macId){showToast('⚠️ เลือกเครื่องแอร์');return;}
+  const problem=document.getElementById('tk-problem').value.trim(); if(!problem){showToast('⚠️ กรุณาระบุปัญหา');return;}
+  const mac=db.machines.find(m=>m.id===macId)||{};
+  const assigneeId=document.getElementById('tk-assignee').value;
+  const assigneeUser=db.users.find(u=>u.id===assigneeId);
+  const data={machineId:macId,machine:`${macId} (${mac.room||''})`,dept:mac.dept||'',problem,reporter:document.getElementById('tk-reporter').value.trim(),assigneeId,assignee:assigneeUser?.name||'',priority:document.getElementById('tk-prio').value,status:document.getElementById('tk-stat').value,cost:document.getElementById('tk-cost').value||0,type:'repair'};
+  if(_editTicketId){const idx=db.tickets.findIndex(t=>t.id===_editTicketId);if(idx>=0)db.tickets[idx]={...db.tickets[idx],...data};}
+  else{const newId=`TK-${String(db._seq||1).padStart(5,'0')}`;db._seq=(db._seq||1)+1;db.tickets.push({...data,id:newId,createdAt:new Date().toISOString()});}
+  saveDB(); closeModal('modal-ticket'); renderTickets(); updateNavBadges(); showToast('💾 บันทึกใบงานแล้ว');
+}
+
+// ══════════════════════════════════════════════════
+// TRACKING
+// ══════════════════════════════════════════════════
+function renderTracking() {
+  const T=db.tickets||[], U=db.users||[];
+  const techs=U.filter(u=>u.role==='tech');
+  const statMap={new:'รอจ่ายงาน',assigned:'จ่ายงานแล้ว',accepted:'รับงานแล้ว',inprogress:'กำลังซ่อม',waiting_part:'รออะไหล่'};
+  document.getElementById('tracking-tech-grid').innerHTML=techs.map(u=>{
+    const myTk=T.filter(t=>t.assigneeId===u.id&&!['done','verified','closed'].includes(t.status));
+    const load=myTk.length;
+    const loadColor=load>4?'var(--red)':load>2?'var(--yellow)':'var(--green)';
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:1.1rem">${u.name.charAt(0)}</div>
+        <div>
+          <div style="font-weight:600;font-size:0.82rem">${u.name}</div>
+          <div style="font-size:0.65rem;color:var(--muted)">${u.dept||'—'}</div>
+        </div>
+        <div style="margin-left:auto;font-size:1.4rem;font-weight:700;font-family:monospace;color:${loadColor}">${load}</div>
+      </div>
+      ${myTk.slice(0,4).map(t=>`<div style="background:var(--surface2);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:0.72rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span class="mono" style="color:var(--accent2);font-size:0.65rem">${t.id}</span>
+          <span style="font-size:0.6rem;color:var(--muted)">${statMap[t.status]||t.status}</span>
+        </div>
+        <div style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem}</div>
+      </div>`).join('')}
+      ${myTk.length>4?`<div style="text-align:center;font-size:0.65rem;color:var(--muted)">+${myTk.length-4} งานอื่นๆ</div>`:''}
+    </div>`;
+  }).join('');
+  const waitPart=T.filter(t=>t.status==='waiting_part');
+  document.getElementById('waiting-part-tbody').innerHTML=waitPart.map(t=>`
+    <tr>
+      <td><span class="mono" style="color:var(--accent2)">${t.id}</span></td>
+      <td>${t.problem||'—'}</td>
+      <td class="mono" style="font-size:0.68rem">${t.machineId||'—'}</td>
+      <td>${t.assignee||'—'}</td>
+      <td><span class="badge orange">${t.waitingPart||'อะไหล่'}</span></td>
+      <td class="mono" style="font-size:0.68rem">${(t.createdAt||'').slice(0,10)}</td>
+    </tr>`).join('')||'<tr><td colspan="6" class="empty">ไม่มีใบงานรออะไหล่</td></tr>';
+}
+
+// ══════════════════════════════════════════════════
+// PURCHASE
+// ══════════════════════════════════════════════════
+let _editPurId=null;
+function renderPurchase(){
+  const P=db.purchases||[];
+  const q=(document.getElementById('pur-search')?.value||'').toLowerCase();
+  const sF=document.getElementById('pur-status')?.value||'';
+  const filtered=P.filter(p=>{
+    const txt=[p.id,p.item,p.requester,p.ticketId].join(' ').toLowerCase();
+    return(!q||txt.includes(p.item)||txt.includes(q))&&(!sF||p.status===sF);
+  }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const statMap={pending:'<span class="badge open">รออนุมัติ</span>',approved:'<span class="badge cyan">อนุมัติแล้ว</span>',ordered:'<span class="badge purple">สั่งซื้อแล้ว</span>',received:'<span class="badge done">รับแล้ว</span>'};
+  document.getElementById('purchase-tbody').innerHTML=filtered.map(p=>`
+    <tr>
+      <td><span class="mono" style="color:var(--accent2)">${p.id}</span></td>
+      <td>${p.item||'—'}</td>
+      <td class="mono">${p.qty||'—'}</td>
+      <td class="mono">฿${Number(p.unitPrice||0).toLocaleString()}</td>
+      <td class="mono" style="color:var(--yellow);font-weight:700">฿${Number(p.total||0).toLocaleString()}</td>
+      <td>${p.requester||'—'}</td>
+      <td class="mono" style="font-size:0.68rem;color:var(--accent2)">${p.ticketId||'—'}</td>
+      <td>${statMap[p.status]||p.status||'—'}</td>
+      <td class="mono" style="font-size:0.68rem">${(p.createdAt||'').slice(0,10)}</td>
+      <td>
+        <button class="filter-btn" style="padding:3px 8px;font-size:0.62rem" onclick="approvePR('${p.id}')">✅</button>
+        <button class="filter-btn" style="padding:3px 8px;font-size:0.62rem;color:var(--red)" onclick="delPR('${p.id}')">🗑️</button>
+      </td>
+    </tr>`).join('')||'<tr><td colspan="10" class="empty">ไม่พบใบสั่งซื้อ</td></tr>';
+}
+function openPurchaseModal(){ _editPurId=null; ['pur-item','pur-ticket','pur-requester'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); document.getElementById('pur-qty').value=1; document.getElementById('pur-price').value=''; document.getElementById('pur-stat').value='pending'; openModal('modal-purchase'); }
+function savePurchase(){
+  const item=document.getElementById('pur-item').value.trim(); if(!item){showToast('⚠️ ระบุรายการอะไหล่');return;}
+  const qty=parseInt(document.getElementById('pur-qty').value)||1;
+  const unitPrice=parseFloat(document.getElementById('pur-price').value)||0;
+  const data={item,qty,unitPrice,total:qty*unitPrice,requester:document.getElementById('pur-requester').value.trim(),ticketId:document.getElementById('pur-ticket').value.trim(),status:document.getElementById('pur-stat').value};
+  const newId=`PR-${String((db.purchases||[]).length+1).padStart(4,'0')}`;
+  db.purchases=db.purchases||[]; db.purchases.unshift({...data,id:newId,createdAt:new Date().toISOString()});
+  saveDB(); closeModal('modal-purchase'); renderPurchase(); updateNavBadges(); showToast('💾 สร้าง PR แล้ว');
+}
+function approvePR(id){ const p=db.purchases.find(x=>x.id===id); if(!p)return; const next={pending:'approved',approved:'ordered',ordered:'received'}; if(next[p.status]){p.status=next[p.status];saveDB();renderPurchase();showToast(`✅ อัพเดตสถานะ ${p.id} → ${p.status}`);} }
+function delPR(id){ if(!confirm('ลบ PR นี้?'))return; db.purchases=db.purchases.filter(p=>p.id!==id); saveDB(); renderPurchase(); showToast('🗑️ ลบ PR แล้ว'); }
+
+// ══════════════════════════════════════════════════
+// PM
+// ══════════════════════════════════════════════════
+let _pmTab='plan';
+function switchPMTab(tab, el){
+  _pmTab=tab;
+  document.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  ['plan','history','due'].forEach(t=>{const w=document.getElementById('pm-'+t+'-wrap');if(w)w.style.display=t===tab?'block':'none';});
+  renderPM();
+}
+function renderPM(){
+  const P=db.pmPlans||[], T=db.tickets||[];
+  if(_pmTab==='plan'){
+    document.getElementById('pm-plan-wrap').innerHTML=`<div class="tbl-wrap tbl-scroll"><table>
+      <thead><tr><th>วันที่</th><th>ประเภท PM</th><th>ช่าง</th><th>แผนก</th><th>เครื่อง</th><th>สถานะ</th><th>ความถี่</th></tr></thead>
+      <tbody>${P.sort((a,b)=>a.date.localeCompare(b.date)).map(p=>`
+        <tr>
+          <td class="mono">${p.date}</td>
+          <td>${p.type}</td>
+          <td>${p.tech||'—'}</td>
+          <td>${p.dept||'—'}</td>
+          <td class="mono" style="color:var(--accent2)">${p.machineId||'—'}</td>
+          <td>${p.status==='done'?'<span class="badge done">เสร็จแล้ว</span>':'<span class="badge open">รอดำเนินการ</span>'}</td>
+          <td>${p.frequency||'—'} เดือน</td>
+        </tr>`).join('')||'<tr><td colspan="7" class="empty">ไม่มีแผน PM</td></tr>'}
+      </tbody></table></div>`;
+  } else if(_pmTab==='history'){
+    const pmTks=T.filter(t=>t.type==='pm'&&['done','verified','closed'].includes(t.status));
+    document.getElementById('pm-history-wrap').innerHTML=`<div class="tbl-wrap tbl-scroll"><table>
+      <thead><tr><th>วันที่</th><th>ประเภท</th><th>เครื่อง</th><th>แผนก</th><th>ช่าง</th></tr></thead>
+      <tbody>${pmTks.map(t=>`<tr>
+        <td class="mono">${(t.createdAt||'').slice(0,10)}</td>
+        <td>PM</td>
+        <td class="mono" style="color:var(--accent2)">${t.machineId||'—'}</td>
+        <td>${t.dept||'—'}</td>
+        <td>${t.assignee||'—'}</td>
+      </tr>`).join('')||'<tr><td colspan="5" class="empty">ไม่มีประวัติ</td></tr>'}
+      </tbody></table></div>`;
+  } else {
+    const today=new Date(); today.setHours(0,0,0,0);
+    const due=P.filter(p=>{const d=new Date(p.date); return d>=today && d<=new Date(today.getTime()+30*864e5) && p.status!=='done';});
+    document.getElementById('pm-due-wrap').innerHTML=due.length?`<div style="display:flex;flex-direction:column;gap:10px">${due.map(p=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="background:var(--yellow);color:#0a0e1a;border-radius:8px;padding:10px 14px;font-size:1.1rem;font-weight:700;font-family:monospace;text-align:center;min-width:48px">${new Date(p.date).getDate()}</div>
+        <div>
+          <div style="font-weight:600;font-size:0.82rem">${p.type} — ${p.machineId}</div>
+          <div style="font-size:0.68rem;color:var(--muted)">${p.tech} · ${p.dept}</div>
+        </div>
+        <div style="margin-left:auto"><span class="badge open">ถึงกำหนด</span></div>
+      </div>`).join('')}</div>`:`<div class="tbl-wrap"><div class="empty"><div class="empty-icon">✅</div>ไม่มีงาน PM ถึงกำหนดใน 30 วัน</div></div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════════════════
+let _calYear=new Date().getFullYear(), _calMonth=new Date().getMonth();
+const MONTHS_TH=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const DAYS_TH=['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+function calNav(dir){ _calMonth+=dir; if(_calMonth>11){_calMonth=0;_calYear++;} if(_calMonth<0){_calMonth=11;_calYear--;} renderCalendar(); }
+function calToday(){ _calYear=new Date().getFullYear(); _calMonth=new Date().getMonth(); renderCalendar(); }
+
+function renderCalendar(){
+  document.getElementById('cal-title').textContent=`${MONTHS_TH[_calMonth]} ${_calYear+543}`;
+  const E=db.calEvents||[], P=db.pmPlans||[];
+  const ym=`${_calYear}-${String(_calMonth+1).padStart(2,'0')}`;
+  const eventsThisMonth=[...E.filter(e=>(e.date||'').startsWith(ym)),...P.filter(p=>(p.date||'').startsWith(ym)).map(p=>({...p,title:`PM ${p.machineId}`,color:p.status==='done'?'#10b981':'#f59e0b'}))];
+  const firstDay=new Date(_calYear,_calMonth,1).getDay();
+  const daysInMonth=new Date(_calYear,_calMonth+1,0).getDate();
+  const today=new Date();
+  let html=`<div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)">`;
+  DAYS_TH.forEach(d=>html+=`<div style="padding:8px;text-align:center;font-size:0.65rem;font-weight:700;color:var(--muted);background:var(--surface2)">${d}</div>`);
+  html+='</div><div style="display:grid;grid-template-columns:repeat(7,1fr)">';
+  for(let i=0;i<firstDay;i++) html+=`<div style="min-height:80px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface3);opacity:.5"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=today.getFullYear()===_calYear&&today.getMonth()===_calMonth&&today.getDate()===d;
+    const dayEvs=eventsThisMonth.filter(e=>e.date===dateStr);
+    html+=`<div style="min-height:80px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:6px;${isToday?'background:rgba(59,130,246,.08)':''}">
+      <div style="font-size:0.72rem;font-weight:${isToday?'700':'400'};color:${isToday?'var(--accent2)':'var(--text)'};margin-bottom:4px">${d}</div>
+      ${dayEvs.slice(0,3).map(e=>`<div style="background:${e.color||'#3b82f6'}22;border-left:2px solid ${e.color||'#3b82f6'};border-radius:3px;padding:2px 4px;font-size:0.55rem;color:${e.color||'var(--text)'};margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>`).join('')}
+      ${dayEvs.length>3?`<div style="font-size:0.52rem;color:var(--muted)">+${dayEvs.length-3} เพิ่มเติม</div>`:''}
+    </div>`;
+  }
+  const rem=(firstDay+daysInMonth)%7; if(rem>0){for(let i=rem;i<7;i++) html+=`<div style="min-height:80px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface3);opacity:.5"></div>`;}
+  html+='</div>';
+  document.getElementById('cal-grid').innerHTML=html;
+  document.getElementById('cal-events').innerHTML=eventsThisMonth.length?eventsThisMonth.sort((a,b)=>(a.date||'').localeCompare(b.date)).map(e=>`
+    <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${e.color||'var(--accent)'};border-radius:10px;padding:10px 14px">
+      <div style="font-size:0.72rem;font-weight:600">${e.title}</div>
+      <div style="font-size:0.62rem;color:var(--muted);">${e.date} · ${e.tech||e.dept||'—'}</div>
+    </div>`).join(''):`<div style="color:var(--muted);font-size:0.78rem;text-align:center;padding:24px">ไม่มีกิจกรรมเดือนนี้</div>`;
+}
+
+// ══════════════════════════════════════════════════
+// USERS
+// ══════════════════════════════════════════════════
+let _editUserId=null;
+function renderUsers(){
+  const U=db.users||[], T=db.tickets||[];
+  const q=(document.getElementById('user-search')?.value||'').toLowerCase();
+  const rF=document.getElementById('user-role')?.value||'';
+  const filtered=U.filter(u=>{
+    const txt=[u.name,u.username,u.dept,u.tel].join(' ').toLowerCase();
+    return(!q||txt.includes(q))&&(!rF||u.role===rF);
+  });
+  const roleCount={admin:U.filter(u=>u.role==='admin').length,tech:U.filter(u=>u.role==='tech').length,reporter:U.filter(u=>u.role==='reporter').length,executive:U.filter(u=>u.role==='executive').length};
+  document.getElementById('user-stat-row').innerHTML=`
+    <div class="stat-box"><div class="stat-num" style="color:var(--accent2)">${U.length}</div><div class="stat-lbl">ผู้ใช้ทั้งหมด</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${roleCount.tech}</div><div class="stat-lbl">ช่าง</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--yellow)">${roleCount.reporter}</div><div class="stat-lbl">ผู้แจ้ง</div></div>`;
+  const roleMap={admin:'<span class="badge red">Admin</span>',tech:'<span class="badge open">ช่าง</span>',reporter:'<span class="badge new">ผู้แจ้ง</span>',executive:'<span class="badge purple">Executive</span>'};
+  document.getElementById('user-tbody').innerHTML=filtered.map(u=>{
+    const openTk=T.filter(t=>t.assigneeId===u.id&&!['done','verified','closed'].includes(t.status)).length;
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.82rem;flex-shrink:0">${u.name?.charAt(0)||'?'}</div>
+        <span style="font-weight:500">${u.name}</span>
+      </div></td>
+      <td class="mono">${u.username||'—'}</td>
+      <td>${roleMap[u.role]||u.role}</td>
+      <td>${u.dept||'—'}</td>
+      <td class="mono">${u.tel||'—'}</td>
+      <td>${openTk?`<span class="badge red">${openTk} งาน</span>`:'<span class="badge muted">—</span>'}</td>
+      <td>${u.active!==false?'<span class="badge done">Active</span>':'<span class="badge muted">Inactive</span>'}</td>
+      <td>
+        <button class="filter-btn" style="padding:3px 8px;font-size:0.62rem" onclick="editUser('${u.id}')">✏️</button>
+        <button class="filter-btn" style="padding:3px 8px;font-size:0.62rem;color:var(--red)" onclick="delUser('${u.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8" class="empty">ไม่พบผู้ใช้</td></tr>';
+}
+function openUserModal(){ _editUserId=null; ['u-name','u-username','u-dept','u-tel','u-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); openModal('modal-user'); }
+function editUser(id){ const u=db.users.find(x=>x.id===id); if(!u)return; _editUserId=id; document.getElementById('u-name').value=u.name||''; document.getElementById('u-username').value=u.username||''; document.getElementById('u-role').value=u.role||'tech'; document.getElementById('u-dept').value=u.dept||''; document.getElementById('u-tel').value=u.tel||''; document.getElementById('u-pass').value=''; openModal('modal-user'); }
+function delUser(id){ if(!confirm('ลบผู้ใช้?'))return; db.users=db.users.filter(u=>u.id!==id); saveDB(); renderUsers(); updateNavBadges(); showToast('🗑️ ลบผู้ใช้แล้ว'); }
+function saveUser(){
+  const name=document.getElementById('u-name').value.trim(); if(!name){showToast('⚠️ กรุณาใส่ชื่อ');return;}
+  const username=document.getElementById('u-username').value.trim(); if(!username){showToast('⚠️ กรุณาใส่ username');return;}
+  const data={name,username,role:document.getElementById('u-role').value,dept:document.getElementById('u-dept').value.trim(),tel:document.getElementById('u-tel').value.trim(),active:true};
+  if(_editUserId){const idx=db.users.findIndex(u=>u.id===_editUserId);if(idx>=0)db.users[idx]={...db.users[idx],...data};}
+  else{const newId=`U${String((db.users||[]).length+1).padStart(3,'0')}`;db.users=db.users||[];db.users.push({...data,id:newId,createdAt:new Date().toISOString()});}
+  saveDB(); closeModal('modal-user'); renderUsers(); updateNavBadges(); showToast('💾 บันทึกผู้ใช้แล้ว');
+}
+
+// ══════════════════════════════════════════════════
+// REPORT
+// ══════════════════════════════════════════════════
+let _currentReportTab='summary';
+function switchReportTab(tab, el){
+  _currentReportTab=tab;
+  document.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderReport(tab);
+}
+function renderReport(tab='summary'){
+  const T=db.tickets||[], M=db.machines||[], U=db.users||[];
+  const el=document.getElementById('report-content');
+  if(tab==='summary'){
+    const done=T.filter(t=>['done','verified','closed'].includes(t.status));
+    const open=T.filter(t=>!['done','verified','closed'].includes(t.status));
+    const totalCost=T.reduce((s,t)=>s+Number(t.cost||0),0);
+    const pct=T.length?Math.round(done.length/T.length*100):0;
+    el.innerHTML=`
+      <div class="stat-row stat-row-4" style="margin-bottom:20px">
+        <div class="stat-box"><div class="stat-num" style="color:var(--accent2)">${T.length}</div><div class="stat-lbl">ใบงานทั้งหมด</div></div>
+        <div class="stat-box"><div class="stat-num" style="color:var(--green)">${done.length}</div><div class="stat-lbl">เสร็จแล้ว</div></div>
+        <div class="stat-box"><div class="stat-num" style="color:var(--red)">${open.length}</div><div class="stat-lbl">ค้างอยู่</div></div>
+        <div class="stat-box"><div class="stat-num" style="color:var(--yellow)">฿${Math.round(totalCost/1000)}K</div><div class="stat-lbl">ค่าซ่อมรวม</div></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:6px">ความคืบหน้าโดยรวม</div>
+        <div style="background:var(--surface3);border-radius:99px;height:10px;overflow:hidden;margin-bottom:6px">
+          <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:99px;transition:width 1s ease"></div>
+        </div>
+        <div style="font-size:0.68rem;color:var(--muted)">${done.length} เสร็จ จาก ${T.length} ใบงาน · ${pct}%</div>
+      </div>`;
+  } else if(tab==='monthly'){
+    const monthMap={};
+    T.forEach(t=>{const ym=(t.createdAt||'').slice(0,7);if(!ym)return;if(!monthMap[ym])monthMap[ym]={total:0,done:0};monthMap[ym].total++;if(['done','verified','closed'].includes(t.status))monthMap[ym].done++;});
+    el.innerHTML=`<div class="tbl-wrap"><table>
+      <thead><tr><th>เดือน</th><th>ใบงานใหม่</th><th>เสร็จ</th><th>ค้าง</th><th>อัตราเสร็จ</th></tr></thead>
+      <tbody>${Object.entries(monthMap).sort((a,b)=>b[0].localeCompare(a[0])).map(([ym,v])=>`
+        <tr><td class="mono">${ym}</td><td class="mono">${v.total}</td><td class="mono" style="color:var(--green)">${v.done}</td><td class="mono" style="color:var(--red)">${v.total-v.done}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar-wrap" style="width:60px"><div class="prog-bar" style="width:${v.total?Math.round(v.done/v.total*100):0}%"></div></div>${v.total?Math.round(v.done/v.total*100):0}%</div></td></tr>`).join('')||'<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>'}
+      </tbody></table></div>`;
+  } else if(tab==='tech'){
+    const techs=U.filter(u=>u.role==='tech');
+    el.innerHTML=`<div class="tbl-wrap"><table>
+      <thead><tr><th>ช่าง</th><th>แผนก</th><th>งานทั้งหมด</th><th>เสร็จ</th><th>ค้าง</th><th>อัตราเสร็จ</th></tr></thead>
+      <tbody>${techs.map(u=>{
+        const myTk=T.filter(t=>t.assigneeId===u.id);
+        const done=myTk.filter(t=>['done','verified','closed'].includes(t.status)).length;
+        const open=myTk.length-done;
+        const pct=myTk.length?Math.round(done/myTk.length*100):0;
+        return `<tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.78rem">${u.name?.charAt(0)||'?'}</div>${u.name}</div></td>
+          <td>${u.dept||'—'}</td><td class="mono">${myTk.length}</td>
+          <td class="mono" style="color:var(--green)">${done}</td><td class="mono" style="color:${open>3?'var(--red)':'var(--muted)'}">${open}</td>
+          <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar-wrap" style="width:60px"><div class="prog-bar" style="width:${pct}%;background:${pct>80?'var(--green)':pct>50?'var(--yellow)':'var(--red)'}"></div></div>${pct}%</div></td></tr>`;
+      }).join('')||'<tr><td colspan="6" class="empty">ไม่มีช่าง</td></tr>'}
+      </tbody></table></div>`;
+  } else if(tab==='dept'){
+    const deptMap={};
+    T.forEach(t=>{const d=t.dept||'—';if(!deptMap[d])deptMap[d]={total:0,done:0};deptMap[d].total++;if(['done','verified','closed'].includes(t.status))deptMap[d].done++;});
+    el.innerHTML=`<div class="tbl-wrap"><table>
+      <thead><tr><th>แผนก</th><th>ใบงานทั้งหมด</th><th>เสร็จ</th><th>ค้าง</th><th>%เสร็จ</th></tr></thead>
+      <tbody>${Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).map(([d,v])=>{
+        const pct=v.total?Math.round(v.done/v.total*100):0;
+        return `<tr><td>${d}</td><td class="mono">${v.total}</td><td class="mono" style="color:var(--green)">${v.done}</td><td class="mono" style="color:var(--red)">${v.total-v.done}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar-wrap" style="width:60px"><div class="prog-bar" style="width:${pct}%"></div></div>${pct}%</div></td></tr>`;
+      }).join('')||'<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>'}
+      </tbody></table></div>`;
+  } else if(tab==='cost'){
+    const byMonth={};
+    T.forEach(t=>{const cost=Number(t.cost||0);if(!cost)return;const ym=(t.createdAt||'').slice(0,7);if(!byMonth[ym])byMonth[ym]=0;byMonth[ym]+=cost;});
+    const total=Object.values(byMonth).reduce((s,v)=>s+v,0);
+    el.innerHTML=`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px">
+        <div style="font-size:0.65rem;color:var(--muted)">ค่าซ่อมรวมทั้งหมด</div>
+        <div style="font-size:2rem;font-weight:700;font-family:monospace;color:var(--yellow)">฿${Math.round(total).toLocaleString()}</div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>เดือน</th><th>ค่าซ่อม (฿)</th><th>สัดส่วน</th></tr></thead>
+        <tbody>${Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).map(([ym,cost])=>`
+          <tr><td class="mono">${ym}</td><td class="mono" style="color:var(--yellow)">฿${Math.round(cost).toLocaleString()}</td>
+          <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar-wrap" style="width:80px;background:rgba(245,158,11,.15)"><div class="prog-bar" style="width:${total?Math.round(cost/total*100):0}%;background:var(--yellow)"></div></div>${total?Math.round(cost/total*100):0}%</div></td></tr>`).join('')||'<tr><td colspan="3" class="empty">ไม่มีข้อมูล</td></tr>'}
+        </tbody></table></div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════
+function renderSettings(){
+  document.getElementById('cfg-mac-cnt').textContent=(db.machines||[]).length;
+  document.getElementById('cfg-user-cnt').textContent=(db.users||[]).length;
+  document.getElementById('cfg-tk-cnt').textContent=(db.tickets||[]).length;
+  document.getElementById('cfg-pur-cnt').textContent=(db.purchases||[]).length;
+}
+
+// ══════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════
+function exportCSV(){
+  const M=db.machines||[];
+  const headers=['รหัส Air','ชื่อห้อง','ยี่ห้อ','รุ่น','BTU','แผนก','Zone','PM ทุก (เดือน)','Function Location','Equipment No.'];
+  const rows=M.map(m=>[m.id,m.room||'',m.brand||'',m.model||'',m.btu||'',m.dept||'',m.zone||'',m.pmInterval||'',m.fl||'',m.eq||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  dlFile('\uFEFF'+[headers.join(','),...rows].join('\n'),'aircondition_machines.csv','text/csv;charset=utf-8');
+  showToast('📥 Export เครื่องแอร์แล้ว');
+}
+function exportTicketsCSV(){
+  const T=db.tickets||[];
+  const headers=['เลขที่ใบงาน','ปัญหา','เครื่อง','แผนก','ผู้แจ้ง','ช่าง','ความเร่งด่วน','สถานะ','วันที่แจ้ง','ค่าใช้จ่าย'];
+  const rows=T.map(t=>[t.id,t.problem,t.machineId,t.dept,t.reporter,t.assignee,t.priority,t.status,(t.createdAt||'').slice(0,10),t.cost||''].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  dlFile('\uFEFF'+[headers.join(','),...rows].join('\n'),'aircondition_tickets.csv','text/csv;charset=utf-8');
+  showToast('📥 Export ใบงานแล้ว');
+}
+function exportAllJSON(){
+  dlFile(JSON.stringify(db,null,2),'aircon_mockdata_backup.json','application/json');
+  showToast('📤 Export JSON แล้ว');
+}
+function dlFile(content,name,type){
+  const blob=new Blob([content],{type});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name; a.click();
+}
+
+// ══════════════════════════════════════════════════
+// MODAL / TOAST
+// ══════════════════════════════════════════════════
+function openModal(id){document.getElementById(id)?.classList.add('open');}
+function closeModal(id){document.getElementById(id)?.classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+let _toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_toastTimer); _toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  if(!loadDB()) {
+    db=generateMockData();
+    saveDB();
+  }
+  updateNavBadges();
+  renderDashboard();
+  renderCalendar();
+  showToast(`✅ โหลดสำเร็จ — ${db.machines.length} เครื่อง, ${db.tickets.length} ใบงาน`);
+});
+</script>
+</body>
+</html>
