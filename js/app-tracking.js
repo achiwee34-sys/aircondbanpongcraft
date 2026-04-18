@@ -2596,14 +2596,13 @@ function _showCompleteDialog() {
   const el = document.getElementById('complete-sheet');
   if (!el) return;
   el.style.display = 'flex';
-  el._backdropHandler = (e) => { if (e.target === el) closeCompleteSheet(); };
-  el.addEventListener('click', el._backdropHandler);
+  if (typeof lockBodyScroll === 'function') lockBodyScroll();
 }
 function closeCompleteSheet() {
   const el = document.getElementById('complete-sheet');
   if (!el) return;
   el.style.display = 'none';
-  if (el._backdropHandler) el.removeEventListener('click', el._backdropHandler);
+  if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
   const bgrid = document.getElementById('c-grid-before');
   if (bgrid) bgrid.innerHTML = '';
   if (typeof pendingPhotos !== 'undefined') pendingPhotos.before = [];
@@ -3105,14 +3104,6 @@ async function doComplete( /* PATCH v67 */) {
     _rc += price*qty;
   });
   t.repairCost = _rc;
-  // Bug 2 fix: save wage dropdown label so detail page shows correct label
-  const _wageSelEl = document.getElementById('c-wage-select');
-  if (_wageSelEl && _wageSelEl.value) {
-    const _wageOpt = _wageSelEl.options[_wageSelEl.selectedIndex];
-    t.wageLabel = _wageOpt ? _wageOpt.text.split(' — ')[0].trim() : '';
-  } else {
-    t.wageLabel = '';
-  }
   // partsCost = PO total (ใช้ค่าล่าสุด ไม่ให้ 0 ทับค่าเดิมที่บันทึกไว้)
   const _poTotal = Number(t.purchaseOrder?.total || 0);
   t.partsCost = Math.max(_poTotal, Number(t.partsCost || 0));
@@ -3795,19 +3786,6 @@ function openDetail(tid) {
       </div>
     </div>
 
-    <!-- สรุปผลการดำเนินการ (repair tags) -->
-    ${_dedupLines.length ? `
-    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
-      <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
-        <span style="font-size:0.75rem">🔧</span>
-        <span style="font-size:0.75rem;font-weight:800;color:#0f172a">สรุปผลการดำเนินการ</span>
-        <span style="margin-left:auto;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:20px;padding:2px 9px;font-size:0.6rem;font-weight:800">${_dedupLines.length} รายการ</span>
-      </div>
-      <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px">
-        ${_dedupLines.map(line=>`<span style="background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0;border-radius:20px;padding:5px 13px;font-size:0.72rem;font-weight:700;line-height:1.3">${escapeHtml(line)}</span>`).join('')}
-      </div>
-    </div>` : ''}
-
     <!-- วัสดุ / อะไหล่ที่ใช้ + ค่าแรง (2 column) -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <!-- วัสดุ -->
@@ -3935,7 +3913,7 @@ function openDetail(tid) {
     acts.push(`<button class="btn btn-primary btn-full" onclick="this.disabled=true;this.textContent='⏳ กำลังรับงาน...';closeSheet('detail');doAccept('${t.id}')">✋ รับงาน</button>`); // ✅ H4 fix
   }
   if (CU.role==='tech' && t.assigneeId===CU.id && ['accepted','inprogress'].includes(t.status)) {
-    acts.push(`<button class="btn btn-ok btn-full" onclick="closeSheet('detail');openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);
+    acts.push(`<button class="btn btn-ok btn-full" onclick="openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);
   }
   if (CU.role==='tech' && t.assigneeId===CU.id && t.status==='waiting_part') {
     const arrived = t.purchaseOrder?.receiveStatus === 'received';
@@ -3943,7 +3921,7 @@ function openDetail(tid) {
     const poNum = t.purchaseOrder?.po || '';
     const hasPO = !!(t.purchaseOrder);
     if (arrived) {
-      acts.push(`<button class="btn btn-ok btn-full" onclick="closeSheet('detail');openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);
+      acts.push(`<button class="btn btn-ok btn-full" onclick="openCompleteSheet('${t.id}')">✅ บันทึกผลซ่อม</button>`);
     } else {
       const prLine = prNum
         ? `<div style="margin-top:6px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap">
@@ -3985,6 +3963,14 @@ function openDetail(tid) {
   }
   if (CU.role==='admin' && !t.assigneeId) {
     acts.push(`<button class="btn btn-full" style="background:#fff5f5;color:#dc2626;border:1.5px solid #fecaca" onclick="deleteTicket('${t.id}')">🗑️ ลบงานนี้</button>`);
+  }
+  // ✅ FIX: ปุ่มตรวจรับงาน — reporter เจ้าของงาน หรือ admin เมื่อ status = 'done'
+  if (t.status === 'done') {
+    const isOwner = CU.role === 'reporter' && t.reporterId === CU.id;
+    const isAdmin = CU.role === 'admin';
+    if (isOwner || isAdmin) {
+      acts.push(`<button class="btn btn-ok btn-full" onclick="openVerifySheet('${t.id}')">🔵 ตรวจรับงาน</button>`);
+    }
   }
   document.getElementById('detail-actions').innerHTML = acts.join('');
   openSheet('detail');

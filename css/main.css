@@ -251,9 +251,29 @@ body.dark-mode .sheet [style*="background:#eef2ff"] { background:#0c1228 !import
 body.dark-mode .sheet [style*="background:#fffbeb"] { background:#160f00 !important; }
 
 /* ─ complete-sheet ─ */
-body.dark-mode #complete-sheet { background:rgba(0,0,0,0.75) !important; }
-body.dark-mode #complete-sheet > div { background:#111827 !important; }
-body.dark-mode #complete-sheet .sheet-body { background:#111827 !important; }
+body.dark-mode #complete-sheet { background:#0f172a !important; }
+body.dark-mode #complete-sheet > div { background:#0f172a !important; }
+body.dark-mode #complete-sheet .sheet-body { background:#0f172a !important; }
+
+/* complete-sheet: full-page display */
+#complete-sheet { display:none; flex-direction:column; }
+#complete-sheet.open { display:flex !important; }
+
+/* complete-sheet mobile: collapse all 2-col grids to 1 col */
+@media (max-width: 767px) {
+  #complete-sheet [style*="grid-template-columns:1fr 280px"],
+  #complete-sheet [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  #complete-sheet [style*="grid-template-columns:1fr 1fr"][style*="gap:12px"] {
+    grid-template-columns: 1fr !important;
+  }
+  #complete-sheet [style*="max-height:340px"] {
+    max-height: 260px !important;
+  }
+  /* job strip hidden on narrow screens */
+  #c-job-strip { display:none !important; }
+}
 body.dark-mode #detail-sheet > div:nth-child(2) { background:#111827 !important; border-bottom-color:#1e2d45 !important; }
 body.dark-mode #detail-title { color:#e2e8f0 !important; }
 
@@ -1010,8 +1030,13 @@ html, body { height: 100%; margin: 0; padding: 0; overflow-x: hidden !important;
 .sheet.open { display: flex; flex-direction: column; overflow-y: hidden; }
 .sheet.open .sheet-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 /* Bug-fix: verify-sheet keyboard-safe max-height */
+/* FIX z-index: verify must be above detail-fullpage (502) and its overlay (501) */
 #verify-sheet {
   max-height: calc(96dvh - env(safe-area-inset-top, 0px)) !important;
+  z-index: 510 !important;
+}
+#verify-overlay {
+  z-index: 509 !important;
 }
 #verify-sheet .sheet-body {
   overflow-y: auto;
@@ -1234,7 +1259,7 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
   :root { --head-h: 40px; }
 }
 
-/* Tablet landscape (768px+, height > 600px) — sidebar ยังต้องแสดงอยู่ */
+/* Tablet landscape (768px+, height > 600px) — sidebar แสดงปกติ */
 @media (orientation: landscape) and (min-height: 601px) and (min-width: 768px) {
   /* sidebar แสดงปกติ ไม่หาย — ต้องมีทั้ง display และ width/flex-direction */
   .bottom-nav {
@@ -1254,6 +1279,52 @@ select[multiple] option:checked { background:linear-gradient(0deg,#fff0f2,#fff0f
     width: 56px !important;
     min-width: 56px !important;
   }
+}
+
+/* ── LANDSCAPE มือถือ/tablet ขนาดกลาง (width >= 768px, height <= 600px) ──
+   เช่น มือถือ landscape, tablet เล็กๆ — ใช้ bottom nav แนวนอน */
+@media (orientation: landscape) and (max-height: 600px) and (min-width: 768px) {
+  :root { --nav-h: 48px; }
+  #app { flex-direction: column !important; overflow: hidden !important; }
+  .bottom-nav {
+    order: 2 !important;
+    width: 100% !important; min-width: 100% !important;
+    height: auto !important; min-height: var(--nav-h) !important;
+    flex-direction: row !important;
+    border-top: 1px solid #e5e7eb !important;
+    border-right: none !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    background: #111827 !important;
+  }
+  #main-col { order: 1 !important; flex: 1 1 0 !important; min-height: 0 !important; overflow: hidden !important; }
+  .content-area { flex: 1 1 0 !important; overflow: hidden !important; min-height: 0 !important; position: relative !important; }
+  .content-area > .page:not(#pg-purchase) { overflow-y: auto !important; overflow-x: hidden !important; padding: 12px 16px calc(var(--nav-h, 48px) + var(--safe-bot, 0px) + 8px) !important; }
+  .bn-item {
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 1px !important;
+    padding: 4px 2px !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    flex: 1 1 0 !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+  .bn-item:not(.active) .bn-icon { color: #64748b !important; }
+  .bn-item:not(.active) .bn-icon svg { stroke: #64748b !important; }
+  .bn-icon { width: 18px !important; height: 18px !important; }
+  .bn-icon svg { width: 18px !important; height: 18px !important; }
+  .bn-label { font-size: 0.45rem !important; display: block !important; opacity: 1 !important; max-width: 100% !important; white-space: nowrap !important; color: #64748b !important; }
+  .bn-item.active .bn-label { color: #ffffff !important; }
+  .bn-item.active .bn-icon { color: #ffffff !important; }
+  .bn-item.active .bn-icon svg { stroke: #ffffff !important; }
+  .bn-item.active::after { top: 0 !important; left: 15% !important; right: 15% !important; height: 2px !important; bottom: auto !important; }
+  .topbar { height: 40px !important; padding-top: 0 !important; }
+  :root { --head-h: 40px; }
 }
 
 
@@ -1633,7 +1704,7 @@ select:not(#pur-po-panel select):not(#pur-po-panel *) {
 @media (min-width: 768px) {
   #detail-sheet.detail-fullpage,
   #detail-sheet.detail-fullpage.open {
-    max-width: 800px !important;
+    max-width: 600px !important;
     left: 50% !important;
     transform: translateX(calc(-50% + 50vw - 50% + 100%)) !important;
   }
