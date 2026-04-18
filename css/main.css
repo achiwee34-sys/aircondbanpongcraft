@@ -1034,12 +1034,20 @@ html, body { height: 100%; margin: 0; padding: 0; overflow-x: hidden !important;
 #verify-sheet {
   max-height: calc(96dvh - env(safe-area-inset-top, 0px)) !important;
   z-index: 510 !important;
+  background: #f1f5f9 !important;
+  border-radius: 20px 20px 0 0 !important;
   overflow: hidden !important;
 }
 #verify-sheet.open {
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+}
+#verify-sheet .sheet-body {
+  flex: 1 1 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  min-height: 0 !important;
 }
 #verify-overlay {
   z-index: 509 !important;
