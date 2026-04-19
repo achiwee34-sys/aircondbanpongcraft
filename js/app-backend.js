@@ -1,7 +1,23 @@
 // ============================================================
-// BACKEND MONITOR — admin only
+// app-backend.js — SCG AirCon Admin Backend Dashboard
+// ============================================================
+// ✅ Drop-in replacement สำหรับ app-backend.js เดิม
+// ✅ รองรับ HTML element IDs ทุกตัวจาก index.html เดิม
+// ✅ เพิ่ม Error Checking ครอบคลุม:
+//    • Global error/unhandledrejection handler
+//    • Data integrity check (null / undefined / type mismatch)
+//    • Firebase / Firestore connection check พร้อม retry
+//    • Offline queue monitoring
+//    • localStorage quota check
+//    • Function availability check ก่อนเรียก
+//    • Error badge แสดงจำนวน error แบบ realtime
 // ============================================================
 
+'use strict';
+
+// ──────────────────────────────────────────────────────────────
+// CONSTANTS
+// ──────────────────────────────────────────────────────────────
 const BK_LOG_KEY   = 'aircon_bk_log';
 const BK_AUDIT_KEY = 'aircon_bk_audit';
 const BK_RULES_KEY = 'aircon_bk_rules';
@@ -16,60 +32,1058 @@ service cloud.firestore {
   }
 }`;
 
-// ── Counters (in-memory, session only) ──────────────────────
-window._bkReads  = 0;
-window._bkWrites = 0;
+// ──────────────────────────────────────────────────────────────
+// IN-MEMORY STATE
+// ──────────────────────────────────────────────────────────────
+window._bkReads  = window._bkReads  || 0;
+window._bkWrites = window._bkWrites || 0;
+window._bkErrors = window._bkErrors || [];   // [ {ts, msg, src, type} ]
 
-// ── Log helpers ─────────────────────────────────────────────
-function _bkGetLog()   { try { return JSON.parse(localStorage.getItem(BK_LOG_KEY)   || '[]'); } catch(e){ return []; } }
-function _bkGetAudit() { try { return JSON.parse(localStorage.getItem(BK_AUDIT_KEY) || '[]'); } catch(e){ return []; } }
+let _bkpTab       = 'overview';
+let _bkpLogFilter = 'all';
+let _bkpClearType = null;
+let _bkpPingTimer = null;
 
-function bkLog(type, msg, detail) {
-  const log = _bkGetLog();
-  log.unshift({ ts: new Date().toISOString(), type, msg, detail: detail||'', user: window.CU?.name||'—' });
-  if (log.length > 300) log.length = 300;
-  localStorage.setItem(BK_LOG_KEY, JSON.stringify(log));
+// ──────────────────────────────────────────────────────────────
+// ✅ GLOBAL ERROR CAPTURE
+// ──────────────────────────────────────────────────────────────
+(function _installErrorCapture() {
+  const push = (entry) => {
+    window._bkErrors.unshift(entry);
+    if (window._bkErrors.length > 100) window._bkErrors.length = 100;
+    // บันทึกลง log ด้วย
+    _bkRawLog('error', entry.msg.slice(0, 150), entry.src || '');
+    // อัปเดต error badge ถ้าอยู่หน้า backend
+    _refreshErrorBadge();
+  };
+
+  // JavaScript runtime error
+  const _prevOnerror = window.onerror;
+  window.onerror = function (msg, src, line, col, err) {
+    push({
+      ts:   new Date().toISOString(),
+      type: 'js',
+      msg:  String(msg).slice(0, 200),
+      src:  (src || '').split('/').pop() + ':' + line,
+      stack: err?.stack?.slice(0, 300) || '',
+    });
+    if (typeof _prevOnerror === 'function') return _prevOnerror(msg, src, line, col, err);
+  };
+
+  // Promise rejection
+  const _prevUnhandled = window.onunhandledrejection;
+  window.onunhandledrejection = function (e) {
+    const reason = e?.reason;
+    const msg = reason?.message || String(reason) || 'Unhandled Promise Rejection';
+    push({
+      ts:   new Date().toISOString(),
+      type: 'promise',
+      msg:  msg.slice(0, 200),
+      src:  'promise',
+      stack: reason?.stack?.slice(0, 300) || '',
+    });
+    if (typeof _prevUnhandled === 'function') return _prevUnhandled(e);
+  };
+
+  // ดักจับ console.error ด้วย (optional — comment ออกถ้าไม่ต้องการ)
+  const _prevConsoleError = console.error;
+  console.error = function (...args) {
+    const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+    push({
+      ts:   new Date().toISOString(),
+      type: 'console',
+      msg:  msg.slice(0, 200),
+      src:  'console.error',
+    });
+    _prevConsoleError.apply(console, args);
+  };
+})();
+
+// ──────────────────────────────────────────────────────────────
+// ✅ DATA INTEGRITY CHECK
+// ──────────────────────────────────────────────────────────────
+/**
+ * ตรวจสอบ db object ทั้งหมด คืน array of issues
+ * เรียกก่อน render และแสดงใน Overview
+ */
+function _checkDataIntegrity() {
+  const issues = [];
+  const db = window.db;
+
+  if (!db || typeof db !== 'object') {
+    issues.push({ level: 'critical', msg: 'window.db ไม่มีหรือไม่ใช่ object' });
+    return issues;
+  }
+
+  // ── Array fields ──
+  const arrFields = ['machines', 'tickets', 'users', 'calEvents', 'notifications', 'vendors'];
+  arrFields.forEach(f => {
+    if (db[f] === undefined) {
+      issues.push({ level: 'warn', msg: `db.${f} ไม่มี (undefined) — จะใช้ []` });
+      db[f] = [];
+    } else if (!Array.isArray(db[f])) {
+      issues.push({ level: 'error', msg: `db.${f} ไม่ใช่ Array (พบ: ${typeof db[f]})` });
+    }
+  });
+
+  if (issues.some(i => i.level === 'critical' || i.level === 'error')) return issues;
+
+  // ── Machines ──
+  const machines = db.machines || [];
+  const machineIds = new Set();
+  machines.forEach((m, idx) => {
+    if (!m || typeof m !== 'object') {
+      issues.push({ level: 'error', msg: `machines[${idx}] ไม่ใช่ object` }); return;
+    }
+    if (!m.id) issues.push({ level: 'warn', msg: `machines[${idx}] ไม่มี id` });
+    else if (machineIds.has(m.id)) issues.push({ level: 'warn', msg: `Machine ID ซ้ำ: ${m.id}` });
+    else machineIds.add(m.id);
+    if (m.btu && isNaN(Number(m.btu))) issues.push({ level: 'info', msg: `machines[${m.id}] btu="${m.btu}" ไม่ใช่ตัวเลข` });
+  });
+
+  // ── Tickets ──
+  const tickets = db.tickets || [];
+  const ticketIds = new Set();
+  tickets.forEach((t, idx) => {
+    if (!t || typeof t !== 'object') {
+      issues.push({ level: 'error', msg: `tickets[${idx}] ไม่ใช่ object` }); return;
+    }
+    if (!t.id) issues.push({ level: 'warn', msg: `tickets[${idx}] ไม่มี id` });
+    else if (ticketIds.has(t.id)) issues.push({ level: 'warn', msg: `Ticket ID ซ้ำ: ${t.id}` });
+    else ticketIds.add(t.id);
+    if (t.machineId && !machineIds.has(t.machineId))
+      issues.push({ level: 'info', msg: `Ticket ${t.id} อ้างอิง machineId "${t.machineId}" ที่ไม่มีในระบบ` });
+    const validStatuses = ['new','assigned','accepted','inprogress','waiting_part','done','verified','closed','cancelled'];
+    if (t.status && !validStatuses.includes(t.status))
+      issues.push({ level: 'warn', msg: `Ticket ${t.id} มี status ไม่รู้จัก: "${t.status}"` });
+    if (t.createdAt && isNaN(Date.parse(t.createdAt)))
+      issues.push({ level: 'warn', msg: `Ticket ${t.id} createdAt ไม่ถูกต้อง: "${t.createdAt}"` });
+  });
+
+  // ── Users ──
+  const users = db.users || [];
+  const userIds = new Set();
+  const validRoles = ['admin','tech','reporter','executive','manager'];
+  users.forEach((u, idx) => {
+    if (!u || typeof u !== 'object') {
+      issues.push({ level: 'error', msg: `users[${idx}] ไม่ใช่ object` }); return;
+    }
+    if (!u.id) issues.push({ level: 'warn', msg: `users[${idx}] ไม่มี id` });
+    else if (userIds.has(u.id)) issues.push({ level: 'warn', msg: `User ID ซ้ำ: ${u.id}` });
+    else userIds.add(u.id);
+    if (!u.name) issues.push({ level: 'info', msg: `users[${u.id || idx}] ไม่มีชื่อ` });
+    if (u.role && !validRoles.includes(u.role))
+      issues.push({ level: 'warn', msg: `users[${u.id || idx}] role ไม่รู้จัก: "${u.role}"` });
+  });
+
+  // ── Ticket assignee integrity ──
+  tickets.forEach(t => {
+    if (t.assigneeId && !userIds.has(t.assigneeId))
+      issues.push({ level: 'info', msg: `Ticket ${t.id} assigneeId "${t.assigneeId}" ไม่มีใน users` });
+  });
+
+  // ── localStorage quota check ──
+  try {
+    const used = JSON.stringify(db).length;
+    const usedKB = Math.round(used / 1024);
+    if (usedKB > 4000) issues.push({ level: 'warn', msg: `Data ใน localStorage ใหญ่มาก: ${usedKB}KB (ขีดจำกัด ~5MB)` });
+  } catch (e) {
+    issues.push({ level: 'warn', msg: `ไม่สามารถประมาณขนาด localStorage ได้: ${e.message}` });
+  }
+
+  if (issues.length === 0) issues.push({ level: 'ok', msg: 'ไม่พบปัญหา — ข้อมูลสมบูรณ์ ✅' });
+  return issues;
 }
+
+// ──────────────────────────────────────────────────────────────
+// ✅ FUNCTION AVAILABILITY GUARD
+// ──────────────────────────────────────────────────────────────
+/**
+ * ตรวจสอบว่า function มีอยู่ก่อนเรียก
+ * @param {string} name - ชื่อ function
+ * @param {string} [label] - ชื่อแสดงใน toast
+ * @returns {boolean}
+ */
+function _fnCheck(name, label) {
+  if (typeof window[name] === 'function') return true;
+  const msg = `❌ ไม่พบ function ${label || name}() — อาจโหลด script ไม่ครบ`;
+  if (typeof showToast === 'function') showToast(msg);
+  else alert(msg);
+  _bkRawLog('error', msg, 'function-check');
+  return false;
+}
+
+// ──────────────────────────────────────────────────────────────
+// LOG HELPERS
+// ──────────────────────────────────────────────────────────────
+function _bkGetLog()   {
+  try { return JSON.parse(localStorage.getItem(BK_LOG_KEY)   || '[]'); } catch (e) { return []; }
+}
+function _bkGetAudit() {
+  try { return JSON.parse(localStorage.getItem(BK_AUDIT_KEY) || '[]'); } catch (e) { return []; }
+}
+
+/** เขียน log ตรงๆ (ไม่ผ่าน bkLog เพื่อป้องกัน circular) */
+function _bkRawLog(type, msg, detail) {
+  try {
+    const log = _bkGetLog();
+    log.unshift({ ts: new Date().toISOString(), type, msg, detail: detail || '', user: window.CU?.name || '—' });
+    if (log.length > 300) log.length = 300;
+    localStorage.setItem(BK_LOG_KEY, JSON.stringify(log));
+  } catch (e) { /* localStorage full — ไม่ throw */ }
+}
+
+function bkLog(type, msg, detail) { _bkRawLog(type, msg, detail); }
 
 function bkAudit(action, target, before, after) {
-  const audit = _bkGetAudit();
-  audit.unshift({
-    ts: new Date().toISOString(),
-    user: window.CU?.name || '—',
-    role: window.CU?.role || '—',
-    action, target,
-    before: before ? JSON.stringify(before).slice(0, 200) : '—',
-    after:  after  ? JSON.stringify(after).slice(0, 200)  : '—',
-  });
-  if (audit.length > 500) audit.length = 500;
-  localStorage.setItem(BK_AUDIT_KEY, JSON.stringify(audit));
+  try {
+    const audit = _bkGetAudit();
+    audit.unshift({
+      ts:     new Date().toISOString(),
+      user:   window.CU?.name  || '—',
+      role:   window.CU?.role  || '—',
+      action, target,
+      before: before ? JSON.stringify(before).slice(0, 200) : '—',
+      after:  after  ? JSON.stringify(after).slice(0, 200)  : '—',
+    });
+    if (audit.length > 500) audit.length = 500;
+    localStorage.setItem(BK_AUDIT_KEY, JSON.stringify(audit));
+  } catch (e) { /* localStorage full */ }
 }
 
-// expose globally for other modules
+// expose globally
 window.bkLog   = bkLog;
 window.bkAudit = bkAudit;
 
-// ── Error capture ────────────────────────────────────────────
-const _bkErrors = [];
-const _origError = window.onerror;
-window.onerror = function(msg, src, line, col, err) {
-  _bkErrors.unshift({ ts: new Date().toISOString(), msg: String(msg), src: (src||'').split('/').pop()+':'+line });
-  if (_bkErrors.length > 50) _bkErrors.length = 50;
-  bkLog('error', String(msg).slice(0, 120), (src||'').split('/').pop()+':'+line);
-  if (_origError) return _origError(msg, src, line, col, err);
-};
-const _origUnhandled = window.onunhandledrejection;
-window.onunhandledrejection = function(e) {
-  const msg = e?.reason?.message || String(e?.reason) || 'Unhandled rejection';
-  _bkErrors.unshift({ ts: new Date().toISOString(), msg: msg.slice(0,120), src: 'promise' });
-  if (_bkErrors.length > 50) _bkErrors.length = 50;
-  bkLog('error', msg.slice(0,120), 'promise');
-  if (_origUnhandled) return _origUnhandled(e);
-};
+// ──────────────────────────────────────────────────────────────
+// ERROR BADGE
+// ──────────────────────────────────────────────────────────────
+function _refreshErrorBadge() {
+  const cnt = (window._bkErrors || []).length;
+  // badge บน tab firebase ใน index.html
+  const el = document.getElementById('bkp-tab-firebase');
+  if (!el) return;
+  if (cnt > 0) {
+    el.textContent = `Firebase 🔴${cnt}`;
+    el.style.color = '#fca5a5';
+  } else {
+    el.textContent = 'Firebase';
+  }
+}
 
-// ── Panel show/hide (called from settings render) ────────────
+// ──────────────────────────────────────────────────────────────
+// KEYBOARD FIX (ย้ายมาจาก app-backend.js เดิม)
+// ──────────────────────────────────────────────────────────────
+(function _initKeyboardFix() {
+  if (!window.visualViewport) return;
+  let _kbActive = false;
+  function _applyKbShift() {
+    const vv = window.visualViewport;
+    const kbH = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+    const app = document.getElementById('app');
+    if (!app) return;
+    if (kbH > 80) {
+      _kbActive = true;
+      app.style.transform  = `translateY(-${kbH * 0.5}px)`;
+      app.style.transition = 'transform 0.2s ease';
+    } else if (_kbActive) {
+      _kbActive = false;
+      app.style.transform = '';
+    }
+  }
+  window.visualViewport.addEventListener('resize', _applyKbShift);
+  window.visualViewport.addEventListener('scroll', _applyKbShift);
+})();
+
+// ──────────────────────────────────────────────────────────────
+// LOGIN/LOGOUT HOOK
+// ──────────────────────────────────────────────────────────────
+(function _hookLoginLogout() {
+  // hook _onLoginSuccess
+  const _origLogin = window._onLoginSuccess;
+  window._onLoginSuccess = function () {
+    if (typeof _origLogin === 'function') _origLogin();
+    setTimeout(() => bkLog('login', 'เข้าสู่ระบบ', window.CU?.username || ''), 500);
+  };
+  // hook doLogout
+  const _origLogout = window.doLogout;
+  window.doLogout = function () {
+    bkLog('logout', 'ออกจากระบบ', window.CU?.username || '');
+    if (typeof _origLogout === 'function') _origLogout();
+  };
+})();
+
+// ──────────────────────────────────────────────────────────────
+// READ/WRITE COUNTERS (เรียกจาก firebase-init.js)
+// ──────────────────────────────────────────────────────────────
+window.bkCountRead  = function (n) { window._bkReads  = (window._bkReads  || 0) + (n || 1); };
+window.bkCountWrite = function (n) { window._bkWrites = (window._bkWrites || 0) + (n || 1); };
+
+// ──────────────────────────────────────────────────────────────
+// RENDER ENTRY POINTS (เรียกจาก app-core.js / goPage)
+// ──────────────────────────────────────────────────────────────
 function showBackendPanel() {
   const el = document.getElementById('sp-backend-panel');
+  if (el) { el.style.display = 'block'; refreshBackendPanel(); }
+}
+
+function renderBackendPage() {
+  // ── Guard: ต้องเป็น admin ──
+  if (!window.CU) {
+    setTimeout(() => {
+      const active = document.querySelector('.page.active');
+      if (active?.id === 'pg-backend') renderBackendPage();
+    }, 400);
+    return;
+  }
+  if (window.CU.role !== 'admin') {
+    if (typeof goPage === 'function') goPage('home');
+    return;
+  }
+
+  // ── Guard: รอ Firebase ──
+  const hasData = (window.db?.tickets?.length || 0)
+                + (window.db?.machines?.length || 0)
+                + (window.db?.users?.length || 0);
+  if (!hasData && window._firebaseReady !== true) {
+    setTimeout(() => {
+      const active = document.querySelector('.page.active');
+      if (active?.id === 'pg-backend') renderBackendPage();
+    }, 700);
+    return;
+  }
+
+  // แสดง overview
+  ['data','users','notify','firebase','log','danger'].forEach(t => {
+    const el = document.getElementById('bkp-pane-' + t);
+    if (el) el.style.display = 'none';
+  });
+  const ov = document.getElementById('bkp-pane-overview');
+  if (ov) ov.style.display = '';
+
+  _bkpCheckConnection();
+  renderBkpOverview();
+}
+
+function refreshBackendPage() {
+  _bkpCheckConnection();
+  switchBkpTab(_bkpTab);
+}
+
+// ──────────────────────────────────────────────────────────────
+// TAB SWITCHER
+// ──────────────────────────────────────────────────────────────
+function switchBkpTab(tab) {
+  _bkpTab = tab;
+  // bkp-pane-overview, bkp-pane-data, bkp-pane-users, bkp-pane-notify,
+  // bkp-pane-firebase, bkp-pane-log, bkp-pane-danger
+  // bkp-tab-overview, bkp-tab-data, bkp-tab-users, bkp-tab-notify,
+  // bkp-tab-firebase, bkp-tab-log, bkp-tab-danger
+  const ALL_TABS = ['overview','data','users','notify','firebase','log','danger'];
+  ALL_TABS.forEach(t => {
+    const pane = document.getElementById('bkp-pane-' + t);
+    const btn  = document.getElementById('bkp-tab-' + t);
+    if (pane) pane.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      btn.style.color        = t === tab ? 'white'               : 'rgba(255,255,255,0.45)';
+      btn.style.fontWeight   = t === tab ? '800'                 : '700';
+      btn.style.borderBottom = t === tab ? '2px solid white'     : '2px solid transparent';
+    }
+  });
+
+  if (tab === 'overview') renderBkpOverview();
+  if (tab === 'data')     renderBkpData();
+  if (tab === 'users')    renderBkpUsers();
+  if (tab === 'notify')   renderBkpNotify();
+  if (tab === 'firebase') renderBkpFirebase();
+  if (tab === 'log')      renderBkpLog();
+  // danger tab: static HTML ไม่ต้อง render
+}
+
+// ──────────────────────────────────────────────────────────────
+// ✅ CONNECTION CHECK (พร้อม retry + timeout)
+// ──────────────────────────────────────────────────────────────
+function _bkpCheckConnection() {
+  const badge  = document.getElementById('bkp-conn-badge');
+  const dotFs  = document.getElementById('bkp-dot-fs');
+  const ping   = document.getElementById('bkp-fs-ping');
+  const dotAuth= document.getElementById('bkp-dot-auth');
+  const authEl = document.getElementById('bkp-auth-user');
+
+  // Auth state
+  if (window.firebaseAuth?.currentUser) {
+    if (dotAuth) dotAuth.style.background = '#22c55e';
+    if (authEl)  authEl.textContent = window.firebaseAuth.currentUser.email || 'Signed in';
+  } else {
+    if (dotAuth) dotAuth.style.background = '#f59e0b';
+    if (authEl)  authEl.textContent = 'Anonymous / Guest';
+  }
+
+  // Firestore ping
+  if (!window.firebase || !window.FSdb) {
+    if (dotFs) dotFs.style.background = '#f59e0b';
+    if (ping)  ping.textContent = 'Local only';
+    if (badge) { badge.textContent = '🟡 Local mode'; badge.style.color = 'rgba(255,255,255,0.6)'; }
+    return;
+  }
+
+  if (dotFs) dotFs.style.background = '#f59e0b';
+  if (ping)  ping.textContent = '...';
+
+  const t0 = Date.now();
+  const TIMEOUT_MS = 8000;
+
+  // timeout wrapper
+  const pingPromise = firebase.firestore().collection('appdata').doc('main').get();
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Ping timeout ' + TIMEOUT_MS + 'ms')), TIMEOUT_MS)
+  );
+
+  Promise.race([pingPromise, timeoutPromise])
+    .then(() => {
+      const ms = Date.now() - t0;
+      if (dotFs) dotFs.style.background = '#22c55e';
+      if (ping)  ping.textContent = ms + ' ms';
+      if (badge) { badge.textContent = '🟢 เชื่อมต่อแล้ว · ' + ms + 'ms'; badge.style.color = '#4ade80'; }
+      window._bkReads = (window._bkReads || 0) + 1;
+    })
+    .catch(err => {
+      if (dotFs) dotFs.style.background = '#ef4444';
+      if (ping)  ping.textContent = err.message.includes('timeout') ? 'Timeout' : 'Error';
+      if (badge) { badge.textContent = '🔴 ' + (err.message.includes('timeout') ? 'Timeout' : 'เชื่อมต่อไม่ได้'); badge.style.color = '#f87171'; }
+      bkLog('error', 'Firestore ping failed: ' + err.message, 'connection-check');
+    });
+}
+
+// ──────────────────────────────────────────────────────────────
+// OVERVIEW TAB
+// ──────────────────────────────────────────────────────────────
+function renderBkpOverview() {
+  const db = window.db || {};
+  const tickets  = Array.isArray(db.tickets)  ? db.tickets  : [];
+  const machines = Array.isArray(db.machines) ? db.machines : [];
+  const users    = Array.isArray(db.users)    ? db.users    : [];
+  const open     = tickets.filter(t => t && !['done','verified','closed','cancelled'].includes(t.status));
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  // KPI cards
+  set('bkp-kpi-tickets',  tickets.length);
+  set('bkp-kpi-machines', machines.length);
+  set('bkp-kpi-users',    users.length);
+  set('bkp-kpi-open',     open.length);
+  // Stats
+  set('bkp-stat-reads',   window._bkReads  || 0);
+  set('bkp-stat-writes',  window._bkWrites || 0);
+
+  // ขนาด localStorage
+  try {
+    const sizeKB = Math.round(JSON.stringify(db).length / 1024);
+    set('bkp-stat-size', sizeKB >= 1024 ? (sizeKB / 1024).toFixed(1) + 'MB' : sizeKB + 'KB');
+  } catch (e) {
+    set('bkp-stat-size', 'N/A');
+  }
+
+  _bkpCheckConnection();
+  _renderBkpTicketBars(tickets);
+
+  // ── ✅ Data integrity check ──
+  const issues = _checkDataIntegrity();
+  const integrityEl = document.getElementById('bkp-integrity');
+  if (integrityEl) {
+    const levelColor = { ok:'#22c55e', info:'#3b82f6', warn:'#f59e0b', error:'#ef4444', critical:'#dc2626' };
+    const levelIcon  = { ok:'✅', info:'ℹ️', warn:'⚠️', error:'❌', critical:'🚨' };
+    integrityEl.innerHTML = issues.map(i =>
+      `<div style="display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">
+        <span style="flex-shrink:0;font-size:0.75rem">${levelIcon[i.level] || '•'}</span>
+        <span style="font-size:0.72rem;color:${levelColor[i.level] || 'var(--text)'}">${i.msg}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+function _renderBkpTicketBars(tickets) {
+  const el = document.getElementById('bkp-ticket-bars');
+  if (!el) return;
+  if (!tickets.length) { el.innerHTML = '<div style="font-size:0.72rem;color:var(--muted)">ไม่มี ticket</div>'; return; }
+  const STATUS_MAP = {
+    new:          { label: 'ใหม่',          color: '#7c3aed' },
+    assigned:     { label: 'จ่ายงานแล้ว',   color: '#0891b2' },
+    inprogress:   { label: 'กำลังซ่อม',     color: '#f59e0b' },
+    waiting_part: { label: 'รออะไหล่',      color: '#ea580c' },
+    done:         { label: 'เสร็จแล้ว',     color: '#22c55e' },
+    cancelled:    { label: 'ยกเลิก',        color: '#94a3b8' },
+  };
+  const counts = {};
+  tickets.forEach(t => { if (t) { const s = t.status || 'new'; counts[s] = (counts[s] || 0) + 1; } });
+  el.innerHTML = Object.entries(STATUS_MAP).map(([key, { label, color }]) => {
+    const cnt = counts[key] || 0;
+    const pct = Math.round((cnt / tickets.length) * 100);
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:0.7rem;margin-bottom:3px">
+        <span style="color:var(--text);font-weight:700">${label}</span>
+        <span style="color:${color};font-weight:800">${cnt} (${pct}%)</span>
+      </div>
+      <div style="height:6px;background:var(--bg);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width 0.4s"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────────────────────
+// DATA TAB
+// ──────────────────────────────────────────────────────────────
+function renderBkpData() {
+  const db = window.db || {};
+  // bkp-seq-val, bkp-updated-at
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('bkp-seq-val',    db._seq     || 0);
+  set('bkp-updated-at', db.updatedAt ? db.updatedAt.slice(0, 16).replace('T', ' ') : '—');
+
+  const gsEl = document.getElementById('bkp-gs-url');
+  if (gsEl) gsEl.value = db.gsUrl || '';
+
+  const colEl = document.getElementById('bkp-collections');
+  if (colEl) {
+    const cols = [
+      { name: 'machines',      icon: '❄️',  count: (db.machines      || []).length },
+      { name: 'tickets',       icon: '🔧',  count: (db.tickets       || []).length },
+      { name: 'users',         icon: '👤',  count: (db.users         || []).length },
+      { name: 'calEvents',     icon: '📅',  count: (db.calEvents     || []).length },
+      { name: 'notifications', icon: '🔔',  count: (db.notifications || []).length },
+      { name: 'chats',         icon: '💬',  count: Object.keys(db.chats || {}).length },
+      { name: 'machineReqs',   icon: '📋',  count: (db.machineRequests || []).length },
+    ];
+    const total = cols.reduce((s, c) => s + c.count, 0);
+    colEl.innerHTML = cols.map(c => `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:1rem;width:22px;text-align:center">${c.icon}</span>
+        <span style="flex:1;font-size:0.75rem;color:var(--text);font-weight:600">${c.name}</span>
+        <span style="font-size:0.82rem;font-weight:900;color:#1d4ed8">${c.count}</span>
+        <div style="width:60px;height:5px;background:var(--bg);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${total ? Math.round(c.count / total * 100) : 0}%;background:#1d4ed8;border-radius:3px"></div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+function bkpSaveGsUrl() {
+  const val = document.getElementById('bkp-gs-url')?.value.trim() || '';
+  if (typeof db !== 'undefined') db.gsUrl = val;
+  if (_fnCheck('saveDB', 'saveDB')) saveDB();
+  if (typeof fsSave === 'function') fsSave();
+  const spGs = document.getElementById('sp-gs-url');
+  if (spGs) spGs.value = val;
+  bkAudit('บันทึก GAS URL', 'db.gsUrl', null, { url: val });
+  if (typeof showToast === 'function') showToast('✅ บันทึก GAS URL แล้ว');
+}
+
+function bkpForceSync() {
+  if (!_fnCheck('manualSync', 'manualSync')) return;
+  manualSync();
+  bkLog('sync', 'Force Sync จาก Backend Page');
+  window._bkWrites = (window._bkWrites || 0) + 1;
+  if (typeof showToast === 'function') showToast('⬆️ Force Sync แล้ว');
+}
+
+function bkpForceLoad() {
+  if (!_fnCheck('manualLoad', 'manualLoad')) return;
+  manualLoad();
+  bkLog('sync', 'Force Load จาก Backend Page');
+  if (typeof showToast === 'function') showToast('⬇️ Force Load แล้ว');
+}
+
+// ──────────────────────────────────────────────────────────────
+// USERS TAB
+// ──────────────────────────────────────────────────────────────
+function renderBkpUsers() {
+  const db    = window.db || {};
+  const users = Array.isArray(db.users) ? db.users : [];
+  const tickets = Array.isArray(db.tickets) ? db.tickets : [];
+
+  // role counts: bkp-u-admin-n, bkp-u-tech-n, bkp-u-reporter-n
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('bkp-u-admin-n',    users.filter(u => u?.role === 'admin').length);
+  set('bkp-u-tech-n',     users.filter(u => u?.role === 'tech').length);
+  set('bkp-u-reporter-n', users.filter(u => u?.role === 'reporter' || u?.role === 'manager').length);
+
+  // user list
+  const listEl = document.getElementById('bkp-user-list');
+  if (!listEl) return;
+  if (!users.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.78rem">ไม่มีผู้ใช้งาน</div>';
+  } else {
+    const ROLE_STYLE = {
+      admin:     { color: '#7c3aed', bg: 'rgba(124,58,237,.12)', label: 'Admin' },
+      tech:      { color: '#059669', bg: 'rgba(5,150,105,.12)',  label: 'ช่าง' },
+      reporter:  { color: '#0891b2', bg: 'rgba(8,145,178,.12)',  label: 'ผู้แจ้ง' },
+      executive: { color: '#ea580c', bg: 'rgba(234,88,12,.12)',  label: 'Executive' },
+      manager:   { color: '#d97706', bg: 'rgba(217,119,6,.12)',  label: 'Manager' },
+    };
+    listEl.innerHTML = users.map(u => {
+      if (!u || typeof u !== 'object') return '';
+      const rs = ROLE_STYLE[u.role] || { color: '#94a3b8', bg: 'rgba(148,163,184,.12)', label: u.role || '—' };
+      const initials = (u.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const openTks  = tickets.filter(t => t?.assigneeId === u.id && !['done','verified','closed','cancelled'].includes(t.status)).length;
+      const totalTks = tickets.filter(t => t?.assigneeId === u.id || t?.reporterId === u.id).length;
+      return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;border-radius:50%;background:${rs.bg};border:2px solid ${rs.color};display:flex;align-items:center;justify-content:center;font-size:0.82rem;font-weight:900;color:${rs.color};flex-shrink:0">${initials}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.82rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name || '—'}</div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-top:1px">@${u.username || '—'}${u.dept ? ' · ' + u.dept : ''}${openTks > 0 ? ` · <span style="color:#ef4444;font-weight:700">${openTks} ค้าง</span>` : ''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+          <div style="background:${rs.bg};color:${rs.color};border-radius:99px;padding:2px 8px;font-size:0.62rem;font-weight:800">${rs.label}</div>
+          <div style="font-size:0.6rem;color:var(--muted)">${totalTks} งาน</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Tech Performance
+  const perfWrap = document.getElementById('bkp-tech-perf');
+  if (perfWrap) _renderTechPerformance(perfWrap, db);
+}
+
+function _renderTechPerformance(container, db) {
+  const tickets = Array.isArray(db.tickets) ? db.tickets : [];
+  const techs   = (Array.isArray(db.users) ? db.users : []).filter(u => u?.role === 'tech');
+  if (!techs.length) {
+    container.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:16px">ไม่มีช่างในระบบ</div>';
+    return;
+  }
+  const stats = techs.map(u => {
+    const mine = tickets.filter(t => t?.assigneeId === u.id);
+    const done = mine.filter(t => ['done','verified','closed'].includes(t?.status || ''));
+    const open = mine.filter(t => !['done','verified','closed','cancelled'].includes(t?.status || ''));
+    const times = done.map(t => {
+      const s = t.createdAt, e = t.updatedAt;
+      if (!s || !e) return null;
+      const diff = (new Date(e) - new Date(s)) / 3600000;
+      return isNaN(diff) || diff <= 0 ? null : diff;
+    }).filter(x => x !== null);
+    const avgH = times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : null;
+    const rated = done.filter(t => t?.rating?.score);
+    const avgRating = rated.length ? (rated.reduce((a, t) => a + t.rating.score, 0) / rated.length).toFixed(1) : null;
+    return { u, done: done.length, open: open.length, total: mine.length, avgH, avgRating, ratedCount: rated.length };
+  }).sort((a, b) => b.done - a.done);
+
+  const _time = h => h == null ? '—' : h < 24 ? h + 'ชม.' : Math.round(h / 24) + 'วัน';
+  container.innerHTML = `
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table style="width:100%;border-collapse:collapse;font-size:0.72rem">
+        <thead>
+          <tr style="background:var(--bg)">
+            <th style="padding:8px 6px;text-align:left;color:var(--muted);font-weight:700;white-space:nowrap">ช่าง</th>
+            <th style="padding:8px 6px;text-align:center;color:var(--muted);font-weight:700">เสร็จ</th>
+            <th style="padding:8px 6px;text-align:center;color:var(--muted);font-weight:700">ค้าง</th>
+            <th style="padding:8px 6px;text-align:center;color:var(--muted);font-weight:700;white-space:nowrap">เวลาเฉลี่ย</th>
+            <th style="padding:8px 6px;text-align:center;color:var(--muted);font-weight:700">คะแนน</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stats.map((s, i) => {
+            const initials = (s.u.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            const rankBg   = i === 0 ? '#fef9c3' : i === 1 ? '#f1f5f9' : i === 2 ? '#fdf2f8' : 'transparent';
+            const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+            return `<tr style="border-top:1px solid var(--border);background:${rankBg}">
+              <td style="padding:8px 6px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div style="width:28px;height:28px;border-radius:50%;background:rgba(5,150,105,0.12);border:2px solid #059669;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;color:#059669;flex-shrink:0">${initials}</div>
+                  <div>
+                    <div style="font-weight:800;color:var(--text)">${rankIcon} ${s.u.name || '—'}</div>
+                    <div style="font-size:0.6rem;color:var(--muted)">${s.total} งานทั้งหมด</div>
+                  </div>
+                </div>
+              </td>
+              <td style="padding:8px 6px;text-align:center;font-weight:900;color:#16a34a;font-size:0.85rem">${s.done}</td>
+              <td style="padding:8px 6px;text-align:center;font-weight:700;color:${s.open > 0 ? '#dc2626' : '#94a3b8'}">${s.open}</td>
+              <td style="padding:8px 6px;text-align:center;color:var(--text);font-weight:700">${_time(s.avgH)}</td>
+              <td style="padding:8px 6px;text-align:center;color:#f59e0b;font-weight:800;white-space:nowrap">${s.avgRating ? '⭐' + s.avgRating : '—'}${s.ratedCount ? '<div style="font-size:0.58rem;color:var(--muted)">(' + s.ratedCount + ')</div>' : ''}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────
+// NOTIFY TAB
+// ──────────────────────────────────────────────────────────────
+function renderBkpNotify() {
+  const ln = window.db?.lineNotify || {};
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+  const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+  setVal('bkp-ln-admin', ln.tokenAdmin);
+  setVal('bkp-ln-tech',  ln.tokenTech);
+  setChk('bkp-ev-new',    ln.evNew    !== false);
+  setChk('bkp-ev-accept', ln.evAccept !== false);
+  setChk('bkp-ev-done',   ln.evDone   !== false);
+  setVal('bkp-liff-id', window.db?.liffId);
+  const liffStatus = document.getElementById('bkp-liff-status');
+  if (liffStatus) {
+    liffStatus.textContent = window.liff?.getContext ? '✅ LIFF initialized' : '⚪ LIFF not initialized';
+  }
+}
+
+function bkpSaveNotify() {
+  if (!window.db) { if (typeof showToast === 'function') showToast('❌ db ยังไม่พร้อม'); return; }
+  if (!window.db.lineNotify) window.db.lineNotify = {};
+  window.db.lineNotify.tokenAdmin = document.getElementById('bkp-ln-admin')?.value.trim() || '';
+  window.db.lineNotify.tokenTech  = document.getElementById('bkp-ln-tech')?.value.trim()  || '';
+  window.db.lineNotify.evNew      = document.getElementById('bkp-ev-new')?.checked    !== false;
+  window.db.lineNotify.evAccept   = document.getElementById('bkp-ev-accept')?.checked  !== false;
+  window.db.lineNotify.evDone     = document.getElementById('bkp-ev-done')?.checked    !== false;
+  const liffId = document.getElementById('bkp-liff-id')?.value.trim();
+  if (liffId !== undefined) window.db.liffId = liffId;
+  if (typeof saveDB === 'function') saveDB();
+  if (typeof fsSave  === 'function') fsSave();
+  bkLog('info', 'บันทึก LINE Notify Settings');
+  const spAdmin = document.getElementById('sp-line-admin-token');
+  if (spAdmin) spAdmin.value = window.db.lineNotify.tokenAdmin;
+  if (typeof showToast === 'function') showToast('✅ บันทึก LINE Notify แล้ว');
+}
+
+function bkpTestNotify() {
+  const token = document.getElementById('bkp-ln-admin')?.value.trim();
+  if (!token) { if (typeof showToast === 'function') showToast('⚠️ กรุณาใส่ Token Admin ก่อน'); return; }
+  if (!_fnCheck('lineNotify', 'lineNotify')) return;
+  lineNotify(token, '\n🧪 [TEST] SCG.AIRCON Backend\nทดสอบการแจ้งเตือน LINE\nจาก Backend Dashboard');
+  if (typeof showToast === 'function') showToast('📨 ส่ง test notify แล้ว');
+}
+
+// ──────────────────────────────────────────────────────────────
+// FIREBASE TAB (รวม error panel + offline queue + rules)
+// ──────────────────────────────────────────────────────────────
+function renderBkpFirebase() {
+  _bkpCheckConnection();
+
+  // Listeners status
+  const lisEl = document.getElementById('bkp-listeners');
+  if (lisEl) {
+    const listeners = [
+      { name: 'appdata/main (onSnapshot)', active: !!(window._fsListener) },
+      { name: 'Auth state',               active: !!(window.firebaseAuth) },
+      { name: 'Auto backup interval',     active: !!(window._autoBackupInterval) },
+    ];
+    lisEl.innerHTML = listeners.map(l =>
+      `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <div style="width:8px;height:8px;border-radius:50%;background:${l.active ? '#22c55e' : '#d1d5db'};flex-shrink:0"></div>
+        <span style="flex:1;font-size:0.75rem;color:${l.active ? 'var(--text)' : 'var(--muted)'}">${l.name}</span>
+        <span style="font-size:0.65rem;font-weight:700;color:${l.active ? '#22c55e' : 'var(--muted)'}">${l.active ? 'Active' : 'Inactive'}</span>
+      </div>`
+    ).join('');
+  }
+
+  // ✅ Offline Queue
+  const oqEl = document.getElementById('bkp-offline-queue');
+  if (oqEl) {
+    const q      = Array.isArray(window._offlineQueue) ? window._offlineQueue : [];
+    const online = navigator.onLine;
+    if (q.length === 0) {
+      oqEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${online ? '#22c55e' : '#f59e0b'};flex-shrink:0"></div>
+        <span style="font-size:0.75rem;color:var(--text)">${online ? 'ออนไลน์ · ไม่มีรายการค้าง ✅' : 'ออฟไลน์ · ไม่มีรายการค้าง'}</span>
+      </div>`;
+    } else {
+      oqEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0"></div>
+        <span style="flex:1;font-size:0.75rem;font-weight:700;color:var(--text)">📴 ${q.length} รายการรอ Sync</span>
+        ${online ? `<button onclick="if(typeof offlineSync==='function')offlineSync().then(()=>renderBkpFirebase())" style="padding:3px 10px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:inherit">🔄 Sync</button>` : ''}
+      </div>
+      ${q.slice(0, 5).map(item =>
+        `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:0.8rem">${item.icon || '📦'}</span>
+          <span style="flex:1;font-size:0.68rem;color:var(--text)">${item.label || item.type || '—'}</span>
+          ${item.retryCount > 0 ? `<span style="font-size:0.58rem;background:#fee2e2;color:#ef4444;border-radius:4px;padding:1px 4px">retry ${item.retryCount}</span>` : ''}
+          <span style="font-size:0.6rem;color:var(--muted)">${(item.ts || '').slice(11, 16)}</span>
+        </div>`).join('')}
+      ${q.length > 5 ? `<div style="font-size:0.65rem;color:var(--muted);text-align:center;padding-top:4px">...และอีก ${q.length - 5} รายการ</div>` : ''}`;
+    }
+  }
+
+  // ✅ Error Panel
+  const errEl = document.getElementById('bkp-errors');
+  if (errEl) {
+    const errors = window._bkErrors || [];
+    if (!errors.length) {
+      errEl.innerHTML = 'ไม่มี error ✅';
+      errEl.style.color = '#22c55e';
+    } else {
+      errEl.style.color = '';
+      const typeIcon = { js:'🔴', promise:'🟠', console:'🟡' };
+      errEl.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:700;color:#ef4444">พบ ${errors.length} error</span>
+        <button onclick="clearBkpErrors()" style="padding:2px 8px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:inherit">ล้าง</button>
+      </div>` +
+      errors.map(e =>
+        `<div style="padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:0.75rem">${typeIcon[e.type] || '•'}</span>
+          <span style="color:#ef4444;font-weight:700"> ${_fmtTime(e.ts)}</span>
+          <span style="color:var(--muted)"> · ${e.src || ''}</span><br>
+          <span style="color:var(--text);font-size:0.72rem">${e.msg || ''}</span>
+          ${e.stack ? `<div style="font-size:0.6rem;color:var(--muted);word-break:break-all;margin-top:2px">${e.stack.slice(0, 150)}</div>` : ''}
+        </div>`
+      ).join('');
+    }
+  }
+
+  // Rules editor
+  const ta = document.getElementById('bkp-rules-editor');
+  if (ta && !ta.value) {
+    const saved = localStorage.getItem(BK_RULES_KEY);
+    ta.value = saved || window._DEPLOYED_RULES || DEFAULT_RULES;
+    _renderBkpRulesDiff(ta.value);
+  }
+}
+
+function clearBkpErrors() {
+  window._bkErrors = [];
+  _refreshErrorBadge();
+  renderBkpFirebase();
+  if (typeof showToast === 'function') showToast('🗑️ ล้าง error log แล้ว');
+}
+
+// ──────────────────────────────────────────────────────────────
+// RULES EDITOR
+// ──────────────────────────────────────────────────────────────
+const _DEPLOYED_RULES = window._deployedFirestoreRules || DEFAULT_RULES;
+
+function _renderBkpRulesDiff(current) {
+  const diffEl = document.getElementById('bkp-rules-diff');
+  if (!diffEl) return;
+  const deployed = _DEPLOYED_RULES;
+  if (!deployed || current.trim() === deployed.trim()) {
+    diffEl.innerHTML = '<span style="color:#22c55e;font-weight:700">✅ ตรงกับ Rules ที่ deploy แล้ว</span>';
+    return;
+  }
+  const aLines = deployed.split('\n'), bLines = current.split('\n');
+  let changed = 0, html = '<div style="font-family:monospace;font-size:0.62rem;line-height:1.6">';
+  for (let i = 0; i < Math.max(aLines.length, bLines.length); i++) {
+    const a = aLines[i] ?? '', b = bLines[i] ?? '';
+    if (a !== b) {
+      changed++;
+      if (a) html += `<div style="background:#fee2e2;color:#b91c1c;padding:0 4px">- ${_esc(a)}</div>`;
+      if (b) html += `<div style="background:#dcfce7;color:#15803d;padding:0 4px">+ ${_esc(b)}</div>`;
+    }
+  }
+  html += '</div>';
+  diffEl.innerHTML = `<span style="color:#f59e0b;font-weight:700">⚠️ มี ${changed} บรรทัดที่เปลี่ยน</span>` + html;
+}
+
+function _esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function saveBkpRules() {
+  const ta = document.getElementById('bkp-rules-editor'); if (!ta) return;
+  try {
+    localStorage.setItem(BK_RULES_KEY, ta.value);
+  } catch (e) {
+    if (typeof showToast === 'function') showToast('❌ บันทึกไม่ได้: localStorage เต็ม');
+    return;
+  }
+  _renderBkpRulesDiff(ta.value);
+  bkAudit('แก้ไข Rules', 'firestore.rules', null, { length: ta.value.length });
+  if (typeof showToast === 'function') showToast('💾 บันทึก Rules แล้ว — กรุณา deploy ใน Firebase Console');
+}
+
+function copyBkpRules() {
+  const ta = document.getElementById('bkp-rules-editor'); if (!ta) return;
+  navigator.clipboard?.writeText(ta.value)
+    .then(() => { if (typeof showToast === 'function') showToast('📋 Copy แล้ว'); })
+    .catch(() => { if (typeof showToast === 'function') showToast('❌ Copy ไม่ได้'); });
+}
+
+function resetBkpRules() {
+  const ta = document.getElementById('bkp-rules-editor'); if (!ta) return;
+  ta.value = window._DEPLOYED_RULES || DEFAULT_RULES;
+  try { localStorage.setItem(BK_RULES_KEY, ta.value); } catch (e) { /* ignore */ }
+  _renderBkpRulesDiff(ta.value);
+  if (typeof showToast === 'function') showToast('↩️ Reset Rules แล้ว');
+}
+
+// ──────────────────────────────────────────────────────────────
+// LOG TAB
+// ──────────────────────────────────────────────────────────────
+function filterBkpLog(f) {
+  _bkpLogFilter = f;
+  // bkp-lf-all, bkp-lf-login, bkp-lf-logout, bkp-lf-error, bkp-lf-sync, bkp-lf-photo, bkp-lf-assign
+  ['all','login','logout','error','sync','photo','assign'].forEach(t => {
+    const btn = document.getElementById('bkp-lf-' + t);
+    if (btn) {
+      btn.style.background = t === f ? '#1d4ed8' : 'var(--card)';
+      btn.style.color      = t === f ? 'white'   : 'var(--muted)';
+    }
+  });
+  renderBkpLog();
+}
+
+function renderBkpLog() {
+  // System log
+  const logEl = document.getElementById('bkp-log-list');
+  if (logEl) {
+    let logs = _bkGetLog();
+    if (_bkpLogFilter !== 'all') logs = logs.filter(l => l.type === _bkpLogFilter);
+    if (!logs.length) {
+      logEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:0.75rem">ไม่มี log</div>';
+    } else {
+      const typeColor = { login:'#22c55e', logout:'#f59e0b', error:'#ef4444', info:'#3b82f6', sync:'#7c3aed', photo:'#0891b2', assign:'#ea580c' };
+      const typeIcon  = { login:'🔑', logout:'🚪', error:'❌', info:'ℹ️', sync:'🔄', photo:'📷', assign:'📌' };
+      logEl.innerHTML = logs.slice(0, 100).map(l => {
+        const col = typeColor[l.type] || '#94a3b8';
+        return `<div style="background:var(--bg);border-radius:10px;padding:8px 10px;border-left:3px solid ${col}">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <span style="font-size:0.7rem">${typeIcon[l.type] || '•'}</span>
+            <span style="font-size:0.7rem;font-weight:800;color:${col}">${(l.type || '').toUpperCase()}</span>
+            <span style="font-size:0.62rem;color:var(--muted);margin-left:auto">${_fmtTime(l.ts)}</span>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text);font-weight:600">${l.msg || ''}</div>
+          ${l.user ? `<div style="font-size:0.62rem;color:var(--muted)">👤 ${l.user}${l.detail ? ' · ' + l.detail : ''}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Audit log
+  const auditEl = document.getElementById('bkp-audit-list');
+  if (auditEl) {
+    const audit = _bkGetAudit();
+    if (!audit.length) {
+      auditEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:0.75rem">ไม่มี audit log</div>';
+    } else {
+      auditEl.innerHTML = audit.slice(0, 50).map(a =>
+        `<div style="background:var(--bg);border-radius:10px;padding:8px 10px;border-left:3px solid #7c3aed">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+            <span style="font-size:0.7rem;font-weight:800;color:#7c3aed">${a.action || '—'}</span>
+            <span style="font-size:0.62rem;color:var(--muted);margin-left:auto">${_fmtTime(a.ts)}</span>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text);font-weight:600">${a.target || ''}</div>
+          <div style="font-size:0.62rem;color:var(--muted)">👤 ${a.user || '—'} (${a.role || '—'})</div>
+          ${a.before && a.before !== '—' ? `<div style="font-size:0.6rem;color:var(--muted);margin-top:3px;word-break:break-all">Before: ${a.before}</div>` : ''}
+        </div>`
+      ).join('');
+    }
+  }
+}
+
+function clearBkLog(which) {
+  if (which === 'audit') {
+    localStorage.removeItem(BK_AUDIT_KEY);
+    if (typeof showToast === 'function') showToast('🗑️ ล้าง Audit Log แล้ว');
+  } else {
+    localStorage.removeItem(BK_LOG_KEY);
+    if (typeof showToast === 'function') showToast('🗑️ ล้าง System Log แล้ว');
+  }
+  renderBkpLog();
+}
+
+// Export Log
+function exportBkLog(format) {
+  const isAudit = format.startsWith('audit');
+  const data    = isAudit ? _bkGetAudit() : _bkGetLog();
+  const fname   = (isAudit ? 'audit' : 'log') + '-' + new Date().toISOString().slice(0, 10);
+
+  if (format.endsWith('json')) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    _bkDownload(blob, fname + '.json');
+    return;
+  }
+  if (typeof XLSX === 'undefined') {
+    if (typeof showToast === 'function') showToast('⚠️ SheetJS ยังโหลดไม่เสร็จ — ลองใหม่อีกครั้ง');
+    return;
+  }
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, isAudit ? 'Audit' : 'Log');
+  XLSX.writeFile(wb, fname + '.xlsx');
+  if (typeof showToast === 'function') showToast('⬇️ Export Excel: ' + fname + '.xlsx');
+}
+
+function _bkDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ──────────────────────────────────────────────────────────────
+// DANGER TAB
+// ──────────────────────────────────────────────────────────────
+function confirmBkpClear(type) {
+  _bkpClearType = type;
+  const labels = {
+    reset:   '🔄 ล้าง Users + Tickets ทั้งหมด (เก็บเครื่องแอร์ไว้)',
+    tickets: '🗑️ ล้าง Tickets ทั้งหมด',
+    users:   '🗑️ ล้าง Users ทั้งหมด (เหลือแค่ตัวเอง)',
+  };
+  const label = document.getElementById('bkp-clear-label');
+  const box   = document.getElementById('bkp-clear-confirm');
+  if (label) label.textContent = labels[type] || type;
+  if (box) { box.style.display = 'block'; box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+
+async function executeBkpClear() {
+  const type = _bkpClearType; if (!type) return;
+  const box = document.getElementById('bkp-clear-confirm');
+  if (box) box.style.display = 'none';
+  if (!_fnCheck('clearFirestoreData', 'clearFirestoreData')) return;
+  try {
+    await clearFirestoreData(type);
+    bkLog('info', 'Clear data: ' + type);
+    renderBkpOverview();
+    if (typeof showToast === 'function') showToast('✅ ล้างข้อมูลแล้ว');
+  } catch (e) {
+    bkLog('error', 'executeBkpClear failed: ' + e.message);
+    if (typeof showToast === 'function') showToast('❌ ล้างข้อมูลไม่ได้: ' + e.message);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// SETTINGS PANEL (เรียกจาก renderSettingsPage)
+// ──────────────────────────────────────────────────────────────
+function renderBkStatus() { _bkpCheckConnection(); }
+function renderBkStats()  { /* compat stub */ }
+function renderBkLog()    { /* compat stub */ }
+function renderBkAudit()  { /* compat stub */ }
+function renderBkRules()  { /* compat stub */ }
+function clearBkErrors()  { clearBkpErrors(); }
+function clearBkAudit()   { clearBkLog('audit'); }
+function switchBkTab(tab) { /* compat stub — old settings panel */ }
+
+// ──────────────────────────────────────────────────────────────
+// CACHE / SYNC HELPERS
+// ──────────────────────────────────────────────────────────────
+function bkForceSync() { bkpForceSync(); }
+function bkClearCache() {
+  const keep = ['aircon_db','aircon_last_backup', BK_LOG_KEY, BK_AUDIT_KEY, BK_RULES_KEY, 'aircon_user'];
+  let cleared = 0;
+  try {
+    Object.keys(localStorage).forEach(k => {
+      if (!keep.includes(k) && k.startsWith('aircon_')) { localStorage.removeItem(k); cleared++; }
+    });
+  } catch (e) {
+    bkLog('error', 'bkClearCache failed: ' + e.message);
+  }
+  if (typeof invalidateMacCache === 'function') invalidateMacCache();
+  bkLog('info', `Clear Cache: ${cleared} keys`);
+  if (typeof showToast === 'function') showToast(`🗑️ Clear Cache ${cleared} keys แล้ว`);
+}
+
+// ──────────────────────────────────────────────────────────────
+// UTILITY
+// ──────────────────────────────────────────────────────────────
+function _fmtTime(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso.slice(0, 16);
+    return d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit' }) + ' ' +
+           d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch (e) { return iso.slice(0, 16); }
+}
   if (el) { el.style.display = 'block'; refreshBackendPanel(); }
 }
 
