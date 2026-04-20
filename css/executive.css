@@ -1,28 +1,23 @@
-/* ── Executive Dashboard Stylesheet — Dark SaaS v5 ── */
+/* ── Executive Dashboard Stylesheet ── */
 
 /* Shine animation */
-.exec-card-shine {
-  position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
-  transform: skewX(-15deg); pointer-events: none;
-  animation: execShine 3.5s ease-in-out infinite;
-}
-@keyframes execShine { 0%,100% { left:-80% } 60% { left:130% } }
+.exec-card-shine{position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-15deg);pointer-events:none;animation:execShine 3.5s ease-in-out infinite}
+@keyframes execShine{0%,100%{left:-80%}60%{left:130%}}
 
 /* Scrollbar hide */
 #exec-tab-bar::-webkit-scrollbar,
-#exec-quick-strip::-webkit-scrollbar { display: none; }
+#exec-quick-strip::-webkit-scrollbar { display:none }
 
 /* ── Tab buttons ── */
 #pg-executive .exec-tab-btn {
   flex-shrink: 0;
   padding: 7px 14px;
-  border: 1.5px solid var(--border-ui2);
-  background: var(--card2);
+  border: 1.5px solid #e5e7eb;
+  background: white;
   font-family: inherit;
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--muted);
+  color: #64748b;
   border-radius: 10px;
   cursor: pointer;
   white-space: nowrap;
@@ -30,90 +25,35 @@
   -webkit-tap-highlight-color: transparent;
 }
 #pg-executive .exec-tab-btn.active {
-  background: linear-gradient(135deg, #c0122c, #e8203d);
+  background: linear-gradient(135deg,#c8102e,#e63950);
   color: white;
   border-color: transparent;
-  box-shadow: 0 3px 14px rgba(192,18,44,.35);
+  box-shadow: 0 3px 12px rgba(200,16,46,.3);
   font-weight: 900;
 }
 #pg-executive .exec-tab-btn:active { transform: scale(.95); }
 
 /* ── Quick-stat cells ── */
 #pg-executive .exec-stat-cell {
-  background: var(--card);
-  border: 1.5px solid var(--border-ui);
+  background: white;
+  border: 1.5px solid #e8ecf0;
   border-radius: 12px;
   padding: 9px 6px;
   text-align: center;
-  box-shadow: var(--sh-card);
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
 }
 #pg-executive .exec-stat-cell .ico { font-size: 0.85rem; margin-bottom: 3px; }
 #pg-executive .exec-stat-cell .val {
   font-size: 1.25rem;
   font-weight: 900;
   line-height: 1;
-  font-family: 'IBM Plex Mono', monospace;
-  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
 }
 #pg-executive .exec-stat-cell .lbl {
   font-size: 0.46rem;
-  color: var(--muted);
+  color: #94a3b8;
   font-weight: 700;
   margin-top: 3px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-}
-
-/* ── Exec KPI cards with accent border ── */
-#pg-executive .exec-kpi-card {
-  background: var(--card);
-  border: 1px solid var(--border-ui);
-  border-radius: 14px;
-  padding: 14px;
-  position: relative;
-  overflow: hidden;
-}
-#pg-executive .exec-kpi-card::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at top right, var(--kpi-c, var(--accent)) 0%, transparent 60%);
-  opacity: .06;
-  pointer-events: none;
-}
-
-/* ── Exec chart bars ── */
-.exec-bar-wrap {
-  background: var(--card2);
-  border-radius: 3px 3px 0 0;
-  transition: height .5s ease;
-}
-.exec-bar-active {
-  background: linear-gradient(180deg, var(--accent3), var(--accent));
-  box-shadow: 0 0 10px rgba(192,18,44,.35);
-}
-
-/* ── Exec page bg ── */
-#pg-executive {
-  background: var(--bg) !important;
-}
-
-/* ── Dark override for any white boxes inside exec ── */
-#pg-executive [style*="background:white"],
-#pg-executive [style*="background: white"],
-#pg-executive [style*="background:#fff"],
-#pg-executive [style*="background:#f8fafc"],
-#pg-executive [style*="background:#f9fafb"] {
-  background: var(--card) !important;
-}
-#pg-executive [style*="color:#0f172a"],
-#pg-executive [style*="color:#1a1a2e"],
-#pg-executive [style*="color:#374151"] {
-  color: var(--text) !important;
-}
-#pg-executive [style*="border:1px solid #e5e7eb"],
-#pg-executive [style*="border:1.5px solid #e5e7eb"],
-#pg-executive [style*="border: 1px solid #e5e7eb"] {
-  border-color: var(--border-ui) !important;
 }

@@ -411,8 +411,7 @@ function _tbMenu(page) {
 // initLang ย้ายไปอยู่ใน app-core.js แล้ว
 
 function toggleDarkMode() {
-  const isDark = !document.body.classList.contains('dark-mode');
-  document.body.classList.toggle('dark-mode', isDark);
+  const isDark = document.body.classList.toggle('dark-mode');
   localStorage.setItem('aircon_dark', isDark ? '1' : '0');
   _updateDarkBtn(isDark);
 }
