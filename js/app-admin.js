@@ -930,3 +930,24 @@ function printDeptQRA4(deptKey) {
 }
 
 // ============================================================
+
+
+// ===== FIRESTORE CACHE FIX =====
+firebase.firestore().enablePersistence().catch(err=>{
+ console.warn("cache error:", err.code);
+});
+
+let unsubscribeTickets=null;
+
+function loadTicketsFast(){
+ const col=firebase.firestore().collection("tickets");
+ if(unsubscribeTickets) unsubscribeTickets();
+
+ col.get({source:'cache'}).then(s=>{
+   console.log("cache loaded");
+ });
+
+ unsubscribeTickets=col.limit(50).onSnapshot(s=>{
+   console.log("live update:",s.size);
+ });
+}
