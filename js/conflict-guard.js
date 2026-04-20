@@ -68,8 +68,17 @@ async function fsSaveWithLock(payload) {
 
       // ถ้า remote version ใหม่กว่า local → conflict
       if (remoteVersion > _localDocVersion) {
-        _localDocVersion = remoteVersion;
-        return 'conflict';
+        // ── FIX: ถ้า _localDocVersion ยังเป็น 0 แสดงว่า syncDocVersion() ยังไม่ได้รัน
+        // (race condition ระหว่าง fsLoad กับ fsSave ครั้งแรก) → sync version แล้ว save ต่อ
+        // ไม่ใช่ conflict จริง เพราะ user เพิ่งโหลดข้อมูลมาในแท็บนี้
+        if (_localDocVersion === 0) {
+          console.info('[ConflictGuard] first-save version sync: remote=' + remoteVersion);
+          _localDocVersion = remoteVersion;
+          // fall through → save ต่อด้วย version ที่ sync แล้ว
+        } else {
+          _localDocVersion = remoteVersion;
+          return 'conflict';
+        }
       }
     }
 

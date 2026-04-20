@@ -26,7 +26,7 @@ const firebaseConfig = {
 let _firebaseAuthReady = false;
 
 // ── รอ auth ก่อน write (max 5 วินาที) ──
-async function _waitForAuth(maxMs = 5000) {
+async function _waitForAuth(maxMs = 8000) { // FIX: เพิ่มจาก 5000→8000ms ป้องกัน timeout บน slow connection
   if (_firebaseAuthReady) return true;
   const start = Date.now();
   while (!_firebaseAuthReady && Date.now() - start < maxMs) {
@@ -247,7 +247,7 @@ async function fsSaveNow() {
   }
   // ─── FALLBACK (ถ้า conflict-guard.js ยังไม่โหลด) ─────────
   if (!_firebaseReady || !FSdb) return;
-  const _authed = await _waitForAuth();
+  const _authed = await _waitForAuth(8000);
   if (!_authed) { console.warn("[fsSaveNow] auth not ready"); return; }
   // FIX v23-fix14b: ใช้ CU (app user) แทน firebase.auth().isAnonymous
   // เพราะระบบ login ด้วย username/password → firebase user = anonymous เสมอ
