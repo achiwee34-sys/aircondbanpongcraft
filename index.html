@@ -142,6 +142,23 @@ service cloud.firestore {
 `;</script>
 </head>
 <body>
+<!-- NEW MAIN MENU -->
+<div id="main-menu" style="padding:10px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div class="menu-card red" onclick="openReport()"><h2>REPORT<br>REPAIR</h2></div>
+    <div class="menu-card orange" onclick="openDashboard()"><h2>DASHBOARD</h2></div>
+    <div class="menu-card darkorange" onclick="openMyJobs()"><h2>MY JOBS</h2></div>
+    <div class="menu-card green" onclick="openUsers()"><h2>USERS</h2></div>
+  </div>
+</div>
+<style>
+.menu-card{height:140px;display:flex;align-items:center;justify-content:center;border:3px solid;font-weight:700;text-align:center}
+.red{border-color:#e53935;color:#e53935}
+.orange{border-color:#fb8c00;color:#fb8c00}
+.darkorange{border-color:#ef6c00;color:#ef6c00}
+.green{border-color:#2e7d32;color:#2e7d32}
+</style>
+
 
 <!-- ========== LIFF LANDING PAGE — New Design (v23) ========== -->
 <div id="login-screen" style="transition:opacity 0.25s,transform 0.25s">
