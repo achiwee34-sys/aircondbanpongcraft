@@ -3771,10 +3771,11 @@ function initLang() {
 }
 
 function initDarkMode() {
-  // v5: dark mode is always on — no toggle needed
-  document.body.classList.add('dark-mode');
-  localStorage.setItem('aircon_dark', '1');
-  _updateDarkBtn(true);
+  // v5.1: light mode is default; dark only if user previously toggled on
+  const saved = localStorage.getItem('aircon_dark');
+  const isDark = saved === '1';
+  document.body.classList.toggle('dark-mode', isDark);
+  _updateDarkBtn(isDark);
 }
 
 function resetCompleteExtras() {
@@ -3988,14 +3989,20 @@ function applyLang() {
 
 function _updateDarkBtn(isDark) {
   const btn = document.getElementById('dark-toggle-btn');
-  if (!btn) return;
-  btn.textContent = isDark ? '☀️' : '🌙';
-  btn.style.background = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
+  if (btn) {
+    btn.textContent = isDark ? '☀️' : '🌙';
+    btn.style.background = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
+  }
   // settings toggle (ถ้ามี)
   const knob = document.getElementById('dark-knob');
   if (knob) knob.style.left = isDark ? '27px' : '3px';
   const settBtn = document.getElementById('dark-settings-btn');
   if (settBtn) settBtn.style.background = isDark ? '#c8102e' : '#e2e8f0';
+  // profile dropdown icon + label
+  const qmIcon = document.getElementById('tb-qm-dark');
+  if (qmIcon) qmIcon.textContent = isDark ? '☀️' : '🌙';
+  const qmLabel = document.getElementById('tb-qm-dark-label');
+  if (qmLabel) qmLabel.textContent = isDark ? 'Light Mode' : 'Dark Mode';
 }
 
 function switchPMPlanTab(tab) {
