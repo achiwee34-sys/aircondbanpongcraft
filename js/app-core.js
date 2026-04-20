@@ -3771,11 +3771,10 @@ function initLang() {
 }
 
 function initDarkMode() {
-  const saved = localStorage.getItem('aircon_dark');
-  if (saved === '1') {
-    document.body.classList.add('dark-mode');
-    _updateDarkBtn(true);
-  }
+  // v5: dark mode is always on — no toggle needed
+  document.body.classList.add('dark-mode');
+  localStorage.setItem('aircon_dark', '1');
+  _updateDarkBtn(true);
 }
 
 function resetCompleteExtras() {

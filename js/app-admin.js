@@ -411,9 +411,10 @@ function _tbMenu(page) {
 // initLang ย้ายไปอยู่ใน app-core.js แล้ว
 
 function toggleDarkMode() {
-  const isDark = document.body.classList.toggle('dark-mode');
-  localStorage.setItem('aircon_dark', isDark ? '1' : '0');
-  _updateDarkBtn(isDark);
+  // v5: dark mode is permanent — always on
+  document.body.classList.add('dark-mode');
+  localStorage.setItem('aircon_dark', '1');
+  _updateDarkBtn(true);
 }
 // _updateDarkBtn ย้ายไปอยู่ใน app-core.js แล้ว
 // initDarkMode ย้ายไปอยู่ใน app-core.js แล้ว
@@ -930,24 +931,3 @@ function printDeptQRA4(deptKey) {
 }
 
 // ============================================================
-
-
-// ===== FIRESTORE CACHE FIX =====
-firebase.firestore().enablePersistence().catch(err=>{
- console.warn("cache error:", err.code);
-});
-
-let unsubscribeTickets=null;
-
-function loadTicketsFast(){
- const col=firebase.firestore().collection("tickets");
- if(unsubscribeTickets) unsubscribeTickets();
-
- col.get({source:'cache'}).then(s=>{
-   console.log("cache loaded");
- });
-
- unsubscribeTickets=col.limit(50).onSnapshot(s=>{
-   console.log("live update:",s.size);
- });
-}
