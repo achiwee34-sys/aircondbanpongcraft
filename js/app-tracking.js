@@ -3108,22 +3108,20 @@ async function doComplete( /* PATCH v67 */) {
   const _poTotal = Number(t.purchaseOrder?.total || 0);
   t.partsCost = Math.max(_poTotal, Number(t.partsCost || 0));
   t.cost = Number(t.repairCost || 0) + Number(t.partsCost || 0) || Number(t.cost) || 0;
-  if (typeof uploadPendingPhotosToStorage === 'function') {
-    showToast('⏳ กำลัง upload รูปภาพ...');
-    await uploadPendingPhotosToStorage(t.id);
-  }
-  // FIX: รูปหลังซ่อม — ใช้ pendingPhotos.after หลัง upload (จะเป็น fs: keys)
-  // ถ้า array ว่าง (upload ล้มเหลว / ไม่ได้ถ่ายรูป) เก็บ array เดิมไว้
-  if (pendingPhotos.after.length > 0) {
-    t.photosAfter = [...pendingPhotos.after];
-  }
-  // FIX: รูปก่อนซ่อม — merge เฉพาะถ้ามีของใหม่ ไม่ทับของเดิม
-  if (pendingPhotos.before.length > 0) {
+  // ── snapshot pendingPhotos ก่อน clear ──
+  const _snapAfter  = [...pendingPhotos.after];
+  const _snapBefore = [...pendingPhotos.before];
+
+  // FIX SLOW-SAVE: อัพเดทรูปใน ticket ก่อน save (จาก local cache)
+  // แล้วค่อย upload Firestore ใน background — ไม่ await ทำให้ปิด sheet ทันที
+  if (_snapAfter.length > 0)  t.photosAfter = [..._snapAfter];
+  if (_snapBefore.length > 0) {
     const existing = new Set(t.photosBefore||[]);
     const merged = [...(t.photosBefore||[])];
-    pendingPhotos.before.forEach(p => { if (!existing.has(p)) merged.push(p); });
+    _snapBefore.forEach(p => { if (!existing.has(p)) merged.push(p); });
     t.photosBefore = merged;
   }
+
   if (typeof _lockTicket === 'function') _lockTicket(tid);
   t.status  = 'done';
   t.updatedAt = now;
@@ -3138,6 +3136,20 @@ async function doComplete( /* PATCH v67 */) {
   showToast('✅ บันทึกผลการซ่อมแล้ว — กรุณาเซ็นชื่อ');
   if (navigator.vibrate) navigator.vibrate([100,50,200]);
   try { setTimeout(() => openSignaturePad(tid, 'tech_done'), 500); } catch(e) {}
+
+  // ── Background upload: อัพโหลดรูปหลัง UI ปิดแล้ว ──
+  if (typeof uploadPendingPhotosToStorage === 'function' && (_snapAfter.length || _snapBefore.length)) {
+    setTimeout(async () => {
+      try {
+        await uploadPendingPhotosToStorage(tid);
+        // sync อีกครั้งหลัง upload สำเร็จ เพื่ออัพเดท fs: keys ใน Firestore
+        const _t2 = db.tickets.find(x=>x.id===tid);
+        if (_t2) syncTicket(_t2);
+      } catch(e) {
+        console.warn('[doComplete] background photo upload failed:', e.message);
+      }
+    }, 200);
+  }
 
   } catch(e) {
     console.error('[doComplete] error:', e);
@@ -3659,7 +3671,7 @@ function openDetail(tid) {
   <!-- ─── MACHINE CARD ─── -->
   <div style="background:white;padding:16px;border-bottom:6px solid #f0f4f8">
     <div style="display:flex;align-items:flex-start;gap:14px">
-      <div style="width:52px;height:52px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.5rem;box-shadow:0 2px 8px rgba(59,130,246,0.15)">❄️</div>
+      <div style="width:52px;height:52px;background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(59,130,246,0.35)"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="15" y1="2" x2="15" y2="28" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="15" x2="28" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="5.04" y1="5.04" x2="24.96" y2="24.96" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="24.96" y1="5.04" x2="5.04" y2="24.96" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="2" x2="11" y2="6" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="2" x2="19" y2="6" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="28" x2="11" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="28" x2="19" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="15" x2="6" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="15" x2="6" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="28" y1="15" x2="24" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="28" y1="15" x2="24" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/><circle cx="15" cy="15" r="3" fill="white"/></svg></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:0.58rem;color:#94a3b8;font-weight:700;margin-bottom:1px;letter-spacing:.05em">${t.id}</div>
         <div style="font-size:1rem;font-weight:900;color:#0f172a;line-height:1.25;margin-bottom:6px">${escapeHtml(t.machine||'—')}</div>
@@ -3845,44 +3857,6 @@ function openDetail(tid) {
           <span style="font-size:0.85rem;color:#15803d;font-weight:800">รวมทั้งสิ้น (โดยประมาณ)</span>
           <span style="font-size:1.35rem;font-weight:900;color:#16a34a">฿${totalCost.toLocaleString()}</span>
         </div>
-      </div>
-    </div>
-
-    <!-- ประวัติดำเนินการ -->
-    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
-      <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
-        <span style="font-size:0.75rem">📋</span>
-        <span style="font-size:0.75rem;font-weight:800;color:#0f172a">ประวัติดำเนินการ</span>
-      </div>
-      <div style="padding:10px 14px">
-        <div class="tl">${(t.history||[]).map((h)=>{
-          const cfg=(act=>{
-            if(act.includes('แจ้งงาน'))   return {icon:'📢',bg:'#fef9c3',cl:'#854d0e'};
-            if(act.includes('จ่ายงาน'))   return {icon:'📋',bg:'#ede9fe',cl:'#5b21b6'};
-            if(act.includes('รับงาน'))    return {icon:'✋',bg:'#dbeafe',cl:'#1d4ed8'};
-            if(act.includes('เริ่มซ่อม')) return {icon:'🔧',bg:'#fee2e2',cl:'#b91c1c'};
-            if(act.includes('รออะไหล่')) return {icon:'⏳',bg:'#ffedd5',cl:'#c2410c'};
-            if(act.includes('อะไหล่มา')) return {icon:'📦',bg:'#d1fae5',cl:'#065f46'};
-            if(act.includes('ซ่อมเสร็จ')||act.includes('บันทึกผล')) return {icon:'✅',bg:'#d1fae5',cl:'#065f46'};
-            if(act.includes('ตรวจรับ'))  return {icon:'🔍',bg:'#cffafe',cl:'#0e7490'};
-            if(act.includes('ปิดงาน'))   return {icon:'🔒',bg:'#f1f5f9',cl:'#475569'};
-            if(act.includes('เปลี่ยนช่าง')) return {icon:'🔄',bg:'#ede9fe',cl:'#5b21b6'};
-            if(act.includes('ออก PR')||act.includes('สั่งซื้อ')||act.includes('PR')||act.includes('PO')) return {icon:'🛒',bg:'#fff7ed',cl:'#c2410c'};
-            if(act.includes('แก้ไขใบ')) return {icon:'✏️',bg:'#f5f3ff',cl:'#6d28d9'};
-            if(act.includes('ช่างเซ็น')||act.includes('ยืนยัน')) return {icon:'✍️',bg:'#ecfdf5',cl:'#065f46'};
-            if(act.includes('ยกเลิก')||act.includes('ไม่ผ่าน')) return {icon:'❌',bg:'#fee2e2',cl:'#b91c1c'};
-            if(act.includes('ให้คะแนน')) return {icon:'⭐',bg:'#fef9c3',cl:'#92400e'};
-            return {icon:'💬',bg:'#f3f4f6',cl:'#6b7280'};
-          })(h.act||'');
-          return `<div class="tl-item">
-            <div class="tl-dot" style="background:${cfg.bg}">${cfg.icon}</div>
-            <div class="tl-body">
-              <div class="tl-t" style="color:${cfg.cl}">${h.act}</div>
-              ${h.detail?(()=>{ var _d=h.detail; var _sep=_d.indexOf(' — '); var _desc=_sep>=0?_d.slice(_sep+3).replace(/^[-\s]+/,'').trim():_d; return _desc?`<div class="tl-d">${_desc}</div>`:''; })():''}
-              <div class="tl-time">👤 ${h.by} &nbsp;·&nbsp; 🕐 ${h.at}</div>
-            </div>
-          </div>`;
-        }).join('')}</div>
       </div>
     </div>
 

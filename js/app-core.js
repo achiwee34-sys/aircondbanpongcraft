@@ -1033,6 +1033,17 @@ async function viewQuotationFull(tid) {
         const _trEntry = (t.techRequest?.rows||[]).find(tr=>tr.name&&tr.name.toLowerCase().trim()===r.name.toLowerCase().trim()&&tr.price>0);
         if(_trEntry){ price=Number(_trEntry.price); }
       }
+      // FIX PRICE: fallback จาก purchaseOrder.rows (Admin-confirmed prices — แหล่งน่าเชื่อถือสุด)
+      if(!price){
+        const _poEntry = (t.purchaseOrder?.rows||[]).find(po=>po.name&&po.name.toLowerCase().trim()===r.name.toLowerCase().trim()&&Number(po.price)>0);
+        if(_poEntry){ price=Number(_poEntry.price); }
+      }
+      // FIX PRICE: fallback fuzzy จาก purchaseOrder.rows (ถ้า name ไม่ตรง exact)
+      if(!price){
+        const _rNameNorm = r.name.toLowerCase().trim();
+        const _poFuzzy = (t.purchaseOrder?.rows||[]).find(po=>po.name&&Number(po.price)>0&&(po.name.toLowerCase().includes(_rNameNorm)||_rNameNorm.includes(po.name.toLowerCase().trim())));
+        if(_poFuzzy){ price=Number(_poFuzzy.price); }
+      }
       if(!price && _macBTU>0){
         // ลอง strip "ขนาด X,XXX BTU" suffix ออก แล้วหาจาก tier
         const baseNoSuffix = r.name.replace(/\s*ขนาด\s*[\d,]+\s*BTU\s*/gi,'').trim();
