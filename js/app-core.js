@@ -2345,7 +2345,8 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
 
   // ── Build overlay HTML ──
   // บนมือถือ: form panel ซ่อนอัตโนมัติ (preview เต็มจอ)
-  const _isMobile = window.innerWidth < 768;
+  // tablet portrait (<= 1024px) ก็ collapse form เหมือน mobile
+  const _isMobile = window.innerWidth < 1024;
   if (_isMobile) DS.formCollapsed = true;
 
   ov.innerHTML = `
@@ -2923,6 +2924,8 @@ const _PAGE_LABELS = {
     'chatroom': {title:'แชทรวม', sub:'ข้อความทุก TK'},
     'executive': {title:'Executive Dashboard', sub:'ภาพรวมผู้บริหาร'},
     'repair-manager': {title:'จัดการรายการงาน', sub:'หมวดหมู่และราคา'},
+    'spare-manager':  {title:'จัดการรายการอะไหล่', sub:'Catalog อะไหล่สำหรับช่าง'},
+    'inventory':      {title:'คลังอะไหล่', sub:'รับเข้า · เบิกออก · Stock จริง'},
     'machine-requests': {title:'คำขอเพิ่มเครื่องแอร์', sub:'Admin อนุมัติ / ปฏิเสธ'},
     'new-machines': {title:'เครื่องแอร์เพิ่มใหม่', sub:'2 เดือนล่าสุด'},
   };

@@ -86,12 +86,42 @@ function getLiffProfile() {
 
 // ── Login ด้วย LINE (สำหรับ browser ปกติ จะ redirect ไป LINE OAuth) ──
 function loginWithLine() {
-  if (!_liffReady || typeof liff === 'undefined') {
-    showToast('⚠️ กรุณาเปิดแอพนี้ผ่าน LINE');
+  // กรณี LIFF SDK พร้อมแล้ว → ใช้ liff.login() ปกติ
+  if (_liffReady && typeof liff !== 'undefined') {
+    if (!liff.isLoggedIn()) {
+      liff.login({ redirectUri: location.href });
+    }
     return;
   }
-  if (!liff.isLoggedIn()) {
-    liff.login({ redirectUri: location.href });
+
+  // กรณี LIFF SDK ยังไม่พร้อม (browser ปกติ มือถือ/tablet) →
+  // ลอง init ก่อน แล้ว login
+  if (typeof liff !== 'undefined') {
+    const _cleanUrl = location.origin + location.pathname;
+    liff.init({ liffId: LIFF_ID })
+      .then(() => {
+        _liffReady = true;
+        liff.login({ redirectUri: _cleanUrl });
+      })
+      .catch(() => {
+        // fallback: redirect ไป LINE OAuth โดยตรง
+        const redirectUri = encodeURIComponent(location.origin + location.pathname);
+        window.location.href = 'https://access.line.me/oauth2/v2.1/authorize' +
+          '?response_type=code' +
+          '&client_id=' + LIFF_ID.split('-')[0] +
+          '&redirect_uri=' + redirectUri +
+          '&state=liff_login' +
+          '&scope=profile%20openid' +
+          '&nonce=' + Date.now();
+      });
+    return;
+  }
+
+  // ไม่มี SDK เลย → แจ้ง user ให้เปิดใน LINE app
+  if (typeof showToast === 'function') {
+    showToast('⚠️ กรุณาเปิดลิงก์นี้ใน LINE app');
+  } else {
+    alert('กรุณาเปิดลิงก์นี้ใน LINE app');
   }
 }
 
@@ -437,17 +467,18 @@ async function doRegisterWithLine() {
 
 // ── เปลี่ยน LINE Account (logout LIFF แล้ว login ใหม่) ────────
 function switchLineAccount() {
-  if (!_liffReady || typeof liff === 'undefined') return;
   // ล้าง active session
   if (typeof CU !== 'undefined' && CU && CU.id) {
     _clearActiveSession(CU.id);
   }
   _liffProfile = null;
-  try {
-    liff.logout();
-  } catch(e) {}
-  // login ใหม่ → LINE จะให้เลือก account
-  liff.login({ redirectUri: location.href });
+  if (_liffReady && typeof liff !== 'undefined') {
+    try { liff.logout(); } catch(e) {}
+    liff.login({ redirectUri: location.origin + location.pathname });
+  } else {
+    // fallback: reload หน้าเพื่อ init LIFF ใหม่
+    location.href = location.origin + location.pathname;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -529,7 +560,8 @@ async function autoLiffLogin() {
   const ok = await initLiff();
 
   if (!ok) {
-    // LIFF init ล้มเหลว → ปุ่ม fallback ยังแสดงอยู่แล้ว
+    // LIFF init ล้มเหลว → render fallback button ที่ทำงานได้บน mobile browser
+    _showFallbackLineButton();
     return;
   }
 

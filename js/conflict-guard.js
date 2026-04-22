@@ -193,6 +193,10 @@ async function fsSaveNowSafe() {
       notifications:   db.notifications   || [],
       deletedUserIds:  db.deletedUserIds  || [],
       gsUrl:           db.gsUrl           || '',
+      // ── FIX MISSING DATA: repairGroups + pdfConfig + spareParts ──
+      repairGroups:    db.repairGroups    || [],
+      pdfConfig:       db.pdfConfig       || {},
+      spareParts:      db.spareParts      || [],
       _seq:            db._seq = (db._seq || 0) + 1,
       updatedAt:       new Date().toISOString(),
     };

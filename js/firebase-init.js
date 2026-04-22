@@ -173,6 +173,18 @@ async function fsLoad() {
       if (data.chats)                                           db.chats    = data.chats;
       if (data._seq)                                            db._seq     = data._seq;
       if (data.gsUrl)                                           db.gsUrl    = data.gsUrl;
+      // ── FIX MISSING DATA: โหลด repairGroups + pdfConfig + spareParts กลับมาด้วย ──
+      if (Array.isArray(data.repairGroups) && data.repairGroups.length > 0)
+                                                                db.repairGroups = data.repairGroups;
+      if (data.pdfConfig && typeof data.pdfConfig === 'object')
+                                                                db.pdfConfig = data.pdfConfig;
+      if (Array.isArray(data.spareParts) && data.spareParts.length > 0)
+                                                                db.spareParts = data.spareParts;
+      if (data.spareStock && typeof data.spareStock === 'object')
+                                                                db.spareStock = data.spareStock;
+      if (Array.isArray(data.stockMovements))                   db.stockMovements = data.stockMovements;
+      if (Array.isArray(data.machineRequests))                  db.machineRequests = data.machineRequests;
+      if (Array.isArray(data.notifications))                    db.notifications   = data.notifications;
 
       try {
         // BUG FIX: อ่าน signatures เฉพาะ real user (custom token / LIFF) — anonymous ได้ permission-denied
@@ -298,10 +310,16 @@ async function fsSaveNow() {
       calEvents:       db.calEvents       || [],
       chats:           db.chats           || {},
       machineRequests: db.machineRequests || [],
-      notifications:   db.notifications   || [],   // ← BUG FIX: ขาดไปเหมือน conflict-guard.js
+      notifications:   db.notifications   || [],
       deletedUserIds:  db.deletedUserIds  || [],
       _seq:            db._seq,
       gsUrl:           db.gsUrl           || '',
+      // ── FIX MISSING DATA: repairGroups + pdfConfig + spareParts ──
+      repairGroups:    db.repairGroups    || [],
+      pdfConfig:       db.pdfConfig       || {},
+      spareParts:      db.spareParts      || [],
+      spareStock:      db.spareStock      || {},
+      stockMovements:  db.stockMovements  || [],
       updatedAt:       new Date().toISOString()
     });
     if (Object.keys(allSigs).length > 0) {
@@ -531,6 +549,25 @@ async function fsListen() {
 
     // ── sync gsUrl ทุกครั้งที่ onSnapshot ยิง (ป้องกัน Reporter ได้ db.gsUrl='' เพราะ cache เก่า) ──
     if (data.gsUrl && data.gsUrl !== db.gsUrl) { db.gsUrl = data.gsUrl; console.info('[onSnapshot] gsUrl updated'); }
+    // ── FIX: sync repairGroups + pdfConfig จาก onSnapshot ด้วย ──
+    if (Array.isArray(data.repairGroups) && data.repairGroups.length > 0 &&
+        JSON.stringify(data.repairGroups) !== JSON.stringify(db.repairGroups||[])) {
+      db.repairGroups = data.repairGroups;
+      console.info('[onSnapshot] repairGroups updated:', data.repairGroups.length, 'groups');
+    }
+    if (data.pdfConfig && typeof data.pdfConfig === 'object' &&
+        JSON.stringify(data.pdfConfig) !== JSON.stringify(db.pdfConfig||{})) {
+      db.pdfConfig = data.pdfConfig;
+    }
+    // ── sync spareStock + stockMovements จาก onSnapshot ──
+    if (data.spareStock && typeof data.spareStock === 'object' &&
+        JSON.stringify(data.spareStock) !== JSON.stringify(db.spareStock||{})) {
+      db.spareStock = data.spareStock;
+    }
+    if (Array.isArray(data.stockMovements) &&
+        JSON.stringify(data.stockMovements) !== JSON.stringify(db.stockMovements||[])) {
+      db.stockMovements = data.stockMovements;
+    }
 
     // ── ตรวจสอบ role ของ CU ก่อน check('users') ──
     const _cuRoleBefore = CU ? CU.role : null;

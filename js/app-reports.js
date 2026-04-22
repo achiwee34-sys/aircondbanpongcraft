@@ -2544,10 +2544,16 @@ function openTechReqForm(tid) {
       <!-- rows -->
       <div id="tech-req-rows"></div>
       <!-- add button -->
-      <button onclick="addTechReqRow()" style="width:100%;padding:13px;background:white;border:2px dashed #cbd5e1;border-radius:13px;color:#64748b;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:6px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        เพิ่มรายการอะไหล่
-      </button>
+      <!-- add buttons row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+        <button onclick="addTechReqRow()" style="padding:13px;background:white;border:2px dashed #cbd5e1;border-radius:13px;color:#64748b;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          พิมพ์เอง
+        </button>
+        <button onclick="openSparePicker(_techReqRows.length-1)" style="padding:13px;background:#fff7ed;border:2px solid #fed7aa;border-radius:13px;color:#e65100;font-size:0.78rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+          📦 เลือกจากรายการ
+        </button>
+      </div>
       <!-- note -->
       <div style="background:white;border:1.5px solid #e2e8f0;border-radius:13px;padding:12px;margin-bottom:14px">
         <div style="font-size:0.68rem;font-weight:700;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">หมายเหตุเพิ่มเติม</div>
@@ -2611,6 +2617,8 @@ function renderTechReqRows() {
         <input type="text" value="${r.name}" placeholder="ชื่ออะไหล่ / ชิ้นส่วน *"
           style="flex:1;border:none;outline:none;font-size:0.86rem;font-weight:700;font-family:inherit;color:#0f172a;background:transparent"
           oninput="_techReqRows[${i}].name=this.value"/>
+        <button onclick="openSparePicker(${i})" title="เลือกจากรายการ"
+          style="flex-shrink:0;padding:3px 8px;border-radius:7px;background:#fff7ed;border:1.5px solid #fed7aa;cursor:pointer;font-size:0.62rem;font-weight:800;color:#e65100;white-space:nowrap;font-family:inherit">📦 เลือก</button>
         ${_techReqRows.length>1?`<button onclick="removeTechReqRow(${i})" title="ลบ"
           style="width:26px;height:26px;border-radius:50%;background:#fee2e2;border:none;cursor:pointer;color:#ef4444;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>`:''}
       </div>

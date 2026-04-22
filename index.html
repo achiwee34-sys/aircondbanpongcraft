@@ -2340,6 +2340,30 @@ window._liffLandingUpdateCard = liffUpdateCard;
             <span style="color:var(--muted)">›</span>
           </button>
 
+          <!-- จัดการรายการอะไหล่ (Catalog) -->
+          <button onclick="openSpareManager()" id="sp-spare-manager-card"
+            style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent"
+            onmousedown="this.style.background='var(--card2)'" onmouseup="this.style.background='transparent'" onmouseleave="this.style.background='transparent'">
+            <div style="width:32px;height:32px;background:linear-gradient(135deg,#14532d,#16a34a);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem">📦</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.82rem;font-weight:800;color:var(--text)">จัดการรายการอะไหล่ (Catalog)</div>
+              <div style="font-size:0.62rem;color:var(--muted);margin-top:1px">เพิ่ม / แก้ไข / ปิด อะไหล่ใน Catalog</div>
+            </div>
+            <span style="color:var(--muted)">›</span>
+          </button>
+
+          <!-- คลังอะไหล่ (Inventory) -->
+          <button onclick="openInventoryManager()" id="sp-inventory-manager-card"
+            style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent"
+            onmousedown="this.style.background='var(--card2)'" onmouseup="this.style.background='transparent'" onmouseleave="this.style.background='transparent'">
+            <div style="width:32px;height:32px;background:linear-gradient(135deg,#1e3a8a,#1d4ed8);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem">🗄️</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.82rem;font-weight:800;color:var(--text)">คลังอะไหล่ (Inventory)</div>
+              <div style="font-size:0.62rem;color:var(--muted);margin-top:1px">รับเข้า · เบิกออก · ดูจำนวนจริงในคลัง</div>
+            </div>
+            <span style="color:var(--muted)">›</span>
+          </button>
+
           <!-- จัดการ Vendor -->
           <button onclick="openVendorManager()" id="sp-vendor-manager-card"
             style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent"
@@ -4758,6 +4782,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
 <script src="js/app-users.js?v=1776406588" defer></script>
 <script src="js/app-tickets.js?v=1776406588" defer></script>
 <script src="js/app-tracking.js?v=1776406588" defer></script>
+<script src="js/spare-parts.js" defer></script>
 <script src="js/app-reports.js?v=1776406588" defer></script>
 <script src="js/app-admin.js?v=1776406588" defer></script>
 <script src="js/app-backend.js?v=1776406588" defer></script>
