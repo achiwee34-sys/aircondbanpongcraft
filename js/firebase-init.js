@@ -40,6 +40,11 @@ function initFirebase() {
     if (typeof firebase === 'undefined') return;
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     FSdb = firebase.firestore();
+    // M2 Fix: เปิด offline persistence สำหรับ mobile ที่สัญญาณไม่ดี
+    FSdb.enablePersistence({ synchronizeTabs: true }).catch(err => {
+      if (err.code === 'failed-precondition') console.warn('[Firestore] persistence: multiple tabs open');
+      else if (err.code === 'unimplemented') console.warn('[Firestore] persistence: browser not supported');
+    });
     _firebaseReady = true;
     if (firebase.auth) {
       window.firebaseAuth = firebase.auth();

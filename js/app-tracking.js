@@ -2333,7 +2333,9 @@ function openRepairManager() {
   window._rmDelGroup = (gi) => {
     if (!confirm(`ลบหมวด "${db.repairGroups[gi].label}" และรายการทั้งหมด?`)) return;
     db.repairGroups.splice(gi,1);
-    saveDB(); render();
+    saveDB();
+    if (typeof fsSave === 'function') fsSave();
+    render();
   };
   window._rmAddItem = () => {
     const g = db.repairGroups[editGrpIdx];
@@ -2370,6 +2372,7 @@ function openRepairManager() {
     g.items = (g.items||[]).filter(it=>it.name);
     g._saved = true;
     saveDB();
+    if (typeof fsSave === 'function') fsSave();
     showToast('💾 บันทึกหมวด "'+g.label+'" แล้ว');
     editGrpIdx = null;
     render();
@@ -2378,6 +2381,7 @@ function openRepairManager() {
     if (!confirm('รีเซ็ตรายการงานทั้งหมดเป็นค่าเริ่มต้น?')) return;
     db.repairGroups = [];
     saveDB();
+    if (typeof fsSave === 'function') fsSave();
     showToast('🔄 รีเซ็ตแล้ว');
     render();
   };

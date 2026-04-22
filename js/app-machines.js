@@ -2025,20 +2025,7 @@ function filterDeptPicker(q) {
   renderDeptPickerGrid(filtered);
 }
 
-function _lockBodyScroll() {
-  const y = window.scrollY;
-  document.body.style.cssText += ';position:fixed;top:-'+y+'px;left:0;right:0;overflow:hidden';
-  document.body.dataset.scrollY = y;
-}
-function _unlockBodyScroll() {
-  const y = parseInt(document.body.dataset.scrollY || '0');
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.overflow = '';
-  window.scrollTo({ top: y, behavior: 'instant' });
-}
+// _lockBodyScroll / _unlockBodyScroll — ย้ายไปอยู่ใน app-core.js แล้ว (C2 fix)
 
 function toggleDeptPicker() {
   const picker = document.getElementById('nt-dept-picker');

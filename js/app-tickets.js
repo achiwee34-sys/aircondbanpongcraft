@@ -599,15 +599,7 @@ function closeSwipeCard(card) {
 
 // ── Global Search ──
 // ── unlock body scroll after global search close ──
-function _unlockBodyScroll() {
-  const sy = parseInt(document.body.style.top || '0') * -1;
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.overflow = '';
-  if (sy) window.scrollTo(0, sy);
-}
+// _unlockBodyScroll — ย้ายไปอยู่ใน app-core.js แล้ว (C2 fix)
 
 function openGlobalSearch() {
   // ── ล็อก body scroll ป้องกัน Android viewport เลื่อนเมื่อ keyboard ขึ้น ──

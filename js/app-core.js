@@ -8,7 +8,7 @@ function _overlayStyle(zIndex, bg, anim) {
   const desktop = navW > 60; // sidebar mode: width > collapsed(56px)
   const left   = desktop ? (navW + 'px') : '0';
   const bottom = desktop ? '0' : 'calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)))';
-  return `position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:${bottom};left:${left};right:0;z-index:${zIndex};background:${bg||'#f1f5f9'};display:flex;flex-direction:column;animation:slideDown ${anim||'0.25s'} cubic-bezier(0.32,0.72,0,1)`;
+  return `position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:${bottom};left:${left};right:0;z-index:${zIndex};background:${bg||'#f1f5f9'};display:flex;flex-direction:column;overflow:hidden;animation:slideDown ${anim||'0.25s'} cubic-bezier(0.32,0.72,0,1)`;
 }
 // i18n — ต้องอยู่ก่อนสุดเพื่อให้ทุก script ใช้ได้
 // ============================================================
@@ -3715,6 +3715,22 @@ async function syncMachine(m){const url=db.gsUrl;if(!url)return;_showSyncDot();t
 // ============================================================
 // ADMIN UI FUNCTIONS — ย้ายมาจาก app-admin.js
 // ============================================================
+
+// ── Body scroll lock (C2 fix: consolidate จาก app-machines + app-tickets) ──
+function _lockBodyScroll() {
+  const y = window.scrollY;
+  document.body.style.cssText += ';position:fixed;top:-'+y+'px;left:0;right:0;overflow:hidden';
+  document.body.dataset.scrollY = y;
+}
+function _unlockBodyScroll() {
+  const y = parseInt(document.body.dataset.scrollY || '0');
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
+  window.scrollTo({ top: y, behavior: 'instant' });
+}
 
 function toggleSidebar() {
   const app = document.getElementById('app');

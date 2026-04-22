@@ -250,18 +250,7 @@ function tbSearchNow(q) {
   }
 }
 
-function toggleSidebar() {
-  const app = document.getElementById('app');
-  const collapsed = app.classList.toggle('sidebar-collapsed');
-  localStorage.setItem('aircon_sidebar_collapsed', collapsed ? '1' : '0');
-  const icon = document.getElementById('sidebar-toggle-icon');
-  if (icon) {
-    icon.innerHTML = collapsed
-      ? '<polyline points="9 18 15 12 9 6"/>'
-      : '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>';
-  }
-}
-
+// toggleSidebar() ย้ายไปอยู่ใน app-core.js แล้ว — ลบ duplicate ออก (C2 fix)
 // initSidebarState ย้ายไปอยู่ใน app-core.js แล้ว
 
 // ── Orientation change — sync sidebar state ──

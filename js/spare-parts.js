@@ -68,7 +68,7 @@ function openSparePicker(rowIdx) {
 
   const sh = document.createElement('div');
   sh.className = 'spare-picker-sh';
-  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9600;background:#f8fafc;border-radius:22px 22px 0 0;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.2)';
+  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9600;background:#f8fafc;border-radius:22px 22px 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -12px 48px rgba(0,0,0,0.2)';
 
   sh.innerHTML = `
     <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0">
@@ -521,6 +521,7 @@ function openSpareManager() {
     // sync กลับ SPARE_PARTS runtime (ให้ picker เห็นข้อมูลใหม่ทันที)
     _smSyncRuntime();
     saveDB();
+    if (typeof fsSave === 'function') fsSave();
     _smEditId = null;
     renderList();
   };
@@ -530,6 +531,7 @@ function openSpareManager() {
     db.spareParts = (db.spareParts||[]).filter(s=>s.id!==id);
     _smSyncRuntime();
     saveDB();
+    if (typeof fsSave === 'function') fsSave();
     showToast('🗑 ลบแล้ว');
     _smEditId = null;
     renderList();
@@ -605,6 +607,7 @@ function _invAddMovement({ partId, type, qty, ref = '', note = '', by = '' }) {
   db.spareStock[partId] = cur;
 
   saveDB();
+  if (typeof fsSave === 'function') fsSave();
   return mv;
 }
 
@@ -942,10 +945,11 @@ function openInventoryManager() {
     window._invSaveSettings = (pid) => {
       if (!db.spareStock) db.spareStock = {};
       const cur = db.spareStock[pid] || { qty: 0, minQty: 0, location: '' };
-      cur.minQty   = parseFloat(document.getElementById('inv-minqty')?.value) || 0;
+      cur.minQty   = Math.max(0, parseFloat(document.getElementById('inv-minqty')?.value) || 0);
       cur.location = document.getElementById('inv-location')?.value.trim() || '';
       db.spareStock[pid] = cur;
       saveDB();
+      if (typeof fsSave === 'function') fsSave();
       showToast('💾 บันทึกแล้ว');
     };
 
@@ -1062,6 +1066,7 @@ function openInventoryManager() {
         const kbH = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
         sh.style.maxHeight = (window.visualViewport.height * 0.9) + 'px';
         sh.style.bottom = Math.max(0, kbH) + 'px';
+        sh.style.paddingBottom = Math.max(32, kbH + 16) + 'px';
       };
       window.visualViewport.addEventListener('resize', fix);
       fix();
