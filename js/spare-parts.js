@@ -214,7 +214,7 @@ function openSpareManager() {
   document.getElementById('_sm_page')?.remove();
   const page = document.createElement('div');
   page.id = '_sm_page';
-  page.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)));left:0;right:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideDown 0.25s cubic-bezier(0.32,0.72,0,1)';
+  page.style.cssText = _overlayStyle(9600, '#f1f5f9', '0.25s');
 
   // init db.spareParts ถ้ายังไม่มี → ใช้ SPARE_PARTS เป็น default
   if (!db.spareParts || !db.spareParts.length) {
@@ -293,17 +293,17 @@ function openSpareManager() {
           <input id="sm-search" type="text" placeholder="ค้นหา..."
             value="${escapeHtml(_smQ)}"
             style="width:100%;padding:9px 12px 9px 32px;border:1.5px solid rgba(255,255,255,.3);border-radius:11px;font-size:0.84rem;font-family:inherit;outline:none;background:rgba(255,255,255,.15);color:white;box-sizing:border-box"
-            oninput="_smQ=this.value;renderList()"
+            oninput="window._smSetQ(this.value)"
             onfocus="this.style.borderColor='white'" onblur="this.style.borderColor='rgba(255,255,255,.3)'"/>
         </div>
         <!-- category tabs -->
         <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
-          <button onclick="_smCat='';renderList()"
+          <button onclick="window._smSetCat('')"
             style="flex-shrink:0;padding:4px 12px;border-radius:99px;border:1.5px solid ${_smCat===''?'white':'rgba(255,255,255,.35)'};background:${_smCat===''?'white':'transparent'};color:${_smCat===''?'#15803d':'white'};font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">
             ทั้งหมด (${total})
           </button>
           ${Object.entries(CAT_COLORS).map(([k,v])=>`
-          <button onclick="_smCat='${k}';renderList()"
+          <button onclick="window._smSetCat('${k}')"
             style="flex-shrink:0;padding:4px 12px;border-radius:99px;border:1.5px solid ${_smCat===k?'white':'rgba(255,255,255,.35)'};background:${_smCat===k?'white':'transparent'};color:${_smCat===k?'#15803d':'white'};font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">
             ${v.icon} ${SPARE_CAT_META[k]?.label||k} (${catCounts[k]||0})
           </button>`).join('')}
@@ -355,7 +355,7 @@ function openSpareManager() {
     page.innerHTML = `
       <div style="background:linear-gradient(160deg,#0c1a0e 0%,#14532d 50%,#16a34a 100%);padding:12px 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
-          <button onclick="_smEditId=null;renderList()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="window._smBackToList()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
             <div style="color:white;font-size:1rem;font-weight:900">${isNew?'เพิ่มอะไหล่ใหม่':'แก้ไขอะไหล่'}</div>
             <div style="color:rgba(255,255,255,.5);font-size:0.62rem;margin-top:2px">${s.id||''}</div>
@@ -452,6 +452,12 @@ function openSpareManager() {
     // store temp category
     window._smCurrentCat = s.category || 'hardware';
   };
+
+  // ── Expose render + state setters to window (needed by inline onclick/oninput) ──
+  window._smRender    = () => render();
+  window._smSetQ      = (v) => { _smQ = v; renderList(); };
+  window._smSetCat    = (v) => { _smCat = v; renderList(); };
+  window._smBackToList = () => { _smEditId = null; renderList(); };
 
   // ── Handlers ──
   window._smNew   = () => { _smEditId = '__new__'; render(); };
@@ -609,7 +615,7 @@ function openInventoryManager() {
   document.getElementById('_inv_page')?.remove();
   const page = document.createElement('div');
   page.id = '_inv_page';
-  page.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)));left:0;right:0;z-index:9700;background:#f1f5f9;display:flex;flex-direction:column;animation:slideDown 0.25s cubic-bezier(0.32,0.72,0,1)';
+  page.style.cssText = _overlayStyle(9700, '#f1f5f9', '0.25s');
 
   let _invTab    = 'stock';   // 'stock' | 'movements'
   let _invQ      = '';
@@ -688,8 +694,8 @@ function openInventoryManager() {
 
         <!-- tabs -->
         <div style="display:flex;gap:4px;margin-bottom:10px">
-          <button onclick="window._invTab_='stock';render()" style="flex:1;padding:7px;border-radius:9px;border:none;background:${_invTab==='stock'?'white':'rgba(255,255,255,.15)'};color:${_invTab==='stock'?'#1d4ed8':'white'};font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📦 Stock</button>
-          <button onclick="window._invTab_='movements';render()" style="flex:1;padding:7px;border-radius:9px;border:none;background:${_invTab==='movements'?'white':'rgba(255,255,255,.15)'};color:${_invTab==='movements'?'#1d4ed8':'white'};font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ความเคลื่อนไหว</button>
+          <button onclick="window._invTab_('stock')" style="flex:1;padding:7px;border-radius:9px;border:none;background:${_invTab==='stock'?'white':'rgba(255,255,255,.15)'};color:${_invTab==='stock'?'#1d4ed8':'white'};font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📦 Stock</button>
+          <button onclick="window._invTab_('movements')" style="flex:1;padding:7px;border-radius:9px;border:none;background:${_invTab==='movements'?'white':'rgba(255,255,255,.15)'};color:${_invTab==='movements'?'#1d4ed8':'white'};font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ความเคลื่อนไหว</button>
         </div>
 
         <!-- search -->
@@ -697,7 +703,7 @@ function openInventoryManager() {
           <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="ค้นหาอะไหล่..." value="${escapeHtml(_invQ)}"
             style="width:100%;padding:9px 12px 9px 30px;border:1.5px solid rgba(255,255,255,.3);border-radius:11px;font-size:0.83rem;font-family:inherit;outline:none;background:rgba(255,255,255,.15);color:white;box-sizing:border-box"
-            oninput="window._invQ_=this.value;render()"
+            oninput="window._invSetQ(this.value)"
             onfocus="this.style.borderColor='white'" onblur="this.style.borderColor='rgba(255,255,255,.3)'"/>
         </div>
       </div>
@@ -786,7 +792,7 @@ function openInventoryManager() {
           <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="ค้นหา..." value="${escapeHtml(_invQ)}"
             style="width:100%;padding:9px 12px 9px 30px;border:1.5px solid rgba(255,255,255,.3);border-radius:11px;font-size:0.83rem;font-family:inherit;outline:none;background:rgba(255,255,255,.15);color:white;box-sizing:border-box"
-            oninput="window._invQ_=this.value;renderMovements()"
+            oninput="window._invSetQ(this.value)"
             onfocus="this.style.borderColor='white'" onblur="this.style.borderColor='rgba(255,255,255,.3)'"/>
         </div>
       </div>
@@ -846,7 +852,7 @@ function openInventoryManager() {
     page.innerHTML = `
       <div style="background:linear-gradient(160deg,#0c1a2e 0%,#1e3a5f 50%,#1d4ed8 100%);padding:14px 16px 16px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:10px">
-          <button onclick="window._invDetailId=null;render()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="window._invBackToList()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
             <div style="color:white;font-size:0.9rem;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item?.name||id)}</div>
             <div style="color:rgba(255,255,255,.5);font-size:0.62rem;margin-top:1px">${id}</div>
@@ -1051,8 +1057,13 @@ function openInventoryManager() {
   };
 
   // bind closure vars accessible from inner render fns
-  window._invDetailId = null;
-  window._invTab_ = (v) => { _invTab = v; render(); };
+  window._invDetailId  = null;
+  window._invTab_      = (v) => { _invTab = v; render(); };
+  window._invSetQ      = (v) => { _invQ = v; if (_invTab === 'movements') renderMovements(); else renderStock(); };
+  window._invSetFilter = (f) => { _invFilter = f; render(); };
+  window._invOpenDetail = (id) => { _invDetailId = id; render(); };
+  window._invRender    = () => render();
+  window._invBackToList = () => { _invDetailId = null; render(); };
 
   render();
   document.body.appendChild(page);

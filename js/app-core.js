@@ -1,4 +1,12 @@
 // ============================================================
+
+// ── Responsive overlay page position (v31) ──────────
+function _overlayStyle(zIndex, bg, anim) {
+  const desktop = window.innerWidth >= 768 && window.innerWidth > window.innerHeight;
+  const left   = desktop ? 'calc(var(--nav-w,220px))' : '0';
+  const bottom = desktop ? '0' : 'calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)))';
+  return `position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:${bottom};left:${left};right:0;z-index:${zIndex};background:${bg||'#f1f5f9'};display:flex;flex-direction:column;animation:slideDown ${anim||'0.25s'} cubic-bezier(0.32,0.72,0,1)`;
+}
 // i18n — ต้องอยู่ก่อนสุดเพื่อให้ทุก script ใช้ได้
 // ============================================================
 let _lang = (typeof localStorage !== 'undefined' && localStorage.getItem('aircon_lang')) || 'TH';

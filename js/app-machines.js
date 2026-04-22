@@ -3152,7 +3152,7 @@ function openMachineRequestsPage() {
   document.getElementById('_mac-req-page')?.remove();
   const page = document.createElement('div');
   page.id = '_mac-req-page';
-  page.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)));left:0;right:0;z-index:9500;background:#f1f5f9;display:flex;flex-direction:column;animation:slideDown 0.25s cubic-bezier(0.32,0.72,0,1)';
+  page.style.cssText = _overlayStyle(9500, '#f1f5f9', '0.25s');
 
   const renderContent = () => {
     const pending = (db.machineRequests||[]).filter(r => r.status === 'pending');
@@ -3429,7 +3429,7 @@ function openNewMachinesTable() {
   document.getElementById('_nmtable')?.remove();
   const pg = document.createElement('div');
   pg.id = '_nmtable';
-  pg.style.cssText = 'position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)));left:0;right:0;z-index:9600;background:#f1f5f9;display:flex;flex-direction:column;animation:slideDown 0.22s cubic-bezier(0.32,0.72,0,1)';
+  pg.style.cssText = _overlayStyle(9600, '#f1f5f9', '0.22s');
 
   const totalPages = () => Math.ceil(list.length / PAGE_SIZE);
 
