@@ -467,7 +467,7 @@ function _renderTicketsInner() {
 
   // BUG FIX (Bug 1): dirty-check — skip DOM rebuild ถ้า content ไม่เปลี่ยน
   // fingerprint = IDs ของ page นี้ + status + updatedAt (ตรวจจับ edit ด้วย)
-  const fingerprint = pageItems.map(t => t.id + '|' + (t.status||'') + '|' + (t.updatedAt||'')).join(',')
+  const fingerprint = pageItems.map(t => t.id + '|' + (t.status||'') + '|' + (t.updatedAt||'') + '|' + (t.createdAt||'')).join(',')
     + '::p' + tkPage + '::tot' + total;
   if (fingerprint === _tkLastFingerprint && tlEl.children.length > 0) {
     // list ไม่เปลี่ยน — อัปเดตแค่ badge/scroller ไม่ต้อง rebuild DOM

@@ -441,10 +441,9 @@ async function fsListen() {
   _fsListener = FSdb.collection('appdata').doc('main').onSnapshot(snap => {
     if (!snap.exists || !CU) return;
     const data = snap.data();
-    // FIX v23-track3: ถ้าอยู่หน้า tracking → อย่า skip แม้ _fsSaving = true
-    // เพราะ admin เพิ่งกด "ของมาแล้ว" แล้ว tracking ต้องอัปเดตทันที
+    // FIX v34: ไม่ block onSnapshot ขณะ _fsSaving เพื่อป้องกันงานหายจาก device อื่น
+    // เฉพาะ seq เท่ากัน (write ของตัวเอง) จึงจะ skip — ตรวจด้านล่างแล้ว
     const _onTrackingPage = document.querySelector('.page.active')?.id === 'pg-tracking';
-    if (_fsSaving && !_fsChatSaving && !_onTrackingPage) return;
     // ── BUG FIX (Bug 1 cross-device sync): ปรับ _seq check ──
     // เดิม: db._seq >= data._seq → skip ทั้งหมด
     // ปัญหา: อุปกรณ์ที่มี localStorage เก่า (_seq สูง) จะไม่รับ update จากอุปกรณ์อื่นเลย
@@ -463,8 +462,10 @@ async function fsListen() {
       return;
     }
     // กัน localStorage cache เก่ามากๆ ที่ _seq พุ่งสูงผิดปกติ (เช่น หลัง clear +100)
-    // แต่ยังคง sync ถ้า remote ใหม่กว่า
-    if (localSeq > remoteSeq && (localSeq - remoteSeq) > 50) return;
+    // แต่ยังคง sync ถ้า remote ใหม่กว่า หรือ remote มีงานมากกว่า local (ป้องกันงานหาย)
+    const _remoteTicketCount = Array.isArray(data.tickets) ? data.tickets.length : 0;
+    const _localTicketCount  = Array.isArray(db.tickets)   ? db.tickets.length   : 0;
+    if (localSeq > remoteSeq && (localSeq - remoteSeq) > 50 && _remoteTicketCount <= _localTicketCount) return;
     const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
     const DEMO_IDS       = ['u2','u3','u4','u5'];
     const check = (key) => {
@@ -519,7 +520,8 @@ async function fsListen() {
           }
         }
         if (d.length !== localArr.length) { db[key] = d; return true; }
-        const sig = a => a.length + '|' + a.map(x => (x?.updatedAt||x?.id||'')).join(',');
+        // FIX: ใช้ sorted sig ป้องกัน false-match เมื่อ order ต่างกัน
+        const sig = a => a.map(x => (x?.id||'') + ':' + (x?.updatedAt||x?.status||'')).sort().join(',');
         if (sig(d) !== sig(localArr)) { db[key] = d; return true; }
         return false;
       }
