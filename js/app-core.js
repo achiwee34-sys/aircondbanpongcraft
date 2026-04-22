@@ -2,8 +2,11 @@
 
 // ── Responsive overlay page position (v31) ──────────
 function _overlayStyle(zIndex, bg, anim) {
-  const desktop = window.innerWidth >= 768; // PC sidebar: ใช้ width >= 768 เพียงอย่างเดียว ไม่เช็ค portrait/landscape
-  const left   = desktop ? 'calc(var(--nav-w,220px))' : '0';
+  // ตรวจ sidebar จาก offsetWidth จริง (รองรับทั้ง landscape/portrait และ collapsed)
+  const navEl  = document.querySelector('.bottom-nav');
+  const navW   = navEl ? navEl.offsetWidth : 0;
+  const desktop = navW > 60; // sidebar mode: width > collapsed(56px)
+  const left   = desktop ? (navW + 'px') : '0';
   const bottom = desktop ? '0' : 'calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)))';
   return `position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:${bottom};left:${left};right:0;z-index:${zIndex};background:${bg||'#f1f5f9'};display:flex;flex-direction:column;animation:slideDown ${anim||'0.25s'} cubic-bezier(0.32,0.72,0,1)`;
 }

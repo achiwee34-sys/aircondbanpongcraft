@@ -216,8 +216,20 @@ function openSpareManager() {
   page.id = '_sm_page';
   page.style.cssText = _overlayStyle(9600, '#f1f5f9', '0.25s');
 
-  // init db.spareParts ถ้ายังไม่มี → ใช้ SPARE_PARTS เป็น default
-  if (!db.spareParts || !db.spareParts.length) {
+  // init db.spareParts เฉพาะกรณีที่ยังไม่มีข้อมูลเลย (ไม่ overwrite ข้อมูลที่บันทึกไว้)
+  if (!Array.isArray(db.spareParts) || db.spareParts.length === 0) {
+    // ตรวจ localStorage โดยตรงก่อน (กรณี fsSave ยังไม่ sync กลับมา)
+    try {
+      const raw = localStorage.getItem(typeof DB_KEY !== 'undefined' ? DB_KEY : 'aircon_db');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.spareParts) && parsed.spareParts.length > 0) {
+          db.spareParts = parsed.spareParts;
+        }
+      }
+    } catch(e) {}
+  }
+  if (!Array.isArray(db.spareParts) || db.spareParts.length === 0) {
     db.spareParts = SPARE_PARTS.map(s => ({
       id: s.id, name: s.n, category: s.c,
       price: s.p, unit: s.u,
@@ -431,10 +443,10 @@ function openSpareManager() {
             <label style="position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0">
               <input type="checkbox" id="sm-active" ${s.isActive!==false?'checked':''}
                 style="opacity:0;width:0;height:0;position:absolute"
-                onchange="document.getElementById('sm-active-track').style.background=this.checked?'#16a34a':'#d1d5db'"/>
+                onchange="document.getElementById('sm-active-track').style.background=this.checked?'#16a34a':'#d1d5db';document.getElementById('sm-active-knob').style.transform=this.checked?'translateX(22px)':'translateX(0)'"/>
               <span id="sm-active-track" style="position:absolute;inset:0;border-radius:13px;background:${s.isActive!==false?'#16a34a':'#d1d5db'};transition:background 0.2s;cursor:pointer"
-                onclick="const cb=document.getElementById('sm-active');cb.checked=!cb.checked;this.style.background=cb.checked?'#16a34a':'#d1d5db'"></span>
-              <span style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s;pointer-events:none"></span>
+                onclick="const cb=document.getElementById('sm-active');cb.checked=!cb.checked;this.style.background=cb.checked?'#16a34a':'#d1d5db';document.getElementById('sm-active-knob').style.transform=cb.checked?'translateX(22px)':'translateX(0)'"></span>
+              <span id="sm-active-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s;pointer-events:none;transform:${s.isActive!==false?'translateX(22px)':'translateX(0)'}"></span>
             </label>
           </div>
           ${!isNew?`
