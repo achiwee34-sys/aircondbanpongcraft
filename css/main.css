@@ -1711,3 +1711,25 @@ select:not(#pur-po-panel select):not(#pur-po-panel *) {
     transform: translateX(-50%) !important;
   }
 }
+
+/* ── Overlay CSS Variables (ใช้กับ _overlayStyle ใน app-core.js) ──────────
+   กำหนด --overlay-left และ --overlay-bottom ให้ตรงกับ layout จริงในแต่ละ breakpoint
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* default: mobile portrait — bottom nav, ไม่มี sidebar */
+:root {
+  --overlay-left: 0px;
+  --overlay-bottom: calc(var(--nav-h, 56px) + var(--safe-bot, env(safe-area-inset-bottom, 0px)));
+}
+
+/* landscape + width >= 768px — sidebar mode, bottom = 0 */
+@media (orientation: landscape) and (min-width: 768px) {
+  :root {
+    --overlay-left: var(--nav-w, 220px);
+    --overlay-bottom: 0px;
+  }
+  /* sidebar collapsed */
+  #app.sidebar-collapsed {
+    --overlay-left: 56px;
+  }
+}

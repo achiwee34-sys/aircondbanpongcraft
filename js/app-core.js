@@ -1,25 +1,12 @@
 // ============================================================
 
-// ── Responsive overlay page position (v32 — fix overflow) ──────────
+// ── Responsive overlay page position (v33 — pure CSS vars) ──────────
 function _overlayStyle(zIndex, bg, anim) {
-  // ตรวจ sidebar จาก offsetWidth จริง (รองรับทั้ง landscape/portrait และ collapsed)
-  const navEl   = document.querySelector('.bottom-nav');
-  const mainCol = document.getElementById('main-col');
-  const navW    = navEl ? navEl.offsetWidth : 0;
-  const desktop = navW > 60; // sidebar mode: width > collapsed(56px)
-
-  // คำนวณ left จาก main-col position จริง (แม่นยำกว่า navW)
-  let left = '0';
-  if (desktop) {
-    if (mainCol) {
-      left = mainCol.getBoundingClientRect().left + 'px';
-    } else {
-      left = navW + 'px';
-    }
-  }
-
-  const bottom = desktop ? '0' : 'calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)))';
+  // ใช้ CSS variables แทน JS getBoundingClientRect() ป้องกัน layout ยังไม่พร้อม
+  // --overlay-left / --overlay-bottom ถูก set โดย @media rules ใน main.css
   const top    = `calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)))`;
+  const bottom = `var(--overlay-bottom,calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px))))`;
+  const left   = `var(--overlay-left,0px)`;
   return `position:fixed;top:${top};bottom:${bottom};left:${left};right:0;z-index:${zIndex};background:${bg||'var(--bg,#f0f2f5)'};display:flex;flex-direction:column;overflow:hidden;animation:slideDown ${anim||'0.25s'} cubic-bezier(0.32,0.72,0,1)`;
 }
 // i18n — ต้องอยู่ก่อนสุดเพื่อให้ทุก script ใช้ได้

@@ -465,23 +465,23 @@ function openCostMonthDrill(year, month, label) {
   sheet.style.cssText = 'background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
 
   sheet.innerHTML = `
-    <div style="background:linear-gradient(160deg,#1a0a0e,#7f1d1d,#c8102e);padding:16px 16px 14px;flex-shrink:0">
+    <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:16px 16px 12px;flex-shrink:0">
       <div style="width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 12px"></div>
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div style="color:white;font-size:1rem;font-weight:900">💰 ${MONTH_TH[month]} ${year+543}</div>
-          <div style="color:rgba(255,255,255,0.55);font-size:0.65rem;margin-top:2px">${tickets.length} งาน · รวม ฿${totalCost.toLocaleString()}</div>
+          <div style="color:var(--text,#111827);font-size:1rem;font-weight:900">💰 ${MONTH_TH[month]} ${year+543}</div>
+          <div style="color:#6b7280;font-size:0.65rem;margin-top:2px">${tickets.length} งาน · รวม ฿${totalCost.toLocaleString()}</div>
         </div>
         <button onclick="this.closest('[style*=fixed]').remove()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:1.2rem;cursor:pointer">✕</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
         <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:8px 10px">
-          <div style="font-size:0.55rem;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;margin-bottom:2px">🔧 ค่าแรงซ่อม</div>
+          <div style="font-size:0.55rem;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:2px">🔧 ค่าแรงซ่อม</div>
           <div style="font-size:0.95rem;font-weight:900;color:white">${(totalRepair+totalLegacy)>0?'฿'+(totalRepair+totalLegacy).toLocaleString():'—'}</div>
           <div style="font-size:0.55rem;color:rgba(255,255,255,0.4);margin-top:1px">จาก Price List</div>
         </div>
         <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:8px 10px">
-          <div style="font-size:0.55rem;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;margin-bottom:2px">📦 ค่าสั่งซื้อ</div>
+          <div style="font-size:0.55rem;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:2px">📦 ค่าสั่งซื้อ</div>
           <div style="font-size:0.95rem;font-weight:900;color:white">${totalParts>0?'฿'+totalParts.toLocaleString():'—'}</div>
           <div style="font-size:0.55rem;color:rgba(255,255,255,0.4);margin-top:1px">จาก PO/PR</div>
         </div>
@@ -627,7 +627,7 @@ function renderRptKPI(total, done, pending) {
       <div style="display:flex;align-items:stretch;position:relative">
         <!-- left: total -->
         <div style="flex:1;padding:20px 18px 14px;border-right:1px solid rgba(255,255,255,0.07)">
-          <div style="font-size:0.6rem;color:rgba(255,255,255,0.45);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">งานทั้งหมดเดือนนี้</div>
+          <div style="font-size:0.6rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">งานทั้งหมดเดือนนี้</div>
           <div style="display:flex;align-items:baseline;gap:6px">
             <div style="font-size:3.8rem;font-weight:900;color:white;line-height:1">${total}</div>
             <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);font-weight:600">ใบงาน</div>
@@ -2402,7 +2402,7 @@ function showLockedTechReq(t) {
 
   const sh = document.createElement('div');
   sh.className = 'tech-req-sheet';
-  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9200;background:var(--bg);border-radius:22px 22px 0 0;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.18)';
+  sh.style.cssText = 'position:fixed;bottom:0;left:var(--overlay-left,0px);right:0;z-index:9200;background:var(--bg);border-radius:22px 22px 0 0;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.18)';
 
   // ปุ่มแก้ไข — แสดงเฉพาะ: ยังไม่ปิด + Admin ยังไม่ได้กรอก PO
   const canEdit = !isClosed && !hasAdminPO;
@@ -2503,7 +2503,7 @@ function openTechReqForm(tid) {
 
   const sh = document.createElement('div');
   sh.className = 'tech-req-sheet';
-  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9200;background:var(--bg);border-radius:22px 22px 0 0;max-height:93vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.18)';
+  sh.style.cssText = 'position:fixed;bottom:0;left:var(--overlay-left,0px);right:0;z-index:9200;background:var(--bg);border-radius:22px 22px 0 0;max-height:93vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.18)';
   sh.innerHTML = `
     <!-- handle -->
     <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0">

@@ -177,7 +177,7 @@ function openPhotoAfterSheet() {
 
   const sheet = document.createElement('div');
   sheet.id = '_photo-action-sheet';
-  sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:var(--card);border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);font-family:inherit;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
+  sheet.style.cssText = 'position:fixed;bottom:0;left:var(--overlay-left,0px);right:0;z-index:99999;background:var(--card);border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);font-family:inherit;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
   sheet.innerHTML = `
     <div style="width:40px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 16px"></div>
     <div style="font-size:0.85rem;font-weight:800;color:var(--text2);margin-bottom:14px;text-align:center">เลือกรูปหลังซ่อม</div>
@@ -1463,7 +1463,7 @@ function openRepairPicker() {
           </div>
           <div style="display:flex;align-items:center;gap:5px;margin-top:1px">
             ${_rpBtuLabel ? `<span style="background:rgba(251,191,36,.3);color:#fde68a;border-radius:4px;padding:1px 6px;font-size:0.62rem;font-weight:900;border:1px solid rgba(251,191,36,.35)">${_rpBtuLabel}</span>` : ''}
-            ${_rpDept ? `<span style="font-size:0.6rem;color:rgba(255,255,255,.5);font-weight:600">🏢 ${_rpDept}</span>` : ''}
+            ${_rpDept ? `<span style="font-size:0.6rem;color:#6b7280;font-weight:600">🏢 ${_rpDept}</span>` : ''}
           </div>
         </div>
         <div style="flex-shrink:0;background:rgba(255,255,255,.12);border-radius:8px;padding:4px 10px;text-align:center;min-width:40px">
@@ -1477,7 +1477,7 @@ function openRepairPicker() {
         <div style="background:rgba(255,255,255,.13);border-radius:10px;padding:0 10px;display:flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.1)">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="rp-search" placeholder="ค้นหารายการ..." style="flex:1;background:none;border:none;outline:none;color:white;font-size:0.82rem;padding:8px 0;font-family:inherit" oninput="window._rpSearch(this.value)"/>
-          <button id="rp-search-clear" onclick="document.getElementById('rp-search').value='';window._rpSearch('')" style="display:none;background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1rem;padding:4px">✕</button>
+          <button id="rp-search-clear" onclick="document.getElementById('rp-search').value='';window._rpSearch('')" style="display:none;background:none;border:none;color:#6b7280;cursor:pointer;font-size:1rem;padding:4px">✕</button>
         </div>
       </div>
     </div>
@@ -2176,12 +2176,12 @@ function openRepairManager() {
   const renderGroupList = () => {
     const totalItems = db.repairGroups.reduce((s,g)=>s+(g.items?.length||0),0);
     page.innerHTML = `
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:14px 16px 16px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:14px 16px 12px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-          <button onclick="document.getElementById('_rm_page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
+          <button onclick="document.getElementById('_rm_page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
-            <div style="color:white;font-size:1rem;font-weight:900;letter-spacing:-0.01em">จัดการรายการงาน</div>
-            <div style="color:rgba(255,255,255,.5);font-size:0.65rem;margin-top:3px">${db.repairGroups.length} หมวด · ${totalItems} รายการ</div>
+            <div style="color:var(--text,#111827);font-size:1rem;font-weight:900;letter-spacing:-0.01em">จัดการรายการงาน</div>
+            <div style="color:#6b7280;font-size:0.65rem;margin-top:3px">${db.repairGroups.length} หมวด · ${totalItems} รายการ</div>
           </div>
           <button onclick="window._rmAddGroup()" style="background:var(--card);color:#c8102e;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;display:flex;align-items:center;gap:6px;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>เพิ่มหมวด
@@ -2189,11 +2189,11 @@ function openRepairManager() {
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
           <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:7px 12px;border:1px solid rgba(255,255,255,.18)">
-            <div style="font-size:0.55rem;color:rgba(255,255,255,.55);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">หมวดหมู่</div>
+            <div style="font-size:0.55rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">หมวดหมู่</div>
             <div style="font-size:1.2rem;font-weight:900;color:white;line-height:1">${db.repairGroups.length}</div>
           </div>
           <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:7px 12px;border:1px solid rgba(255,255,255,.18)">
-            <div style="font-size:0.55rem;color:rgba(255,255,255,.55);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">รายการทั้งหมด</div>
+            <div style="font-size:0.55rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">รายการทั้งหมด</div>
             <div style="font-size:1.2rem;font-weight:900;color:white;line-height:1">${totalItems}</div>
           </div>
         </div>
@@ -2234,12 +2234,12 @@ function openRepairManager() {
     const c = _rmColors[gi % _rmColors.length];
     page.innerHTML = `
       <!-- Header gradient แดง เหมือน list page -->
-      <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 50%,#c8102e 100%);padding:12px 16px 16px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:12px 16px 10px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
-          <button onclick="window._rmBackToList()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
+          <button onclick="window._rmBackToList()" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
-            <div style="color:white;font-size:1rem;font-weight:900;letter-spacing:-0.01em">${isNew?'เพิ่มหมวดใหม่':'แก้ไขหมวด'}</div>
-            <div style="color:rgba(255,255,255,.5);font-size:0.65rem;margin-top:2px">${g.label||'หมวดใหม่'} · ${g.items?.length||0} รายการ</div>
+            <div style="color:var(--text,#111827);font-size:1rem;font-weight:900;letter-spacing:-0.01em">${isNew?'เพิ่มหมวดใหม่':'แก้ไขหมวด'}</div>
+            <div style="color:#6b7280;font-size:0.65rem;margin-top:2px">${g.label||'หมวดใหม่'} · ${g.items?.length||0} รายการ</div>
           </div>
           <button onclick="window._rmSaveGroup()" style="background:var(--card);color:#16a34a;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;box-shadow:0 2px 8px rgba(0,0,0,0.15)">💾 บันทึก</button>
         </div>
