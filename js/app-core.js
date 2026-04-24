@@ -1,14 +1,26 @@
 // ============================================================
 
-// ── Responsive overlay page position (v31) ──────────
+// ── Responsive overlay page position (v32 — fix overflow) ──────────
 function _overlayStyle(zIndex, bg, anim) {
   // ตรวจ sidebar จาก offsetWidth จริง (รองรับทั้ง landscape/portrait และ collapsed)
-  const navEl  = document.querySelector('.bottom-nav');
-  const navW   = navEl ? navEl.offsetWidth : 0;
+  const navEl   = document.querySelector('.bottom-nav');
+  const mainCol = document.getElementById('main-col');
+  const navW    = navEl ? navEl.offsetWidth : 0;
   const desktop = navW > 60; // sidebar mode: width > collapsed(56px)
-  const left   = desktop ? (navW + 'px') : '0';
+
+  // คำนวณ left จาก main-col position จริง (แม่นยำกว่า navW)
+  let left = '0';
+  if (desktop) {
+    if (mainCol) {
+      left = mainCol.getBoundingClientRect().left + 'px';
+    } else {
+      left = navW + 'px';
+    }
+  }
+
   const bottom = desktop ? '0' : 'calc(var(--nav-h,56px) + var(--safe-bot,env(safe-area-inset-bottom,0px)))';
-  return `position:fixed;top:calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)));bottom:${bottom};left:${left};right:0;z-index:${zIndex};background:${bg||'#f1f5f9'};display:flex;flex-direction:column;overflow:hidden;animation:slideDown ${anim||'0.25s'} cubic-bezier(0.32,0.72,0,1)`;
+  const top    = `calc(var(--head-h,56px) + var(--safe-top,env(safe-area-inset-top,0px)))`;
+  return `position:fixed;top:${top};bottom:${bottom};left:${left};right:0;z-index:${zIndex};background:${bg||'var(--bg,#f0f2f5)'};display:flex;flex-direction:column;overflow:hidden;animation:slideDown ${anim||'0.25s'} cubic-bezier(0.32,0.72,0,1)`;
 }
 // i18n — ต้องอยู่ก่อนสุดเพื่อให้ทุก script ใช้ได้
 // ============================================================
