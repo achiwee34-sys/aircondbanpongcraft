@@ -1262,3 +1262,190 @@ body.dark-mode #pg-backend {
 }
 
 /* ─── END OF REDESIGN v4 ─── */
+
+/* ═══════════════════════════════════════════════════════════
+   PATCH v4.1 — CSS Variables เพิ่มเติม + override inline styles ที่ JS render
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg-2: #e8ecf1;
+}
+body.dark-mode {
+  --bg-2: #0d1117;
+}
+
+/* ─── Override inline white/gray backgrounds ทั้งหมดที่ JS render ─── */
+
+/* Card/surface */
+#pg-home    [style*="background:var(--card)"],
+#pg-tickets [style*="background:var(--card)"],
+#pg-tracking[style*="background:var(--card)"],
+#pg-mywork  [style*="background:var(--card)"],
+#pg-new     [style*="background:var(--card)"],
+#pg-machines[style*="background:var(--card)"],
+#pg-users   [style*="background:var(--card)"],
+#pg-settings[style*="background:var(--card)"],
+#pg-report  [style*="background:var(--card)"],
+#pg-calendar[style*="background:var(--card)"],
+#pg-purchase[style*="background:var(--card)"],
+#pg-backend [style*="background:var(--card)"],
+#pg-executive[style*="background:var(--card)"],
+#pg-chatroom[style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* Bg surface */
+#app [style*="background:var(--bg)"] { background: var(--bg) !important; }
+#app [style*="background:var(--bg-2,#f1f5f9)"] { background: var(--bg-2) !important; }
+
+/* Text color */
+#app [style*="color:var(--text)"]  { color: var(--text)  !important; }
+#app [style*="color:var(--text2)"] { color: var(--text2) !important; }
+
+/* border color */
+#app [style*="border:1px solid var(--border)"],
+#app [style*="border:1.5px solid var(--border)"] {
+  border-color: var(--border) !important;
+}
+
+/* ─── Home page: Dashboard card ─── */
+#home-content > div[style*="border-radius:24px"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Status grid cells in dashboard */
+#home-content [style*="border-right:1px solid #f0eded"],
+#home-content [style*="border-bottom:1.5px solid #f5e8e8"],
+#home-content [style*="border-bottom:1px solid #f5e8e8"] {
+  border-color: var(--border2) !important;
+}
+
+/* Inner status cell bg */
+#home-content [style*="background:#f8f8f8"] {
+  background: var(--bg) !important;
+}
+
+/* Ring card right side */
+#home-content [style*="background:linear-gradient(135deg,#fff8f8,#fff5f5)"] {
+  background: var(--bg) !important;
+}
+
+/* Quick access 3-col buttons */
+#home-content button[style*="border-radius:12px"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* Tech card list in home */
+#home-content [style*="background:var(--bg-2"] {
+  background: var(--bg) !important;
+}
+
+/* ─── Users page card ─── */
+#users-list > div {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Spare parts sheet ─── */
+#spare-manager-sheet [style*="background:var(--card)"],
+#inventory-sheet [style*="background:var(--card)"] {
+  background: var(--card) !important;
+}
+
+/* ─── Settings: Admin menu rows ─── */
+#pg-settings [style*="border-radius"] {
+  border-color: var(--border) !important;
+}
+
+/* ─── Ticket list: "no ticket" empty card ─── */
+#ticket-list [style*="background:var(--card)"][style*="border-radius:12px"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Charts / report page ─── */
+#rpt-panel-summary [style*="background:var(--card)"],
+#rpt-panel-history [style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Purchase page PR/PO ─── */
+#pur-list-panel [style*="background:var(--card)"],
+#pur-po-panel   [style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Chatroom panels ─── */
+#cr-list-panel {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+#cr-chat-panel {
+  background: var(--bg) !important;
+}
+
+/* ─── Backend page ─── */
+#pg-backend [style*="background:var(--card)"] {
+  background: var(--card) !important;
+}
+
+/* ─── Calendar cells ─── */
+.cal-cell {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Machine cards in dashboard ─── */
+#mac-dashboard-view [style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Sidebar/Admin home menu items ─── */
+.home-row {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Page tabbar bg ─── */
+#page-tabbar {
+  background: var(--card) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.ptab-row {
+  background: var(--card) !important;
+}
+
+/* ─── Tracking page ─── */
+#tracking-content [style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Search input in sheet ─── */
+.sheet input[type="text"],
+.sheet input[type="search"],
+.sheet textarea,
+.sheet select {
+  background: var(--bg) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* ─── Override all remaining hardcoded #f0eded, #f5e8e8 dividers ─── */
+body.dark-mode [style*="border-bottom:1.5px solid #f5e8e8"],
+body.dark-mode [style*="border-right:1px solid #f0eded"],
+body.dark-mode [style*="border-left:1.5px solid #f5e8e8"],
+body.dark-mode [style*="border-left:1px solid #f5e8e8"] {
+  border-color: var(--border) !important;
+}
+
+/* ─── Smooth transition for theme ─── */
+*:not(svg):not(path):not(circle):not(line):not(polyline):not(rect):not(g) {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease !important;
+}

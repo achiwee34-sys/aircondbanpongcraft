@@ -54,7 +54,7 @@ function renderHome() {
 
     html += `
     <!-- ══ New Dashboard Card (design v2) ══ -->
-    <div style="background:white;border-radius:24px;box-shadow:0 8px 40px rgba(0,0,0,0.13);overflow:hidden;border:1px solid #f0f0f0;margin-bottom:12px">
+    <div style="background:var(--card);border-radius:24px;box-shadow:0 8px 40px rgba(0,0,0,0.13);overflow:hidden;border:1px solid #f0f0f0;margin-bottom:12px">
 
       <!-- Top Hero: repair count + ring -->
       <div style="display:flex;align-items:stretch;border-bottom:1.5px solid #f5e8e8">
@@ -64,14 +64,14 @@ function renderHome() {
           <div style="position:absolute;bottom:-10px;left:0;right:0;height:50px;background:linear-gradient(180deg,transparent,rgba(200,16,46,0.04));border-radius:50% 50% 0 0"></div>
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
             <span style="font-size:0.72rem;color:#64748b;font-weight:700">📅</span>
-            <span style="font-size:0.72rem;font-weight:800;color:#374151">จำนวนซ่อมเดือนนี้</span>
+            <span style="font-size:0.72rem;font-weight:800;color:var(--text2)">จำนวนซ่อมเดือนนี้</span>
           </div>
           <div style="display:flex;align-items:baseline;gap:8px">
-            <span style="font-size:2.8rem;font-weight:900;color:#0f172a;line-height:1;font-family:'JetBrains Mono',monospace">${monthTotal}</span>
+            <span style="font-size:2.8rem;font-weight:900;color:var(--text);line-height:1;font-family:'JetBrains Mono',monospace">${monthTotal}</span>
             <span style="font-size:0.72rem;color:#94a3b8;font-weight:600">จาก ${T.length} ใบงานทั้งหมด</span>
           </div>
           <!-- Progress bar -->
-          <div style="margin-top:10px;height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+          <div style="margin-top:10px;height:6px;background:var(--bg-2,#f1f5f9);border-radius:99px;overflow:hidden">
             <div style="height:100%;border-radius:99px;width:${pct}%;background:linear-gradient(90deg,#c8102e,#e63950);box-shadow:0 0 8px rgba(200,16,46,0.4);transition:width 1s ease"></div>
           </div>
           <div style="margin-top:4px;display:flex;justify-content:space-between">
@@ -111,10 +111,10 @@ function renderHome() {
       <!-- Status Cards: 4 columns -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1.5px solid #f5e8e8">
         <!-- รอจ่ายงาน -->
-        <div onclick="setFilter('status','new');goPage('tickets')" style="padding:14px 8px 12px;background:#f8f8f8;border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
-          <div style="width:36px;height:36px;border-radius:10px;background:#f3f4f6;border:1.5px solid #e5e7eb;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h-1a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1"/><path d="M9 12h6M9 16h4"/></svg></div>
-          <div style="font-size:1.7rem;font-weight:900;color:#374151;line-height:1">${nNew}</div>
-          <div style="font-size:0.6rem;font-weight:800;color:#374151;text-align:center;line-height:1.3;opacity:.85">รอนำงาน</div>
+        <div onclick="setFilter('status','new');goPage('tickets')" style="padding:14px 8px 12px;background:var(--bg);border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
+          <div style="width:36px;height:36px;border-radius:10px;background:#f3f4f6;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h-1a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1"/><path d="M9 12h6M9 16h4"/></svg></div>
+          <div style="font-size:1.7rem;font-weight:900;color:var(--text2);line-height:1">${nNew}</div>
+          <div style="font-size:0.6rem;font-weight:800;color:var(--text2);text-align:center;line-height:1.3;opacity:.85">รอนำงาน</div>
         </div>
         <!-- กำลังดำเนินการ -->
         <div onclick="setFilter('status','');goPage('tickets')" style="padding:14px 8px 12px;background:#fff7ed;border-right:1px solid #f0eded;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='.75'" onmouseup="this.style.opacity='1'">
@@ -138,9 +138,9 @@ function renderHome() {
       </div>
 
       <!-- Footer summary strip -->
-      <div style="display:flex;align-items:center;padding:10px 16px;background:#f8fafc">
+      <div style="display:flex;align-items:center;padding:10px 16px;background:var(--bg)">
         <div style="flex:1;padding-right:12px;border-right:1px solid #e2e8f0">
-          <div style="font-size:1.05rem;font-weight:900;color:#0f172a">${active.length}</div>
+          <div style="font-size:1.05rem;font-weight:900;color:var(--text)">${active.length}</div>
           <div style="font-size:0.58rem;color:#94a3b8;font-weight:600;margin-top:2px">งานเปิดอยู่</div>
         </div>
         <div style="flex:2;text-align:center;padding:0 12px;border-right:1px solid #e2e8f0">
@@ -195,11 +195,11 @@ function renderHome() {
       const av   = u.photo
         ? `<img src="${u.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${bdr}">`
         : `<div style="width:36px;height:36px;border-radius:50%;background:${_techGrad};display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;color:white;border:2px solid ${bdr};letter-spacing:0.02em;box-shadow:0 2px 8px rgba(0,0,0,0.15)">${_initials}</div>`;
-      return `<div style="background:white;border-radius:14px;padding:10px 12px;margin-bottom:7px;border:1px solid #f1f5f9;box-shadow:0 1px 6px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openTechPopup('${u.id}')">
+      return `<div style="background:var(--card);border-radius:14px;padding:10px 12px;margin-bottom:7px;border:1px solid #f1f5f9;box-shadow:0 1px 6px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openTechPopup('${u.id}')">
         ${av}
         <div style="flex:1;min-width:0">
-          <div style="font-weight:800;font-size:0.85rem;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
-          <div style="background:#f1f5f9;border-radius:99px;height:4px;overflow:hidden;margin-top:6px"><div style="height:100%;width:${bar}%;background:${bc};border-radius:99px;transition:width .5s ease;box-shadow:0 0 4px ${bc}88"></div></div>
+          <div style="font-weight:800;font-size:0.85rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
+          <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:4px;overflow:hidden;margin-top:6px"><div style="height:100%;width:${bar}%;background:${bc};border-radius:99px;transition:width .5s ease;box-shadow:0 0 4px ${bc}88"></div></div>
         </div>
         <div style="background:${bgCard};border:1px solid ${bdr};border-radius:10px;padding:5px 10px;text-align:center;flex-shrink:0;min-width:44px">
           <div style="font-size:1.1rem;font-weight:900;color:${cl2};line-height:1;font-family:'JetBrains Mono',monospace">${cnt}</div>
@@ -209,17 +209,17 @@ function renderHome() {
     </div>
     <!-- Quick access: Users, Report, Purchase -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;box-sizing:border-box;width:100%;overflow:hidden">
-      <button onclick="goPage('users')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+      <button onclick="goPage('users')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:var(--card);border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <div style="font-size:0.67rem;font-weight:600;color:#374151">ผู้ใช้</div>
+        <div style="font-size:0.67rem;font-weight:600;color:var(--text2)">ผู้ใช้</div>
       </button>
-      <button onclick="goPage('report')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+      <button onclick="goPage('report')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:var(--card);border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        <div style="font-size:0.67rem;font-weight:600;color:#374151">รายงาน</div>
+        <div style="font-size:0.67rem;font-weight:600;color:var(--text2)">รายงาน</div>
       </button>
-      <button onclick="goPage('purchase')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+      <button onclick="goPage('purchase')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:var(--card);border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-        <div style="font-size:0.67rem;font-weight:600;color:#374151">สั่งซื้อ</div>
+        <div style="font-size:0.67rem;font-weight:600;color:var(--text2)">สั่งซื้อ</div>
         <span id="pur-badge" style="display:none;position:absolute;top:6px;right:10px;background:#c8102e;color:white;border-radius:99px;padding:1px 5px;font-size:0.6rem;font-weight:700"></span>
       </button>
     </div>
@@ -268,18 +268,18 @@ function renderHome() {
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;box-sizing:border-box;width:100%;overflow:hidden">
-      <button onclick="goPage('purchase')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1.5px solid #d1fae5;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+      <button onclick="goPage('purchase')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:var(--card);border:1.5px solid #d1fae5;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-        <div style="font-size:0.67rem;font-weight:700;color:#374151">สั่งซื้ออะไหล่</div>
+        <div style="font-size:0.67rem;font-weight:700;color:var(--text2)">สั่งซื้ออะไหล่</div>
         <span id="pur-badge-home" style="display:none;position:absolute;top:6px;right:10px;background:#c8102e;color:white;border-radius:99px;padding:1px 5px;font-size:0.6rem;font-weight:700"></span>
       </button>
-      <button onclick="openRepairHistoryPage()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+      <button onclick="openRepairHistoryPage()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:var(--card);border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        <div style="font-size:0.67rem;font-weight:600;color:#374151">ประวัติ</div>
+        <div style="font-size:0.67rem;font-weight:600;color:var(--text2)">ประวัติ</div>
       </button>
-      <button onclick="goPage('chatroom')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:white;border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
+      <button onclick="goPage('chatroom')" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:var(--card);border:1px solid #e8eaed;border-radius:12px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity='0.65'" onmouseup="this.style.opacity=''">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <div style="font-size:0.67rem;font-weight:600;color:#374151">แชท</div>
+        <div style="font-size:0.67rem;font-weight:600;color:var(--text2)">แชท</div>
       </button>
     </div>
     <div class="home-section-hd" style="margin-top:4px">
@@ -294,7 +294,7 @@ function renderHome() {
         <div class="home-row-sub">${t.machine}</div>
       </div>
       <span class="tag ${stc(t.status)}">${sTH(t.status)}</span>
-    </div>`).join('') : '<div style="text-align:center;padding:20px;background:white;border-radius:12px;border:1px solid #e5e7eb;color:#9ca3af;font-size:0.82rem">✅ ไม่มีงานค้าง</div>'}`;
+    </div>`).join('') : '<div style="text-align:center;padding:20px;background:var(--card);border-radius:12px;border:1px solid var(--border);color:#9ca3af;font-size:0.82rem">✅ ไม่มีงานค้าง</div>'}`;
 
   // ── REPORTER ──
   } else {
@@ -334,7 +334,7 @@ function renderHome() {
         <div class="home-row-sub">${t.machine}</div>
       </div>
       <span class="tag ${stc(t.status)}">${sTH(t.status)}</span>
-    </div>`).join('') : '<div style="text-align:center;padding:20px;background:white;border-radius:12px;border:1px solid #e5e7eb;color:#9ca3af;font-size:0.82rem">✅ ไม่มีงานค้าง</div>'}`;
+    </div>`).join('') : '<div style="text-align:center;padding:20px;background:var(--card);border-radius:12px;border:1px solid var(--border);color:#9ca3af;font-size:0.82rem">✅ ไม่มีงานค้าง</div>'}`;
   }
 
   hcEl.innerHTML = html;
@@ -667,10 +667,10 @@ function openGlobalSearch() {
     if(tickets.length) {
       html+='<div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:8px 4px 6px">📋 ใบงาน ('+tickets.length+')</div>';
       html+=tickets.map(t=>`
-        <div onclick="ov.remove();_unlockBodyScroll();goPage('tickets');setTimeout(()=>safeOpenDetail('${t.id}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+        <div onclick="ov.remove();_unlockBodyScroll();goPage('tickets');setTimeout(()=>safeOpenDetail('${t.id}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="width:36px;height:36px;border-radius:9px;background:${sColor(t.status)}20;border:1.5px solid ${sColor(t.status)}40;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:${sColor(t.status)};flex-shrink:0;font-family:'JetBrains Mono',monospace">${t.id.slice(-3)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)}</div>
+            <div style="font-size:0.85rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)}</div>
             <div style="font-size:0.7rem;color:#64748b;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.machine}</div>
           </div>
           <span style="font-size:0.6rem;padding:2px 7px;border-radius:4px;font-weight:700;background:${sColor(t.status)}15;color:${sColor(t.status)}">${sTH(t.status)}</span>
@@ -689,10 +689,10 @@ function openGlobalSearch() {
     if(machines.length) {
       html+='<div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:12px 4px 6px">❄️ เครื่องแอร์ ('+machines.length+')</div>';
       html+=machines.map(m=>`
-        <div onclick="ov.remove();setTimeout(()=>{goPage('machines');setTimeout(()=>openMachineDetail('${m.id}'),250)},100)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+        <div onclick="ov.remove();setTimeout(()=>{goPage('machines');setTimeout(()=>openMachineDetail('${m.id}'),250)},100)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="width:36px;height:36px;border-radius:9px;background:#eff6ff;border:1.5px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">❄️</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(m.name)}</div>
+            <div style="font-size:0.85rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(m.name)}</div>
             <div style="font-size:0.7rem;color:#64748b;margin-top:1px">${m.serial} · ${m.dept||'—'}</div>
           </div>
           ${m.vendor?`<span style="font-size:0.65rem;font-weight:700;color:#1d4ed8;background:#eff6ff;border-radius:5px;padding:1px 7px">${m.vendor}</span>`:''}
@@ -710,10 +710,10 @@ function openGlobalSearch() {
       html+='<div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:12px 4px 6px">👤 ผู้ใช้งาน ('+users.length+')</div>';
       const roleC={tech:{bg:'#f0fdf4',cl:'#166534'},reporter:{bg:'#eff6ff',cl:'#1d4ed8'},admin:{bg:'#fdf4ff',cl:'#7c3aed'}};
       html+=users.map(u=>`
-        <div onclick="ov.remove();_unlockBodyScroll();goPage('users');setTimeout(()=>switchUserTab('${u.role}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+        <div onclick="ov.remove();_unlockBodyScroll();goPage('users');setTimeout(()=>switchUserTab('${u.role}'),200)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:12px;margin-bottom:6px;cursor:pointer;border:1px solid #f1f5f9;-webkit-tap-highlight-color:transparent" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="width:36px;height:36px;border-radius:50%;background:${getAvatarColor(u.id)};display:flex;align-items:center;justify-content:center;font-size:0.88rem;font-weight:900;color:white;flex-shrink:0">${getAvatarInitials(u.name)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.85rem;font-weight:700;color:#0f172a">${u.name}</div>
+            <div style="font-size:0.85rem;font-weight:700;color:var(--text)">${u.name}</div>
             <div style="font-size:0.7rem;color:#64748b">@${u.username}${u.dept?' · '+u.dept:''}</div>
           </div>
           <span style="font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:99px;background:${(roleC[u.role]||roleC.reporter).bg};color:${(roleC[u.role]||roleC.reporter).cl}">${{tech:'ช่าง',reporter:'ผู้แจ้ง',admin:'Admin'}[u.role]||u.role}</span>
@@ -727,8 +727,8 @@ function openGlobalSearch() {
     results.innerHTML=html;
     // Fix dark mode for results
     if(document.body.classList.contains('dark-mode')) {
-      results.querySelectorAll('[style*="background:white"]').forEach(el=>{el.style.background='#2a2f45';});
-      results.querySelectorAll('[style*="color:#0f172a"]').forEach(el=>{el.style.color='#dde1f0';});
+      results.querySelectorAll('[style*="background:var(--card)"]').forEach(el=>{el.style.background='#2a2f45';});
+      results.querySelectorAll('[style*="color:var(--text)"]').forEach(el=>{el.style.color='#dde1f0';});
     }
   };
 
@@ -876,10 +876,10 @@ function renderOverdueAlert(T) {
     const urgColor = days >= 7 ? '#b91c1c' : days >= 5 ? '#d97706' : '#c8102e';
     const urgBg   = days >= 7 ? '#fef2f2' : days >= 5 ? '#fffbeb' : '#fff0f2';
     const urgBdr  = days >= 7 ? '#fecaca' : days >= 5 ? '#fde68a' : '#fecaca';
-    return `<div onclick="safeOpenDetail('${t.id}')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:white;border-radius:10px;border:1px solid #f1f5f9;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:5px" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+    return `<div onclick="safeOpenDetail('${t.id}')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card);border-radius:10px;border:1px solid #f1f5f9;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:5px" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
       <div style="background:${urgBg};border:1.5px solid ${urgBdr};border-radius:8px;padding:3px 8px;font-size:0.65rem;font-weight:900;color:${urgColor};flex-shrink:0;min-width:36px;text-align:center">${days}d</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.78rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.machine||'—')}</div>
+        <div style="font-size:0.78rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.machine||'—')}</div>
         <div style="font-size:0.62rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem||'—')}</div>
       </div>
       <span style="font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${urgBg};color:${urgColor};border:1px solid ${urgBdr};flex-shrink:0">${t.assignee||'ยังไม่มีช่าง'}</span>
@@ -929,10 +929,10 @@ function renderPMReminderBanner() {
     const tagBdr   = isMajor ? '#bfdbfe' : '#bbf7d0';
     const urgText  = diff === 0 ? '🔴 วันนี้!' : diff === 1 ? '🟠 พรุ่งนี้' : `🟡 อีก ${diff} วัน`;
     const dateStr  = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-    return `<div onclick="goPage('calendar')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:white;border-radius:10px;border:1px solid #f1f5f9;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:5px" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
+    return `<div onclick="goPage('calendar')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card);border-radius:10px;border:1px solid #f1f5f9;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:5px" onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
       <div style="font-size:1.2rem;flex-shrink:0">${isMajor ? '🔵' : '💦'}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.78rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(e.title||'แผน PM')}</div>
+        <div style="font-size:0.78rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(e.title||'แผน PM')}</div>
         <div style="font-size:0.62rem;color:#94a3b8">📅 ${dateStr}${e.tech ? ' · 👷 ' + escapeHtml(e.tech) : ''}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
@@ -1010,7 +1010,7 @@ function renderHomeRecentMachines() {
 
       <!-- Info -->
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.82rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${m.name||m.location||m.id}</div>
+        <div style="font-size:0.82rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${m.name||m.location||m.id}</div>
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow:hidden">
           ${m.vendor?`<span style="background:${vc.bg};color:${vc.cl};border:1px solid ${vc.bd};border-radius:4px;padding:0 5px;font-size:0.58rem;font-weight:800;flex-shrink:0">${m.vendor}</span>`:''}
           ${m.btu?`<span style="font-size:0.62rem;color:#94a3b8;flex-shrink:0">${Number(m.btu).toLocaleString()} BTU</span>`:''}
@@ -1026,7 +1026,7 @@ function renderHomeRecentMachines() {
           : `<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:99px;padding:2px 7px;font-size:0.62rem;font-weight:600">ปกติ</span>`
         }
         ${isAdmin ? `<button onclick="openMachineSheet('${m.id}')"
-          style="width:28px;height:28px;background:#f1f5f9;color:#64748b;border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.12s"
+          style="width:28px;height:28px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.12s"
           onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
         </button>` : `<span style="font-size:0.6rem;color:#cbd5e1">${lastT?(lastT.updatedAt||'').substring(0,10):'—'}</span>`}
@@ -1044,14 +1044,14 @@ function renderHomeRecentMachines() {
         <div style="width:22px;height:22px;background:#0f172a;border-radius:6px;display:flex;align-items:center;justify-content:center">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
         </div>
-        <span style="font-size:0.82rem;font-weight:800;color:#0f172a">เครื่องแอร์ล่าสุด</span>
+        <span style="font-size:0.82rem;font-weight:800;color:var(--text)">เครื่องแอร์ล่าสุด</span>
         ${pendingCount>0&&isAdmin?`<span onclick="openMachineRequestsPage()" style="background:#1d4ed8;color:white;border-radius:99px;padding:1px 7px;font-size:0.58rem;font-weight:800;cursor:pointer">${pendingCount} รอ</span>`:''}
       </div>
       <button onclick="goPage('machines')" style="background:none;border:none;color:#c8102e;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit;padding:0">ดูทั้งหมด →</button>
     </div>
 
     <!-- Cards -->
-    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05)">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05)">
       ${rows}
     </div>
   </div>`;
@@ -1369,7 +1369,7 @@ function openBulkAssignSheet() {
   if (chips) {
     chips.innerHTML = [..._selectedTickets].map(tid => {
       const t = db.tickets.find(x => x.id === tid);
-      return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:white;border:1.5px solid #fca5a5;border-radius:8px;font-size:0.62rem;font-weight:700;color:#9b0b22">
+      return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--card);border:1.5px solid #fca5a5;border-radius:8px;font-size:0.62rem;font-weight:700;color:#9b0b22">
         <span style="font-family:'JetBrains Mono',monospace">${tid}</span>
         ${t ? `<span style="color:#64748b;font-weight:500;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem||''}</span>` : ''}
         <span onclick="event.stopPropagation();_selectedTickets.delete('${tid}');_updateMultiSelectUI();openBulkAssignSheet()" style="cursor:pointer;color:#c8102e;font-size:0.7rem;line-height:1">✕</span>
@@ -1396,15 +1396,15 @@ function openBulkAssignSheet() {
         ? `<img src="${u.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;flex-shrink:0">`
         : `<div style="width:44px;height:44px;border-radius:50%;background:${_tGrad};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,255,255,0.3);font-size:0.85rem;font-weight:900;color:white;letter-spacing:0.02em;box-shadow:0 2px 10px rgba(0,0,0,0.18)">${_ti}</div>`;
       return `<div id="btc-${u.id}" onclick="_bulkPickTech('${u.id}')"
-        style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:2px solid #e5e7eb;background:white;cursor:pointer;transition:all 0.18s;touch-action:manipulation;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:2px solid #e5e7eb;background:var(--card);cursor:pointer;transition:all 0.18s;touch-action:manipulation;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
         ${avatar}
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-            <div style="font-size:0.88rem;font-weight:800;color:#0f172a">${u.name}</div>
+            <div style="font-size:0.88rem;font-weight:800;color:var(--text)">${u.name}</div>
             <span style="font-size:0.58rem;font-weight:800;padding:2px 7px;border-radius:99px;background:${wCfg.badgeBg};color:${wCfg.badgeColor};border:1px solid ${wCfg.bdr}">${wCfg.badge}</span>
           </div>
           <div style="font-size:0.7rem;color:#64748b;margin-bottom:6px">${u.dept||'ช่างเทคนิค'}</div>
-          <div style="background:#f1f5f9;border-radius:99px;height:4px;overflow:hidden"><div style="height:100%;width:${wCfg.barW};background:${wCfg.bar};border-radius:99px"></div></div>
+          <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:4px;overflow:hidden"><div style="height:100%;width:${wCfg.barW};background:${wCfg.bar};border-radius:99px"></div></div>
         </div>
       </div>`;
     }).join('');
@@ -1669,7 +1669,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
       ${CU&&CU.role==='admin' ? `<button onclick="deleteTicket('${t.id}')" style="padding:0 14px;background:#dc2626;color:white;border:none;cursor:pointer;font-size:0.72rem;font-weight:800;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:52px">🗑️<span>ลบ</span></button>` : ''}
     </div>
     <!-- Main card -->
-    <div class="tk tk-swipeable" data-tid="${t.id}" style="border-left:3px solid ${accentColor};border-radius:10px;overflow:hidden;box-shadow:none;position:relative;z-index:1;transition:transform 0.25s ease;will-change:transform;touch-action:pan-y;background:white">
+    <div class="tk tk-swipeable" data-tid="${t.id}" style="border-left:3px solid ${accentColor};border-radius:10px;overflow:hidden;box-shadow:none;position:relative;z-index:1;transition:transform 0.25s ease;will-change:transform;touch-action:pan-y;background:var(--card)">
     <div class="tk-body" style="padding:0">
       ${banner}
       <div style="padding:8px 10px 5px" onclick="safeOpenDetail('${t.id}')">
@@ -1681,7 +1681,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
           ${hasPics?`<span style="font-size:0.65rem">📷 ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)}</span>`:''}
           ${t.rating?.score?`<span style="font-size:0.65rem;margin-left:auto;color:#f59e0b;font-weight:800">⭐${t.rating.score}</span>`:`<span style="flex:1"></span>`}
         </div>
-        <div style="font-size:0.82rem;font-weight:700;color:#0f172a;line-height:1.3;margin-bottom:4px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">${escapeHtml(t.problem)}</div>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">${escapeHtml(t.problem)}</div>
         <div style="font-size:0.6rem;color:#64748b;display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding-bottom:6px;border-bottom:1px solid #f1f5f9">
           ${serial?`<span style="font-family:'JetBrains Mono',monospace;background:#e0f2fe;color:#0369a1;padding:0 5px;border-radius:3px;font-weight:700;font-size:0.58rem">${serial}</span>`:''}
           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">${t.machine}${mac?.location ? ` · ${mac.location}` : ''}</span>
@@ -1690,8 +1690,8 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
           ${t.assignee?`<span style="margin-left:auto;color:#64748b;font-size:0.58rem">👷 ${t.assignee.split(' ')[0]}</span>`:`<span style="margin-left:auto;font-size:0.55rem;color:#cbd5e1">${(t.createdAt||'').substring(0,10)}</span>`}
         </div>
         ${prBadge||adminTechBadge?`<div style="padding:4px 0 2px;display:flex;gap:4px;flex-wrap:wrap">${prBadge}${adminTechBadge}</div>`:''}
-        ${!hasPics ? `<div style="margin-top:6px;padding:7px 10px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;display:flex;flex-direction:column;gap:5px">
-          ${(t.detail||t.note) ? `<div style="font-size:0.68rem;color:#374151;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><span style="display:inline-block;width:14px;height:14px;margin-right:4px;vertical-align:-2px"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>${escapeHtml(t.detail||t.note)}</div>` : ''}
+        ${!hasPics ? `<div style="margin-top:6px;padding:7px 10px;background:var(--bg);border-radius:8px;border:1px solid #f1f5f9;display:flex;flex-direction:column;gap:5px">
+          ${(t.detail||t.note) ? `<div style="font-size:0.68rem;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><span style="display:inline-block;width:14px;height:14px;margin-right:4px;vertical-align:-2px"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>${escapeHtml(t.detail||t.note)}</div>` : ''}
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             ${mac?.location ? `<span style="font-size:0.62rem;color:#64748b;display:flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"><path d="M12 22s-8-7.5-8-13a8 8 0 1 1 16 0c0 5.5-8 13-8 13z"/><circle cx="12" cy="9" r="2.5"/></svg>${escapeHtml(mac.location)}</span>` : ''}
             ${t.contact ? `<span style="font-size:0.62rem;color:#64748b;display:flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 9.82 19.79 19.79 0 0 1 1 1.18 2 2 0 0 1 2.95 1h3.08a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z"/></svg>${escapeHtml(t.contact)}</span>` : ''}
@@ -1703,7 +1703,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
             if (!p) return '';
             const _isFsKey = p.startsWith('fs:');
             return `<div onclick="event.stopPropagation();${_isFsKey?`_resolveAndLightbox(this)`:`openLightbox('${p}')`}" data-photo-key="${p}" data-tid="${t.id}" style="position:relative;flex-shrink:0;cursor:pointer">
-              <img src="${_isFsKey?'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid #e5e7eb;${_isFsKey?'opacity:0':''}"/>
+              <img src="${_isFsKey?'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7':p}" loading="lazy" decoding="async" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1.5px solid var(--border);${_isFsKey?'opacity:0':''}"/>
               ${_isFsKey?`<div class="_ph-spin" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1rem">⏳</div>`:''}
               <div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,0.55);color:white;border-radius:3px;padding:0 4px;font-size:0.5rem;font-weight:700">ก่อน</div>
             </div>`;
@@ -1718,7 +1718,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
             </div>`;
           })
           ].join('')}
-          ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0) > 4 ? `<div onclick="event.stopPropagation();safeOpenDetail('${t.id}')" style="width:52px;height:40px;background:#f1f5f9;border-radius:6px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.65rem;font-weight:700;color:#6b7280;flex-shrink:0">+${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)-4}</div>` : ''}
+          ${(t.photosBefore?.length||0)+(t.photosAfter?.length||0) > 4 ? `<div onclick="event.stopPropagation();safeOpenDetail('${t.id}')" style="width:52px;height:40px;background:var(--bg-2,#f1f5f9);border-radius:6px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.65rem;font-weight:700;color:#6b7280;flex-shrink:0">+${(t.photosBefore?.length||0)+(t.photosAfter?.length||0)-4}</div>` : ''}
         </div>` : ''}
       </div>
       ${CU.role==='executive' ? `
@@ -1739,7 +1739,7 @@ function _buildTkCardHtml(t, mac, serial, btu, vendor, isArrived, isPurchasing, 
         ${canAccept?`<button class="btn btn-xs" style="background:#1565c0;color:white;font-size:0.63rem" onclick="doAccept('${t.id}')">รับงาน</button>`:''}
         ${canStart?`<button class="btn btn-xs" style="background:#e65100;color:white;font-size:0.63rem" onclick="doStart('${t.id}')">เริ่มซ่อม</button>`:''}
         ${canWaitPart && !t.techRequest?`<button class="btn btn-xs" style="background:#e65100;color:white;font-size:0.63rem" onclick="openTechReqForm('${t.id}')">แจ้งสั่งซื้ออะไหล่</button>`:''}
-        ${canWaitPart && t.techRequest && !t.techRequest.locked?`<button class="btn btn-xs" style="background:#f1f5f9;color:#64748b;font-size:0.63rem" onclick="openTechReqForm('${t.id}')">📋 รายการอะไหล่</button>`:''}
+        ${canWaitPart && t.techRequest && !t.techRequest.locked?`<button class="btn btn-xs" style="background:var(--bg-2,#f1f5f9);color:#64748b;font-size:0.63rem" onclick="openTechReqForm('${t.id}')">📋 รายการอะไหล่</button>`:''}
         ${canWaitPart && t.techRequest?.locked?`<span style="font-size:0.6rem;color:#92400e;padding:2px 8px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fbbf24;border-radius:6px;font-weight:800">📋 ส่งรายการแล้ว · รอ Admin ออก PR</span>`:''}
         ${canComplete?`<button class="btn btn-ok btn-xs" style="font-size:0.63rem" onclick="openCompleteSheet('${t.id}')">บันทึกผล</button>`:''}
         ${CU.role==='tech' && t.assigneeId===CU.id && t.status==='waiting_part' && !isArrived
@@ -1841,7 +1841,7 @@ function renderRepairHistRow(t, statusColor, statusLabel) {
   const sl = statusLabel[t.status] || t.status;
   const items = (t.repairItems||[]).map(i=>typeof i==='string'?i:(i.name||'')).filter(Boolean);
   return `<div onclick="closeSheet('repairhist');setTimeout(()=>safeOpenDetail('${t.id}'),220)"
-    style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent"
+    style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent"
     onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px">
       <div style="flex:1;min-width:0">
@@ -1849,7 +1849,7 @@ function renderRepairHistRow(t, statusColor, statusLabel) {
           <span style="font-size:0.7rem;font-family:'JetBrains Mono',monospace;font-weight:900;color:#c8102e;background:#fff0f2;border-radius:4px;padding:1px 6px">${t.id}</span>
           <span style="font-size:0.62rem;font-weight:800;padding:1px 7px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sl}</span>
         </div>
-        <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${t.machine||'—'}</div>
+        <div style="font-size:0.85rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${t.machine||'—'}</div>
         <div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${t.problem||'—'}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
@@ -1866,8 +1866,8 @@ function renderRepairHistRow(t, statusColor, statusLabel) {
       ${partsCost > 0 ? `<span style="font-size:0.62rem;background:#fffbeb;color:#92400e;border-radius:5px;padding:1px 6px;font-weight:700">🛒 ฿${partsCost.toLocaleString()}</span>` : ''}
       <button onclick="event.stopPropagation();if(typeof generateRepairPDF==='function')generateRepairPDF('${t.id}')" style="margin-left:auto;padding:4px 9px;background:#1a5276;color:white;border:none;border-radius:7px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px">PDF</button>
     </div>
-    ${items.length > 0 ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${items.slice(0,4).map(i=>`<span style="font-size:0.6rem;background:#f1f5f9;color:#475569;border-radius:5px;padding:1px 6px">${i}</span>`).join('')}${items.length>4?`<span style="font-size:0.6rem;color:#94a3b8">+${items.length-4}</span>`:''}</div>` : ''}
-    ${t.summary ? `<div style="margin-top:6px;padding:6px 9px;background:#f8fafc;border-radius:8px;font-size:0.68rem;color:#374151;line-height:1.5;border-left:3px solid #c8102e">${(t.summary).substring(0,150)}${t.summary.length>150?'…':''}</div>` : ''}
+    ${items.length > 0 ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${items.slice(0,4).map(i=>`<span style="font-size:0.6rem;background:var(--bg-2,#f1f5f9);color:#475569;border-radius:5px;padding:1px 6px">${i}</span>`).join('')}${items.length>4?`<span style="font-size:0.6rem;color:#94a3b8">+${items.length-4}</span>`:''}</div>` : ''}
+    ${t.summary ? `<div style="margin-top:6px;padding:6px 9px;background:var(--bg);border-radius:8px;font-size:0.68rem;color:var(--text2);line-height:1.5;border-left:3px solid #c8102e">${(t.summary).substring(0,150)}${t.summary.length>150?'…':''}</div>` : ''}
   </div>`;
 }
 

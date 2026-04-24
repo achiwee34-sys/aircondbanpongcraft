@@ -715,7 +715,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow-x: hidden !important;
   height: 100vh; height: calc(var(--vh, 1vh) * 100);
   flex-direction: column;
   overflow: hidden;
-  background: #f8fafc;
+  background: var(--bg);
 }
 #app.visible { display: flex !important; }
 .topbar {

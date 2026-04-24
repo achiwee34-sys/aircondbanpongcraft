@@ -161,7 +161,7 @@ function _renderExecDashboard(d) {
   // ── KPI Cards — Bright clean white cards ──
   const kpiEl = document.getElementById('exec-kpi-cards');
   if (kpiEl) kpiEl.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    <div onclick="showKpiModal('all')" style="background:white;border-radius:20px;padding:16px 14px;position:relative;overflow:hidden;box-shadow:0 2px 20px rgba(29,78,216,.1);cursor:pointer;border:2px solid #dbeafe;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+    <div onclick="showKpiModal('all')" style="background:var(--card);border-radius:20px;padding:16px 14px;position:relative;overflow:hidden;box-shadow:0 2px 20px rgba(29,78,216,.1);cursor:pointer;border:2px solid #dbeafe;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
       <div class="exec-card-shine"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 4px 10px rgba(29,78,216,.3)">📋</div>
@@ -170,7 +170,7 @@ function _renderExecDashboard(d) {
       <div style="font-size:2.8rem;font-weight:900;color:#1d4ed8;line-height:1;font-family:'JetBrains Mono',monospace">${monthT.length}</div>
       <div style="font-size:.6rem;color:#94a3b8;margin-top:6px;font-weight:600">งานซ่อมทั้งหมด · แตะดู</div>
     </div>
-    <div onclick="showKpiModal('done')" style="background:white;border-radius:20px;padding:16px 14px;position:relative;overflow:hidden;box-shadow:0 2px 20px rgba(22,163,74,.1);cursor:pointer;border:2px solid #bbf7d0;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+    <div onclick="showKpiModal('done')" style="background:var(--card);border-radius:20px;padding:16px 14px;position:relative;overflow:hidden;box-shadow:0 2px 20px rgba(22,163,74,.1);cursor:pointer;border:2px solid #bbf7d0;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
       <div class="exec-card-shine"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#16a34a,#22c55e);display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 4px 10px rgba(22,163,74,.3)">✅</div>
@@ -179,7 +179,7 @@ function _renderExecDashboard(d) {
       <div style="font-size:2.8rem;font-weight:900;color:#16a34a;line-height:1;font-family:'JetBrains Mono',monospace">${done.length}</div>
       <div style="background:#f0fdf4;border-radius:8px;height:5px;margin-top:10px;overflow:hidden"><div style="height:100%;width:${doneRate}%;background:linear-gradient(90deg,#22c55e,#16a34a);border-radius:8px;transition:width .8s ease"></div></div>
     </div>
-    <div onclick="showKpiModal('pending')" style="background:white;border-radius:20px;padding:16px 14px;position:relative;overflow:hidden;box-shadow:0 2px 20px rgba(217,119,6,.1);cursor:pointer;border:2px solid #fde68a;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+    <div onclick="showKpiModal('pending')" style="background:var(--card);border-radius:20px;padding:16px 14px;position:relative;overflow:hidden;box-shadow:0 2px 20px rgba(217,119,6,.1);cursor:pointer;border:2px solid #fde68a;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
       <div class="exec-card-shine"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#d97706,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 4px 10px rgba(217,119,6,.3)">⏳</div>
@@ -188,7 +188,7 @@ function _renderExecDashboard(d) {
       <div style="font-size:2.8rem;font-weight:900;color:#d97706;line-height:1;font-family:'JetBrains Mono',monospace">${pending.length}</div>
       <div style="font-size:.6rem;color:#94a3b8;margin-top:6px;font-weight:600">งานที่ยังไม่เสร็จ · แตะดู</div>
     </div>
-    <div onclick="showKpiModal('cost')" style="background:white;border-radius:20px;padding:16px 14px;position:relative;overflow:hidden;box-shadow:0 2px 20px rgba(124,58,237,.1);cursor:pointer;border:2px solid #ddd6fe;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+    <div onclick="showKpiModal('cost')" style="background:var(--card);border-radius:20px;padding:16px 14px;position:relative;overflow:hidden;box-shadow:0 2px 20px rgba(124,58,237,.1);cursor:pointer;border:2px solid #ddd6fe;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
       <div class="exec-card-shine"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 4px 10px rgba(124,58,237,.3)">💰</div>
@@ -214,8 +214,8 @@ function _renderExecDashboard(d) {
     const r=38,cx=50,cy=50,circ=2*Math.PI*r;
     statusEl.innerHTML=`<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
       <div style="width:28px;height:28px;border-radius:9px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:.85rem">📊</div>
-      <span style="font-size:.85rem;font-weight:900;color:#0f172a">สถานะงานประจำเดือน</span>
-      <span style="margin-left:auto;font-size:.65rem;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:3px 8px;border-radius:8px">${monthT.length} งาน</span>
+      <span style="font-size:.85rem;font-weight:900;color:var(--text)">สถานะงานประจำเดือน</span>
+      <span style="margin-left:auto;font-size:.65rem;font-weight:700;color:#94a3b8;background:var(--bg-2,#f1f5f9);padding:3px 8px;border-radius:8px">${monthT.length} งาน</span>
     </div>
     <div style="display:flex;align-items:center;gap:18px">
       <div style="position:relative;flex-shrink:0">
@@ -224,7 +224,7 @@ function _renderExecDashboard(d) {
           ${monthT.length===0?'':segs.map(s=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="11" stroke-dasharray="${s.pct/100*circ} ${circ}" stroke-dashoffset="${-s.offset/100*circ}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="round"/>`).join('')}
         </svg>
         <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
-          <div style="font-size:1.6rem;font-weight:900;color:#0f172a;line-height:1;font-family:'JetBrains Mono',monospace">${monthT.length}</div>
+          <div style="font-size:1.6rem;font-weight:900;color:var(--text);line-height:1;font-family:'JetBrains Mono',monospace">${monthT.length}</div>
           <div style="font-size:.48rem;color:#94a3b8;font-weight:700">งาน</div>
         </div>
       </div>
@@ -233,12 +233,12 @@ function _renderExecDashboard(d) {
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <div style="display:flex;align-items:center;gap:6px">
               <div style="width:9px;height:9px;border-radius:3px;background:${s.color}"></div>
-              <span style="font-size:.7rem;color:#374151;font-weight:600">${s.label}</span>
+              <span style="font-size:.7rem;color:var(--text2);font-weight:600">${s.label}</span>
             </div>
-            <span style="font-size:.78rem;font-weight:900;color:#0f172a;font-family:'JetBrains Mono',monospace">${s.count}<span style="font-size:.6rem;font-weight:500;color:#94a3b8"> (${Math.round(s.pct)}%)</span></span>
+            <span style="font-size:.78rem;font-weight:900;color:var(--text);font-family:'JetBrains Mono',monospace">${s.count}<span style="font-size:.6rem;font-weight:500;color:#94a3b8"> (${Math.round(s.pct)}%)</span></span>
           </div>
-          <div style="background:#f8fafc;border-radius:99px;height:5px;overflow:hidden"><div style="background:${s.color};border-radius:99px;height:5px;width:${s.pct}%;transition:width .7s ease"></div></div>
-        </div>`).join(''):`<div style="text-align:center;color:#94a3b8;font-size:.75rem;padding:16px;background:#f8fafc;border-radius:12px">ไม่มีข้อมูลเดือนนี้</div>`}
+          <div style="background:var(--bg);border-radius:99px;height:5px;overflow:hidden"><div style="background:${s.color};border-radius:99px;height:5px;width:${s.pct}%;transition:width .7s ease"></div></div>
+        </div>`).join(''):`<div style="text-align:center;color:#94a3b8;font-size:.75rem;padding:16px;background:var(--bg);border-radius:12px">ไม่มีข้อมูลเดือนนี้</div>`}
       </div>
     </div>`;
   }
@@ -251,7 +251,7 @@ function _renderExecDashboard(d) {
     const maxCost=Math.max(...last6.map(m=>m.cost),1);
     trendMini.innerHTML=`<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
       <div style="width:28px;height:28px;border-radius:9px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;font-size:.85rem">📈</div>
-      <span style="font-size:.85rem;font-weight:900;color:#0f172a">แนวโน้ม 6 เดือน</span>
+      <span style="font-size:.85rem;font-weight:900;color:var(--text)">แนวโน้ม 6 เดือน</span>
       <div style="margin-left:auto;display:flex;gap:8px;font-size:.58rem;color:#94a3b8">
         <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#38bdf8;display:inline-block"></span>งาน</span>
         <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#a78bfa;display:inline-block"></span>ค่าใช้จ่าย</span>
@@ -289,7 +289,7 @@ function _renderExecDashboard(d) {
     const sn=dept=>{const m2=dept.match(/\(([^)]+)\)/);if(m2)return m2[1].slice(0,4);return dept.trim().split(/[\s#]+/).slice(0,2).map(w=>w.slice(0,3)).join('');};
     deptEl.innerHTML=`<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
       <div style="width:28px;height:28px;border-radius:9px;background:#ecfeff;display:flex;align-items:center;justify-content:center;font-size:.85rem">🏢</div>
-      <span style="font-size:.85rem;font-weight:900;color:#0f172a">Top 5 แผนกที่มีงานมากสุด</span>
+      <span style="font-size:.85rem;font-weight:900;color:var(--text)">Top 5 แผนกที่มีงานมากสุด</span>
     </div>
     <div style="display:flex;flex-direction:column;gap:11px">
       ${sorted.map(([dept,cnt],i)=>{const p=palettes[i];return`<div style="display:flex;align-items:center;gap:10px">
@@ -298,15 +298,15 @@ function _renderExecDashboard(d) {
         </div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-            <span style="font-size:.72rem;color:#0f172a;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${dept}</span>
+            <span style="font-size:.72rem;color:var(--text);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${dept}</span>
             <span style="font-size:.88rem;font-weight:900;color:${p.bar};font-family:'JetBrains Mono',monospace;flex-shrink:0;margin-left:4px">${cnt}<span style="font-size:.6rem;font-weight:600;color:#94a3b8"> งาน</span></span>
           </div>
-          <div style="background:#f1f5f9;border-radius:99px;height:6px;overflow:hidden">
+          <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:6px;overflow:hidden">
             <div style="background:${p.bar};border-radius:99px;height:6px;width:${cnt/maxVal*100}%;transition:width .7s ease"></div>
           </div>
         </div>
       </div>`;}).join('')}
-      ${!sorted.length?`<div style="text-align:center;color:#94a3b8;font-size:.75rem;padding:20px;background:#f8fafc;border-radius:12px">ไม่มีข้อมูลเดือนนี้</div>`:''}
+      ${!sorted.length?`<div style="text-align:center;color:#94a3b8;font-size:.75rem;padding:20px;background:var(--bg);border-radius:12px">ไม่มีข้อมูลเดือนนี้</div>`:''}
     </div>`;
   }
 
@@ -318,7 +318,7 @@ function _renderExecDashboard(d) {
     const ad=costDiff>0?'#fecaca':costDiff<0?'#bbf7d0':'#e2e8f0';
     costEl.innerHTML=`<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
       <div style="width:28px;height:28px;border-radius:9px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;font-size:.85rem">💰</div>
-      <span style="font-size:.85rem;font-weight:900;color:#0f172a">สรุปค่าใช้จ่ายเดือนนี้</span>
+      <span style="font-size:.85rem;font-weight:900;color:var(--text)">สรุปค่าใช้จ่ายเดือนนี้</span>
     </div>
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div style="flex:1;min-width:120px">
@@ -344,7 +344,7 @@ function _renderExecCost(d) {
   if (trendEl) {
     const maxCost = Math.max(...monthly.map(m => m.cost), 1);
     trendEl.innerHTML = `
-      <div style="font-size:0.78rem;font-weight:900;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+      <div style="font-size:0.78rem;font-weight:900;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-flex;width:24px;height:24px;border-radius:8px;background:#f5f3ff;align-items:center;justify-content:center;font-size:0.8rem">📈</span>
         ค่าใช้จ่าย 12 เดือนย้อนหลัง
       </div>
@@ -383,7 +383,7 @@ function _renderExecCost(d) {
     const maxV = sorted[0]?.[1]?.[hasCost?'cost':'count'] || 1;
     const deptColors = ['#7c3aed','#0e7490','#059669','#d97706','#dc2626'];
     deptEl.innerHTML = `
-      <div style="font-size:0.78rem;font-weight:900;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+      <div style="font-size:0.78rem;font-weight:900;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-flex;width:24px;height:24px;border-radius:8px;background:#f5f3ff;align-items:center;justify-content:center;font-size:0.8rem">🏢</span>
         ค่าใช้จ่ายแยกตามแผนก
         ${!hasCost?'<span style="font-size:0.58rem;background:#fef9c3;color:#a16207;padding:2px 7px;border-radius:99px;font-weight:700;margin-left:auto">แสดงจำนวนงาน</span>':''}
@@ -392,10 +392,10 @@ function _renderExecCost(d) {
         ${sorted.map(([dept,v], i) => `
           <div>
             <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-              <span style="font-size:0.68rem;color:#374151;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${dept}</span>
+              <span style="font-size:0.68rem;color:var(--text2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${dept}</span>
               <span style="font-size:0.68rem;font-weight:900;color:${deptColors[i%5]}">${hasCost?'฿'+_fmt(v.cost):v.count+' งาน'}</span>
             </div>
-            <div style="background:#f1f5f9;border-radius:99px;height:5px">
+            <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:5px">
               <div style="background:${deptColors[i%5]};border-radius:99px;height:5px;width:${(hasCost?v.cost:v.count)/maxV*100}%;transition:width .6s ease"></div>
             </div>
             ${hasCost?`<div style="font-size:0.58rem;color:#94a3b8;margin-top:2px">${v.count} งาน</div>`:''}
@@ -421,17 +421,17 @@ function _renderExecCost(d) {
     const hasCost = sorted.some(([,v])=>v.cost>0);
     const vColors = ['#0e7490','#7c3aed','#059669','#d97706','#dc2626'];
     vendorEl.innerHTML = `
-      <div style="font-size:0.78rem;font-weight:900;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+      <div style="font-size:0.78rem;font-weight:900;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-flex;width:24px;height:24px;border-radius:8px;background:#ecfeff;align-items:center;justify-content:center;font-size:0.8rem">🏭</span>
         ค่าใช้จ่ายแยกตาม Vendor
         ${!hasCost?'<span style="font-size:0.58rem;background:#fef9c3;color:#a16207;padding:2px 7px;border-radius:99px;font-weight:700;margin-left:auto">แสดงจำนวนงาน</span>':''}
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${sorted.length ? sorted.map(([v, info], i) => `
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:12px;border:1px solid var(--border)">
             <div style="width:30px;height:30px;border-radius:9px;background:${vColors[i%5]}18;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:900;color:${vColors[i%5]};flex-shrink:0">${i+1}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.72rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v}</div>
+              <div style="font-size:0.72rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v}</div>
               <div style="font-size:0.6rem;color:#94a3b8;margin-top:1px">${info.count} งาน</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
@@ -483,7 +483,7 @@ function _renderExecCost(d) {
       {bg:'#f0fdf4',border:'#bbf7d0',text:'#16a34a'},
     ];
     typeEl.innerHTML = `
-      <div style="font-size:0.78rem;font-weight:900;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+      <div style="font-size:0.78rem;font-weight:900;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-flex;width:24px;height:24px;border-radius:8px;background:#f0fdf4;align-items:center;justify-content:center;font-size:0.8rem">🔩</span>
         ค่าใช้จ่ายแยกตามประเภทงาน
         ${!hasCost?'<span style="font-size:0.58rem;background:#fef9c3;color:#a16207;padding:2px 7px;border-radius:99px;font-weight:700;margin-left:auto">แสดงจำนวนงาน</span>':''}
@@ -492,7 +492,7 @@ function _renderExecCost(d) {
         ${sorted.length ? sorted.map(([type, v], i) => {
           const c = tagColors[i%8];
           return `<div style="background:${c.bg};border:1px solid ${c.border};border-radius:10px;padding:8px 12px;min-width:80px">
-            <div style="font-size:0.62rem;color:#374151;font-weight:700;margin-bottom:3px">${type}</div>
+            <div style="font-size:0.62rem;color:var(--text2);font-weight:700;margin-bottom:3px">${type}</div>
             <div style="font-size:0.78rem;font-weight:900;color:${c.text}">${hasCost?'฿'+_fmt(v.cost):v.count+' งาน'}</div>
           </div>`;
         }).join('') : '<div style="color:#94a3b8;font-size:0.75rem;padding:10px">ไม่มีข้อมูลเดือนนี้</div>'}
@@ -542,14 +542,14 @@ function _renderExecRepair(d) {
     const rows = monthT.slice(0, 20);
     tableEl.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:0.85rem;font-weight:900;color:#0f172a">📋 รายการงานซ่อมเดือนนี้</div>
+        <div style="font-size:0.85rem;font-weight:900;color:var(--text)">📋 รายการงานซ่อมเดือนนี้</div>
         <span style="font-size:0.62rem;color:#94a3b8">${monthT.length} รายการ</span>
       </div>
       ${rows.length ? `
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
         <table style="width:100%;border-collapse:collapse;font-size:0.68rem;min-width:360px">
           <thead>
-            <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">
+            <tr style="background:var(--bg);border-bottom:2px solid #e2e8f0">
               <th style="text-align:left;padding:6px 8px;color:#64748b;font-weight:700">TK</th>
               <th style="text-align:left;padding:6px 8px;color:#64748b;font-weight:700">ปัญหา</th>
               <th style="text-align:left;padding:6px 8px;color:#64748b;font-weight:700">สถานะ</th>
@@ -563,7 +563,7 @@ function _renderExecRepair(d) {
               const cost = _tCost(t);
               return `<tr style="border-bottom:1px solid #f1f5f9">
                 <td style="padding:6px 8px;font-family:monospace;color:#7c3aed;font-weight:700;white-space:nowrap">${t.id}</td>
-                <td style="padding:6px 8px;color:#374151;overflow:hidden;text-overflow:ellipsis;max-width:120px;white-space:nowrap">${t.problem||t.machine||'-'}</td>
+                <td style="padding:6px 8px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;max-width:120px;white-space:nowrap">${t.problem||t.machine||'-'}</td>
                 <td style="padding:6px 8px"><span style="background:${stColor}22;color:${stColor};border-radius:6px;padding:2px 6px;font-weight:700;white-space:nowrap">${stLabel}</span></td>
                 <td style="padding:6px 8px;text-align:right;font-weight:800;color:${cost>0?'#7c3aed':'#94a3b8'}">${cost>0?'฿'+_fmt(cost):'-'}</td>
               </tr>`;
@@ -584,16 +584,16 @@ function _renderExecRepair(d) {
     });
     const topMac = Object.entries(macCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
     repEl.innerHTML = `
-      <div style="font-size:0.85rem;font-weight:900;color:#0f172a;margin-bottom:10px">🔁 Top 10 เครื่องที่ซ่อมบ่อยสุด</div>
+      <div style="font-size:0.85rem;font-weight:900;color:var(--text);margin-bottom:10px">🔁 Top 10 เครื่องที่ซ่อมบ่อยสุด</div>
       <div style="display:flex;flex-direction:column;gap:6px">
         ${topMac.length ? topMac.map(([mid, cnt], i) => {
           const mac = macMap.get(mid);
           const name = mac?.name || mid;
           const serial = mac?.serial || '';
-          return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
+          return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
             <div style="width:22px;height:22px;border-radius:6px;background:${i<3?'#fef2f2':'#f1f5f9'};display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;color:${i<3?'#dc2626':'#64748b'};flex-shrink:0">${i+1}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.7rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+              <div style="font-size:0.7rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
               ${serial ? `<div style="font-size:0.58rem;color:#94a3b8;font-family:monospace">${serial}</div>` : ''}
             </div>
             <div style="background:${i<3?'#fef2f2':'#ecfeff'};color:${i<3?'#dc2626':'#0e7490'};border-radius:8px;padding:3px 8px;font-size:0.7rem;font-weight:900;flex-shrink:0">${cnt} ครั้ง</div>
@@ -625,25 +625,25 @@ function _renderExecVendor(d) {
   if (cardsEl) {
     cardsEl.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px">
       ${vData.slice(0,4).map((v, i) => `
-        <div style="background:white;border-radius:14px;padding:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+        <div style="background:var(--card);border-radius:14px;padding:12px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05)">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
             <div style="width:24px;height:24px;border-radius:7px;background:${['#ecfeff','#f5f3ff','#f0fdf4','#fffbeb'][i%4]};display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0">🏭</div>
-            <div style="font-size:0.68rem;font-weight:900;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.v}</div>
+            <div style="font-size:0.68rem;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.v}</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-            <div style="text-align:center;background:#f8fafc;border-radius:8px;padding:5px">
+            <div style="text-align:center;background:var(--bg);border-radius:8px;padding:5px">
               <div style="font-size:0.9rem;font-weight:900;color:#0e7490">${v.total}</div>
               <div style="font-size:0.5rem;color:#94a3b8">งานทั้งหมด</div>
             </div>
-            <div style="text-align:center;background:#f8fafc;border-radius:8px;padding:5px">
+            <div style="text-align:center;background:var(--bg);border-radius:8px;padding:5px">
               <div style="font-size:0.9rem;font-weight:900;color:#059669">${v.rate}%</div>
               <div style="font-size:0.5rem;color:#94a3b8">อัตราสำเร็จ</div>
             </div>
-            <div style="text-align:center;background:#f8fafc;border-radius:8px;padding:5px">
+            <div style="text-align:center;background:var(--bg);border-radius:8px;padding:5px">
               <div style="font-size:0.8rem;font-weight:900;color:#7c3aed">฿${_fmt(v.totalCost)}</div>
               <div style="font-size:0.5rem;color:#94a3b8">ค่าใช้จ่าย</div>
             </div>
-            <div style="text-align:center;background:#f8fafc;border-radius:8px;padding:5px">
+            <div style="text-align:center;background:var(--bg);border-radius:8px;padding:5px">
               <div style="font-size:0.9rem;font-weight:900;color:#d97706">${v.avgDays||'-'}</div>
               <div style="font-size:0.5rem;color:#94a3b8">เฉลี่ย(วัน)</div>
             </div>
@@ -655,11 +655,11 @@ function _renderExecVendor(d) {
   const tableEl = document.getElementById('exec-vendor-table');
   if (tableEl) {
     tableEl.innerHTML = `
-      <div style="font-size:0.85rem;font-weight:900;color:#0f172a;margin-bottom:10px">📊 เปรียบเทียบ Vendor ทั้งหมด</div>
+      <div style="font-size:0.85rem;font-weight:900;color:var(--text);margin-bottom:10px">📊 เปรียบเทียบ Vendor ทั้งหมด</div>
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
         <table style="width:100%;border-collapse:collapse;font-size:0.68rem;min-width:380px">
           <thead>
-            <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">
+            <tr style="background:var(--bg);border-bottom:2px solid #e2e8f0">
               <th style="text-align:left;padding:6px 8px;color:#64748b;font-weight:700">Vendor</th>
               <th style="text-align:center;padding:6px 8px;color:#64748b;font-weight:700">งาน</th>
               <th style="text-align:center;padding:6px 8px;color:#64748b;font-weight:700">สำเร็จ%</th>
@@ -670,7 +670,7 @@ function _renderExecVendor(d) {
           <tbody>
             ${vData.map(v => `
               <tr style="border-bottom:1px solid #f1f5f9">
-                <td style="padding:6px 8px;font-weight:700;color:#0f172a;white-space:nowrap">${v.v}</td>
+                <td style="padding:6px 8px;font-weight:700;color:var(--text);white-space:nowrap">${v.v}</td>
                 <td style="padding:6px 8px;text-align:center;color:#0e7490;font-weight:800">${v.total}</td>
                 <td style="padding:6px 8px;text-align:center">
                   <span style="background:${v.rate>=80?'#f0fdf4':v.rate>=50?'#fffbeb':'#fef2f2'};color:${v.rate>=80?'#059669':v.rate>=50?'#d97706':'#dc2626'};border-radius:6px;padding:2px 6px;font-weight:800">${v.rate}%</span>
@@ -709,7 +709,7 @@ function _renderExecRisk(d) {
 
   if (!riskMachines.length) {
     listEl.innerHTML = `
-      <div style="background:white;border-radius:14px;padding:24px;text-align:center;border:1px solid #e2e8f0">
+      <div style="background:var(--card);border-radius:14px;padding:24px;text-align:center;border:1px solid var(--border)">
         <div style="font-size:2.5rem;margin-bottom:8px">✅</div>
         <div style="font-size:0.85rem;font-weight:800;color:#059669">ไม่มีเครื่องที่น่าเป็นห่วง</div>
         <div style="font-size:0.68rem;color:#94a3b8;margin-top:4px">ไม่พบเครื่องที่ซ่อมซ้ำ ≥3 ครั้งใน 3 เดือนล่าสุด</div>
@@ -728,18 +728,18 @@ function _renderExecRisk(d) {
     const riskColor = item.cnt >= 6 ? '#dc2626' : item.cnt >= 4 ? '#d97706' : '#ca8a04';
     const riskBg    = item.cnt >= 6 ? '#fef2f2' : item.cnt >= 4 ? '#fffbeb' : '#fefce8';
     return `
-      <div style="background:white;border-radius:14px;padding:14px;border:2px solid ${riskColor}33;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <div style="background:var(--card);border-radius:14px;padding:14px;border:2px solid ${riskColor}33;box-shadow:0 1px 4px rgba(0,0,0,.05)">
         <div style="display:flex;align-items:flex-start;gap:10px">
           <div style="width:36px;height:36px;border-radius:10px;background:${riskBg};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">⚠️</div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-              <span style="font-size:0.75rem;font-weight:900;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+              <span style="font-size:0.75rem;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
               <span style="background:${riskBg};color:${riskColor};border-radius:6px;padding:1px 7px;font-size:0.6rem;font-weight:800;border:1px solid ${riskColor}44;flex-shrink:0">⚠ ${riskLevel}</span>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
               ${serial ? `<span style="font-size:0.6rem;color:#7c3aed;background:#f5f3ff;border-radius:5px;padding:1px 6px;font-family:monospace;font-weight:700">${serial}</span>` : ''}
               ${btu ? `<span style="font-size:0.6rem;color:#d97706;background:#fffbeb;border-radius:5px;padding:1px 6px;font-weight:700">${btu}</span>` : ''}
-              <span style="font-size:0.6rem;color:#64748b;background:#f1f5f9;border-radius:5px;padding:1px 6px">${dept}</span>
+              <span style="font-size:0.6rem;color:#64748b;background:var(--bg-2,#f1f5f9);border-radius:5px;padding:1px 6px">${dept}</span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
               <div style="background:#fef2f2;border-radius:8px;padding:6px;text-align:center">
@@ -818,18 +818,18 @@ function exportExecPDF() {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;700;900&display=swap');
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Noto Sans Thai',Arial,sans-serif; background:white; color:#0f172a; }
+    body { font-family:'Noto Sans Thai',Arial,sans-serif; background:var(--card); color:var(--text); }
     .header { background:linear-gradient(135deg,#0a0f1e,#0e7490); color:white; padding:24px 32px; }
     .header h1 { font-size:20px; font-weight:900; }
     .header .sub { font-size:11px; opacity:.65; margin-top:4px; }
     .body { padding:24px 32px; }
     .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-    .kpi { background:#f8fafc; border-radius:10px; padding:14px; border:1px solid #e2e8f0; text-align:center; }
+    .kpi { background:var(--bg); border-radius:10px; padding:14px; border:1px solid var(--border); text-align:center; }
     .kpi .val { font-size:22px; font-weight:900; }
     .kpi .lbl { font-size:10px; color:#64748b; margin-top:4px; }
     h2 { font-size:14px; font-weight:900; margin:20px 0 10px; border-left:3px solid #0e7490; padding-left:10px; }
     table { width:100%; border-collapse:collapse; font-size:11px; }
-    th { background:#f1f5f9; padding:6px 10px; text-align:left; font-weight:700; color:#64748b; }
+    th { background:var(--bg-2,#f1f5f9); padding:6px 10px; text-align:left; font-weight:700; color:#64748b; }
     td { padding:6px 10px; border-bottom:1px solid #f1f5f9; }
     .footer { margin-top:32px; padding-top:12px; border-top:1px solid #e2e8f0; font-size:10px; color:#94a3b8; text-align:right; }
     @media print { @page { size:A4; margin:15mm; } .no-print { display:none; } }
@@ -868,7 +868,7 @@ function exportExecPDF() {
           <td style="text-align:right">฿${_fmt(info.cost)}</td>
           <td style="text-align:right">฿${_fmt(info.cost*1.07)}</td>
         </tr>`).join('')}
-        <tr style="font-weight:900;background:#f8fafc">
+        <tr style="font-weight:900;background:var(--bg)">
           <td>รวมทั้งหมด</td>
           <td style="text-align:center">${monthT.length}</td>
           <td style="text-align:right">฿${_fmt(totalCost)}</td>
@@ -913,9 +913,9 @@ function showKpiModal(type) {
           <span style="font-size:0.75rem;font-weight:900;background:${g.bg};color:${g.color};padding:3px 10px;border-radius:99px;border:1px solid ${g.color}33">${ts.length} งาน</span>
         </div>
         ${ts.map(t => `
-          <div style="display:flex;justify-content:space-between;padding:7px 10px;background:#f8fafc;border-radius:8px;margin-bottom:4px;border:1px solid #f1f5f9">
+          <div style="display:flex;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:8px;margin-bottom:4px;border:1px solid #f1f5f9">
             <div>
-              <div style="font-size:0.68rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">${t.problem || t.machine || t.id || '-'}</div>
+              <div style="font-size:0.68rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">${t.problem || t.machine || t.id || '-'}</div>
               <div style="font-size:0.6rem;color:#94a3b8;margin-top:1px">${t.dept || macMap.get(t.machineId)?.dept || ''}</div>
             </div>
             <span style="font-size:0.62rem;font-family:monospace;color:${g.color};font-weight:700;flex-shrink:0;margin-left:6px">${t.id||''}</span>
@@ -940,9 +940,9 @@ function showKpiModal(type) {
         </div>
       </div>
       ${done.map(t => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#f8fafc;border-radius:8px;margin-bottom:4px;border:1px solid #f1f5f9">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:8px;margin-bottom:4px;border:1px solid #f1f5f9">
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.68rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem || t.machine || '-'}</div>
+            <div style="font-size:0.68rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem || t.machine || '-'}</div>
             <div style="font-size:0.6rem;color:#94a3b8;margin-top:1px">${t.dept || macMap.get(t.machineId)?.dept || ''} · ${t.vendor || macMap.get(t.machineId)?.vendor || 'ไม่ระบุ vendor'}</div>
           </div>
           <div style="text-align:right;flex-shrink:0;margin-left:8px">
@@ -962,9 +962,9 @@ function showKpiModal(type) {
       ${pending.map(t => {
         const statusLabel = {inprogress:'🔧 กำลังซ่อม', pending:'⏳ รอดำเนินการ', open:'📂 เปิดงาน', waiting_part:'🔩 รอชิ้นส่วน'}[t.status] || t.status || '?';
         const statusColor = {inprogress:'#0e7490', pending:'#d97706', open:'#64748b', waiting_part:'#7c3aed'}[t.status] || '#64748b';
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#f8fafc;border-radius:8px;margin-bottom:4px;border:1px solid #f1f5f9">
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-radius:8px;margin-bottom:4px;border:1px solid #f1f5f9">
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.68rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem || t.machine || '-'}</div>
+            <div style="font-size:0.68rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem || t.machine || '-'}</div>
             <div style="font-size:0.6rem;color:#94a3b8;margin-top:1px">${t.dept || macMap.get(t.machineId)?.dept || ''}</div>
           </div>
           <span style="font-size:0.6rem;font-weight:700;color:${statusColor};background:${statusColor}15;padding:2px 7px;border-radius:99px;flex-shrink:0;margin-left:6px;white-space:nowrap">${statusLabel}</span>
@@ -1027,7 +1027,7 @@ function showKpiModal(type) {
               <span style="font-size:0.72rem;font-weight:800;color:${g.color}">${g.label}</span>
               <span style="font-size:0.8rem;font-weight:900;color:${g.color}">฿${_fmt(g.value)}</span>
             </div>
-            <div style="background:white;border-radius:99px;height:5px;margin-bottom:4px">
+            <div style="background:var(--card);border-radius:99px;height:5px;margin-bottom:4px">
               <div style="background:${g.color};border-radius:99px;height:5px;width:${pct(g.value)}%"></div>
             </div>
             <div style="font-size:0.6rem;color:${g.color};opacity:.8">${pct(g.value)}% ของค่าใช้จ่ายทั้งหมด</div>
@@ -1035,9 +1035,9 @@ function showKpiModal(type) {
       </div>
 
       <!-- รายการงานที่มีค่าใช้จ่าย -->
-      <div style="font-size:0.72rem;font-weight:900;color:#0f172a;margin-bottom:8px">รายการงานที่มีค่าใช้จ่าย</div>
+      <div style="font-size:0.72rem;font-weight:900;color:var(--text);margin-bottom:8px">รายการงานที่มีค่าใช้จ่าย</div>
       ${monthT.filter(t=>_tCost(t)>0).length === 0
-        ? `<div style="text-align:center;color:#94a3b8;font-size:0.75rem;padding:16px;background:#f8fafc;border-radius:10px">ยังไม่มีข้อมูลค่าใช้จ่ายในเดือนนี้</div>`
+        ? `<div style="text-align:center;color:#94a3b8;font-size:0.75rem;padding:16px;background:var(--bg);border-radius:10px">ยังไม่มีข้อมูลค่าใช้จ่ายในเดือนนี้</div>`
         : monthT.filter(t=>_tCost(t)>0).map(t => {
             const rc = Number(t.repairCost||0);
             const pc = Number(t.partsCost||0);
@@ -1050,9 +1050,9 @@ function showKpiModal(type) {
             // ค่าอะไหล่
             const parts = pc > 0 ? pc : (po > 0 && !rc ? po : (po > 0 ? po : 0));
             const other = Math.max(0, tc - labor - parts);
-            return `<div style="background:#f8fafc;border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid #f1f5f9">
+            return `<div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid #f1f5f9">
               <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                <div style="font-size:0.68rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${t.problem||t.machine||t.id||'-'}</div>
+                <div style="font-size:0.68rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${t.problem||t.machine||t.id||'-'}</div>
                 <div style="font-size:0.72rem;font-weight:900;color:#7c3aed;flex-shrink:0">฿${_fmt(_tCost(t))}</div>
               </div>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1072,10 +1072,10 @@ function showKpiModal(type) {
     modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;font-family:inherit';
     modal.innerHTML = `
       <div id="_kpi-modal-backdrop" onclick="closeKpiModal()" style="position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px)"></div>
-      <div id="_kpi-modal-sheet" style="position:relative;width:100%;max-width:520px;max-height:82vh;background:white;border-radius:24px 24px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.25);transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0)">
+      <div id="_kpi-modal-sheet" style="position:relative;width:100%;max-width:520px;max-height:82vh;background:var(--card);border-radius:24px 24px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.25);transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0)">
         <div style="flex-shrink:0;padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:12px">
-          <div id="_kpi-modal-title" style="font-size:0.85rem;font-weight:900;color:#0f172a"></div>
-          <button onclick="closeKpiModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:#f1f5f9;color:#64748b;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+          <div id="_kpi-modal-title" style="font-size:0.85rem;font-weight:900;color:var(--text)"></div>
+          <button onclick="closeKpiModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg-2,#f1f5f9);color:#64748b;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
         </div>
         <div id="_kpi-modal-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 32px"></div>
       </div>`;
@@ -1183,12 +1183,12 @@ function _execTicketRow(t, macMap) {
   const statusColor = {new:'#1d4ed8',assigned:'#4338ca',accepted:'#7c3aed',inprogress:'#0e7490',waiting_part:'#c2410c',done:'#15803d',verified:'#15803d',closed:'#6b7280',rejected:'#b91c1c'}[t.status]||'#6b7280';
   const cost = _tCost(t);
   const dateStr = t.createdAt ? t.createdAt.slice(0,10) : '';
-  return `<div style="background:white;border-radius:14px;padding:14px;border:1px solid #e8ecf0;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:8px">
+  return `<div style="background:var(--card);border-radius:14px;padding:14px;border:1px solid #e8ecf0;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:8px">
     <div style="display:flex;align-items:flex-start;gap:10px">
       <div style="width:34px;height:34px;border-radius:10px;background:${statusColor}18;border:1.5px solid ${statusColor}33;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:900;color:${statusColor};flex-shrink:0;font-family:'JetBrains Mono',monospace">${(t.id||'').slice(-3)}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-          <span style="font-size:0.78rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${t.problem||'—'}</span>
+          <span style="font-size:0.78rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${t.problem||'—'}</span>
           <span style="background:${statusColor}15;color:${statusColor};border-radius:6px;padding:2px 8px;font-size:0.6rem;font-weight:800;flex-shrink:0">${statusLabel}</span>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -1217,7 +1217,7 @@ function _renderExecPending(d) {
     </div>
   </div>`;
   if (!pending.length) {
-    el.innerHTML = header + `<div style="background:white;border-radius:14px;padding:28px;text-align:center;border:1px solid #e2e8f0"><div style="font-size:2rem;margin-bottom:6px">🎉</div><div style="font-size:0.85rem;font-weight:800;color:#059669">ไม่มีงานค้าง!</div></div>`;
+    el.innerHTML = header + `<div style="background:var(--card);border-radius:14px;padding:28px;text-align:center;border:1px solid var(--border)"><div style="font-size:2rem;margin-bottom:6px">🎉</div><div style="font-size:0.85rem;font-weight:800;color:#059669">ไม่มีงานค้าง!</div></div>`;
     return;
   }
   el.innerHTML = header + pending.map(t => _execTicketRow(t, macMap)).join('');
@@ -1239,7 +1239,7 @@ function _renderExecDone(d) {
     </div>
   </div>`;
   if (!done.length) {
-    el.innerHTML = header + `<div style="background:white;border-radius:14px;padding:28px;text-align:center;border:1px solid #e2e8f0"><div style="font-size:0.8rem;color:#94a3b8">ยังไม่มีงานเสร็จ</div></div>`;
+    el.innerHTML = header + `<div style="background:var(--card);border-radius:14px;padding:28px;text-align:center;border:1px solid var(--border)"><div style="font-size:0.8rem;color:#94a3b8">ยังไม่มีงานเสร็จ</div></div>`;
     return;
   }
   el.innerHTML = header + done.map(t => _execTicketRow(t, macMap)).join('');
@@ -1276,7 +1276,7 @@ function _renderExecDept(d) {
   </div>`;
 
   if (!sorted.length) {
-    el.innerHTML = header + `<div style="background:white;border-radius:14px;padding:28px;text-align:center;border:1px solid #e2e8f0"><div style="font-size:0.8rem;color:#94a3b8">ไม่มีข้อมูล</div></div>`;
+    el.innerHTML = header + `<div style="background:var(--card);border-radius:14px;padding:28px;text-align:center;border:1px solid var(--border)"><div style="font-size:0.8rem;color:#94a3b8">ไม่มีข้อมูล</div></div>`;
     return;
   }
 
@@ -1286,20 +1286,20 @@ function _renderExecDept(d) {
     const roomsSorted = Object.entries(info.rooms).sort((a,b) => b[1]-a[1]);
     const roomsHtml = roomsSorted.map(([room, cnt]) =>
       `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f8fafc">
-        <span style="font-size:0.7rem;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">🔹 ${room}</span>
+        <span style="font-size:0.7rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">🔹 ${room}</span>
         <span style="font-size:0.7rem;font-weight:800;color:${color};flex-shrink:0;margin-left:8px">${cnt} งาน</span>
       </div>`
     ).join('');
     const uid = 'dept-' + i;
-    return `<div style="background:white;border-radius:16px;border:1px solid #e8ecf0;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:10px;overflow:hidden">
+    return `<div style="background:var(--card);border-radius:16px;border:1px solid #e8ecf0;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:10px;overflow:hidden">
       <div onclick="document.getElementById('${uid}').style.display=document.getElementById('${uid}').style.display==='none'?'block':'none';this.querySelector('.dept-arrow').style.transform=document.getElementById('${uid}').style.display!=='none'?'rotate(90deg)':'rotate(0deg)'"
         style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">
         <div style="width:40px;height:40px;border-radius:12px;background:${color}18;border:2px solid ${color}33;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <span style="font-size:0.78rem;font-weight:900;color:${color}">🏢</span>
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.82rem;font-weight:900;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
-          <div style="margin-top:5px;background:#f1f5f9;border-radius:99px;height:5px;overflow:hidden">
+          <div style="font-size:0.82rem;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
+          <div style="margin-top:5px;background:var(--bg-2,#f1f5f9);border-radius:99px;height:5px;overflow:hidden">
             <div style="background:${color};border-radius:99px;height:5px;width:${pct}%;transition:width .6s ease"></div>
           </div>
         </div>

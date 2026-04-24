@@ -445,10 +445,10 @@ function showRegisterSuccess(name, callback) {
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
   const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:24px;padding:36px 28px;max-width:320px;width:90%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.3)';
+  box.style.cssText = 'background:var(--card);border-radius:24px;padding:36px 28px;max-width:320px;width:90%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.3)';
   box.innerHTML =
     '<div style="width:72px;height:72px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2.2rem">&#10003;</div>' +
-    '<div style="font-size:1.2rem;font-weight:900;color:#0f172a;margin-bottom:8px">สมัครสมาชิกสำเร็จ!</div>' +
+    '<div style="font-size:1.2rem;font-weight:900;color:var(--text);margin-bottom:8px">สมัครสมาชิกสำเร็จ!</div>' +
     '<div style="font-size:0.85rem;color:#64748b;line-height:1.6;margin-bottom:20px">ยินดีต้อนรับ <strong style="color:#c8102e">' + name + '</strong><br>กรุณาเข้าสู่ระบบด้วยบัญชีที่สมัคร</div>';
   const btn = document.createElement('button');
   btn.textContent = 'ไปหน้าเข้าสู่ระบบ';
@@ -628,7 +628,7 @@ function renderSettingsPage() {
         ['ค่าซ่อมสะสม', done.length ? '฿'+totalCost.toLocaleString() : '—', '#0891b2'],
         ['เฉลี่ย (ชม.)', avgHours, '#7c3aed'],
       ].map(([label,val,color]) =>
-        '<div style="background:#f8fafc;border-radius:10px;padding:10px;text-align:center">'
+        '<div style="background:var(--bg);border-radius:10px;padding:10px;text-align:center">'
         +'<div style="font-size:1.1rem;font-weight:900;color:'+color+'">'+val+'</div>'
         +'<div style="font-size:0.65rem;color:var(--muted);font-weight:600;margin-top:2px">'+label+'</div>'
         +'</div>'
@@ -1133,11 +1133,11 @@ async function viewQuotationFull(tid) {
     +'<style>@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800;900&display=swap\');'
     +'*{margin:0;padding:0;box-sizing:border-box}'
     +'body{font-family:\'Sarabun\',Arial,sans-serif;font-size:9.5pt;color:#000;background:#c8c8c8;overflow-x:hidden}'
-    +'.page{width:100%;max-width:210mm;min-height:297mm;margin:12px auto;background:white;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:10mm;transform-origin:top left}'
+    +'.page{width:100%;max-width:210mm;min-height:297mm;margin:12px auto;background:var(--card);box-shadow:0 4px 24px rgba(0,0,0,.25);padding:10mm;transform-origin:top left}'
     +'@media screen and (max-width:820px){.page{padding:6mm;transform:scale(var(--ps,1));margin-left:0!important;margin-right:0!important}}'
     +'table{border-collapse:collapse;width:100%}'
     +'td,th{font-family:\'Sarabun\',Arial,sans-serif}'
-    +'@media print{body{background:white}html,body{width:210mm}.page{margin:0;padding:10mm;box-shadow:none;width:210mm;max-width:210mm;min-height:auto;transform:none!important}.no-print{display:none!important}@page{size:A4 portrait;margin:0}}'
+    +'@media print{body{background:var(--card)}html,body{width:210mm}.page{margin:0;padding:10mm;box-shadow:none;width:210mm;max-width:210mm;min-height:auto;transform:none!important}.no-print{display:none!important}@page{size:A4 portrait;margin:0}}'
     +'</style></head><body>'
     +'<div class="page">'
 
@@ -1279,7 +1279,7 @@ async function viewQuotationFull(tid) {
   const iframe = document.createElement('iframe');
   iframe.id = '_vq_iframe';
   // Fix 4: เต็มหน้าจอ ไม่มีขอบ — ความสูงจะถูก set อีกครั้งหลัง load
-  iframe.style.cssText = 'width:100%;border:none;background:white;display:block;height:100%;min-height:100%;';
+  iframe.style.cssText = 'width:100%;border:none;background:var(--card);display:block;height:100%;min-height:100%;';
   iframe.setAttribute('sandbox','allow-same-origin allow-scripts allow-modals');
   wrap.appendChild(iframe);
   ov.appendChild(wrap);
@@ -1546,7 +1546,7 @@ async function generateRepairPDF(tid) {
 
   // ── Photo grid ──
   const mkPhotoGrid = (arr, label, accentColor) => {
-    if (!arr||!arr.length) return `<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;height:60px;background:#f8fafc;border-radius:8px;color:#9ca3af;font-size:8pt">— ไม่มีรูป${label} —</div>`;
+    if (!arr||!arr.length) return `<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;height:60px;background:var(--bg);border-radius:8px;color:#9ca3af;font-size:8pt">— ไม่มีรูป${label} —</div>`;
     return arr.slice(0,6).map(p=>`<div style="aspect-ratio:4/3;overflow:hidden;border-radius:8px;border:2px solid ${accentColor}30"><img src="${p}" style="width:100%;height:100%;object-fit:cover"/></div>`).join('');
   };
 
@@ -1554,7 +1554,7 @@ async function generateRepairPDF(tid) {
   const mkSig = (name, role, sigObj, color) => {
     const sigImg = sigObj?.data ? `<img src="${sigObj.data}" style="height:40px;max-width:130px;object-fit:contain"/>` : `<div style="height:40px;border-bottom:1.5px dashed #cbd5e1"></div>`;
     const dt = sigObj?.at ? `<div style="font-size:6.5pt;color:#94a3b8;margin-top:2px">${fmtDate(sigObj.at)}</div>` : '';
-    return `<div style="flex:1;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;text-align:center;border-top:3px solid ${color}">
+    return `<div style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;border-top:3px solid ${color}">
       <div style="font-size:7pt;font-weight:800;color:${color};text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">${role}</div>
       <div style="min-height:44px;display:flex;align-items:center;justify-content:center;margin-bottom:8px">${sigImg}</div>
       <div style="border-top:1px solid #e5e7eb;padding-top:7px">
@@ -1628,9 +1628,9 @@ async function generateRepairPDF(tid) {
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Sarabun',Arial,sans-serif;font-size:9.5pt;color:#000;background:#c8c8c8;min-height:100vh;overflow-x:hidden}
-.page{width:210mm;min-height:297mm;margin:12px auto;background:white;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:10mm;transform-origin:top center}
+.page{width:210mm;min-height:297mm;margin:12px auto;background:var(--card);box-shadow:0 4px 24px rgba(0,0,0,.25);padding:10mm;transform-origin:top center}
 @media screen{.page{margin:8px auto}}
-@media print{body{background:white}html,body{width:210mm}.page{box-shadow:none;margin:0;padding:10mm;width:210mm;max-width:210mm;min-height:auto;transform:none!important}.no-print{display:none!important}@page{size:A4 portrait;margin:0}}
+@media print{body{background:var(--card)}html,body{width:210mm}.page{box-shadow:none;margin:0;padding:10mm;width:210mm;max-width:210mm;min-height:auto;transform:none!important}.no-print{display:none!important}@page{size:A4 portrait;margin:0}}
 table{border-collapse:collapse;width:100%}
 td,th{font-family:'Sarabun',Arial,sans-serif}
 </style>
@@ -1815,7 +1815,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     const hasA = (t.photosAfter||[]).length  > 0;
     if (!hasB && !hasA) return '';
     const mkCell = (arr, label, color) => {
-      if (!arr||!arr.length) return '<div style="flex:1;text-align:center;padding:10px;color:#9ca3af;font-size:8pt;background:#f8fafc;border-radius:8px">— ไม่มีรูป' + label + ' —</div>';
+      if (!arr||!arr.length) return '<div style="flex:1;text-align:center;padding:10px;color:#9ca3af;font-size:8pt;background:var(--bg);border-radius:8px">— ไม่มีรูป' + label + ' —</div>';
       const imgs = arr.slice(0,3).map(p=>'<div style="flex:1;aspect-ratio:4/3;overflow:hidden;border-radius:6px;border:1.5px solid '+color+'30"><img src="'+p+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display=\'none\'"/></div>').join('');
       return '<div style="flex:1"><div style="font-size:7.5pt;font-weight:800;color:'+color+';margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">'+label+'</div><div style="display:flex;gap:5px">'+imgs+'</div></div>';
     };
@@ -2026,7 +2026,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     +'@import url(\'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800;900&display=swap\');'
     +'*{margin:0;padding:0;box-sizing:border-box}'
     +'body{font-family:\'Sarabun\',Arial,sans-serif;font-size:9.5pt;color:#000;background:#bfbfbf}'
-    +'.page{width:100%;max-width:210mm;min-height:297mm;margin:12px auto;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:10mm}'
+    +'.page{width:100%;max-width:210mm;min-height:297mm;margin:12px auto;background:var(--card);box-shadow:0 4px 20px rgba(0,0,0,.2);padding:10mm}'
     +'table{border-collapse:collapse;width:100%}'
     +'td,th{font-family:\'Sarabun\',Arial,sans-serif}'
     +'@media print{body{background:#fff}.page{margin:0;padding:10mm;box-shadow:none;width:100%}@page{size:A4;margin:0}}'
@@ -2200,7 +2200,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
     const el = document.getElementById('_ds_rows');
     if(!el) return;
     el.innerHTML = DS.rows.map((r,i) => `
-      <div style="background:#f8fafc;border:1.5px solid #dde3ea;border-radius:8px;padding:8px 10px;margin-bottom:6px">
+      <div style="background:var(--bg);border:1.5px solid #dde3ea;border-radius:8px;padding:8px 10px;margin-bottom:6px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="font-size:0.65rem;font-weight:800;color:#1a5276;background:rgba(26,82,118,0.1);padding:1px 7px;border-radius:4px">รายการ ${i+1}</span>
           <button onclick="_dsDelRow(${i})" style="width:22px;height:22px;background:#fee2e2;border:none;border-radius:5px;cursor:pointer;color:#ef4444;font-size:0.8rem">✕</button>
@@ -2235,7 +2235,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
   };
 
   // ── Input style ──
-  var _dsInput = 'width:100%;padding:5px 8px;border:1.5px solid #dde3ea;border-radius:6px;font-family:inherit;font-size:1rem;color:#1a1a2e;background:white;outline:none;box-sizing:border-box';
+  var _dsInput = 'width:100%;padding:5px 8px;border:1.5px solid #dde3ea;border-radius:6px;font-family:inherit;font-size:1rem;color:#1a1a2e;background:var(--card);outline:none;box-sizing:border-box';
 
   // ── Bind DS globals (debounced versions assigned below with _dsRowUp) ──
   window._dsQiUpload = (input) => {
@@ -2382,7 +2382,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
   <div style="display:flex;flex:1;overflow:hidden;position:relative">
 
     <!-- FORM PANEL -->
-    <div style="width:${_isMobile?'0':'320px'};flex-shrink:0;background:white;overflow-y:${_isMobile?'hidden':'auto'};overflow-x:hidden;-webkit-overflow-scrolling:touch;border-right:1px solid #dde3ea;transition:width 0.25s ease,opacity 0.2s ease;${_isMobile?'opacity:0;':'opacity:1;'}" id="_ds_form_panel">
+    <div style="width:${_isMobile?'0':'320px'};flex-shrink:0;background:var(--card);overflow-y:${_isMobile?'hidden':'auto'};overflow-x:hidden;-webkit-overflow-scrolling:touch;border-right:1px solid #dde3ea;transition:width 0.25s ease,opacity 0.2s ease;${_isMobile?'opacity:0;':'opacity:1;'}" id="_ds_form_panel">
 
       <!-- Company -->
       <div style="padding:12px 14px;border-bottom:1px solid #f1f5f9">
@@ -2392,7 +2392,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
         <div style="margin-bottom:8px">
           <div style="font-size:0.62rem;color:#6b7280;font-weight:600;margin-bottom:4px">โลโก้บริษัท</div>
           <div style="display:flex;align-items:center;gap:8px">
-            <div id="_ds_logo_preview" style="width:52px;height:52px;border:2px dashed #dde3ea;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;background:#f8fafc">
+            <div id="_ds_logo_preview" style="width:52px;height:52px;border:2px dashed #dde3ea;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;background:var(--bg)">
               ${DS.logoData ? `<img src="${DS.logoData}" style="width:100%;height:100%;object-fit:contain"/>` : '<span style="font-size:1.4rem">🏢</span>'}
             </div>
             <div style="flex:1">
@@ -2468,7 +2468,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
         <div style="margin-bottom:6px"><div style="font-size:0.62rem;color:#6b7280;font-weight:600;margin-bottom:2px">ชื่องาน / สถานที่</div><input value="${(DS.job).replace(/"/g,'&quot;')}" oninput="_dsField('job',this.value)" style="${_dsInput}"></div>
         <div style="margin-bottom:6px">
           <div style="font-size:0.62rem;color:#6b7280;font-weight:600;margin-bottom:4px">ยี่ห้อ / รุ่น</div>
-          <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:0.78rem;line-height:1.7">
+          <div style="background:var(--bg);border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:0.78rem;line-height:1.7">
             <div><span style="font-size:0.6rem;font-weight:800;color:#1a5276;background:#e0eaf4;padding:1px 5px;border-radius:3px;margin-right:5px">FCU</span>${DS.fcuModel||'—'}</div>
             <div style="margin-top:2px"><span style="font-size:0.6rem;font-weight:800;color:#7c3aed;background:#ede9fe;padding:1px 5px;border-radius:3px;margin-right:5px">CDU</span>${DS.cduModel||'—'}</div>
           </div>
@@ -2504,7 +2504,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
 
     <!-- PREVIEW PANEL -->
     <div style="flex:1;overflow-y:auto;overflow-x:hidden;background:#c0c6cc;padding:8px;display:flex;flex-direction:column;align-items:center;-webkit-overflow-scrolling:touch">
-      <iframe id="_ds_iframe" style="width:100%;border:none;background:white;box-shadow:0 4px 24px rgba(0,0,0,0.25);min-height:600px;display:block"></iframe>
+      <iframe id="_ds_iframe" style="width:100%;border:none;background:var(--card);box-shadow:0 4px 24px rgba(0,0,0,0.25);min-height:600px;display:block"></iframe>
     </div>
 
   </div>`;
@@ -3260,7 +3260,7 @@ function goPage(name) {
           window.visualViewport.removeEventListener('scroll', _ppReset._kbFix);
           delete _ppReset._kbFix; delete _ppReset._kbBound;
         }
-        _ppReset.style.cssText = 'display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f8fafc;font-family:inherit;overscroll-behavior:contain;z-index:10';
+        _ppReset.style.cssText = 'display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);font-family:inherit;overscroll-behavior:contain;z-index:10';
       }
       if (_lpReset) { _lpReset.style.display = 'flex'; _lpReset.style.flexDirection = 'column'; }
       renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order', true);
@@ -3461,7 +3461,7 @@ function renderNotifPanel(){
           </div>
           ${!n.read?'<div style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px"></div>':''}
           <button ontouchstart="event.stopPropagation()" onclick="event.stopPropagation();dismissNotif('${n.id}')"
-            style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;color:#94a3b8;font-size:0.85rem;font-weight:800;display:flex;align-items:center;justify-content:center">×</button>
+            style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--bg-2,#f1f5f9);border:none;cursor:pointer;color:#94a3b8;font-size:0.85rem;font-weight:800;display:flex;align-items:center;justify-content:center">×</button>
         </div>
       </div><div class="ni-sep"></div>`).join('');
 }
@@ -3612,13 +3612,13 @@ function showLoginRequired(actionLabel) {
     animation:_lrFadeIn 0.18s ease;
   `;
 
-  const actionText = actionLabel ? `<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;background:#f8fafc;border-radius:8px;padding:8px 12px;border-left:3px solid #c8102e">
-      กำลังจะ: <strong style="color:#0f172a">${actionLabel}</strong>
+  const actionText = actionLabel ? `<div style="font-size:0.78rem;color:#64748b;margin-bottom:16px;background:var(--bg);border-radius:8px;padding:8px 12px;border-left:3px solid #c8102e">
+      กำลังจะ: <strong style="color:var(--text)">${actionLabel}</strong>
     </div>` : '';
 
   overlay.innerHTML = `
     <style>@keyframes _lrFadeIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}</style>
-    <div style="background:white;border-radius:20px;padding:28px 24px 20px;max-width:320px;width:100%;
+    <div style="background:var(--card);border-radius:20px;padding:28px 24px 20px;max-width:320px;width:100%;
       box-shadow:0 20px 60px rgba(0,0,0,0.25);text-align:center;position:relative;">
       <div style="width:56px;height:56px;background:linear-gradient(135deg,#c8102e,#991b1b);border-radius:16px;
         display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 6px 16px rgba(200,16,46,0.3)">
@@ -3626,14 +3626,14 @@ function showLoginRequired(actionLabel) {
           <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
       </div>
-      <div style="font-size:1.1rem;font-weight:900;color:#0f172a;margin-bottom:6px">ต้องเข้าสู่ระบบก่อน</div>
+      <div style="font-size:1.1rem;font-weight:900;color:var(--text);margin-bottom:6px">ต้องเข้าสู่ระบบก่อน</div>
       <div style="font-size:0.82rem;color:#64748b;line-height:1.5;margin-bottom:16px">
         กรุณา Login ด้วยบัญชีของคุณเพื่อใช้งานระบบ
       </div>
       ${actionText}
       <div style="display:flex;gap:8px">
         <button onclick="document.getElementById('_login_required_modal').remove()"
-          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid #e2e8f0;background:white;
+          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid #e2e8f0;background:var(--card);
             font-size:0.85rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit;transition:all 0.15s"
           onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
           ยกเลิก
@@ -3677,13 +3677,13 @@ function showAlert(opts) {
   ov.style.cssText = 'position:fixed;inset:0;z-index:19998;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px';
 
   const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:24px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.3);animation:popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)';
+  box.style.cssText = 'background:var(--card);border-radius:24px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.3);animation:popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)';
   box.innerHTML = `
     <div style="width:64px;height:64px;border-radius:20px;background:${o.color}18;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2.2rem;border:2px solid ${o.color}33">${o.icon}</div>
-    <div style="font-size:1.05rem;font-weight:900;color:#0f172a;margin-bottom:8px;line-height:1.3">${o.title}</div>
+    <div style="font-size:1.05rem;font-weight:900;color:var(--text);margin-bottom:8px;line-height:1.3">${o.title}</div>
     <div style="font-size:0.85rem;color:#64748b;line-height:1.75;margin-bottom:22px">${o.msg}</div>
     <div style="display:flex;gap:8px">
-      ${o.btnCancel ? `<button id="_alert_cancel" style="flex:1;padding:14px;background:#f1f5f9;color:#64748b;border:none;border-radius:14px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">${o.btnCancel}</button>` : ''}
+      ${o.btnCancel ? `<button id="_alert_cancel" style="flex:1;padding:14px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:14px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">${o.btnCancel}</button>` : ''}
       <button id="_alert_ok" style="flex:${o.btnCancel?2:1};padding:14px;background:linear-gradient(135deg,${o.color},${o.color}cc);color:white;border:none;border-radius:14px;font-size:0.9rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px ${o.color}44;-webkit-tap-highlight-color:transparent">
         ${o.btnOk}
       </button>
@@ -3884,21 +3884,21 @@ function openSignaturePad(tid, type) {
   ov.id = 'sig-overlay';
   ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);display:flex;align-items:flex-end;justify-content:center;';
   ov.innerHTML = `
-    <div style="background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:520px;padding:20px 20px 32px;box-shadow:0 -8px 40px rgba(0,0,0,0.18)">
+    <div style="background:var(--card);border-radius:22px 22px 0 0;width:100%;max-width:520px;padding:20px 20px 32px;box-shadow:0 -8px 40px rgba(0,0,0,0.18)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div>
-          <div style="font-size:1rem;font-weight:800;color:#0f172a">${lbl.title}</div>
+          <div style="font-size:1rem;font-weight:800;color:var(--text)">${lbl.title}</div>
           <div style="font-size:0.72rem;color:#64748b;margin-top:1px">${lbl.sub}</div>
         </div>
-        <button onclick="closeSignaturePad()" style="width:32px;height:32px;border-radius:8px;background:#f1f5f9;border:none;font-size:1rem;cursor:pointer;color:#64748b">✕</button>
+        <button onclick="closeSignaturePad()" style="width:32px;height:32px;border-radius:8px;background:var(--bg-2,#f1f5f9);border:none;font-size:1rem;cursor:pointer;color:#64748b">✕</button>
       </div>
       <div style="font-size:0.65rem;color:#94a3b8;margin-bottom:8px;text-align:center">วาดลายเซ็นในกรอบด้านล่าง</div>
       <canvas id="sig-canvas"
-        style="width:100%;height:180px;border:2px dashed #cbd5e1;border-radius:14px;background:#f8fafc;touch-action:none;display:block;cursor:crosshair">
+        style="width:100%;height:180px;border:2px dashed #cbd5e1;border-radius:14px;background:var(--bg);touch-action:none;display:block;cursor:crosshair">
       </canvas>
       <div style="display:flex;gap:10px;margin-top:14px">
         <button onclick="clearSignaturePad()"
-          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;font-size:0.85rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit">
+          style="flex:1;padding:11px;border-radius:12px;border:1.5px solid #e2e8f0;background:var(--card);font-size:0.85rem;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit">
           🗑️ ล้าง
         </button>
         <button onclick="confirmSignature()"
@@ -4062,13 +4062,13 @@ function renderPMPlanDeptList() {
   });
   const depts = Object.entries(deptCount).sort((a,b) => b[1]-a[1]);
   list.innerHTML = depts.map(([dept, count]) => `
-    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:12px;border:1.5px solid #e5e7eb;cursor:pointer;transition:all 0.15s;"
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:12px;border:1.5px solid var(--border);cursor:pointer;transition:all 0.15s;"
       onmouseover="this.style.borderColor='#38bdf8'" onmouseout="if(!this.querySelector('input').checked)this.style.borderColor='#e5e7eb'">
       <input type="checkbox" class="pmplan-dept-cb" data-dept="${dept}"
         style="width:17px;height:17px;accent-color:#0369a1;flex-shrink:0;"
         onchange="pmplanUpdateCheck(this)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
+        <div style="font-size:0.85rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <div style="background:#0369a1;color:white;border-radius:99px;padding:2px 10px;font-size:0.72rem;font-weight:800;">${count}</div>
@@ -4209,10 +4209,10 @@ function renderPMPlanSchedule() {
         <div style="flex:1;height:1px;background:#bfdbfe"></div>
       </div>
       ${evs.map(e => `
-        <div style="background:white;border-radius:12px;padding:11px 13px;margin-bottom:7px;border:1px solid #e8ecf0;display:flex;align-items:center;gap:10px">
+        <div style="background:var(--card);border-radius:12px;padding:11px 13px;margin-bottom:7px;border:1px solid #e8ecf0;display:flex;align-items:center;gap:10px">
           <div style="width:38px;height:38px;border-radius:10px;background:${e.type==='clean-major'?'#eff6ff':'#f0fdf4'};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${e.type==='clean-major'?'🔵':'💦'}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.78rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
+            <div style="font-size:0.78rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
             <div style="font-size:0.63rem;color:#64748b;margin-top:2px">
               📅 ${new Date(e.date+'T00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})}
               ${e.tech ? ' · 👷 '+e.tech : ''}
@@ -4251,22 +4251,22 @@ function renderPMPlanHistory() {
       <div style="font-size:2.2rem;font-weight:900;line-height:1">${total}</div>
       <div style="font-size:0.65rem;opacity:0.65;margin-top:4px">รายการ</div>
     </div>
-    <div style="background:white;border-radius:14px;padding:12px 14px;margin-bottom:10px;border:1px solid #e8ecf0">
+    <div style="background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:10px;border:1px solid #e8ecf0">
       <div style="font-size:0.7rem;font-weight:800;color:#64748b;margin-bottom:10px">สรุปตามแผนก</div>
       ${Object.entries(deptCounts).sort((a,b)=>b[1]-a[1]).map(([dept,cnt]) => `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
-          <div style="font-size:0.75rem;font-weight:700;color:#0f172a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
+          <div style="font-size:0.75rem;font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
           <div style="background:#eff6ff;color:#0369a1;border-radius:99px;padding:2px 10px;font-size:0.68rem;font-weight:800;flex-shrink:0">${cnt} ครั้ง</div>
         </div>
-        <div style="background:#f1f5f9;border-radius:99px;height:4px;margin-bottom:8px">
+        <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:4px;margin-bottom:8px">
           <div style="background:#0369a1;border-radius:99px;height:4px;width:${Math.round(cnt/total*100)}%"></div>
         </div>`).join('')}
     </div>
     ${pmDone.slice(0,20).map(t => `
-      <div style="background:white;border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid #f1f5f9;display:flex;align-items:center;gap:9px">
+      <div style="background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid #f1f5f9;display:flex;align-items:center;gap:9px">
         <div style="width:32px;height:32px;border-radius:9px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">✅</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.75rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.machine||t.problem||t.id}</div>
+          <div style="font-size:0.75rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.machine||t.problem||t.id}</div>
           <div style="font-size:0.62rem;color:#64748b;margin-top:1px">${t.dept||''} · ${t.closedAt?(new Date(t.closedAt).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})):''}</div>
         </div>
       </div>`).join('')}
@@ -4494,10 +4494,10 @@ function openOfflineQueueDrawer() {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:99990;display:flex;flex-direction:column;justify-content:flex-end';
   overlay.innerHTML = `
     <div onclick="document.getElementById('_oq-drawer').remove()" style="flex:1;background:rgba(0,0,0,0.4)"></div>
-    <div style="background:white;border-radius:20px 20px 0 0;padding:20px 16px 32px;max-height:70vh;overflow-y:auto;box-shadow:0 -4px 24px rgba(0,0,0,0.18)">
+    <div style="background:var(--card);border-radius:20px 20px 0 0;padding:20px 16px 32px;max-height:70vh;overflow-y:auto;box-shadow:0 -4px 24px rgba(0,0,0,0.18)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div>
-          <div style="font-size:1rem;font-weight:900;color:#0f172a">📴 Offline Queue</div>
+          <div style="font-size:1rem;font-weight:900;color:var(--text)">📴 Offline Queue</div>
           <div style="font-size:0.72rem;color:#64748b;margin-top:2px">${cnt} รายการรอ Sync เมื่อออนไลน์</div>
         </div>
         <div style="display:flex;gap:8px">
@@ -4517,10 +4517,10 @@ function openOfflineQueueDrawer() {
             const retryBadge = item.retryCount > 0
               ? `<span style="font-size:0.6rem;background:#fee2e2;color:#ef4444;border-radius:99px;padding:1px 6px;font-weight:700">retry ${item.retryCount}/5</span>`
               : '';
-            return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:12px;margin-bottom:8px;border:1px solid #e2e8f0">
+            return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:12px;margin-bottom:8px;border:1px solid var(--border)">
               <div style="font-size:1.4rem;flex-shrink:0">${item.icon || '📦'}</div>
               <div style="flex:1;min-width:0">
-                <div style="font-size:0.78rem;font-weight:800;color:#0f172a">${item.label || item.type}</div>
+                <div style="font-size:0.78rem;font-weight:800;color:var(--text)">${item.label || item.type}</div>
                 ${item.payload?.ticketData?.id ? `<div style="font-size:0.65rem;color:#64748b;font-family:monospace">${item.payload.ticketData.id}</div>` : ''}
                 <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">${dateStr} ${timeStr} ${retryBadge}</div>
               </div>

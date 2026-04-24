@@ -108,9 +108,9 @@ function openMachineHistory(mid) {
         const prNum  = t.purchaseOrder?.pr||'';
         const poNum  = t.purchaseOrder?.po||'';
         return `
-        <div style="border:1px solid #f0f0f0;border-radius:12px;margin-bottom:8px;overflow:hidden;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        <div style="border:1px solid #f0f0f0;border-radius:12px;margin-bottom:8px;overflow:hidden;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,0.04)">
           <!-- Header -->
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fafafa;border-bottom:1px solid #f0f0f0">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg);border-bottom:1px solid #f0f0f0">
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#c8102e;background:#fff0f2;border:1px solid #fecaca;border-radius:6px;padding:2px 7px">${t.id}</span>
               <span class="tag ${stc(t.status)}" style="font-size:0.62rem">${sTH(t.status)}</span>
@@ -119,16 +119,16 @@ function openMachineHistory(mid) {
           </div>
           <!-- Body -->
           <div style="padding:8px 10px">
-            <div style="font-weight:700;font-size:0.83rem;color:#0f172a;margin-bottom:4px">${escapeHtml(t.problem||'')}</div>
+            <div style="font-weight:700;font-size:0.83rem;color:var(--text);margin-bottom:4px">${escapeHtml(t.problem||'')}</div>
             ${t.assignee?`<div style="font-size:0.7rem;color:#64748b;margin-bottom:4px">🔧 ${escapeHtml(t.assignee)}</div>`:''}
             ${t.detail?`<div style="font-size:0.72rem;color:#64748b;margin-bottom:4px">${escapeHtml(t.detail)}</div>`:''}
             <!-- ค่าใช้จ่ายแยกรายการ -->
             ${(rc>0||pc>0||tc>0)?`
-            <div style="background:#f8fafc;border-radius:8px;padding:8px;margin-top:6px;display:flex;flex-direction:column;gap:4px">
+            <div style="background:var(--bg);border-radius:8px;padding:8px;margin-top:6px;display:flex;flex-direction:column;gap:4px">
               ${rc>0?`<div style="display:flex;justify-content:space-between;font-size:0.72rem"><span style="color:#475569">🔧 ค่าซ่อม</span><span style="font-weight:800;color:#1d4ed8">฿${rc.toLocaleString()}</span></div>`:''}
               ${pc>0?`<div style="display:flex;justify-content:space-between;font-size:0.72rem"><span style="color:#475569">🛒 ราคาซื้อของ</span><span style="font-weight:800;color:#d97706">฿${pc.toLocaleString()}</span></div>`:''}
               ${(rc>0&&pc>0)?`<div style="height:1px;background:#e2e8f0;margin:2px 0"></div>`:''}
-              ${tc>0?`<div style="display:flex;justify-content:space-between;font-size:0.75rem"><span style="font-weight:800;color:#0f172a">รวม</span><span style="font-weight:900;color:#c8102e">฿${tc.toLocaleString()}</span></div>`:''}
+              ${tc>0?`<div style="display:flex;justify-content:space-between;font-size:0.75rem"><span style="font-weight:800;color:var(--text)">รวม</span><span style="font-weight:900;color:#c8102e">฿${tc.toLocaleString()}</span></div>`:''}
             </div>`:''}
             <!-- รายการอะไหล่ที่สั่ง -->
             ${poRows.length>0?`
@@ -139,7 +139,7 @@ function openMachineHistory(mid) {
               <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:3px">
                 ${poRows.map(r=>`
                   <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.7rem">
-                    <span style="color:#0f172a;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px">${escapeHtml(r.name)}</span>
+                    <span style="color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px">${escapeHtml(r.name)}</span>
                     <span style="color:#78350f;white-space:nowrap">${r.qty||1} × ฿${Number(r.price||0).toLocaleString()} = <b>฿${((r.qty||1)*(r.price||0)).toLocaleString()}</b></span>
                   </div>
                 `).join('')}
@@ -294,7 +294,7 @@ function renderAirSearchResults() {
         const airId = m ? m.id.replace(/^csv_/,'') : '';
         return `
         <div onclick="closeSheet('airsearch');setTimeout(()=>safeOpenDetail('${t.id}'),220)"
-          style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent"
+          style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent"
           onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
             <div style="flex:1;min-width:0">
@@ -302,7 +302,7 @@ function renderAirSearchResults() {
                 <span style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:800;color:#c8102e">${t.id}</span>
                 ${airId?`<span style="font-size:0.6rem;font-family:'JetBrains Mono',monospace;font-weight:700;color:#0891b2;background:#ecfeff;border-radius:4px;padding:1px 5px">AIR: ${airId}</span>`:''}
               </div>
-              <div style="font-size:0.82rem;font-weight:800;color:#0f172a;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml((t.problem||'').slice(0,40))}${(t.problem||'').length>40?'…':''}</div>
+              <div style="font-size:0.82rem;font-weight:800;color:var(--text);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml((t.problem||'').slice(0,40))}${(t.problem||'').length>40?'…':''}</div>
               ${m?`<div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${escapeHtml(m.name||'')}${m.dept?' · '+escapeHtml(m.dept):''}</div>`:''}
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
@@ -334,7 +334,7 @@ function renderAirSearchResults() {
     const lastTk      = tix.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))[0];
     return `
     <div onclick="closeSheet('airsearch');setTimeout(()=>openMachineHistory('${m.id}'),220)"
-      style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent"
+      style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent"
       onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
       <!-- Top row: AIR ID + serial + dept -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px">
@@ -343,11 +343,11 @@ function renderAirSearchResults() {
             <span style="font-size:0.7rem;font-family:'JetBrains Mono',monospace;font-weight:900;color:#c8102e;background:#fff0f2;border-radius:4px;padding:1px 6px">AIR: ${m.id.replace(/^csv_/,'')}</span>
             ${m.serial?`<span style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;font-weight:700;color:#0891b2">${escapeHtml(m.serial)}</span>`:''}
           </div>
-          <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${escapeHtml(m.name)}</div>
+          <div style="font-size:0.85rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${escapeHtml(m.name)}</div>
           <div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${m.dept?escapeHtml(m.dept):''}${m.brand?' · '+escapeHtml(m.brand):''}${m.btu?' · '+Number(m.btu).toLocaleString()+' BTU':''}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
-          <span style="font-size:0.65rem;background:#f1f5f9;color:#475569;border-radius:6px;padding:2px 7px;font-weight:700">${tixCnt} งาน</span>
+          <span style="font-size:0.65rem;background:var(--bg-2,#f1f5f9);color:#475569;border-radius:6px;padding:2px 7px;font-weight:700">${tixCnt} งาน</span>
           ${activeCnt>0?`<span style="font-size:0.62rem;background:#fff0f2;color:#c8102e;border:1px solid #fecaca;border-radius:6px;padding:1px 6px;font-weight:800">${activeCnt} ค้าง</span>`:''}
         </div>
       </div>
@@ -402,7 +402,7 @@ function _buildMachineRowsHtml(list) {
         <div style="display:flex;gap:3px;align-items:center">
           <button onclick="event.stopPropagation();showMachineQR('${m.id}')" title="QR Code" style="border:none;background:#f0f4ff;color:#3730a3;border-radius:8px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">${qrSvg}</button>
           <button onclick="event.stopPropagation();openMachineHistory('${m.id}')" title="ประวัติ" style="border:none;background:#f0fdf4;color:#166534;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center">📋</button>
-          <button onclick="event.stopPropagation();openMachineSheet('${m.id}')" title="แก้ไข" style="border:none;background:#fafafa;color:var(--muted);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center">✏️</button>
+          <button onclick="event.stopPropagation();openMachineSheet('${m.id}')" title="แก้ไข" style="border:none;background:var(--bg);color:var(--muted);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center">✏️</button>
           <button onclick="event.stopPropagation();delMachine('${m.id}')" title="ลบ" style="border:none;background:#fff0f2;color:var(--accent);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center">🗑️</button>
         </div>
       </td>
@@ -417,11 +417,11 @@ function _buildMachineRowsHtml(list) {
           <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #f1f5f9">
             <div style="padding:8px 14px;border-right:1px solid #f1f5f9">
               <div style="font-size:0.58rem;font-weight:700;color:#94a3b8;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px">📍 สถานที่</div>
-              <div style="font-size:0.75rem;font-weight:600;color:#1e293b">${locDesc||m.dept||'—'}</div>
+              <div style="font-size:0.75rem;font-weight:600;color:var(--text)">${locDesc||m.dept||'—'}</div>
             </div>
             <div style="padding:8px 14px">
               <div style="font-size:0.58rem;font-weight:700;color:#94a3b8;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px">🏭 แผนก</div>
-              <div style="font-size:0.75rem;font-weight:600;color:#1e293b">${m.dept||'—'}</div>
+              <div style="font-size:0.75rem;font-weight:600;color:var(--text)">${m.dept||'—'}</div>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #dbeafe;background:#eff6ff">
@@ -446,7 +446,7 @@ function _buildMachineRowsHtml(list) {
               <div style="font-size:0.68rem;font-weight:600;color:#15803d;font-family:'JetBrains Mono',monospace;margin-top:2px">${m.modelFCU||'—'}</div>
             </div>
           </div>
-          <div style="padding:8px 12px;background:#f8fafc;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+          <div style="padding:8px 12px;background:var(--bg);display:flex;flex-wrap:wrap;gap:6px;align-items:center">
             ${m.btu?`<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;border-radius:8px;padding:3px 10px;font-size:0.7rem;font-weight:800">🌡️ ${Number(m.btu).toLocaleString()} BTU</span>`:''}
             ${m.refrigerant?`<span style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:8px;padding:3px 10px;font-size:0.7rem;font-weight:800">❄️ ${m.refrigerant}</span>`:''}
             ${m.interval?`<span style="background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;border-radius:8px;padding:3px 10px;font-size:0.7rem;font-weight:800">🗓️ PM ${m.interval} เดือน</span>`:''}
@@ -459,11 +459,11 @@ function _buildMachineRowsHtml(list) {
   }).join('');
 
   const pager = totalPages > 1 ? `
-    <tr><td colspan="5" style="padding:8px 10px;text-align:center;background:#f9fafb;border-top:1px solid #e5e7eb">
+    <tr><td colspan="5" style="padding:8px 10px;text-align:center;background:var(--bg);border-top:1px solid #e5e7eb">
       <div style="display:flex;align-items:center;justify-content:center;gap:10px">
-        <button onclick="macPageGo(${page-1})" ${page===0?'disabled style="opacity:0.3"':''} style="border:1px solid #e5e7eb;background:white;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:0.78rem">‹</button>
+        <button onclick="macPageGo(${page-1})" ${page===0?'disabled style="opacity:0.3"':''} style="border:1px solid var(--border);background:var(--card);border-radius:8px;padding:4px 12px;cursor:pointer;font-size:0.78rem">‹</button>
         <span style="font-size:0.75rem;color:var(--muted)">หน้า ${page+1}/${totalPages} · ${total} เครื่อง</span>
-        <button onclick="macPageGo(${page+1})" ${page>=totalPages-1?'disabled style="opacity:0.3"':''} style="border:1px solid #e5e7eb;background:white;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:0.78rem">›</button>
+        <button onclick="macPageGo(${page+1})" ${page>=totalPages-1?'disabled style="opacity:0.3"':''} style="border:1px solid var(--border);background:var(--card);border-radius:8px;padding:4px 12px;cursor:pointer;font-size:0.78rem">›</button>
       </div>
     </td></tr>` : '';
 
@@ -654,7 +654,7 @@ function openMachineExportMenu(btn) {
 
   const menu = document.createElement('div');
   menu.id = 'mac-export-menu';
-  menu.style.cssText = 'position:fixed;background:white;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:99999;min-width:210px;overflow:hidden';
+  menu.style.cssText = 'position:fixed;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:99999;min-width:210px;overflow:hidden';
 
   const items = [
     { icon:'📋', label:'รายการเครื่องแอร์ทั้งหมด', fn:'exportMachineList()', color:'#0f172a' },
@@ -664,7 +664,7 @@ function openMachineExportMenu(btn) {
 
   menu.innerHTML = items.map((it,i) => `
     <button onclick="document.getElementById('mac-export-menu').remove();${it.fn}"
-      style="width:100%;padding:10px 14px;border:none;background:white;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:600;color:${it.color};font-family:inherit;text-align:left;transition:background 0.1s${i<items.length-1?';border-bottom:1px solid #f1f5f9':''}"
+      style="width:100%;padding:10px 14px;border:none;background:var(--card);cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:600;color:${it.color};font-family:inherit;text-align:left;transition:background 0.1s${i<items.length-1?';border-bottom:1px solid #f1f5f9':''}"
       onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
       <span style="font-size:0.95rem">${it.icon}</span>${it.label}
     </button>`).join('');
@@ -1079,7 +1079,7 @@ function renderMachineDashboardStats() {
   ${filteredBanner}
 
   <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px">
-    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px 6px;text-align:center">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center">
       <div style="font-size:1.3rem;font-weight:800;color:var(--text);line-height:1">${totalMac}</div>
       <div style="font-size:0.58rem;color:var(--muted);font-weight:600;margin-top:2px">${isFiltered?'กรอง':'ทั้งหมด'}</div>
     </div>
@@ -1113,7 +1113,7 @@ function renderMachineDashboardStats() {
 
 
   <!-- ── Vendor Dashboard ── -->
-  <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:12px;overflow:hidden">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden">
     <div style="background:#0f172a;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="font-size:0.78rem;font-weight:800;color:white">🏢 บริษัทผู้รับผิดชอบ</div>
@@ -1162,7 +1162,7 @@ function renderMachineDashboardStats() {
             </div>
           </div>
           ${btuChips?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">${btuChips}</div>`:''}
-          <div style="background:#f1f5f9;border-radius:99px;height:3px;overflow:hidden">
+          <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:3px;overflow:hidden">
             <div style="height:100%;width:${bar}%;background:${cl};border-radius:99px;transition:width 0.6s ease"></div>
           </div>
         </div>`;
@@ -1237,7 +1237,7 @@ function renderMachineDashboardCards() {
            ${!eqs.hasEQ?'<span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;font-size:0.6rem;font-weight:700">EQ</span>':''}
            <button onclick="event.stopPropagation();openMachineSheet('${m.id}')" style="margin-left:auto;border:none;background:#3730a3;color:white;border-radius:6px;padding:2px 9px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:inherit">เติมข้อมูล</button>
          </div>`
-      : `<div style="padding:5px 14px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
+      : `<div style="padding:5px 14px;background:var(--bg);border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
            <span style="font-size:0.6rem;color:#64748b;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${eqs.fl||'—'}</span>
            <span style="color:#e2e8f0;flex-shrink:0">·</span>
@@ -1250,7 +1250,7 @@ function renderMachineDashboardCards() {
            ${tickets.slice(0,2).map(t=>`
              <div onclick="event.stopPropagation();openDetail('${t.id}')" style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;border-bottom:1px dashed #fee2e2;last-child:border-bottom:none">
                <span class="tag ${stc(t.status)}" style="font-size:0.58rem;padding:1px 6px;flex-shrink:0">${sTH(t.status)}</span>
-               <span style="font-size:0.72rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#374151">${t.problem}</span>
+               <span style="font-size:0.72rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)">${t.problem}</span>
                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
              </div>`).join('')}
            ${tickets.length>2?`<div style="font-size:0.65rem;color:#c8102e;font-weight:700;padding-top:4px">+${tickets.length-2} งานอื่น...</div>`:''}
@@ -1258,7 +1258,7 @@ function renderMachineDashboardCards() {
       : '';
 
     cardsHtml += `
-    <div style="background:#fff;border:1px solid ${hasIssue?'#fecaca':'#e5e7eb'};border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.05);transition:box-shadow 0.15s;margin-bottom:10px"
+    <div style="background:var(--card);border:1px solid ${hasIssue?'#fecaca':'#e5e7eb'};border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.05);transition:box-shadow 0.15s;margin-bottom:10px"
          onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 1px 6px rgba(0,0,0,0.05)'">
 
       <!-- ── Header ── -->
@@ -1269,7 +1269,7 @@ function renderMachineDashboardCards() {
         </div>
         <!-- Info -->
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.9rem;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${m.name}</div>
+          <div style="font-size:0.9rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${m.name}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;overflow:hidden">
             ${vendorBadge}
             ${zoneBadge}
@@ -1281,7 +1281,7 @@ function renderMachineDashboardCards() {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
           ${statusPill}
           <button onclick="event.stopPropagation();openMachineSheet('${m.id}')"
-            style="display:flex;align-items:center;gap:3px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;border-radius:7px;padding:3px 8px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s"
+            style="display:flex;align-items:center;gap:3px;border:1px solid var(--border);background:var(--bg);color:#64748b;border-radius:7px;padding:3px 8px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s"
             onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#f8fafc';this.style.color='#64748b'">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
             แก้ไข
@@ -1293,11 +1293,11 @@ function renderMachineDashboardCards() {
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #f1f5f9">
         <div style="padding:7px 12px;border-right:1px solid #f1f5f9">
           <div style="font-size:0.55rem;color:#94a3b8;font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em">แผนก</div>
-          <div style="font-size:0.72rem;font-weight:700;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.dept||m.location||'—'}</div>
+          <div style="font-size:0.72rem;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.dept||m.location||'—'}</div>
         </div>
         <div style="padding:7px 12px;border-right:1px solid #f1f5f9">
           <div style="font-size:0.55rem;color:#94a3b8;font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em">BTU</div>
-          <div style="font-size:0.72rem;font-weight:700;color:#374151">${m.btu?Number(m.btu).toLocaleString():'—'}</div>
+          <div style="font-size:0.72rem;font-weight:700;color:var(--text2)">${m.btu?Number(m.btu).toLocaleString():'—'}</div>
         </div>
         <div style="padding:7px 12px">
           <div style="font-size:0.55rem;color:#94a3b8;font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em">ค่าซ่อมสะสม</div>
@@ -1390,7 +1390,7 @@ function showBulkVendorEdit() {
   ov.style.cssText = 'position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center';
 
   const card = document.createElement('div');
-  card.style.cssText = 'background:#f8fafc;border-radius:22px 22px 0 0;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1)';
+  card.style.cssText = 'background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1)';
 
   // ── Header ──
   const header = document.createElement('div');
@@ -1421,12 +1421,12 @@ function showBulkVendorEdit() {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:6px">
           <div style="width:20px;height:20px;background:#0f172a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0">1</div>
-          <div style="font-size:0.82rem;font-weight:800;color:#0f172a">เลือกแผนก</div>
+          <div style="font-size:0.82rem;font-weight:800;color:var(--text)">เลือกแผนก</div>
         </div>
         <button id="bve-selall" style="font-size:0.7rem;font-weight:700;color:#c8102e;background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:6px;background:#fff0f2">เลือกทั้งหมด</button>
       </div>
       <input id="bve-search" type="search" placeholder="🔍 ค้นหาแผนก..."
-        style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:white;color:#374151"/>
+        style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;background:var(--card);color:var(--text2)"/>
     </div>
     <div id="bve-dept-list" style="max-height:240px;overflow-y:auto"></div>
     <div id="bve-summary" style="display:none;padding:8px 16px;background:#f0fdf4;border-top:1px solid #bbf7d0;font-size:0.75rem;color:#166534;font-weight:700"></div>`;
@@ -1441,11 +1441,11 @@ function showBulkVendorEdit() {
   step2.innerHTML = `
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
       <div style="width:20px;height:20px;background:#0f172a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900">2</div>
-      <div style="font-size:0.82rem;font-weight:800;color:#0f172a">เลือก Vendor ใหม่</div>
+      <div style="font-size:0.82rem;font-weight:800;color:var(--text)">เลือก Vendor ใหม่</div>
     </div>
     <div id="bve-vendor-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px"></div>
     <input id="bve-other-inp" type="text" placeholder="ระบุชื่อบริษัท..."
-      style="display:none;width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:0.88rem;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:4px"/>`;
+      style="display:none;width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88rem;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:4px"/>`;
   body.appendChild(step2);
 
   // Step 3: Preview
@@ -1458,9 +1458,9 @@ function showBulkVendorEdit() {
 
   // ── Footer ──
   const footer = document.createElement('div');
-  footer.style.cssText = 'padding:10px 16px calc(env(safe-area-inset-bottom,0px)+16px);flex-shrink:0;border-top:1px solid #e5e7eb;background:white;display:flex;gap:8px';
+  footer.style.cssText = 'padding:10px 16px calc(env(safe-area-inset-bottom,0px)+16px);flex-shrink:0;border-top:1px solid #e5e7eb;background:var(--card);display:flex;gap:8px';
   footer.innerHTML = `
-    <button onclick="this.closest('[style*=inset]').remove()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:11px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+    <button onclick="this.closest('[style*=inset]').remove()" style="flex:1;padding:13px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:11px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
     <button id="bve-save" style="flex:2.5;padding:13px;background:#0f172a;color:white;border:none;border-radius:11px;font-size:0.9rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
       บันทึก Vendor
@@ -1531,7 +1531,7 @@ function showBulkVendorEdit() {
   vList.forEach(({v,bg,cl,bd}) => {
     const btn = document.createElement('button');
     btn.dataset.v = v;
-    btn.style.cssText = `padding:10px 6px;background:white;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit;color:#374151;transition:all 0.12s`;
+    btn.style.cssText = `padding:10px 6px;background:var(--card);border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text2);transition:all 0.12s`;
     btn.textContent = v==='OTHER' ? 'อื่นๆ...' : v;
     btn.onclick = () => {
       vGrid.querySelectorAll('button').forEach(b => {
@@ -1595,10 +1595,10 @@ function showNoEquipPopup() {
       ${list.map(m => {
         const eqs = getMachineEqStatus(m);
         return `<div onclick="(function(el){const ov=el.closest('[style*=inset]');if(ov)ov.remove();setTimeout(()=>openMachineSheet('${m.id}'),200);})(this)"
-          style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border-radius:12px;margin-bottom:6px;cursor:pointer;border:1.5px solid #e0e7ff;transition:all 0.15s;box-shadow:0 1px 4px rgba(55,48,163,0.06)"
+          style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:12px;margin-bottom:6px;cursor:pointer;border:1.5px solid #e0e7ff;transition:all 0.15s;box-shadow:0 1px 4px rgba(55,48,163,0.06)"
           onmousedown="this.style.background='#f5f3ff';this.style.transform='scale(0.98)'" onmouseup="this.style.background='white';this.style.transform=''">
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.82rem;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
+            <div style="font-size:0.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
               <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:#0369a1;font-weight:700">${m.serial||m.id.replace('csv_','')}</span>
               ${!eqs.hasEQ?'<span style="background:#fee2e2;color:#991b1b;border-radius:5px;padding:1px 6px;font-size:0.6rem;font-weight:700">❌ EQ</span>':''}
@@ -1640,7 +1640,7 @@ function showDupEqPopup() {
   ov.style.cssText = 'position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;padding:0;animation:fadeIn 0.2s ease';
 
   const card = document.createElement('div');
-  card.style.cssText = 'background:#f8fafc;border-radius:24px 24px 0 0;width:100%;max-width:600px;max-height:88vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1)';
+  card.style.cssText = 'background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:600px;max-height:88vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1)';
 
   // Handle
   const handle = document.createElement('div');
@@ -1655,10 +1655,10 @@ function showDupEqPopup() {
     <div style="display:flex;align-items:center;gap:12px">
       <div style="width:40px;height:40px;background:#c8102e;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;box-shadow:0 4px 12px rgba(200,16,46,0.3)">⚠️</div>
       <div style="flex:1">
-        <div style="font-size:1rem;font-weight:900;color:#0f172a">Equipment No. ซ้ำกัน</div>
+        <div style="font-size:1rem;font-weight:900;color:var(--text)">Equipment No. ซ้ำกัน</div>
         <div style="font-size:0.7rem;color:#64748b;margin-top:2px">${dupGroups.length} กลุ่ม · ${totalMachines} เครื่อง — แตะเพื่อแก้ไข</div>
       </div>
-      <button style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;color:#64748b;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+      <button style="width:32px;height:32px;border-radius:50%;background:var(--bg-2,#f1f5f9);border:none;cursor:pointer;color:#64748b;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     </div>`;
   hdr.querySelector('button').onclick = () => ov.remove();
   card.appendChild(hdr);
@@ -1698,7 +1698,7 @@ function showDupEqPopup() {
       row.style.cssText = `display:flex;align-items:center;gap:10px;padding:10px 14px;background:${mi%2===0?'white':'#fffafa'};${mi<g.machines.length-1?'border-bottom:1px solid #fef2f2':''};cursor:pointer;transition:background 0.12s`;
       row.innerHTML = `
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.82rem;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
+          <div style="font-size:0.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
           <div style="font-size:0.65rem;color:#6b7280;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap">
             <span style="font-family:'JetBrains Mono',monospace;color:#c8102e;font-weight:700">${m.serial||m.id.replace('csv_','')}</span>
             <span>${m.dept||'—'}</span>
@@ -1715,14 +1715,14 @@ function showDupEqPopup() {
     const cmpBar = document.createElement('div');
     cmpBar.style.cssText = 'padding:8px 14px;background:#fff5f6;border-top:1px solid #fecaca';
     const cmpBtn = document.createElement('button');
-    cmpBtn.style.cssText = 'width:100%;padding:8px;background:white;border:1.5px solid #fecaca;border-radius:9px;font-size:0.75rem;font-weight:700;color:#c8102e;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s';
+    cmpBtn.style.cssText = 'width:100%;padding:8px;background:var(--card);border:1.5px solid #fecaca;border-radius:9px;font-size:0.75rem;font-weight:700;color:#c8102e;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s';
     cmpBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> เปรียบเทียบข้อมูล';
     cmpBar.appendChild(cmpBtn);
     groupDiv.appendChild(cmpBar);
 
     // Compare table (hidden)
     const cmpTable = document.createElement('div');
-    cmpTable.style.cssText = 'display:none;overflow-x:auto;background:white;border-top:1px solid #fecaca';
+    cmpTable.style.cssText = 'display:none;overflow-x:auto;background:var(--card);border-top:1px solid #fecaca';
 
     // Build table
     const table = document.createElement('table');
@@ -1756,7 +1756,7 @@ function showDupEqPopup() {
       tr.style.borderBottom = '1px solid #f8fafc';
 
       const tdLabel = document.createElement('td');
-      tdLabel.style.cssText = 'padding:7px 8px;font-size:0.65rem;color:#94a3b8;font-weight:600;white-space:nowrap;vertical-align:top;background:#fafafa';
+      tdLabel.style.cssText = 'padding:7px 8px;font-size:0.65rem;color:#94a3b8;font-weight:600;white-space:nowrap;vertical-align:top;background:var(--bg)';
       tdLabel.textContent = f.label;
       tr.appendChild(tdLabel);
 
@@ -1790,7 +1790,7 @@ function showDupEqPopup() {
 
   // Footer: Export (sticky)
   const footer = document.createElement('div');
-  footer.style.cssText = 'padding:10px 16px 20px;flex-shrink:0;border-top:1px solid #e5e7eb;background:#f8fafc';
+  footer.style.cssText = 'padding:10px 16px 20px;flex-shrink:0;border-top:1px solid #e5e7eb;background:var(--bg)';
   const exportBtn = document.createElement('button');
   exportBtn.style.cssText = 'width:100%;padding:13px;background:#0f172a;color:white;border:none;border-radius:14px;font-size:0.9rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(200,16,46,0.25);transition:transform 0.15s';
   exportBtn.textContent = '📥 Export Excel รายการซ้ำ';
@@ -1874,7 +1874,7 @@ function _showCardPopup({ icon, iconBg, title, subtitle, accentColor, body, extr
   ov.style.cssText = 'position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;padding:0;animation:fadeIn 0.2s ease';
 
   const card = document.createElement('div');
-  card.style.cssText = 'background:#f8fafc;border-radius:24px 24px 0 0;width:100%;max-width:600px;max-height:88vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1)';
+  card.style.cssText = 'background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:600px;max-height:88vh;display:flex;flex-direction:column;animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1)';
 
   card.innerHTML = `
     <!-- Handle -->
@@ -1886,18 +1886,18 @@ function _showCardPopup({ icon, iconBg, title, subtitle, accentColor, body, extr
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:40px;height:40px;background:${iconBg};border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,0.2)">${icon}</div>
         <div style="flex:1">
-          <div style="font-size:1rem;font-weight:900;color:#0f172a">${title}</div>
+          <div style="font-size:1rem;font-weight:900;color:var(--text)">${title}</div>
           <div style="font-size:0.7rem;color:#64748b;margin-top:2px">${subtitle}</div>
         </div>
         <button onclick="this.closest('[style*=inset]').remove()"
-          style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;color:#64748b;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+          style="width:32px;height:32px;border-radius:50%;background:var(--bg-2,#f1f5f9);border:none;cursor:pointer;color:#64748b;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
       </div>
     </div>
     <!-- Body (scrollable) -->
     <div style="overflow-y:auto;flex:1;padding:14px 16px 8px">${body}</div>
     <!-- Footer: Export button (sticky) -->
     ${extraBtn ? `
-    <div style="padding:10px 16px 20px;flex-shrink:0;border-top:1px solid #e5e7eb;background:#f8fafc">
+    <div style="padding:10px 16px 20px;flex-shrink:0;border-top:1px solid #e5e7eb;background:var(--bg)">
       <button onclick="${extraBtn.fn}"
         style="width:100%;padding:13px;background:${iconBg};color:white;border:none;border-radius:14px;font-size:0.9rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,0.18);transition:transform 0.15s"
         onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''">${extraBtn.label}</button>
@@ -2012,7 +2012,7 @@ function renderDeptPickerGrid(depts) {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20V9l6-4v4l6-4v4l6-4v15H2z"/><path d="M6 20v-5h3v5"/><path d="M10 20v-5h3v5"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="14" y1="11" x2="16" y2="11"/><line x1="14" y1="14" x2="16" y2="14"/></svg>
       </div>
       <div style="flex:1;min-width:0;overflow:hidden">
-        <div style="font-size:0.95rem;font-weight:700;color:#0f172a;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d}</div>
+        <div style="font-size:0.95rem;font-weight:700;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d}</div>
         <div style="font-size:0.72rem;color:#94a3b8;margin-top:3px">${cnt} เครื่องแอร์</div>
       </div>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2047,10 +2047,10 @@ function toggleDeptPicker() {
       if (grid) {
         grid.innerHTML = [1,2,3,4].map(() =>
           `<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f1f5f9">
-            <div style="width:40px;height:40px;border-radius:12px;background:#f1f5f9;flex-shrink:0;animation:pulse 1.4s ease-in-out infinite"></div>
+            <div style="width:40px;height:40px;border-radius:12px;background:var(--bg-2,#f1f5f9);flex-shrink:0;animation:pulse 1.4s ease-in-out infinite"></div>
             <div style="flex:1">
-              <div style="height:14px;background:#f1f5f9;border-radius:6px;margin-bottom:6px;width:60%;animation:pulse 1.4s ease-in-out infinite"></div>
-              <div style="height:10px;background:#f1f5f9;border-radius:4px;width:35%;animation:pulse 1.4s ease-in-out infinite"></div>
+              <div style="height:14px;background:var(--bg-2,#f1f5f9);border-radius:6px;margin-bottom:6px;width:60%;animation:pulse 1.4s ease-in-out infinite"></div>
+              <div style="height:10px;background:var(--bg-2,#f1f5f9);border-radius:4px;width:35%;animation:pulse 1.4s ease-in-out infinite"></div>
             </div>
           </div>`
         ).join('') + '<style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}</style>';
@@ -2154,7 +2154,7 @@ function renderMacPickerGrid(machines) {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
       </div>
       <div style="flex:1;min-width:0;overflow:hidden">
-        <div style="font-size:0.92rem;font-weight:700;color:#0f172a;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(lbl)}</div>
+        <div style="font-size:0.92rem;font-weight:700;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(lbl)}</div>
         ${sub ? `<div style="font-size:0.72rem;color:#94a3b8;margin-top:3px">${escapeHtml(sub)}</div>` : ''}
       </div>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2351,9 +2351,9 @@ function openRepairHistory() {
            onmouseenter="this.style.background='#fafafa'" onmouseleave="this.style.background=''"
            onclick="pickHistory('${t.id}')">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
-          <span style="width:20px;height:20px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:800;color:#64748b;flex-shrink:0">${idx+1}</span>
+          <span style="width:20px;height:20px;border-radius:50%;background:var(--bg-2,#f1f5f9);display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:800;color:#64748b;flex-shrink:0">${idx+1}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.8rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem}</div>
+            <div style="font-size:0.8rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem}</div>
           </div>
           <span style="background:${statusBg};color:${statusColor};font-size:0.58rem;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0">${sTH(t.status)}</span>
         </div>
@@ -2428,7 +2428,7 @@ function onNtSearch(q) {
       onmousedown="this.style.background='#fff0f2'" onmouseup="this.style.background='white'" onmouseleave="this.style.background='white'">
       <div style="width:32px;height:32px;background:#c8102e;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem">❄️</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.82rem;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
         <div style="font-size:0.65rem;color:#6b7280;margin-top:1px;display:flex;gap:6px">
           <span style="font-family:monospace;color:#c8102e;font-weight:700">${serial}</span>
           <span>·</span>
@@ -2660,7 +2660,7 @@ async function openMachineSheet(id) {
           h.style.cssText = 'margin-top:5px;background:#fff5f6;border:1px solid #fecaca;border-radius:8px;padding:7px 10px';
           h.innerHTML = `<div style="font-size:0.7rem;font-weight:800;color:#c8102e;margin-bottom:4px">⚠️ Equipment No. นี้ถูกใช้แล้ว ${dups.length} เครื่อง:</div>` +
             dups.slice(0,3).map(x =>
-              `<div style="font-size:0.72rem;color:#374151;padding:2px 0;display:flex;gap:6px;align-items:center">
+              `<div style="font-size:0.72rem;color:var(--text2);padding:2px 0;display:flex;gap:6px;align-items:center">
                 <span style="font-family:monospace;font-weight:700;color:#c8102e;flex-shrink:0">${x.serial||x.id.replace('csv_','')}</span>
                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.name}</span>
                 <span style="color:#9ca3af;flex-shrink:0">${x.dept||''}</span>
@@ -2724,16 +2724,16 @@ function openAddDept() {
   ov.style.cssText = 'position:fixed;inset:0;z-index:19999;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px';
 
   const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:24px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.3)';
+  box.style.cssText = 'background:var(--card);border-radius:24px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.3)';
   box.innerHTML = `
-    <div style="font-size:1rem;font-weight:900;color:#0f172a;margin-bottom:6px">➕ เพิ่มแผนกใหม่</div>
+    <div style="font-size:1rem;font-weight:900;color:var(--text);margin-bottom:6px">➕ เพิ่มแผนกใหม่</div>
     <div style="font-size:0.78rem;color:#94a3b8;margin-bottom:16px">ชื่อแผนก / โซน จะปรากฏใน dropdown</div>
     <input id="_new_dept_input" type="text" placeholder="เช่น PM#1 Stock, WH Production"
       style="width:100%;padding:13px 14px;border:2px solid #e5e7eb;border-radius:12px;font-size:0.95rem;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:14px;transition:border-color 0.15s"
       onfocus="this.style.borderColor='#c8102e'" onblur="this.style.borderColor='#e5e7eb'"/>
     <div id="_new_dept_err" style="display:none;color:#c8102e;font-size:0.75rem;font-weight:700;margin-bottom:10px"></div>
     <div style="display:flex;gap:8px">
-      <button id="_add_dept_cancel" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+      <button id="_add_dept_cancel" style="flex:1;padding:13px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
       <button id="_add_dept_ok" style="flex:2;padding:13px;background:linear-gradient(135deg,#c8102e,#e63950);color:white;border:none;border-radius:12px;font-size:0.9rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(200,16,46,0.35)">✓ เพิ่มแผนก</button>
     </div>`;
 
@@ -2985,10 +2985,10 @@ function saveMachine() {
     );
     if (dupEq.length > 0) {
       const dupRows = dupEq.slice(0,3).map(x =>
-        `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-radius:8px;margin-bottom:5px;border:1px solid #fecaca">
+        `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--card);border-radius:8px;margin-bottom:5px;border:1px solid #fecaca">
           <div style="width:7px;height:7px;background:#c8102e;border-radius:50%;flex-shrink:0"></div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.82rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.name}</div>
+            <div style="font-size:0.82rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.name}</div>
             <div style="font-size:0.7rem;color:#6b7280;margin-top:1px">${x.serial||x.id.replace('csv_','')} · ${x.dept||'—'}</div>
           </div>
         </div>`
@@ -3181,7 +3181,7 @@ function openMachineRequestsPage() {
         ${pending.length === 0 ? `
           <div style="text-align:center;padding:56px 20px">
             <div style="width:72px;height:72px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin:0 auto 16px;box-shadow:0 8px 24px rgba(16,185,129,0.2)">✅</div>
-            <div style="font-size:1rem;font-weight:800;color:#374151;margin-bottom:6px">ไม่มีคำขอที่รอดำเนินการ</div>
+            <div style="font-size:1rem;font-weight:800;color:var(--text2);margin-bottom:6px">ไม่มีคำขอที่รอดำเนินการ</div>
             <div style="font-size:0.78rem;color:#94a3b8;line-height:1.5">เมื่อช่างส่งคำขอเพิ่มเครื่องแอร์ใหม่<br>จะแสดงรายการที่นี่</div>
           </div>` : `
           <div style="font-size:0.65rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px">
@@ -3189,7 +3189,7 @@ function openMachineRequestsPage() {
             รอการอนุมัติ (${pending.length})
           </div>
           ${pending.map(r => {
-            const vc = vcStyle[r.data.vendor] || 'background:#f1f5f9;color:#475569';
+            const vc = vcStyle[r.data.vendor] || 'background:var(--bg-2,#f1f5f9);color:#475569';
             const fields = [
               {icon:'🏢',label:'แผนก',val:r.data.dept},
               {icon:'🌡️',label:'BTU',val:r.data.btu?Number(r.data.btu).toLocaleString()+' BTU':null},
@@ -3199,7 +3199,7 @@ function openMachineRequestsPage() {
               {icon:'📍',label:'Location',val:r.data.funcLoc||r.data.location||r.data.dept},
             ].filter(f=>f.val);
             return `
-            <div style="background:white;border-radius:18px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid #f1f5f9">
+            <div style="background:var(--card);border-radius:18px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid #f1f5f9">
               <!-- Card top stripe -->
               <div style="height:3px;background:linear-gradient(90deg,#c8102e,#e63950,#ff8c69)"></div>
               <!-- Header -->
@@ -3207,9 +3207,9 @@ function openMachineRequestsPage() {
                 <div style="display:flex;align-items:flex-start;gap:12px">
                   <div style="width:50px;height:50px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0">❄️</div>
                   <div style="flex:1;min-width:0">
-                    <div style="font-size:0.95rem;font-weight:800;color:#0f172a;line-height:1.3;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.data.name||'ไม่ระบุชื่อ'}</div>
+                    <div style="font-size:0.95rem;font-weight:800;color:var(--text);line-height:1.3;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.data.name||'ไม่ระบุชื่อ'}</div>
                     <div style="display:flex;gap:5px;flex-wrap:wrap">
-                      <span style="font-family:monospace;font-size:0.65rem;background:#f1f5f9;color:#475569;border-radius:6px;padding:2px 8px;font-weight:700">${r.serial||'—'}</span>
+                      <span style="font-family:monospace;font-size:0.65rem;background:var(--bg-2,#f1f5f9);color:#475569;border-radius:6px;padding:2px 8px;font-weight:700">${r.serial||'—'}</span>
                       ${r.data.vendor?`<span style="font-size:0.65rem;border-radius:6px;padding:2px 8px;font-weight:800;${vc}">${r.data.vendor}</span>`:''}
                       <span style="font-size:0.62rem;background:#fef9c3;color:#92400e;border-radius:6px;padding:2px 8px;font-weight:700">⏳ รอ Admin</span>
                     </div>
@@ -3217,20 +3217,20 @@ function openMachineRequestsPage() {
                 </div>
               </div>
               <!-- Fields grid -->
-              ${fields.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f1f5f9;border-top:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9">
-                ${fields.map(f=>`<div style="background:white;padding:8px 12px;display:flex;align-items:flex-start;gap:7px">
+              ${fields.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bg-2,#f1f5f9);border-top:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9">
+                ${fields.map(f=>`<div style="background:var(--card);padding:8px 12px;display:flex;align-items:flex-start;gap:7px">
                   <span style="font-size:0.85rem;flex-shrink:0;margin-top:1px">${f.icon}</span>
                   <div style="min-width:0">
                     <div style="font-size:0.55rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:1px">${f.label}</div>
-                    <div style="font-size:0.74rem;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.val}</div>
+                    <div style="font-size:0.74rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.val}</div>
                   </div>
                 </div>`).join('')}
               </div>`:''}
               <!-- Requester -->
-              <div style="margin:10px 14px;background:#f8fafc;border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:8px">
+              <div style="margin:10px 14px;background:var(--bg);border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:8px">
                 <div style="width:32px;height:32px;background:linear-gradient(135deg,#e0f2fe,#bae6fd);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0">👷</div>
                 <div style="flex:1;min-width:0">
-                  <div style="font-size:0.75rem;font-weight:700;color:#1e293b">${r.requestedByName||'—'}</div>
+                  <div style="font-size:0.75rem;font-weight:700;color:var(--text)">${r.requestedByName||'—'}</div>
                   <div style="font-size:0.62rem;color:#94a3b8">${(r.requestedAt||'').substring(0,16).replace('T',' ')}</div>
                 </div>
               </div>
@@ -3243,7 +3243,7 @@ function openMachineRequestsPage() {
                   ✅ อนุมัติ
                 </button>
                 <button onclick="rejectMachineReq('${r.id}')"
-                  style="flex:1;padding:13px;background:white;color:#c8102e;border:2px solid #fecaca;border-radius:12px;font-size:0.85rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;touch-action:manipulation"
+                  style="flex:1;padding:13px;background:var(--card);color:#c8102e;border:2px solid #fecaca;border-radius:12px;font-size:0.85rem;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;touch-action:manipulation"
                   onmousedown="this.style.background='#fff0f2'" onmouseup="this.style.background='white'" ontouchend="this.style.background='white'">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   ปฏิเสธ
@@ -3257,10 +3257,10 @@ function openMachineRequestsPage() {
             <div style="width:4px;height:14px;background:#16a34a;border-radius:2px"></div>
             อนุมัติล่าสุด
           </div>
-          ${approved.map(r=>`<div style="background:white;border:1.5px solid #f0fdf4;border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+          ${approved.map(r=>`<div style="background:var(--card);border:1.5px solid #f0fdf4;border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
             <div style="width:38px;height:38px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">✅</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.8rem;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.data.name||'—'}</div>
+              <div style="font-size:0.8rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.data.name||'—'}</div>
               <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">${r.requestedByName||'—'} · ${(r.approvedAt||'').substring(0,10)}</div>
             </div>
             <span style="background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;border-radius:8px;padding:4px 10px;font-size:0.65rem;font-weight:800;flex-shrink:0">อนุมัติแล้ว</span>
@@ -3272,10 +3272,10 @@ function openMachineRequestsPage() {
             <div style="width:4px;height:14px;background:#c8102e;border-radius:2px"></div>
             ปฏิเสธล่าสุด
           </div>
-          ${rejected.map(r=>`<div style="background:white;border:1.5px solid #fff0f2;border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+          ${rejected.map(r=>`<div style="background:var(--card);border:1.5px solid #fff0f2;border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
             <div style="width:38px;height:38px;background:linear-gradient(135deg,#fee2e2,#fecaca);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">❌</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.8rem;font-weight:700;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.data.name||'—'}</div>
+              <div style="font-size:0.8rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.data.name||'—'}</div>
               <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">${r.requestedByName||'—'} · ${(r.rejectedAt||'').substring(0,10)}</div>
             </div>
             <span style="background:#fff0f2;color:#c8102e;border:1.5px solid #fecaca;border-radius:8px;padding:4px 10px;font-size:0.65rem;font-weight:800;flex-shrink:0">ปฏิเสธ</span>
@@ -3443,7 +3443,7 @@ function openNewMachinesTable() {
 
       return `
       <div onclick="document.getElementById('_nmtable').remove();setTimeout(()=>openMachineDetail('${m.id}'),120)"
-        style="background:white;border-radius:14px;margin-bottom:8px;overflow:hidden;border:1px solid ${hasIssue?'#fecaca':'#e5e7eb'};cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.15s"
+        style="background:var(--card);border-radius:14px;margin-bottom:8px;overflow:hidden;border:1px solid ${hasIssue?'#fecaca':'#e5e7eb'};cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.15s"
         onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';this.style.transform='translateY(-1px)'"
         onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.05)';this.style.transform=''">
 
@@ -3455,7 +3455,7 @@ function openNewMachinesTable() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${hasIssue?'#c8102e':'#15803d'}" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||'—'}</div>
+            <div style="font-size:0.85rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||'—'}</div>
             <div style="display:flex;align-items:center;gap:4px;margin-top:2px;flex-wrap:nowrap;overflow:hidden">
               ${m.vendor?`<span style="background:${vc.bg};color:${vc.color};border:1px solid ${vc.border};border-radius:4px;padding:0 5px;font-size:0.58rem;font-weight:800;flex-shrink:0">${m.vendor}</span>`:''}
               <span style="font-size:0.62rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.serial||m.id}</span>
@@ -3473,11 +3473,11 @@ function openNewMachinesTable() {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid #f8fafc">
           <div style="padding:5px 10px;border-right:1px solid #f8fafc">
             <div style="font-size:0.48rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">แผนก</div>
-            <div style="font-size:0.65rem;font-weight:700;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.dept||m.location||'—'}</div>
+            <div style="font-size:0.65rem;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.dept||m.location||'—'}</div>
           </div>
           <div style="padding:5px 10px;border-right:1px solid #f8fafc">
             <div style="font-size:0.48rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">BTU</div>
-            <div style="font-size:0.65rem;font-weight:700;color:#374151">${m.btu?Number(m.btu).toLocaleString():'—'}</div>
+            <div style="font-size:0.65rem;font-weight:700;color:var(--text2)">${m.btu?Number(m.btu).toLocaleString():'—'}</div>
           </div>
           <div style="padding:5px 10px;border-right:1px solid #f8fafc">
             <div style="font-size:0.48rem;color:${hasFL?'#0369a1':'#f59e0b'};font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">FL</div>
@@ -3529,9 +3529,9 @@ function openNewMachinesTable() {
     const end   = Math.min(currentPage*PAGE_SIZE, list.length);
     return `
     <div style="padding:8px 12px;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap">
-      <button onclick="window._nmGoPage(${currentPage-1})" ${currentPage<=1?'disabled':''} style="min-width:32px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;background:white;color:${currentPage<=1?'#d1d5db':'#374151'};font-size:1rem;cursor:${currentPage<=1?'default':'pointer'};display:flex;align-items:center;justify-content:center">‹</button>
+      <button onclick="window._nmGoPage(${currentPage-1})" ${currentPage<=1?'disabled':''} style="min-width:32px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;background:var(--card);color:${currentPage<=1?'#d1d5db':'#374151'};font-size:1rem;cursor:${currentPage<=1?'default':'pointer'};display:flex;align-items:center;justify-content:center">‹</button>
       ${pages.join('')}
-      <button onclick="window._nmGoPage(${currentPage+1})" ${currentPage>=total?'disabled':''} style="min-width:32px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;background:white;color:${currentPage>=total?'#d1d5db':'#374151'};font-size:1rem;cursor:${currentPage>=total?'default':'pointer'};display:flex;align-items:center;justify-content:center">›</button>
+      <button onclick="window._nmGoPage(${currentPage+1})" ${currentPage>=total?'disabled':''} style="min-width:32px;height:32px;border-radius:8px;border:1.5px solid #e2e8f0;background:var(--card);color:${currentPage>=total?'#d1d5db':'#374151'};font-size:1rem;cursor:${currentPage>=total?'default':'pointer'};display:flex;align-items:center;justify-content:center">›</button>
       <span style="font-size:0.65rem;color:#94a3b8;width:100%;text-align:center;margin-top:2px">${start}–${end} จาก ${list.length} รายการ</span>
     </div>`;
   };
@@ -3593,12 +3593,12 @@ function openNewMachinesTable() {
     </div>
 
     <!-- ── Pagination top ── -->
-    <div id="_nmtable_pagi_top" style="background:white;border-bottom:1px solid #f1f5f9;padding:0 12px;flex-shrink:0">
+    <div id="_nmtable_pagi_top" style="background:var(--card);border-bottom:1px solid #f1f5f9;padding:0 12px;flex-shrink:0">
     </div>
 
     <!-- ── Cards body ── -->
-    <div style="flex:1;overflow-y:auto;background:#f1f5f9">
-      <div id="_nmtable_pagi" style="background:white;border-bottom:1px solid #f1f5f9"></div>
+    <div style="flex:1;overflow-y:auto;background:var(--bg-2,#f1f5f9)">
+      <div id="_nmtable_pagi" style="background:var(--card);border-bottom:1px solid #f1f5f9"></div>
       <div id="_nmtable_body" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+12px)">
         ${list.length === 0
           ? `<div style="text-align:center;padding:60px 20px">

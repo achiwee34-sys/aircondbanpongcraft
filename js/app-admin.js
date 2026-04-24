@@ -462,13 +462,13 @@ function renderPMPageDeptList() {
   });
   const depts = Object.entries(deptCount).sort((a,b) => b[1]-a[1]);
   list.innerHTML = depts.map(([dept, count]) => `
-    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:12px;border:1.5px solid #e5e7eb;cursor:pointer"
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:12px;border:1.5px solid var(--border);cursor:pointer"
       onmouseover="this.style.borderColor='#38bdf8'" onmouseout="if(!this.querySelector('input').checked)this.style.borderColor='#e5e7eb'">
       <input type="checkbox" class="pmpage-dept-cb" data-dept="${dept}"
         style="width:17px;height:17px;accent-color:#0369a1;flex-shrink:0"
         onchange="pmPageUpdateCheck(this)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.85rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
+        <div style="font-size:0.85rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <div style="background:#0369a1;color:white;border-radius:99px;padding:2px 10px;font-size:0.72rem;font-weight:800">${count}</div>
@@ -512,10 +512,10 @@ function renderPMPageHistory() {
     const label = e.type==='clean-major' ? 'ล้างใหญ่' : 'ล้างย่อย';
     const d = new Date(e.date);
     const dateStr = d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;border:1px solid #f1f5f9">
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid #f1f5f9">
       <div style="font-size:1.2rem;flex-shrink:0">${icon}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.75rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.dept||e.title}</div>
+        <div style="font-size:0.75rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.dept||e.title}</div>
         <div style="font-size:0.62rem;color:#94a3b8;margin-top:1px">${label} · ${dateStr}${e.tech?' · '+e.tech:''}</div>
       </div>
       <div style="font-size:0.65rem;background:${e.type==='clean-major'?'#eff6ff':'#f0fdf4'};color:${e.type==='clean-major'?'#0369a1':'#059669'};border-radius:99px;padding:2px 8px;font-weight:700;flex-shrink:0">${e.machineCount||''}${e.machineCount?' เครื่อง':''}</div>
@@ -806,7 +806,7 @@ function _renderDeptQRBody() {
               const airId = m.id.replace(/^csv_/,'');
               return `
               <div onclick="showMachineQR('${m.id}')"
-                style="width:${ITEM_W}px;background:white;border-radius:10px;padding:7px 5px 5px;text-align:center;border:1.5px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;box-sizing:border-box;transition:all 0.15s"
+                style="width:${ITEM_W}px;background:var(--card);border-radius:10px;padding:7px 5px 5px;text-align:center;border:1.5px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;box-sizing:border-box;transition:all 0.15s"
                 ontouchstart="this.style.borderColor='#7c3aed';this.style.transform='scale(0.93)'"
                 ontouchend="this.style.borderColor='#e5e7eb';this.style.transform=''">
                 <div style="width:72px;height:72px;margin:0 auto 4px;border-radius:7px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center;position:relative">
@@ -818,7 +818,7 @@ function _renderDeptQRBody() {
                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
                     onload="this.style.opacity='1'"
                   />
-                  <div style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;background:#f8fafc;border-radius:6px">
+                  <div style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);border-radius:6px">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
                     <span style="font-size:0.45rem;color:#cbd5e1;margin-top:3px">ต้องการเน็ต</span>
                   </div>
@@ -856,11 +856,11 @@ function printDeptQRA4(deptKey) {
       ${row.map(m => {
         const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=${QR_SIZE}x${QR_SIZE}&data=' + encodeURIComponent(m.id) + '&margin=3&format=png';
         const airId = m.id.replace(/^csv_/,'');
-        return `<td style="padding:6px;text-align:center;border:1px solid #e5e7eb;vertical-align:top;width:${Math.floor(170/COLS_A4)}mm">
+        return `<td style="padding:6px;text-align:center;border:1px solid var(--border);vertical-align:top;width:${Math.floor(170/COLS_A4)}mm">
           <img src="${qrSrc}" width="${QR_SIZE}" height="${QR_SIZE}" style="display:block;margin:0 auto 3px"/>
           <div style="font-family:monospace;font-size:7pt;font-weight:900;color:#c8102e;margin-bottom:1px">${airId}</div>
           <div style="font-family:monospace;font-size:6pt;font-weight:700;color:#7c3aed;margin-bottom:1px">${m.serial||''}</div>
-          <div style="font-size:6pt;color:#374151;font-weight:600;line-height:1.3">${m.name||''}</div>
+          <div style="font-size:6pt;color:var(--text2);font-weight:600;line-height:1.3">${m.name||''}</div>
           <div style="font-size:5.5pt;color:#94a3b8">${m.dept||m.location||''}</div>
         </td>`;
       }).join('')}
@@ -878,7 +878,7 @@ function printDeptQRA4(deptKey) {
   .header { display:flex; align-items:center; justify-content:space-between; padding:8px 0 6px; border-bottom:2px solid #c8102e; margin-bottom:10px; }
   .logo-block { display:flex; align-items:center; gap:8px; }
   .logo-sq { width:32px; height:32px; background:#0a0a0a; border-radius:6px; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; font-weight:900; }
-  .title-main { font-size:13pt; font-weight:900; color:#0f172a; }
+  .title-main { font-size:13pt; font-weight:900; color:var(--text); }
   .title-sub { font-size:7pt; color:#94a3b8; margin-top:1px; }
   .dept-badge { background:#7c3aed; color:white; border-radius:6px; padding:4px 12px; font-size:9pt; font-weight:800; }
   .meta { font-size:7pt; color:#94a3b8; text-align:right; margin-top:2px; }
@@ -911,7 +911,7 @@ function printDeptQRA4(deptKey) {
 </div>
 <div style="text-align:center;margin-top:12px">
   <button onclick="window.print()" style="padding:8px 24px;background:#7c3aed;color:white;border:none;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;font-family:inherit">🖨️ พิมพ์ A4</button>
-  <button onclick="window.close()" style="padding:8px 24px;background:#f1f5f9;color:#374151;border:none;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;font-family:inherit;margin-left:8px">ปิด</button>
+  <button onclick="window.close()" style="padding:8px 24px;background:var(--bg-2,#f1f5f9);color:var(--text2);border:none;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;font-family:inherit;margin-left:8px">ปิด</button>
 </div>
 </body></html>`);
   win.document.close();

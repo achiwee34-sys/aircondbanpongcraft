@@ -177,17 +177,17 @@ function openPhotoAfterSheet() {
 
   const sheet = document.createElement('div');
   sheet.id = '_photo-action-sheet';
-  sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:white;border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);font-family:inherit;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
+  sheet.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:var(--card);border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px)+16px);font-family:inherit;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
   sheet.innerHTML = `
     <div style="width:40px;height:4px;background:#e2e8f0;border-radius:2px;margin:0 auto 16px"></div>
-    <div style="font-size:0.85rem;font-weight:800;color:#374151;margin-bottom:14px;text-align:center">เลือกรูปหลังซ่อม</div>
+    <div style="font-size:0.85rem;font-weight:800;color:var(--text2);margin-bottom:14px;text-align:center">เลือกรูปหลังซ่อม</div>
     <button id="_ps-cam" style="width:100%;padding:16px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;font-size:0.92rem;font-weight:700;color:#15803d;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;touch-action:manipulation">
       <span style="font-size:1.4rem">📷</span> ถ่ายรูป
     </button>
     <button id="_ps-gal" style="width:100%;padding:16px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:14px;font-size:0.92rem;font-weight:700;color:#0369a1;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;touch-action:manipulation">
       <span style="font-size:1.4rem">🖼️</span> เลือกจากคลังรูป
     </button>
-    <button id="_ps-cancel" style="width:100%;padding:14px;background:white;border:1.5px solid #e2e8f0;border-radius:14px;font-size:0.88rem;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit;touch-action:manipulation">ยกเลิก</button>`;
+    <button id="_ps-cancel" style="width:100%;padding:14px;background:var(--card);border:1.5px solid #e2e8f0;border-radius:14px;font-size:0.88rem;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit;touch-action:manipulation">ยกเลิก</button>`;
 
   document.body.appendChild(ov);
   document.body.appendChild(sheet);
@@ -306,7 +306,7 @@ async function submitTicket() { // PATCH v67
     const jobList = existingJobs.slice(0,3).map(j =>
       `<div style="display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid #f1f5f9">
         <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;font-weight:800;color:#94a3b8">${j.id}</span>
-        <span style="flex:1;font-size:0.75rem;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${j.problem}</span>
+        <span style="flex:1;font-size:0.75rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${j.problem}</span>
         <span style="font-size:0.62rem;color:#e65100;font-weight:700;white-space:nowrap">${statusTH[j.status]||j.status}</span>
       </div>`
     ).join('');
@@ -315,8 +315,8 @@ async function submitTicket() { // PATCH v67
       icon: '⚠️',
       title: 'มีงานค้างอยู่แล้ว!',
       color: '#e65100',
-      msg: `<strong style="color:#0f172a">${m?.name||'เครื่องนี้'}</strong> มีงานซ่อมค้างอยู่ <strong style="color:#e65100">${existingJobs.length} งาน</strong><br>
-        <div style="margin-top:10px;text-align:left;background:#f8fafc;border-radius:10px;padding:4px 10px">${jobList}</div>
+      msg: `<strong style="color:var(--text)">${m?.name||'เครื่องนี้'}</strong> มีงานซ่อมค้างอยู่ <strong style="color:#e65100">${existingJobs.length} งาน</strong><br>
+        <div style="margin-top:10px;text-align:left;background:var(--bg);border-radius:10px;padding:4px 10px">${jobList}</div>
         <div style="margin-top:10px;font-size:0.8rem;color:#64748b">ต้องการแจ้งงานใหม่เพิ่มเติมหรือไม่?</div>`,
       btnOk: '➕ แจ้งงานใหม่เพิ่ม',
       btnCancel: '← ดูงานเดิมก่อน',
@@ -414,7 +414,7 @@ async function _doSubmitTicket(mid, prob) {
     icon: '✅',
     title: 'ส่งงานแจ้งซ่อมแล้ว!',
     color: '#16a34a',
-    msg: `เลขที่ใบงาน <strong style="color:#0f172a;font-family:monospace">${tid}</strong><br>
+    msg: `เลขที่ใบงาน <strong style="color:var(--text);font-family:monospace">${tid}</strong><br>
       <span style="font-size:0.82rem;color:#64748b">${prob} · ${escapeHtml(m.name)}</span><br>
       <span style="font-size:0.78rem;color:#22c55e;font-weight:600">ระบบแจ้ง Admin แล้ว</span>`,
     btnOk: '🏠 กลับหน้าหลัก',
@@ -510,7 +510,7 @@ function openAssignSheet(tid) {
           ${u.dept||'ช่างเทคนิค'}
         </div>
         <!-- Workload bar -->
-        <div style="background:#f1f5f9;border-radius:99px;height:5px;overflow:hidden">
+        <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:5px;overflow:hidden">
           <div style="height:100%;width:${wCfg.barW};background:${wCfg.bar};border-radius:99px;transition:width 0.4s ease"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:3px">
@@ -774,7 +774,7 @@ function openPOForm(tid) {
                 <div style="font-size:0.7rem;color:#b91c1c;margin-top:2px">ชื่ออะไหล่ / จำนวน / ราคา ต้องครบทุกรายการ</div>
               </div>
             </div>
-            <div style="background:white;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+            <div style="background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:10px">
               ${techRows.map((r,i)=>{
                 const missingFields = [];
                 if(!r.name?.trim()) missingFields.push('ชื่ออะไหล่');
@@ -783,7 +783,7 @@ function openPOForm(tid) {
                 const ok = missingFields.length === 0;
                 return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;${i>0?'border-top:1px solid #f8fafc':''}">
                   <span style="width:20px;height:20px;border-radius:6px;background:${ok?'#dcfce7':'#fee2e2'};color:${ok?'#16a34a':'#dc2626'};font-size:0.7rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</span>
-                  <span style="flex:1;font-size:0.78rem;font-weight:600;color:#374151">${r.name||'(ไม่มีชื่อ)'}</span>
+                  <span style="flex:1;font-size:0.78rem;font-weight:600;color:var(--text2)">${r.name||'(ไม่มีชื่อ)'}</span>
                   ${!ok?`<span style="font-size:0.62rem;color:#dc2626;font-weight:700">ขาด: ${missingFields.join(', ')}</span>`:'<span style="font-size:0.68rem;color:#16a34a;font-weight:700">✓ ครบ</span>'}
                 </div>`;
               }).join('')}
@@ -919,13 +919,13 @@ function confirmSavePOForm() {
   ov.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px';
 
   const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:24px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.25);animation:popIn 0.22s cubic-bezier(0.34,1.56,0.64,1)';
+  box.style.cssText = 'background:var(--card);border-radius:24px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.25);animation:popIn 0.22s cubic-bezier(0.34,1.56,0.64,1)';
 
   const itemRows = rows.map((r,i) => `
     <div style="display:flex;align-items:center;gap:10px;padding:9px 0;${i>0?'border-top:1px solid #f1f5f9':''}">
       <div style="width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,#e65100,#c2410c);color:white;font-size:0.58rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.82rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</div>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</div>
         <div style="font-size:0.68rem;color:#94a3b8;margin-top:1px">×${r.qty||1} ชิ้น${r.pr?` · <span style="color:#e65100;font-weight:700">PR: ${r.pr}</span>`:''}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
@@ -982,7 +982,7 @@ function confirmSavePOForm() {
     <!-- Buttons -->
     <div style="display:flex;gap:8px;padding:0 18px 20px">
       <button onclick="document.getElementById('_po_confirm_modal').remove()"
-        style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:14px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s"
+        style="flex:1;padding:13px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:14px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s"
         onmousedown="this.style.background='#e2e8f0'" onmouseup="this.style.background='#f1f5f9'">
         ยกเลิก
       </button>
@@ -1147,7 +1147,7 @@ function buildPORow(i) {
     const btnMinus = document.createElement('button');
     btnMinus.type = 'button';
     btnMinus.textContent = '−';
-    btnMinus.style.cssText = 'width:26px;height:26px;border-radius:7px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151;line-height:1;-webkit-tap-highlight-color:transparent';
+    btnMinus.style.cssText = 'width:26px;height:26px;border-radius:7px;background:var(--bg-2,#f1f5f9);border:1px solid var(--border);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--text2);line-height:1;-webkit-tap-highlight-color:transparent';
     btnMinus.addEventListener('click', () => {
       let v = Math.max(1, (_poRows[i].qty||1) - 1);
       _poRows[i].qty = v; inQty.value = v; updatePORowTotal(i);
@@ -1155,7 +1155,7 @@ function buildPORow(i) {
     const btnPlus = document.createElement('button');
     btnPlus.type = 'button';
     btnPlus.textContent = '+';
-    btnPlus.style.cssText = 'width:26px;height:26px;border-radius:7px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151;line-height:1;-webkit-tap-highlight-color:transparent';
+    btnPlus.style.cssText = 'width:26px;height:26px;border-radius:7px;background:var(--bg-2,#f1f5f9);border:1px solid var(--border);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--text2);line-height:1;-webkit-tap-highlight-color:transparent';
     btnPlus.addEventListener('click', () => {
       let v = Math.min(9999, (_poRows[i].qty||1) + 1);
       _poRows[i].qty = v; inQty.value = v; updatePORowTotal(i);
@@ -1496,10 +1496,10 @@ function openRepairPicker() {
     </div>
 
     <!-- Group filter bar -->
-    <div style="flex-shrink:0;background:white;border-bottom:2px solid #f1f5f9;padding:8px 14px">
+    <div style="flex-shrink:0;background:var(--card);border-bottom:2px solid #f1f5f9;padding:8px 14px">
       <div style="position:relative">
         <select id="rp-grp-select" onchange="window._rpSetGrp(this.value==='null'?null:parseInt(this.value))"
-          style="width:100%;padding:10px 36px 10px 14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;color:#0f172a;font-size:0.85rem;font-weight:700;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none">
+          style="width:100%;padding:10px 36px 10px 14px;background:var(--bg);border:1.5px solid #e2e8f0;border-radius:12px;color:var(--text);font-size:0.85rem;font-weight:700;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none">
         </select>
         <div style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:0.75rem">▼</div>
       </div>
@@ -1509,9 +1509,9 @@ function openRepairPicker() {
     <div id="rp-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:8px 0 16px"></div>
 
     <!-- Footer -->
-    <div style="padding:14px 20px calc(var(--nav-h,56px) + env(safe-area-inset-bottom,0px) + 8px);background:white;border-top:2px solid #f1f5f9;flex-shrink:0;display:flex;gap:14px;align-items:center;box-shadow:0 -6px 24px rgba(0,0,0,0.08)">
+    <div style="padding:14px 20px calc(var(--nav-h,56px) + env(safe-area-inset-bottom,0px) + 8px);background:var(--card);border-top:2px solid #f1f5f9;flex-shrink:0;display:flex;gap:14px;align-items:center;box-shadow:0 -6px 24px rgba(0,0,0,0.08)">
       <div id="rp-footer-summary" style="flex:1;min-width:0;padding-left:4px">
-        <div id="rp-footer-count" style="font-size:0.82rem;font-weight:800;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div id="rp-footer-count" style="font-size:0.82rem;font-weight:800;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
         <div id="rp-footer-price" style="font-size:1.05rem;font-weight:900;color:#047857;margin-top:1px"></div>
       </div>
       <button id="rp-done" style="padding:16px 32px;background:linear-gradient(135deg,#c8102e,#e63950);color:white;border:none;border-radius:16px;font-size:1rem;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(200,16,46,.45);touch-action:manipulation;white-space:nowrap;letter-spacing:-0.01em;margin-right:4px">
@@ -1567,16 +1567,16 @@ function openRepairPicker() {
         groups.forEach(g => { const it=g.items?.find(i=>i.name===name); if(it){ gColor=grpColors[groups.indexOf(g)%grpColors.length]; gIcon=g.icon||'🔧'; } });
         const safe = name.replace(/'/g,"\'");
         const shortName = name.length > 16 ? name.slice(0,16)+'…' : name;
-        return `<div style="flex-shrink:0;background:white;border:1.5px solid ${gColor}40;border-radius:20px;padding:5px 8px 5px 10px;display:flex;align-items:center;gap:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);white-space:nowrap">
+        return `<div style="flex-shrink:0;background:var(--card);border:1.5px solid ${gColor}40;border-radius:20px;padding:5px 8px 5px 10px;display:flex;align-items:center;gap:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);white-space:nowrap">
           <span style="font-size:0.88rem">${gIcon}</span>
           <div style="min-width:0">
-            <div style="font-size:0.72rem;font-weight:800;color:#0f172a">${shortName}</div>
+            <div style="font-size:0.72rem;font-weight:800;color:var(--text)">${shortName}</div>
             ${price>0 ? `<div style="font-size:0.6rem;color:${gColor};font-weight:700">฿${(price*qty).toLocaleString()}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:2px;margin-left:2px">
-            <button onclick="window.rpAdjust('${safe}',-1)" style="width:22px;height:22px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:0.9rem;font-weight:900;color:#374151;display:flex;align-items:center;justify-content:center;touch-action:manipulation">−</button>
+            <button onclick="window.rpAdjust('${safe}',-1)" style="width:22px;height:22px;border-radius:6px;background:var(--bg-2,#f1f5f9);border:1px solid var(--border);cursor:pointer;font-size:0.9rem;font-weight:900;color:var(--text2);display:flex;align-items:center;justify-content:center;touch-action:manipulation">−</button>
             <span style="font-size:0.72rem;font-weight:900;color:${gColor};min-width:18px;text-align:center">×${qty}</span>
-            <button onclick="window.rpAdjust('${safe}',1)" style="width:22px;height:22px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:0.9rem;font-weight:900;color:#374151;display:flex;align-items:center;justify-content:center;touch-action:manipulation">+</button>
+            <button onclick="window.rpAdjust('${safe}',1)" style="width:22px;height:22px;border-radius:6px;background:var(--bg-2,#f1f5f9);border:1px solid var(--border);cursor:pointer;font-size:0.9rem;font-weight:900;color:var(--text2);display:flex;align-items:center;justify-content:center;touch-action:manipulation">+</button>
           </div>
           <button onclick="window.rpAdjust('${safe}',-999)" style="width:20px;height:20px;border-radius:50%;background:#fee2e2;border:none;cursor:pointer;color:#dc2626;font-size:0.65rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation;margin-left:1px">✕</button>
         </div>`;
@@ -1704,7 +1704,7 @@ function openRepairPicker() {
 
       // Group section container
       const section = document.createElement('div');
-      section.style.cssText = 'margin:0 6px 12px;background:white;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1.5px solid '+grpColor+'22';
+      section.style.cssText = 'margin:0 6px 12px;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1.5px solid '+grpColor+'22';
 
       // Group header — sticky สีหมวด
       const selCnt = items.filter(it=>selectedMap[it.name]).length;
@@ -1713,7 +1713,7 @@ function openRepairPicker() {
       grpHdr.innerHTML = `
         <div style="width:36px;height:36px;background:${grpColor};border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;box-shadow:0 3px 10px ${grpColor}55">${icon||'📋'}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.88rem;font-weight:900;color:#0f172a;letter-spacing:-0.01em">${label}</div>
+          <div style="font-size:0.88rem;font-weight:900;color:var(--text);letter-spacing:-0.01em">${label}</div>
           <div style="font-size:0.6rem;color:#94a3b8;margin-top:1px;font-weight:600">${items.length} รายการ</div>
         </div>
         ${selCnt > 0 ? `<span style="background:${grpColor};color:white;border-radius:99px;padding:4px 12px;font-size:0.62rem;font-weight:900;box-shadow:0 2px 8px ${grpColor}55;display:flex;align-items:center;gap:4px"><span style="font-size:0.7rem">✓</span> ${selCnt} เลือก</span>` : `<span style="background:${grpColor}15;color:${grpColor};border-radius:99px;padding:4px 10px;font-size:0.6rem;font-weight:700">${items.length} รายการ</span>`}`;
@@ -1721,7 +1721,7 @@ function openRepairPicker() {
 
       // Items — 2-col grid redesign: card ใหญ่ขึ้น icon ชัด กดง่าย
       const grid = document.createElement('div');
-      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f1f5f9';
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bg-2,#f1f5f9)';
       items.forEach((it, idx) => {
         const qty = selectedMap[it.name]||0;
         const price = it.price||REPAIR_PRICE[it.name]||0;
@@ -1922,13 +1922,13 @@ function renderInlineRepairPicker() {
     var gi = grp.gi, label = grp.label, icon = grp.icon, items = grp.items;
     var gColor = grpColors[gi % grpColors.length];
     var section = document.createElement('div');
-    section.style.cssText = 'margin:4px 8px 10px;background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1.5px solid '+gColor+'22';
+    section.style.cssText = 'margin:4px 8px 10px;background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1.5px solid '+gColor+'22';
     var hdr = document.createElement('div');
     hdr.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(135deg,'+gColor+'14,'+gColor+'06);border-bottom:1.5px solid '+gColor+'25';
-    hdr.innerHTML = '<div style="width:28px;height:28px;background:'+gColor+';border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0">'+(icon||'📋')+'</div><span style="font-size:0.82rem;font-weight:900;color:#0f172a;flex:1">'+label+'</span><span style="background:'+gColor+'18;color:'+gColor+';border-radius:99px;padding:2px 8px;font-size:0.58rem;font-weight:700">'+items.length+' รายการ</span>';
+    hdr.innerHTML = '<div style="width:28px;height:28px;background:'+gColor+';border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0">'+(icon||'📋')+'</div><span style="font-size:0.82rem;font-weight:900;color:var(--text);flex:1">'+label+'</span><span style="background:'+gColor+'18;color:'+gColor+';border-radius:99px;padding:2px 8px;font-size:0.58rem;font-weight:700">'+items.length+' รายการ</span>';
     section.appendChild(hdr);
     var grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f1f5f9';
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bg-2,#f1f5f9)';
     items.forEach(function(it){
       var price = it.price || REPAIR_PRICE[it.name] || 0;
       var isSel = [...document.querySelectorAll('#c-repair-tags .rtag')].some(function(t){return t.dataset.val===it.name;});
@@ -2037,18 +2037,18 @@ function openVendorManager() {
   ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;';
 
   const sheet = document.createElement('div');
-  sheet.style.cssText = 'width:100%;max-width:540px;background:white;border-radius:24px 24px 0 0;max-height:90vh;display:flex;flex-direction:column;font-family:inherit;';
+  sheet.style.cssText = 'width:100%;max-width:540px;background:var(--card);border-radius:24px 24px 0 0;max-height:90vh;display:flex;flex-direction:column;font-family:inherit;';
 
   const renderVendorList = () => {
     const vendors = getVendors();
     const isDefault = !db.vendors || db.vendors.length === 0;
     listEl.innerHTML = vendors.map((v, i) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:8px">
         <div style="width:42px;height:42px;background:#1a5276;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <span style="font-size:0.75rem;font-weight:900;color:white">${v.code}</span>
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.name}</div>
+          <div style="font-size:0.85rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.name}</div>
           <div style="font-size:0.68rem;color:#94a3b8;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.addr||'—'}</div>
         </div>
         <button onclick="_vmEdit(${i})" style="width:32px;height:32px;background:#eff6ff;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem">✏️</button>
@@ -2074,13 +2074,13 @@ function openVendorManager() {
       </div>`;
     listEl.innerHTML = `
       <div style="padding:4px 0 10px">
-        <div style="font-size:0.8rem;font-weight:900;color:#0f172a;margin-bottom:14px">${isNew?'➕ เพิ่ม Vendor ใหม่':'✏️ แก้ไข Vendor'}</div>
+        <div style="font-size:0.8rem;font-weight:900;color:var(--text);margin-bottom:14px">${isNew?'➕ เพิ่ม Vendor ใหม่':'✏️ แก้ไข Vendor'}</div>
         ${inp('code','รหัสย่อ (เช่น SKIC)',v.code,'SKIC')}
         ${inp('name','ชื่อเต็มบริษัท',v.name,'บริษัท สยามคราฟท์อุตสาหกรรม จำกัด')}
         ${inp('addr','ที่อยู่',v.addr,'เลขที่ ถนน ตำบล อำเภอ จังหวัด')}
         <div style="display:flex;gap:8px;margin-top:4px">
           <button onclick="_vmSave(${idx})" style="flex:1;padding:11px;background:#1a5276;color:white;border:none;border-radius:10px;font-family:inherit;font-size:0.85rem;font-weight:800;cursor:pointer">💾 บันทึก</button>
-          <button onclick="_vmCancelEdit()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-family:inherit;font-size:0.85rem;font-weight:700;cursor:pointer">ยกเลิก</button>
+          <button onclick="_vmCancelEdit()" style="flex:1;padding:11px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:10px;font-family:inherit;font-size:0.85rem;font-weight:700;cursor:pointer">ยกเลิก</button>
         </div>
       </div>`;
     document.getElementById('vm_code')?.focus();
@@ -2093,10 +2093,10 @@ function openVendorManager() {
     </div>
     <div style="padding:14px 18px 12px;border-bottom:1px solid #f1f5f9;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-size:1rem;font-weight:900;color:#0f172a">🏢 จัดการ Vendor / ลูกค้า</div>
+        <div style="font-size:1rem;font-weight:900;color:var(--text)">🏢 จัดการ Vendor / ลูกค้า</div>
         <div style="font-size:0.68rem;color:#94a3b8;margin-top:2px">แก้ไขรายชื่อบริษัทที่แสดงในใบเสนอราคา</div>
       </div>
-      <button onclick="document.getElementById('_vendor_mgr_ov').remove()" style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;color:#64748b;font-size:0.85rem">✕</button>
+      <button onclick="document.getElementById('_vendor_mgr_ov').remove()" style="width:30px;height:30px;border-radius:50%;background:var(--bg-2,#f1f5f9);border:none;cursor:pointer;color:#64748b;font-size:0.85rem">✕</button>
     </div>
     <div id="_vm_list" style="overflow-y:auto;flex:1;padding:14px 16px"></div>`;
 
@@ -2183,7 +2183,7 @@ function openRepairManager() {
             <div style="color:white;font-size:1rem;font-weight:900;letter-spacing:-0.01em">จัดการรายการงาน</div>
             <div style="color:rgba(255,255,255,.5);font-size:0.65rem;margin-top:3px">${db.repairGroups.length} หมวด · ${totalItems} รายการ</div>
           </div>
-          <button onclick="window._rmAddGroup()" style="background:white;color:#c8102e;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;display:flex;align-items:center;gap:6px;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
+          <button onclick="window._rmAddGroup()" style="background:var(--card);color:#c8102e;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;display:flex;align-items:center;gap:6px;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>เพิ่มหมวด
           </button>
         </div>
@@ -2198,16 +2198,16 @@ function openRepairManager() {
           </div>
         </div>
       </div>
-      <div style="flex:1;overflow-y:auto;padding:14px 14px 24px;background:#f8fafc">
+      <div style="flex:1;overflow-y:auto;padding:14px 14px 24px;background:var(--bg)">
         ${db.repairGroups.map((g, gi) => {
           const c = _rmColors[gi % _rmColors.length];
           const itemCount = g.items?.length||0;
-          return `<div style="background:white;border-radius:18px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);border:1.5px solid ${c.border}">
+          return `<div style="background:var(--card);border-radius:18px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);border:1.5px solid ${c.border}">
             <div style="height:4px;background:${c.accent}"></div>
             <div style="display:flex;align-items:center;gap:12px;padding:13px 14px 10px">
               <div style="width:44px;height:44px;background:${c.bg};border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;border:1.5px solid ${c.border}">${g.icon||'📋'}</div>
               <div style="flex:1;min-width:0">
-                <div style="font-size:0.92rem;font-weight:900;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.label}</div>
+                <div style="font-size:0.92rem;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.label}</div>
                 <span style="background:${c.light};color:${c.accent};border-radius:99px;padding:1px 8px;font-size:0.62rem;font-weight:800;margin-top:3px;display:inline-block">${itemCount} รายการ</span>
               </div>
               <div style="display:flex;gap:6px;flex-shrink:0">
@@ -2217,12 +2217,12 @@ function openRepairManager() {
             </div>
             <div style="padding:0 14px 12px;display:flex;flex-wrap:wrap;gap:5px">
               ${(g.items||[]).slice(0,6).map(it=>`<span style="background:${c.light};border:1px solid ${c.border};border-radius:8px;padding:3px 10px;font-size:0.65rem;color:${c.accent};font-weight:700">${it.name}${it.price>0?` ฿${it.price.toLocaleString()}`:''}</span>`).join('')}
-              ${(g.items||[]).length>6?`<span style="background:#f1f5f9;border-radius:8px;padding:3px 8px;font-size:0.62rem;color:#64748b;font-weight:600">+${(g.items||[]).length-6} อีก</span>`:''}
+              ${(g.items||[]).length>6?`<span style="background:var(--bg-2,#f1f5f9);border-radius:8px;padding:3px 8px;font-size:0.62rem;color:#64748b;font-weight:600">+${(g.items||[]).length-6} อีก</span>`:''}
             </div>
           </div>`;
         }).join('')}
         <div style="text-align:center;padding-top:4px">
-          <button onclick="window._rmReset()" style="font-size:0.72rem;color:#94a3b8;background:white;border:1px dashed #d1d5db;border-radius:10px;padding:10px 20px;cursor:pointer;font-family:inherit">🔄 รีเซ็ตเป็นค่าเริ่มต้น</button>
+          <button onclick="window._rmReset()" style="font-size:0.72rem;color:#94a3b8;background:var(--card);border:1px dashed #d1d5db;border-radius:10px;padding:10px 20px;cursor:pointer;font-family:inherit">🔄 รีเซ็ตเป็นค่าเริ่มต้น</button>
         </div>
       </div>`;
   };
@@ -2241,13 +2241,13 @@ function openRepairManager() {
             <div style="color:white;font-size:1rem;font-weight:900;letter-spacing:-0.01em">${isNew?'เพิ่มหมวดใหม่':'แก้ไขหมวด'}</div>
             <div style="color:rgba(255,255,255,.5);font-size:0.65rem;margin-top:2px">${g.label||'หมวดใหม่'} · ${g.items?.length||0} รายการ</div>
           </div>
-          <button onclick="window._rmSaveGroup()" style="background:white;color:#16a34a;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;box-shadow:0 2px 8px rgba(0,0,0,0.15)">💾 บันทึก</button>
+          <button onclick="window._rmSaveGroup()" style="background:var(--card);color:#16a34a;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;box-shadow:0 2px 8px rgba(0,0,0,0.15)">💾 บันทึก</button>
         </div>
       </div>
       <!-- Edit form -->
-      <div style="flex:1;overflow-y:auto;padding:14px 14px 24px;background:#f8fafc">
+      <div style="flex:1;overflow-y:auto;padding:14px 14px 24px;background:var(--bg)">
         <!-- Group name + icon card -->
-        <div style="background:white;border-radius:18px;padding:16px;margin-bottom:12px;border:1.5px solid ${c.border};overflow:hidden;position:relative">
+        <div style="background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px;border:1.5px solid ${c.border};overflow:hidden;position:relative">
           <div style="height:3px;background:${c.accent};position:absolute;top:0;left:0;right:0;border-radius:18px 18px 0 0"></div>
           <div style="font-size:0.65rem;font-weight:900;color:${c.accent};text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;margin-top:4px">ข้อมูลหมวด</div>
           <div style="display:flex;gap:10px;align-items:center">
@@ -2261,16 +2261,16 @@ function openRepairManager() {
             <div style="flex:1">
               <div style="font-size:0.62rem;color:#94a3b8;font-weight:700;margin-bottom:5px">ชื่อหมวด</div>
               <input id="rm-label" value="${g.label||''}" placeholder="เช่น PM / ล้างแอร์"
-                style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:11px 13px;font-size:0.92rem;font-family:inherit;font-weight:800;outline:none;box-sizing:border-box;color:#0f172a"
+                style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-size:0.92rem;font-family:inherit;font-weight:800;outline:none;box-sizing:border-box;color:var(--text)"
                 onfocus="this.style.borderColor='${c.accent}'" onblur="this.style.borderColor='#e5e7eb'"/>
             </div>
           </div>
         </div>
         <!-- Items card -->
-        <div style="background:white;border-radius:18px;overflow:hidden;border:1.5px solid #e5e7eb">
-          <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:#fafbff">
+        <div style="background:var(--card);border-radius:18px;overflow:hidden;border:1.5px solid var(--border)">
+          <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;background:var(--bg)">
             <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:0.7rem;font-weight:900;color:#374151">รายการ</span>
+              <span style="font-size:0.7rem;font-weight:900;color:var(--text2)">รายการ</span>
               <span style="background:${c.light};color:${c.accent};border-radius:99px;padding:1px 8px;font-size:0.62rem;font-weight:800">${g.items?.length||0}</span>
             </div>
             <button onclick="window._rmAddItem()"
@@ -2302,18 +2302,18 @@ function openRepairManager() {
         <div style="flex:1;min-width:0">
           <!-- name -->
           <input data-ii="${ii}" data-field="name" value="${it.name.replace(/"/g,'&quot;')}"
-            style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:0.85rem;font-family:inherit;font-weight:700;outline:none;margin-bottom:7px;box-sizing:border-box;color:#0f172a"
+            style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:0.85rem;font-family:inherit;font-weight:700;outline:none;margin-bottom:7px;box-sizing:border-box;color:var(--text)"
             placeholder="ชื่อรายการงาน" oninput="window._rmUpdateItem(${ii},'name',this.value)"/>
           <!-- price + unit row -->
           <div style="display:flex;gap:7px;align-items:center">
             <div style="flex:1;position:relative">
               <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:0.75rem;color:#94a3b8;font-weight:800;pointer-events:none">฿</span>
               <input data-ii="${ii}" data-field="price" type="number" value="${it.price||0}"
-                style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:9px 10px 9px 26px;font-size:0.85rem;font-family:inherit;font-weight:800;outline:none;box-sizing:border-box;color:#0369a1"
+                style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 10px 9px 26px;font-size:0.85rem;font-family:inherit;font-weight:800;outline:none;box-sizing:border-box;color:#0369a1"
                 placeholder="0" oninput="window._rmUpdateItem(${ii},'price',parseFloat(this.value)||0)"/>
             </div>
             <select data-ii="${ii}" data-field="unit" onchange="window._rmUpdateItem(${ii},'unit',this.value)"
-              style="width:78px;border:1.5px solid #e5e7eb;border-radius:10px;padding:9px 6px;font-size:0.78rem;font-family:inherit;outline:none;flex-shrink:0;background:white;font-weight:700;color:#374151">
+              style="width:78px;border:1.5px solid var(--border);border-radius:10px;padding:9px 6px;font-size:0.78rem;font-family:inherit;outline:none;flex-shrink:0;background:var(--card);font-weight:700;color:var(--text2)">
               ${['JOB','EA','KG','HOUR','M'].map(u=>`<option value="${u}" ${it.unit===u?'selected':''}>${u}</option>`).join('')}
             </select>
           </div>
@@ -2463,13 +2463,13 @@ function formatSummary(text) {
   if (lines.length > 1) {
     return lines.map(function(l){
       var safe = escapeHtml(l.replace(/^[-–\s]+/,'').trim());
-      return '<div style="display:flex;gap:7px;align-items:flex-start;margin-bottom:5px;padding:4px 8px;background:#f8fafc;border-radius:7px;border-left:3px solid #c8102e">'
+      return '<div style="display:flex;gap:7px;align-items:flex-start;margin-bottom:5px;padding:4px 8px;background:var(--bg);border-radius:7px;border-left:3px solid #c8102e">'
         + '<span style="color:#c8102e;font-weight:900;flex-shrink:0;font-size:0.85rem;line-height:1.4">•</span>'
-        + '<span style="flex:1;font-size:0.82rem;font-weight:600;color:#1e293b;line-height:1.5">' + safe + '</span></div>';
+        + '<span style="flex:1;font-size:0.82rem;font-weight:600;color:var(--text);line-height:1.5">' + safe + '</span></div>';
     }).join('');
   }
   // PATCH audit-XSS1: escape plain text
-  return '<div style="font-size:0.82rem;color:#1e293b;font-weight:500">' + escapeHtml(text) + '</div>';
+  return '<div style="font-size:0.82rem;color:var(--text);font-weight:500">' + escapeHtml(text) + '</div>';
 }
 
 
@@ -2516,10 +2516,10 @@ function addPartRow() {
   const list = document.getElementById('c-parts-list');
   const row = document.createElement('div');
   row.style.cssText = 'display:grid;grid-template-columns:1fr 60px 60px 70px 28px;gap:4px;align-items:center';
-  row.innerHTML = `<input type="text" placeholder="ชื่อวัสดุ..." class="c-part-name" style="font-size:0.8rem;padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;width:100%;box-sizing:border-box"/>
-    <input type="number" placeholder="0" class="c-part-qty" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
-    <input type="text" placeholder="กก." class="c-part-unit" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
-    <input type="number" placeholder="0" class="c-part-price" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:right;width:100%;box-sizing:border-box"/>
+  row.innerHTML = `<input type="text" placeholder="ชื่อวัสดุ..." class="c-part-name" style="font-size:0.8rem;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;width:100%;box-sizing:border-box"/>
+    <input type="number" placeholder="0" class="c-part-qty" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+    <input type="text" placeholder="กก." class="c-part-unit" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+    <input type="number" placeholder="0" class="c-part-price" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;text-align:right;width:100%;box-sizing:border-box"/>
     <button type="button" onclick="this.closest('div').remove()" style="width:24px;height:24px;border-radius:6px;background:#fee2e2;border:none;color:#dc2626;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🗑</button>`;
   list.appendChild(row);
 }
@@ -2560,7 +2560,7 @@ function addRefrigRow() {
   row.className = 'c-refrig-row';
   row.style.cssText = 'display:flex;gap:6px;align-items:center';
   row.innerHTML = `
-    <select class="c-ref-type" onchange="syncSummaryFromForm()" style="flex:2;font-size:0.78rem;padding:7px 8px;border:1.5px solid #d1fae5;border-radius:8px;font-family:inherit;background:white">
+    <select class="c-ref-type" onchange="syncSummaryFromForm()" style="flex:2;font-size:0.78rem;padding:7px 8px;border:1.5px solid #d1fae5;border-radius:8px;font-family:inherit;background:var(--card)">
       <option value="">— ไม่ใช้ —</option>
       <option value="R-22">R-22</option><option value="R-32">R-32</option>
       <option value="R-410A">R-410A</option><option value="R-134A">R-134A</option>
@@ -2583,7 +2583,7 @@ function removeRefrigRow(btn) {
 function resetRefrigRows() {
   const list = document.getElementById('c-refrig-list');
   list.innerHTML = `<div style="display:flex;gap:6px;align-items:center" class="c-refrig-row">
-    <select class="c-ref-type" onchange="syncSummaryFromForm()" style="flex:2;font-size:0.78rem;padding:7px 8px;border:1.5px solid #d1fae5;border-radius:8px;font-family:inherit;background:white">
+    <select class="c-ref-type" onchange="syncSummaryFromForm()" style="flex:2;font-size:0.78rem;padding:7px 8px;border:1.5px solid #d1fae5;border-radius:8px;font-family:inherit;background:var(--card)">
       <option value="">— ไม่ใช้ —</option>
       <option value="R-22">R-22</option><option value="R-32">R-32</option>
       <option value="R-410A">R-410A</option><option value="R-134A">R-134A</option>
@@ -2632,10 +2632,10 @@ function closeCompleteSheet() {
   // Reset parts list to one blank row
   const pl = document.getElementById('c-parts-list');
   if (pl) pl.innerHTML = `<div style="display:grid;grid-template-columns:1fr 60px 60px 70px 28px;gap:4px;align-items:center">
-    <input type="text" placeholder="ชื่อวัสดุ..." class="c-part-name" style="font-size:0.8rem;padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;width:100%;box-sizing:border-box"/>
-    <input type="number" placeholder="0" class="c-part-qty" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
-    <input type="text" placeholder="กก." class="c-part-unit" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
-    <input type="number" placeholder="0" class="c-part-price" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;text-align:right;width:100%;box-sizing:border-box"/>
+    <input type="text" placeholder="ชื่อวัสดุ..." class="c-part-name" style="font-size:0.8rem;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;width:100%;box-sizing:border-box"/>
+    <input type="number" placeholder="0" class="c-part-qty" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+    <input type="text" placeholder="กก." class="c-part-unit" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;text-align:center;width:100%;box-sizing:border-box"/>
+    <input type="number" placeholder="0" class="c-part-price" style="font-size:0.8rem;padding:7px 4px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;text-align:right;width:100%;box-sizing:border-box"/>
     <button type="button" onclick="this.closest('div').remove()" style="width:24px;height:24px;border-radius:6px;background:#fee2e2;border:none;color:#dc2626;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">🗑</button>
   </div>`;
 }
@@ -2690,7 +2690,7 @@ function openCompleteSheet(tid) {
     strip.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.82rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
+          <div style="font-size:0.82rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
           <div style="font-size:0.65rem;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
             ❄️ ${escapeHtml(t.machine||'—')}${_csBtu?' · 🌡️ '+_csBtu:''}${_csDept?' · 🏢 '+_csDept:''}
           </div>
@@ -2725,7 +2725,7 @@ function openCompleteSheet(tid) {
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;${i>0?'border-top:1px solid #e0f2fe':''}">
         <div style="display:flex;align-items:center;gap:7px">
           <div style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
-          <span style="font-size:0.8rem;font-weight:600;color:#0f172a">${r.name}</span>
+          <span style="font-size:0.8rem;font-weight:600;color:var(--text)">${r.name}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:0.75rem;color:#64748b">×${r.qty||1}</span>
@@ -3271,9 +3271,9 @@ function openVerifySheet(tid) {
   // §1 ผลงานช่าง
   const tr = t.techRequest;
   const techRows = (tr?.rows||[]).filter(r=>r.name && r.name.trim());
-  const techRowsHtml = techRows.length ? ('<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:10px">' +
-    '<div style="padding:7px 12px;background:#f1f5f9;border-bottom:1px solid #e2e8f0"><span style="font-size:0.58rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">รายการอะไหล่ (ช่างแจ้ง)</span></div>' +
-    techRows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;${i>0?'border-top:1px solid #f1f5f9':''}"><div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.55rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:0.78rem;font-weight:600;color:#0f172a">${escapeHtml(r.name)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:#64748b">×${r.qty||1}</span>${r.price?`<span style="font-size:0.7rem;font-weight:800;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(r.price).toLocaleString()}</span>`:''}</div></div>`).join('') +
+  const techRowsHtml = techRows.length ? ('<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">' +
+    '<div style="padding:7px 12px;background:var(--bg-2,#f1f5f9);border-bottom:1px solid #e2e8f0"><span style="font-size:0.58rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">รายการอะไหล่ (ช่างแจ้ง)</span></div>' +
+    techRows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;${i>0?'border-top:1px solid #f1f5f9':''}"><div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.55rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:0.78rem;font-weight:600;color:var(--text)">${escapeHtml(r.name)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:#64748b">×${r.qty||1}</span>${r.price?`<span style="font-size:0.7rem;font-weight:800;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(r.price).toLocaleString()}</span>`:''}</div></div>`).join('') +
     '</div>') : '';
 
   const zoneHtml = (()=>{ const z=_vm?.zone||'process'; return z==='office'?'<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:5px;padding:1px 7px;font-size:0.62rem;font-weight:800">🏢 Office</span>':'<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:5px;padding:1px 7px;font-size:0.62rem;font-weight:800">⚙️ Process</span>'; })();
@@ -3281,19 +3281,19 @@ function openVerifySheet(tid) {
 
   document.getElementById('v-result-box').innerHTML =
     `<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.78rem">
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700;width:38%;vertical-align:top">เลขที่ใบงาน</td><td style="padding:7px 0;color:#0f172a;font-weight:800;font-family:'JetBrains Mono',monospace">${t.id}</td></tr>
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700;vertical-align:top">เครื่องแอร์</td><td style="padding:7px 0;color:#0f172a;font-weight:700;line-height:1.4">${escapeHtml(machineName)}${serial?`<br><span style="font-size:0.62rem;color:#3b82f6;font-family:'JetBrains Mono',monospace">${serial}</span>`:''}</td></tr>
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">แผนก / BTU</td><td style="padding:7px 0;color:#0f172a;font-weight:700">${escapeHtml(dept)}${btuLabel?` <span style="font-size:0.62rem;color:#64748b">${btuLabel}</span>`:''}</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700;width:38%;vertical-align:top">เลขที่ใบงาน</td><td style="padding:7px 0;color:var(--text);font-weight:800;font-family:'JetBrains Mono',monospace">${t.id}</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700;vertical-align:top">เครื่องแอร์</td><td style="padding:7px 0;color:var(--text);font-weight:700;line-height:1.4">${escapeHtml(machineName)}${serial?`<br><span style="font-size:0.62rem;color:#3b82f6;font-family:'JetBrains Mono',monospace">${serial}</span>`:''}</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">แผนก / BTU</td><td style="padding:7px 0;color:var(--text);font-weight:700">${escapeHtml(dept)}${btuLabel?` <span style="font-size:0.62rem;color:#64748b">${btuLabel}</span>`:''}</td></tr>
       <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">Zone / Range</td><td style="padding:7px 0"><div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding-top:2px">${zoneHtml} ${rangeHtml}</div></td></tr>
-      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">ช่างผู้ซ่อม</td><td style="padding:7px 0;color:#0f172a;font-weight:700">${escapeHtml(t.assignee||'—')}</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 0;color:#94a3b8;font-weight:700">ช่างผู้ซ่อม</td><td style="padding:7px 0;color:var(--text);font-weight:700">${escapeHtml(t.assignee||'—')}</td></tr>
       ${t.cost?`<tr><td style="padding:7px 0;color:#94a3b8;font-weight:700">ค่าใช้จ่าย</td><td style="padding:7px 0;color:#0369a1;font-weight:900;font-family:'JetBrains Mono',monospace">฿${Number(t.cost).toLocaleString()}</td></tr>`:''}
     </table>
     <div style="margin-bottom:${techRows.length||t.parts?'12px':'0'}">
       <div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">สรุปการซ่อม</div>
-      <div style="font-size:0.85rem;color:#1e293b;line-height:1.7;font-weight:500">${formatSummary(t.summary)}</div>
+      <div style="font-size:0.85rem;color:var(--text);line-height:1.7;font-weight:500">${formatSummary(t.summary)}</div>
     </div>
     ${techRowsHtml}
-    ${t.parts?`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px"><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">อะไหล่ (หมายเหตุ)</div><div style="font-size:0.8rem;color:#334155;line-height:1.6">${escapeHtml(t.parts)}</div></div>`:''}`;
+    ${t.parts?`<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px">อะไหล่ (หมายเหตุ)</div><div style="font-size:0.8rem;color:#334155;line-height:1.6">${escapeHtml(t.parts)}</div></div>`:''}`;
 
   // §2 รูปภาพเปรียบเทียบ
   const hasBefore = t.photosBefore?.length > 0;
@@ -3308,7 +3308,7 @@ function openVerifySheet(tid) {
     }).join('');
     photosBody.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       ${hasBefore?`<div><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>ก่อนซ่อม · ${t.photosBefore.length} รูป</div><div class="photo-grid">${makeGrid(t.photosBefore,tid)}</div></div>`:'<div></div>'}
-      ${hasAfter?`<div><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>หลังซ่อม · ${t.photosAfter.length} รูป</div><div class="photo-grid">${makeGrid(t.photosAfter,tid)}</div></div>`:'<div style="display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;min-height:80px"><div style="text-align:center;color:#cbd5e1"><div style="font-size:1.5rem">📷</div><div style="font-size:0.62rem;font-weight:700;margin-top:4px">ยังไม่มีรูปหลังซ่อม</div></div></div>'}
+      ${hasAfter?`<div><div style="font-size:0.58rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>หลังซ่อม · ${t.photosAfter.length} รูป</div><div class="photo-grid">${makeGrid(t.photosAfter,tid)}</div></div>`:'<div style="display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:10px;min-height:80px"><div style="text-align:center;color:#cbd5e1"><div style="font-size:1.5rem">📷</div><div style="font-size:0.62rem;font-weight:700;margin-top:4px">ยังไม่มีรูปหลังซ่อม</div></div></div>'}
     </div>`;
   } else if (photosSec) { photosSec.style.display = 'none'; }
 
@@ -3325,7 +3325,7 @@ function openVerifySheet(tid) {
       po.po?`<span style="background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:800">PO: ${po.po}</span>`:'',
     ].filter(Boolean).join('');
     poBody.innerHTML = (badges?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">${badges}</div>`:'') +
-      (poRows.length?`<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">${poRows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;${i>0?'border-top:1px solid #f1f5f9':''}"><div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.58rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:0.8rem;font-weight:600;color:#0f172a">${escapeHtml(r.name)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:#64748b">×${r.qty||1}</span>${r.price?`<span style="font-size:0.72rem;font-weight:800;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(r.price).toLocaleString()}</span>`:''}</div></div>`).join('')}${po.total?`<div style="border-top:2px solid #e0f2fe;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;background:#f0f9ff"><span style="font-size:0.7rem;font-weight:800;color:#0369a1">มูลค่ารวม</span><span style="font-size:0.92rem;font-weight:900;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(po.total).toLocaleString()}</span></div>`:''}</div>`:'<div style="color:#94a3b8;font-size:0.75rem;text-align:center;padding:12px">ไม่มีรายการอะไหล่</div>');
+      (poRows.length?`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">${poRows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;${i>0?'border-top:1px solid #f1f5f9':''}"><div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;color:white;font-size:0.58rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:0.8rem;font-weight:600;color:var(--text)">${escapeHtml(r.name)}</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:#64748b">×${r.qty||1}</span>${r.price?`<span style="font-size:0.72rem;font-weight:800;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(r.price).toLocaleString()}</span>`:''}</div></div>`).join('')}${po.total?`<div style="border-top:2px solid #e0f2fe;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;background:#f0f9ff"><span style="font-size:0.7rem;font-weight:800;color:#0369a1">มูลค่ารวม</span><span style="font-size:0.92rem;font-weight:900;color:#0369a1;font-family:'JetBrains Mono',monospace">฿${Number(po.total).toLocaleString()}</span></div>`:''}</div>`:'<div style="color:#94a3b8;font-size:0.75rem;text-align:center;padding:12px">ไม่มีรายการอะไหล่</div>');
   } else if (poSec) { poSec.style.display = 'none'; }
 
   // §4 ประวัติงาน
@@ -3673,14 +3673,14 @@ function openDetail(tid) {
   </div>
 
   <!-- ─── MACHINE CARD ─── -->
-  <div style="background:white;padding:16px;border-bottom:6px solid #f0f4f8">
+  <div style="background:var(--card);padding:16px;border-bottom:6px solid #f0f4f8">
     <div style="display:flex;align-items:flex-start;gap:14px">
       <div style="width:52px;height:52px;background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(59,130,246,0.35)"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="15" y1="2" x2="15" y2="28" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="15" x2="28" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="5.04" y1="5.04" x2="24.96" y2="24.96" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="24.96" y1="5.04" x2="5.04" y2="24.96" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="2" x2="11" y2="6" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="2" x2="19" y2="6" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="28" x2="11" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="28" x2="19" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="15" x2="6" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="15" x2="6" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="28" y1="15" x2="24" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="28" y1="15" x2="24" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/><circle cx="15" cy="15" r="3" fill="white"/></svg></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:0.58rem;color:#94a3b8;font-weight:700;margin-bottom:1px;letter-spacing:.05em">${t.id}</div>
-        <div style="font-size:1rem;font-weight:900;color:#0f172a;line-height:1.25;margin-bottom:6px">${escapeHtml(t.machine||'—')}</div>
+        <div style="font-size:1rem;font-weight:900;color:var(--text);line-height:1.25;margin-bottom:6px">${escapeHtml(t.machine||'—')}</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
-          ${_serial?`<span style="background:#f1f5f9;color:#475569;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:700">${_serial}</span>`:''}
+          ${_serial?`<span style="background:var(--bg-2,#f1f5f9);color:#475569;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:700">${_serial}</span>`:''}
           ${t.btuActual?`<span style="background:#dcfce7;color:#15803d;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:800">${Number(t.btuActual).toLocaleString()} BTU</span>`:(_m?.btu?`<span style="background:#dbeafe;color:#1d4ed8;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:700">${Number(_m.btu).toLocaleString()} BTU</span>`:'')}
           ${_m?.refrigerant?`<span style="background:#fce7f3;color:#be185d;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:700">${_m.refrigerant}</span>`:''}
           ${_m?.vendor?`<span style="background:#ede9fe;color:#6d28d9;border-radius:5px;padding:2px 8px;font-size:0.62rem;font-weight:700">${_m.vendor}</span>`:''}
@@ -3693,13 +3693,13 @@ function openDetail(tid) {
     </div>
     <!-- Dates row -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-      <div style="background:#f8fafc;border-radius:10px;padding:8px 10px">
+      <div style="background:var(--bg);border-radius:10px;padding:8px 10px">
         <div style="font-size:0.55rem;color:#94a3b8;font-weight:700;margin-bottom:2px">📅 วันที่สร้างงาน</div>
-        <div style="font-size:0.72rem;font-weight:700;color:#374151">${fmtDT(t.createdAt)}</div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--text2)">${fmtDT(t.createdAt)}</div>
       </div>
-      <div style="background:#f8fafc;border-radius:10px;padding:8px 10px">
+      <div style="background:var(--bg);border-radius:10px;padding:8px 10px">
         <div style="font-size:0.55rem;color:#94a3b8;font-weight:700;margin-bottom:2px">🔄 อัปเดตล่าสุด</div>
-        <div style="font-size:0.72rem;font-weight:700;color:#374151">${fmtDT(t.updatedAt)}</div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--text2)">${fmtDT(t.updatedAt)}</div>
       </div>
     </div>
   </div>
@@ -3708,10 +3708,10 @@ function openDetail(tid) {
   <div style="padding:12px 14px;background:#f0f4f8;display:flex;flex-direction:column;gap:10px">
 
     <!-- ผู้เกี่ยวข้อง -->
-    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+    <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
       <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
         <span style="font-size:0.75rem">👥</span>
-        <span style="font-size:0.75rem;font-weight:800;color:#0f172a">ผู้เกี่ยวข้อง</span>
+        <span style="font-size:0.75rem;font-weight:800;color:var(--text)">ผู้เกี่ยวข้อง</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr">
         <div style="padding:12px 14px;border-right:1px solid #f8fafc">
@@ -3719,7 +3719,7 @@ function openDetail(tid) {
             <div style="width:28px;height:28px;background:#f0f9ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.85rem">👤</div>
             <div style="font-size:0.6rem;color:#94a3b8;font-weight:700">ผู้แจ้ง</div>
           </div>
-          <div style="font-size:0.85rem;font-weight:800;color:#0f172a;line-height:1.3">${escapeHtml(t.reporter||'—')}</div>
+          <div style="font-size:0.85rem;font-weight:800;color:var(--text);line-height:1.3">${escapeHtml(t.reporter||'—')}</div>
           <div style="font-size:0.65rem;color:#64748b;margin-top:2px">${escapeHtml(_dept)}</div>
           ${t.contact?`<a href="tel:${escapeHtml(t.contact)}" style="font-size:0.62rem;color:#3b82f6;font-weight:600;text-decoration:none;display:block;margin-top:3px">📞 ${escapeHtml(t.contact)}</a>`:''}
         </div>
@@ -3735,10 +3735,10 @@ function openDetail(tid) {
     </div>
 
     <!-- สถานะงาน (timeline) -->
-    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+    <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
       <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
         <span style="font-size:0.75rem">📊</span>
-        <span style="font-size:0.75rem;font-weight:800;color:#0f172a">สถานะงาน</span>
+        <span style="font-size:0.75rem;font-weight:800;color:var(--text)">สถานะงาน</span>
       </div>
       <div style="padding:12px 14px">
         <div class="d2-tl">${_timelineHTML}</div>
@@ -3746,13 +3746,13 @@ function openDetail(tid) {
     </div>
 
     <!-- รายละเอียดอาการ -->
-    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+    <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
       <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
         <span style="font-size:0.75rem">🔎</span>
-        <span style="font-size:0.75rem;font-weight:800;color:#0f172a">รายละเอียดอาการ / งานที่ต้องทำ</span>
+        <span style="font-size:0.75rem;font-weight:800;color:var(--text)">รายละเอียดอาการ / งานที่ต้องทำ</span>
       </div>
       <div style="padding:12px 14px">
-        <div style="background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:0.82rem;font-weight:600;color:#374151;line-height:1.75;white-space:pre-wrap">${escapeHtml((t.problem||'—')+(t.detail?'\n'+t.detail:''))}</div>
+        <div style="background:var(--bg);border-radius:10px;padding:10px 12px;font-size:0.82rem;font-weight:600;color:var(--text2);line-height:1.75;white-space:pre-wrap">${escapeHtml((t.problem||'—')+(t.detail?'\n'+t.detail:''))}</div>
       </div>
     </div>
 
@@ -3760,17 +3760,17 @@ function openDetail(tid) {
     ${t.purchaseOrder?`<div>${renderPOBlock(t)}</div>`:''}
 
     <!-- รูปภาพก่อน/หลังซ่อม -->
-    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+    <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
       <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:0.75rem">📷</span>
-          <span style="font-size:0.75rem;font-weight:800;color:#0f172a">รูปภาพเปรียบเทียบ</span>
+          <span style="font-size:0.75rem;font-weight:800;color:var(--text)">รูปภาพเปรียบเทียบ</span>
         </div>
         <span style="font-size:0.6rem;color:#94a3b8;font-weight:600">สูงสุด 3 รูป / ประเภท</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f0f4f8">
         <!-- ก่อนซ่อม -->
-        <div style="background:white;padding:10px">
+        <div style="background:var(--card);padding:10px">
           <div style="background:#ef4444;color:white;border-radius:7px;padding:5px 9px;font-size:0.67rem;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:4px">
             ● ก่อนซ่อม
             ${hasBefore?`<span style="background:rgba(255,255,255,0.25);border-radius:10px;padding:1px 6px;font-size:0.57rem;margin-left:auto">${t.photosBefore.length} รูป</span>`:''}
@@ -3785,7 +3785,7 @@ function openDetail(tid) {
           </div>`}
         </div>
         <!-- หลังซ่อม -->
-        <div style="background:white;padding:10px">
+        <div style="background:var(--card);padding:10px">
           <div style="background:#22c55e;color:white;border-radius:7px;padding:5px 9px;font-size:0.67rem;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:4px">
             ✓ หลังซ่อม
             ${hasAfter?`<span style="background:rgba(255,255,255,0.25);border-radius:10px;padding:1px 6px;font-size:0.57rem;margin-left:auto">${t.photosAfter.length} รูป</span>`:''}
@@ -3805,10 +3805,10 @@ function openDetail(tid) {
     <!-- วัสดุ / อะไหล่ที่ใช้ + ค่าแรง (2 column) -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <!-- วัสดุ -->
-      <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+      <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
         <div style="padding:10px 12px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:5px">
           <span style="font-size:0.7rem">🔩</span>
-          <span style="font-size:0.7rem;font-weight:800;color:#0f172a">วัสดุ / อะไหล่ที่ใช้</span>
+          <span style="font-size:0.7rem;font-weight:800;color:var(--text)">วัสดุ / อะไหล่ที่ใช้</span>
         </div>
         ${_hasPartsTable?`
         <div>
@@ -3817,9 +3817,9 @@ function openDetail(tid) {
           </div>
           ${_poRows.map((r,i)=>`
           <div style="display:grid;grid-template-columns:1fr auto auto;padding:7px 10px;border-bottom:${i<_poRows.length-1?'1px solid #f8fafc':'none'};background:${i%2===0?'white':'#fafafa'}">
-            <span style="font-size:0.7rem;font-weight:600;color:#1e293b;line-height:1.3">${escapeHtml(r.name||'')}</span>
-            <span style="font-size:0.7rem;font-weight:700;color:#374151;text-align:center;padding:0 6px">${r.qty||1}</span>
-            <span style="font-size:0.7rem;font-weight:700;color:#374151;text-align:right">${((r.price||0)*(r.qty||1)).toLocaleString()}</span>
+            <span style="font-size:0.7rem;font-weight:600;color:var(--text);line-height:1.3">${escapeHtml(r.name||'')}</span>
+            <span style="font-size:0.7rem;font-weight:700;color:var(--text2);text-align:center;padding:0 6px">${r.qty||1}</span>
+            <span style="font-size:0.7rem;font-weight:700;color:var(--text2);text-align:right">${((r.price||0)*(r.qty||1)).toLocaleString()}</span>
           </div>`).join('')}
           <div style="padding:7px 10px;background:#f0fdf4;display:flex;justify-content:space-between">
             <span style="font-size:0.65rem;color:#15803d;font-weight:700">รวม</span>
@@ -3828,14 +3828,14 @@ function openDetail(tid) {
         </div>`:`<div style="padding:16px 12px;color:#94a3b8;font-size:0.7rem;text-align:center">ยังไม่มีรายการวัสดุ</div>`}
       </div>
       <!-- ค่าแรง -->
-      <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+      <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
         <div style="padding:10px 12px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:5px">
           <span style="font-size:0.7rem">💰</span>
-          <span style="font-size:0.7rem;font-weight:800;color:#0f172a">ค่าแรง</span>
+          <span style="font-size:0.7rem;font-weight:800;color:var(--text)">ค่าแรง</span>
         </div>
         <div style="padding:12px">
           <div style="font-size:0.62rem;color:#64748b;font-weight:600;margin-bottom:4px">ประเภทค่าแรง</div>
-          <div style="font-size:0.75rem;font-weight:700;color:#1e293b;margin-bottom:12px;line-height:1.4">${escapeHtml(_wageLabel)}</div>
+          <div style="font-size:0.75rem;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.4">${escapeHtml(_wageLabel)}</div>
           <div style="font-size:0.62rem;color:#64748b;font-weight:600;margin-bottom:4px">ค่าแรง</div>
           <div style="font-size:1rem;font-weight:900;color:${_wageTotal?'#1d4ed8':'#94a3b8'}">฿${_wageTotal.toLocaleString()}</div>
         </div>
@@ -3843,19 +3843,19 @@ function openDetail(tid) {
     </div>
 
     <!-- สรุปรายการ (เต็มความกว้าง) -->
-    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
+    <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)">
       <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
         <span style="font-size:0.75rem">🧾</span>
-        <span style="font-size:0.75rem;font-weight:800;color:#0f172a">สรุปรายการ</span>
+        <span style="font-size:0.75rem;font-weight:800;color:var(--text)">สรุปรายการ</span>
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f8fafc">
           <span style="font-size:0.75rem;color:#64748b;font-weight:600">รวมค่าวัสดุ</span>
-          <span style="font-size:0.82rem;font-weight:800;color:#374151">฿${_partsTotal.toLocaleString()}</span>
+          <span style="font-size:0.82rem;font-weight:800;color:var(--text2)">฿${_partsTotal.toLocaleString()}</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f8fafc">
           <span style="font-size:0.75rem;color:#64748b;font-weight:600">รวมค่าแรง</span>
-          <span style="font-size:0.82rem;font-weight:800;color:#374151">฿${_wageTotal.toLocaleString()}</span>
+          <span style="font-size:0.82rem;font-weight:800;color:var(--text2)">฿${_wageTotal.toLocaleString()}</span>
         </div>
         <div style="padding:14px;background:#f0fdf4;display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:0.85rem;color:#15803d;font-weight:800">รวมทั้งสิ้น (โดยประมาณ)</span>
@@ -3865,13 +3865,13 @@ function openDetail(tid) {
     </div>
 
     <!-- หมายเหตุ -->
-    <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07);margin-bottom:4px">
+    <div style="background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07);margin-bottom:4px">
       <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
         <span style="font-size:0.75rem">📝</span>
-        <span style="font-size:0.75rem;font-weight:800;color:#0f172a">หมายเหตุ / บันทึกเพิ่มเติม</span>
+        <span style="font-size:0.75rem;font-weight:800;color:var(--text)">หมายเหตุ / บันทึกเพิ่มเติม</span>
       </div>
       <div style="padding:12px 14px">
-        <div style="background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:0.78rem;color:${t.note?'#374151':'#94a3b8'};font-style:${t.note?'normal':'italic'};line-height:1.6">${escapeHtml(t.note||'ไม่มีหมายเหตุ')}</div>
+        <div style="background:var(--bg);border-radius:10px;padding:10px 12px;font-size:0.78rem;color:${t.note?'#374151':'#94a3b8'};font-style:${t.note?'normal':'italic'};line-height:1.6">${escapeHtml(t.note||'ไม่มีหมายเหตุ')}</div>
       </div>
     </div>
 
@@ -4356,7 +4356,7 @@ function renderTracking() {
       const poBadge = t.purchaseOrder?.po
         ? `<span style="background:#f5f3ff;color:#6d28d9;border:1px solid #c4b5fd;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:700">PO: ${t.purchaseOrder.po}</span>`
         : '';
-      return `<div style="background:white;border:1.5px solid ${hasPO?'rgba(230,81,0,0.25)':'rgba(200,16,46,0.3)'};border-radius:14px;padding:12px;margin-bottom:8px" onclick="safeOpenDetail('${t.id}')" style="cursor:pointer">
+      return `<div style="background:var(--card);border:1.5px solid ${hasPO?'rgba(230,81,0,0.25)':'rgba(200,16,46,0.3)'};border-radius:14px;padding:12px;margin-bottom:8px" onclick="safeOpenDetail('${t.id}')" style="cursor:pointer">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -4376,7 +4376,7 @@ function renderTracking() {
           <div style="display:flex;gap:6px;flex-shrink:0">
             ${CU&&CU.role==='admin' ? `
             <button onclick="event.stopPropagation();closeSheet('detail');setTimeout(()=>openPOForm('${t.id}'),200)"
-              style="padding:5px 10px;border-radius:8px;border:1.5px solid #e65100;background:white;color:#e65100;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit">
+              style="padding:5px 10px;border-radius:8px;border:1.5px solid #e65100;background:var(--card);color:#e65100;font-size:0.65rem;font-weight:800;cursor:pointer;font-family:inherit">
               ✏️ ${hasPO?'แก้ PR':'กรอก PR'}
             </button>
             ${hasPO && !isRecv
@@ -4407,7 +4407,7 @@ function renderTracking() {
     </div>
     ${stale.sort((a,b) => daysSince(b.updatedAt)-daysSince(a.updatedAt)).map(t => {
       const ds = daysSince(t.updatedAt);
-      return `<div style="background:white;border:1px solid rgba(200,16,46,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">
+      return `<div style="background:var(--card);border:1px solid rgba(200,16,46,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
           <div style="flex:1;overflow:hidden">
             <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -4431,7 +4431,7 @@ function renderTracking() {
       <span>✅ ซ่อมเสร็จ รอตรวจรับ</span>
       <span style="background:#2e7d32;color:white;border-radius:99px;padding:1px 8px;font-size:0.72rem">${pendingVerify.length}</span>
     </div>
-    ${pendingVerify.map(t => `<div style="background:white;border:1px solid rgba(21,128,61,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">
+    ${pendingVerify.map(t => `<div style="background:var(--card);border:1px solid rgba(21,128,61,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="safeOpenDetail('${t.id}')">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="flex:1;overflow:hidden">
           <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -4527,17 +4527,17 @@ function confirmClearAllChats() {
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px';
   const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:22px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.25);animation:popIn 0.22s cubic-bezier(0.34,1.56,0.64,1)';
+  box.style.cssText = 'background:var(--card);border-radius:22px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.25);animation:popIn 0.22s cubic-bezier(0.34,1.56,0.64,1)';
   box.innerHTML = `
     <div style="width:60px;height:60px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;border:2px solid #bfdbfe">💬</div>
-    <div style="font-size:1rem;font-weight:900;color:#0f172a;margin-bottom:8px">ลบแชททั้งหมด?</div>
+    <div style="font-size:1rem;font-weight:900;color:var(--text);margin-bottom:8px">ลบแชททั้งหมด?</div>
     <div style="font-size:0.82rem;color:#64748b;line-height:1.7;margin-bottom:20px">
       จะลบข้อความ <strong style="color:#1d4ed8">${total} ข้อความ</strong> ในทุก Ticket<br>
       <span style="font-size:0.75rem;color:#94a3b8">ไม่สามารถย้อนกลับได้</span>
     </div>
     <div style="display:flex;gap:8px">
       <button onclick="this.closest('[style*=inset]').remove()"
-        style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+        style="flex:1;padding:13px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
       <button onclick="doDeleteAllChats();this.closest('[style*=inset]').remove()"
         style="flex:1;padding:13px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(29,78,216,0.35)">
         🗑️ ลบทั้งหมด
@@ -4573,17 +4573,17 @@ function confirmClearAllCalEvents() {
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px';
   const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:22px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.25);animation:popIn 0.22s cubic-bezier(0.34,1.56,0.64,1)';
+  box.style.cssText = 'background:var(--card);border-radius:22px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.25);animation:popIn 0.22s cubic-bezier(0.34,1.56,0.64,1)';
   box.innerHTML = `
     <div style="width:60px;height:60px;background:linear-gradient(135deg,#fff0f2,#fecaca);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;border:2px solid #fca5a5">🗑️</div>
-    <div style="font-size:1rem;font-weight:900;color:#0f172a;margin-bottom:8px">ลบกิจกรรมทั้งหมด?</div>
+    <div style="font-size:1rem;font-weight:900;color:var(--text);margin-bottom:8px">ลบกิจกรรมทั้งหมด?</div>
     <div style="font-size:0.82rem;color:#64748b;line-height:1.7;margin-bottom:20px">
       จะลบกิจกรรม <strong style="color:#c8102e">${total} รายการ</strong> ออกจากปฏิทินทั้งหมด<br>
       <span style="font-size:0.75rem;color:#94a3b8">การกระทำนี้ไม่สามารถย้อนกลับได้</span>
     </div>
     <div style="display:flex;gap:8px">
       <button onclick="this.closest('[style*=inset]').remove()"
-        style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">
+        style="flex:1;padding:13px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">
         ยกเลิก
       </button>
       <button onclick="doDeleteAllCalEvents();this.closest('[style*=inset]').remove()"
@@ -4656,7 +4656,7 @@ function renderCalDayPanel(dateStr) {
 
   if(dayEvs.length) {
     html += dayEvs.map(e => `
-      <div style="display:flex;align-items:center;gap:8px;background:white;border-radius:10px;padding:8px 10px;margin-bottom:6px;border-left:3px solid #7c3aed">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--card);border-radius:10px;padding:8px 10px;margin-bottom:6px;border-left:3px solid #7c3aed">
         <span style="font-size:1rem">${e.type==='clean'?'💧':e.type==='pm'?'🔩':'🔧'}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.8rem;font-weight:700;color:var(--text)">${e.title}</div>
@@ -4667,7 +4667,7 @@ function renderCalDayPanel(dateStr) {
 
   if(dayTickets.length) {
     html += dayTickets.map(t => `
-      <div style="display:flex;align-items:center;gap:8px;background:white;border-radius:10px;padding:8px 10px;margin-bottom:6px;border-left:3px solid ${stColor[t.status]||'#ccc'};cursor:pointer" onclick="openTicketSheet('${t.id}')">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--card);border-radius:10px;padding:8px 10px;margin-bottom:6px;border-left:3px solid ${stColor[t.status]||'#ccc'};cursor:pointer" onclick="openTicketSheet('${t.id}')">
         <div style="flex:1;min-width:0">
           <div style="font-size:0.8rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(t.problem)}</div>
           <div style="font-size:0.68rem;color:var(--muted)">${escapeHtml(t.machine||'')}</div>
@@ -4697,19 +4697,19 @@ function renderCalMonthSummary() {
   el.innerHTML = `
     <div style="font-size:0.72rem;font-weight:800;color:var(--accent);margin-bottom:10px">📊 ${MONTH_TH[calMonth]} ${calYear+543}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div style="background:white;border-radius:12px;padding:12px;text-align:center;border:1.5px solid #d1fae5">
+      <div style="background:var(--card);border-radius:12px;padding:12px;text-align:center;border:1.5px solid #d1fae5">
         <div style="font-size:1.6rem;font-weight:900;color:#059669">${done}</div>
         <div style="font-size:0.68rem;color:var(--muted);font-weight:600">✅ เสร็จแล้ว</div>
       </div>
-      <div style="background:white;border-radius:12px;padding:12px;text-align:center;border:1.5px solid #fee2e2">
+      <div style="background:var(--card);border-radius:12px;padding:12px;text-align:center;border:1.5px solid #fee2e2">
         <div style="font-size:1.6rem;font-weight:900;color:var(--accent)">${pending}</div>
         <div style="font-size:0.68rem;color:var(--muted);font-weight:600">⏳ ค้างอยู่</div>
       </div>
-      <div style="background:white;border-radius:12px;padding:12px;text-align:center;border:1.5px solid #e0e7ff">
+      <div style="background:var(--card);border-radius:12px;padding:12px;text-align:center;border:1.5px solid #e0e7ff">
         <div style="font-size:1.6rem;font-weight:900;color:#7c3aed">${myEvs.length}</div>
         <div style="font-size:0.68rem;color:var(--muted);font-weight:600">📅 กิจกรรม</div>
       </div>
-      <div style="background:white;border-radius:12px;padding:12px;text-align:center;border:1.5px solid #fef3c7">
+      <div style="background:var(--card);border-radius:12px;padding:12px;text-align:center;border:1.5px solid #fef3c7">
         <div style="font-size:1.1rem;font-weight:900;color:#b45309">฿${totalCost.toLocaleString()}</div>
         <div style="font-size:0.68rem;color:var(--muted);font-weight:600">💰 ค่าซ่อมรวม</div>
       </div>
@@ -4780,7 +4780,7 @@ function renderCalTechSummary() {
     const avatar = tech.photo
       ? `<img src="${tech.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid white">`
       : `<div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:1.1rem;border:2px solid rgba(255,255,255,0.4)">🔧</div>`;
-    return `<div onclick="openTechPopup('${tech.id}')" style="flex-shrink:0;width:150px;background:white;border-radius:14px;border:1px solid #e5e7eb;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:transform 0.15s,box-shadow 0.15s" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">
+    return `<div onclick="openTechPopup('${tech.id}')" style="flex-shrink:0;width:150px;background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:transform 0.15s,box-shadow 0.15s" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">
       <div style="background:linear-gradient(135deg,var(--accent),var(--accent2));padding:10px 12px;display:flex;align-items:center;gap:8px">
         ${avatar}
         <div style="flex:1;min-width:0">

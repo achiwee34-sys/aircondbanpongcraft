@@ -50,7 +50,7 @@ function renderUsers() {
   if (!list.length) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#94a3b8">'
       + '<div style="font-size:2.5rem;margin-bottom:8px">' + tm.icon + '</div>'
-      + '<div style="font-size:0.9rem;font-weight:700;color:#374151;margin-bottom:4px">ยังไม่มี' + tm.label + '</div>'
+      + '<div style="font-size:0.9rem;font-weight:700;color:var(--text2);margin-bottom:4px">ยังไม่มี' + tm.label + '</div>'
       + '<div style="font-size:0.75rem">กดปุ่ม + เพิ่ม ด้านบน</div></div>';
     return;
   }
@@ -84,7 +84,7 @@ function buildUserCard(u, tm) {
     var pct     = Math.min(100, active.length*14);
     var barClr  = active.length>4?'#c8102e':active.length>2?'#f59e0b':'#22c55e';
     var manBtn  = (CU&&CU.role==='admin')
-      ? '<button onclick="openAdminManageTechTickets(\'' + u.id + '\')" style="margin-left:auto;font-size:0.62rem;padding:4px 10px;border-radius:7px;border:1.5px solid #c8102e;background:white;color:#c8102e;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">⚙️ จัดการงาน</button>'
+      ? '<button onclick="openAdminManageTechTickets(\'' + u.id + '\')" style="margin-left:auto;font-size:0.62rem;padding:4px 10px;border-radius:7px;border:1.5px solid #c8102e;background:var(--card);color:#c8102e;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">⚙️ จัดการงาน</button>'
       : '';
 
     // ── machine cards: แสดงเครื่องที่มีงานค้างอยู่กับช่างคนนี้ ──
@@ -100,7 +100,7 @@ function buildUserCard(u, tm) {
       }
     });
     if (uniqueMachines.length > 0) {
-      machineCards = '<div style="border-top:1px solid #f1f5f9;padding:8px 14px 10px;background:#fafafa">'
+      machineCards = '<div style="border-top:1px solid #f1f5f9;padding:8px 14px 10px;background:var(--bg)">'
         + '<div style="font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px">เครื่องที่รับผิดชอบ</div>'
         + '<div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;touch-action:pan-x">'
         + uniqueMachines.map(function(item) {
@@ -109,11 +109,11 @@ function buildUserCard(u, tm) {
             var macName = mac ? mac.name : (t.machine||'—');
             var stColor = {new:'#6b7280',assigned:'#7c3aed',accepted:'#0891b2',inprogress:'#e65100',waiting_part:'#b45309',done:'#059669'}[t.status]||'#6b7280';
             var stIcon  = {new:'🆕',assigned:'📋',accepted:'✋',inprogress:'⚙️',waiting_part:'⏳',done:'✅'}[t.status]||'❄️';
-            return '<div onclick="openDetail(\'' + t.id + '\')" style="background:white;border:1.5px solid #e2e8f0;border-radius:10px;padding:7px 10px;cursor:pointer;flex-shrink:0;width:140px;box-sizing:border-box;-webkit-tap-highlight-color:transparent"'
+            return '<div onclick="openDetail(\'' + t.id + '\')" style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:10px;padding:7px 10px;cursor:pointer;flex-shrink:0;width:140px;box-sizing:border-box;-webkit-tap-highlight-color:transparent"'
               + ' ontouchstart="this.style.background=\'#f8fafc\'" ontouchend="this.style.background=\'white\'">'
               + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">'
               + '<span style="font-size:0.75rem">❄️</span>'
-              + '<div style="font-size:0.7rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">' + _esc(macName.length>20?macName.slice(0,20)+'…':macName) + '</div>'
+              + '<div style="font-size:0.7rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">' + _esc(macName.length>20?macName.slice(0,20)+'…':macName) + '</div>'
               + '</div>'
               + (btu ? '<div style="font-size:0.58rem;color:#64748b;margin-bottom:3px">' + btu + '</div>' : '')
               + '<div style="display:flex;align-items:center;gap:4px">'
@@ -125,7 +125,7 @@ function buildUserCard(u, tm) {
         + '</div></div>';
     }
 
-    workHtml = '<div style="border-top:1px solid #f1f5f9;padding:10px 14px 10px;background:#fafafa">'
+    workHtml = '<div style="border-top:1px solid #f1f5f9;padding:10px 14px 10px;background:var(--bg)">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
       + '<span style="font-size:0.65rem;color:#94a3b8;flex:1">ภาระงาน</span>'
       + '<span style="font-size:0.7rem;font-weight:900;color:'+barClr+'">'+active.length+' งานค้าง</span>'
@@ -143,12 +143,12 @@ function buildUserCard(u, tm) {
 
   var canDelete = (CU && CU.role === 'admin' && u.id !== CU.id);
 
-  return '<div style="background:white;border-radius:16px;margin-bottom:10px;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.05);overflow:hidden">'
+  return '<div style="background:var(--card);border-radius:16px;margin-bottom:10px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.05);overflow:hidden">'
     + '<div style="display:flex;align-items:center;gap:12px;padding:13px 14px">'
     + '<div style="width:48px;height:48px;border-radius:50%;background:'+avatarBg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.12)">'+avatarHtml+'</div>'
     + '<div style="flex:1;min-width:0">'
     + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap">'
-    + '<div style="font-size:0.92rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">'+_esc(u.name)+'</div>'
+    + '<div style="font-size:0.92rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">'+_esc(u.name)+'</div>'
     + '<span style="background:'+tm.bg+';color:'+tm.cl+';border:1px solid '+tm.bd+';border-radius:99px;padding:1px 7px;font-size:0.6rem;font-weight:800;flex-shrink:0">'+roleTag+'</span>'
     + '</div>'
     + '<div style="font-size:0.7rem;color:#94a3b8;display:flex;gap:5px;flex-wrap:wrap">'
@@ -157,7 +157,7 @@ function buildUserCard(u, tm) {
     + (u.tel ?'<span>· 📞 '+_esc(u.tel)+'</span>':'')
     + '</div></div>'
     + '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">'
-    + '<button onclick="openUserSheet(\''+u.id+'\')" title="แก้ไข" style="width:36px;height:36px;background:#f1f5f9;border:none;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">✏️</button>'
+    + '<button onclick="openUserSheet(\''+u.id+'\')" title="แก้ไข" style="width:36px;height:36px;background:var(--bg-2,#f1f5f9);border:none;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">✏️</button>'
     + (canDelete ? ('<button onclick="adminResetPassword(\''+u.id+'\')" title="รีเซ็ต Password" style="width:36px;height:36px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">🔑</button><button onclick="delUser(\''+u.id+'\')" title="ลบ" style="width:36px;height:36px;background:#fff0f2;border:1px solid #fecaca;border-radius:10px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">🗑️</button>') : '<div style="width:36px;height:36px"></div>')
     + '</div></div>'
     + workHtml + '</div>';
@@ -348,13 +348,13 @@ function showConfirmDelete(u, onConfirm) {
   ov.className = 'cdel-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
   var box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:20px;padding:24px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)';
+  box.style.cssText = 'background:var(--card);border-radius:20px;padding:24px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)';
   box.innerHTML = '<div style="font-size:2rem;margin-bottom:12px">🗑️</div>'
     + '<div style="font-size:1rem;font-weight:800;margin-bottom:8px">ลบผู้ใช้?</div>'
     + '<div style="font-size:0.85rem;color:#64748b;margin-bottom:6px"><b>'+_esc(u.name)+'</b><br>@'+_esc(u.username)+'</div>'
     + '<div style="font-size:0.75rem;color:#ef4444;background:#fff0f0;border-radius:10px;padding:8px;margin-bottom:20px">⚠️ ไม่สามารถย้อนกลับได้</div>'
     + '<div style="display:flex;gap:10px">'
-    + '<button class="cdel-cancel-btn" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid #e5e7eb;background:white;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>'
+    + '<button class="cdel-cancel-btn" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>'
     + '<button class="cdel-confirm-btn" style="flex:1;padding:12px;border-radius:12px;border:none;background:#c8102e;color:white;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ลบเลย</button>'
     + '</div>';
   ov.appendChild(box);
@@ -382,7 +382,7 @@ function openAdminManageTechTickets(techId) {
         + '<div style="flex:1;min-width:0"><div style="font-size:0.78rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.id+' · '+_esc(t.problem)+'</div></div>'+btn+'</div>';
     }).join('');
   }
-  ov.innerHTML = '<div style="background:white;border-radius:24px 24px 0 0;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column">'
+  ov.innerHTML = '<div style="background:var(--card);border-radius:24px 24px 0 0;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column">'
     + '<div style="display:flex;justify-content:center;padding:10px 0 0"><div style="width:40px;height:4px;background:#e2e8f0;border-radius:99px"></div></div>'
     + '<div style="padding:14px 16px 12px;border-bottom:1px solid #f1f5f9;flex-shrink:0"><div style="font-size:1rem;font-weight:900">⚙️ จัดการงาน — '+_esc(tech.name)+'</div></div>'
     + '<div style="overflow-y:auto;flex:1">'
@@ -392,7 +392,7 @@ function openAdminManageTechTickets(techId) {
     + '<div id="amtk-avail-'+techId+'">'+rows(avail,false)+'</div>'
     + '</div>'
     + '<div style="padding:12px 16px;border-top:1px solid #f1f5f9;flex-shrink:0">'
-    + '<button onclick="document.getElementById(\'admin-manage-tk-ov\').remove()" style="width:100%;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ปิด</button>'
+    + '<button onclick="document.getElementById(\'admin-manage-tk-ov\').remove()" style="width:100%;padding:12px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit">ปิด</button>'
     + '</div></div>';
   ov.onclick = function(e){if(e.target===ov)ov.remove();};
   document.body.appendChild(ov);
@@ -539,7 +539,7 @@ function setProblem(text){document.getElementById('nt-prob').value=text;document
 var xlData=[],xlHeaders=[];
 function openImportSheet(){openSheet('import');}
 function readExcel(input){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});var ws=wb.Sheets[wb.SheetNames[0]];xlData=XLSX.utils.sheet_to_json(ws,{defval:''});xlHeaders=xlData.length>0?Object.keys(xlData[0]):[];document.getElementById('xl-map').style.display='block';document.getElementById('xl-import-btn').style.display='';renderColMap();};reader.readAsArrayBuffer(file);}
-function renderColMap(){var el=document.getElementById('xl-col-map');if(!el)return;var fields=[{key:'name',label:'ชื่อเครื่อง *'},{key:'serial',label:'Serial'},{key:'dept',label:'แผนก'},{key:'room',label:'ห้อง'},{key:'brand',label:'ยี่ห้อ'},{key:'btu',label:'BTU'},{key:'type',label:'ประเภท'},{key:'note',label:'หมายเหตุ'}];el.innerHTML=fields.map(function(f){return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="width:90px;font-size:0.75rem;font-weight:700">'+f.label+'</label><select id="xlmap-'+f.key+'" style="flex:1;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.75rem;font-family:inherit"><option value="">(ไม่นำเข้า)</option>'+xlHeaders.map(function(h){return '<option value="'+h+'"'+(h.toLowerCase().includes(f.key)?' selected':'')+'>'+h+'</option>';}).join('')+'</select></div>';}).join('');}
+function renderColMap(){var el=document.getElementById('xl-col-map');if(!el)return;var fields=[{key:'name',label:'ชื่อเครื่อง *'},{key:'serial',label:'Serial'},{key:'dept',label:'แผนก'},{key:'room',label:'ห้อง'},{key:'brand',label:'ยี่ห้อ'},{key:'btu',label:'BTU'},{key:'type',label:'ประเภท'},{key:'note',label:'หมายเหตุ'}];el.innerHTML=fields.map(function(f){return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><label style="width:90px;font-size:0.75rem;font-weight:700">'+f.label+'</label><select id="xlmap-'+f.key+'" style="flex:1;padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.75rem;font-family:inherit"><option value="">(ไม่นำเข้า)</option>'+xlHeaders.map(function(h){return '<option value="'+h+'"'+(h.toLowerCase().includes(f.key)?' selected':'')+'>'+h+'</option>';}).join('')+'</select></div>';}).join('');}
 function importMachines(){if(!xlData.length)return;var gc=function(k){var el=document.getElementById('xlmap-'+k);return el?el.value:'';};var added=0;xlData.forEach(function(row){var name=row[gc('name')];if(!name)return;var serial=row[gc('serial')]||'';if(serial&&db.machines.find(function(m){return m.serial===serial;}))return;db.machines.push({id:'M'+Date.now()+Math.random().toString(36).slice(2,5),name:String(name).trim(),serial:String(serial).trim(),dept:String(row[gc('dept')]||'').trim(),room:String(row[gc('room')]||'').trim(),brand:String(row[gc('brand')]||'').trim(),btu:String(row[gc('btu')]||'').trim(),type:String(row[gc('type')]||'').trim(),note:String(row[gc('note')]||'').trim(),status:'normal',createdAt:nowStr()});added++;});if(added>0){saveDB();if(typeof renderMachines==='function')renderMachines();}closeSheet('import');resetExcel();showToast(added>0?'✅ นำเข้า '+added+' เครื่องแล้ว':'⚠️ ไม่มีข้อมูลใหม่');}
 function resetExcel(){xlData=[];xlHeaders=[];document.getElementById('xl-map').style.display='none';document.getElementById('xl-import-btn').style.display='none';document.getElementById('xl-file').value='';}
 

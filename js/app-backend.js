@@ -182,7 +182,7 @@ function renderBkStatus() {
         `<div style="border-bottom:1px solid #fee2e2;padding:3px 0">
           <span style="color:#ef4444;font-weight:700">${_fmtTime(e.ts)}</span>
           <span style="color:#64748b"> · ${e.src}</span><br>
-          <span style="color:#1e293b">${e.msg}</span>
+          <span style="color:var(--text)">${e.msg}</span>
         </div>`
       ).join('');
     }
@@ -239,7 +239,7 @@ function renderBkStats() {
     colEl.innerHTML = collections.map(c =>
       `<div style="display:flex;align-items:center;gap:8px;padding:2px 0">
         <span>${c.icon}</span>
-        <span style="flex:1;font-size:0.75rem;color:#1e293b">${c.name}</span>
+        <span style="flex:1;font-size:0.75rem;color:var(--text)">${c.name}</span>
         <span style="font-size:0.75rem;font-weight:800;color:#1d4ed8">${c.count}</span>
         <span style="font-size:0.65rem;color:#94a3b8">docs</span>
       </div>`
@@ -269,10 +269,10 @@ function renderBkStats() {
         const pct = tickets.length ? Math.round(cnt / tickets.length * 100) : 0;
         return `<div style="margin-bottom:6px">
           <div style="display:flex;justify-content:space-between;font-size:0.7rem;margin-bottom:2px">
-            <span style="color:#1e293b;font-weight:700">${label}</span>
+            <span style="color:var(--text);font-weight:700">${label}</span>
             <span style="color:${color};font-weight:800">${cnt} (${pct}%)</span>
           </div>
-          <div style="height:5px;background:#f1f5f9;border-radius:4px;overflow:hidden">
+          <div style="height:5px;background:var(--bg-2,#f1f5f9);border-radius:4px;overflow:hidden">
             <div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width 0.4s"></div>
           </div>
         </div>`;
@@ -312,13 +312,13 @@ function renderBkLog() {
       login:'🔑', logout:'🚪', error:'❌', info:'ℹ️',
       sync:'🔄', photo:'📷', assign:'📌'
     }[l.type] || '•';
-    return `<div style="background:#f8fafc;border-radius:8px;padding:8px 10px;border-left:3px solid ${typeColor}">
+    return `<div style="background:var(--bg);border-radius:8px;padding:8px 10px;border-left:3px solid ${typeColor}">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
         <span style="font-size:0.7rem">${typeIcon}</span>
         <span style="font-size:0.7rem;font-weight:800;color:${typeColor}">${l.type.toUpperCase()}</span>
         <span style="font-size:0.62rem;color:#94a3b8;margin-left:auto">${_fmtTime(l.ts)}</span>
       </div>
-      <div style="font-size:0.72rem;color:#1e293b;font-weight:600">${l.msg}</div>
+      <div style="font-size:0.72rem;color:var(--text);font-weight:600">${l.msg}</div>
       ${l.user ? `<div style="font-size:0.62rem;color:#64748b">👤 ${l.user}${l.detail?' · '+l.detail:''}</div>` : ''}
     </div>`;
   }).join('');
@@ -334,12 +334,12 @@ function renderBkAudit() {
     return;
   }
   el.innerHTML = audit.map(a =>
-    `<div style="background:#f8fafc;border-radius:8px;padding:8px 10px;border-left:3px solid #7c3aed">
+    `<div style="background:var(--bg);border-radius:8px;padding:8px 10px;border-left:3px solid #7c3aed">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
         <span style="font-size:0.7rem;font-weight:800;color:#7c3aed">${a.action}</span>
         <span style="font-size:0.62rem;color:#94a3b8;margin-left:auto">${_fmtTime(a.ts)}</span>
       </div>
-      <div style="font-size:0.72rem;color:#1e293b;font-weight:600">${a.target}</div>
+      <div style="font-size:0.72rem;color:var(--text);font-weight:600">${a.target}</div>
       <div style="font-size:0.62rem;color:#64748b">👤 ${a.user} (${a.role})</div>
       ${a.before !== '—' ? `<div style="font-size:0.6rem;color:#94a3b8;margin-top:3px;word-break:break-all">Before: ${a.before}</div>` : ''}
     </div>`

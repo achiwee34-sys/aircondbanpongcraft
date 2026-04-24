@@ -68,18 +68,18 @@ function openSparePicker(rowIdx) {
 
   const sh = document.createElement('div');
   sh.className = 'spare-picker-sh';
-  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9600;background:#f8fafc;border-radius:22px 22px 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -12px 48px rgba(0,0,0,0.2)';
+  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9600;background:var(--bg);border-radius:22px 22px 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -12px 48px rgba(0,0,0,0.2)';
 
   sh.innerHTML = `
     <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0">
       <div style="width:36px;height:4px;background:#cbd5e1;border-radius:99px"></div>
     </div>
     <!-- header -->
-    <div style="padding:10px 16px 12px;flex-shrink:0;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+    <div style="padding:10px 16px 12px;flex-shrink:0;background:var(--bg);border-bottom:1px solid #e2e8f0">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <button onclick="_closeSparePicker()" style="width:34px;height:34px;border-radius:50%;background:#e2e8f0;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">‹</button>
         <div style="flex:1">
-          <div style="font-size:0.92rem;font-weight:800;color:#0f172a">เลือกอะไหล่</div>
+          <div style="font-size:0.92rem;font-weight:800;color:var(--text)">เลือกอะไหล่</div>
           <div style="font-size:0.65rem;color:#64748b">กดเลือกเพื่อเพิ่มในรายการสั่งซื้อ</div>
         </div>
         <div style="font-size:0.68rem;font-weight:700;color:#64748b;background:#e2e8f0;border-radius:99px;padding:3px 10px" id="spare-count-badge">300 รายการ</div>
@@ -88,7 +88,7 @@ function openSparePicker(rowIdx) {
       <div style="position:relative;margin-bottom:8px">
         <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="spare-search-q" type="text" placeholder="ค้นหาอะไหล่... (ชื่อ, รหัส)"
-          style="width:100%;padding:10px 12px 10px 34px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:0.85rem;font-family:inherit;outline:none;background:white;box-sizing:border-box"
+          style="width:100%;padding:10px 12px 10px 34px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:0.85rem;font-family:inherit;outline:none;background:var(--card);box-sizing:border-box"
           oninput="_renderSpareList()"
           onfocus="this.style.borderColor='#e65100'" onblur="this.style.borderColor='#e2e8f0'"/>
       </div>
@@ -100,7 +100,7 @@ function openSparePicker(rowIdx) {
         </button>
         ${Object.entries(SPARE_CAT_META).map(([k,v])=>`
         <button onclick="_setSparecat('${k}')" id="spare-cat-${k}"
-          style="flex-shrink:0;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:white;color:#64748b;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit">
+          style="flex-shrink:0;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:var(--card);color:#64748b;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit">
           ${v.icon} ${v.label}
         </button>`).join('')}
       </div>
@@ -151,15 +151,15 @@ function openSparePicker(rowIdx) {
     body.innerHTML = results.map(s => {
       const meta = SPARE_CAT_META[s.c] || {icon:'📦',label:s.c};
       return `<div onclick="_selectSpare('${s.id}')" data-spare-id="${s.id}"
-        style="background:white;border:1.5px solid #e2e8f0;border-radius:13px;padding:11px 14px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color 0.15s"
+        style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:13px;padding:11px 14px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color 0.15s"
         onmouseover="this.style.borderColor='#e65100';this.style.background='#fff7ed'"
         onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
         <div style="width:38px;height:38px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${meta.icon}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.82rem;font-weight:700;color:#0f172a;line-height:1.3">${escapeHtml(s.n)}</div>
+          <div style="font-size:0.82rem;font-weight:700;color:var(--text);line-height:1.3">${escapeHtml(s.n)}</div>
           <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap">
             <span style="font-size:0.6rem;color:#94a3b8;font-weight:600;font-family:monospace">${s.id}</span>
-            <span style="font-size:0.6rem;background:#f1f5f9;color:#64748b;border-radius:4px;padding:1px 6px;font-weight:600">${meta.icon} ${meta.label}</span>
+            <span style="font-size:0.6rem;background:var(--bg-2,#f1f5f9);color:#64748b;border-radius:4px;padding:1px 6px;font-weight:600">${meta.icon} ${meta.label}</span>
             <span style="font-size:0.6rem;color:#64748b">/${s.u}</span>
           </div>
         </div>
@@ -295,7 +295,7 @@ function openSpareManager() {
             <div style="color:white;font-size:1rem;font-weight:900">📦 จัดการรายการอะไหล่</div>
             <div style="color:rgba(255,255,255,.55);font-size:0.62rem;margin-top:2px">${total} รายการ · ${active} รายการ active</div>
           </div>
-          <button onclick="window._smNew()" style="background:white;color:#15803d;border:none;border-radius:12px;padding:9px 14px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
+          <button onclick="window._smNew()" style="background:var(--card);color:#15803d;border:none;border-radius:12px;padding:9px 14px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>เพิ่ม
           </button>
         </div>
@@ -323,7 +323,7 @@ function openSpareManager() {
       </div>
 
       <!-- LIST BODY -->
-      <div style="flex:1;overflow-y:auto;padding:10px 12px 20px;background:#f8fafc">
+      <div style="flex:1;overflow-y:auto;padding:10px 12px 20px;background:var(--bg)">
         ${items.length === 0 ? `
           <div style="text-align:center;padding:48px 20px;color:#94a3b8">
             <div style="font-size:2.5rem;margin-bottom:8px">🔍</div>
@@ -337,7 +337,7 @@ function openSpareManager() {
           <div style="background:${inactive?'#f8fafc':'white'};border:1.5px solid ${inactive?'#e2e8f0':cc.border};border-radius:13px;margin-bottom:6px;padding:11px 12px;display:flex;align-items:center;gap:10px;${inactive?'opacity:0.55':''}">
             <div style="width:36px;height:36px;border-radius:10px;background:${cc.bg};border:1px solid ${cc.border};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${cc.icon}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.82rem;font-weight:700;color:#0f172a;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(s.name)}</div>
+              <div style="font-size:0.82rem;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(s.name)}</div>
               <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
                 <span style="font-size:0.58rem;color:#94a3b8;font-family:monospace">${s.id||''}</span>
                 <span style="font-size:0.6rem;background:${cc.bg};color:${cc.accent};border-radius:4px;padding:1px 6px;font-weight:700">${SPARE_CAT_META[s.category]?.label||s.category}</span>
@@ -372,27 +372,27 @@ function openSpareManager() {
             <div style="color:white;font-size:1rem;font-weight:900">${isNew?'เพิ่มอะไหล่ใหม่':'แก้ไขอะไหล่'}</div>
             <div style="color:rgba(255,255,255,.5);font-size:0.62rem;margin-top:2px">${s.id||''}</div>
           </div>
-          <button onclick="window._smSave()" style="background:white;color:#15803d;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.15)">💾 บันทึก</button>
+          <button onclick="window._smSave()" style="background:var(--card);color:#15803d;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.15)">💾 บันทึก</button>
         </div>
       </div>
 
-      <div style="flex:1;overflow-y:auto;padding:14px 14px 32px;background:#f8fafc">
+      <div style="flex:1;overflow-y:auto;padding:14px 14px 32px;background:var(--bg)">
 
         <!-- basic info card -->
-        <div style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid #e2e8f0">
+        <div style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid #e2e8f0">
           <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">ข้อมูลอะไหล่</div>
 
           <div style="margin-bottom:10px">
             <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:5px">รหัสอะไหล่</div>
             <input id="sm-id" value="${escapeHtml(s.id||'')}" placeholder="SP001"
-              style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:0.85rem;font-family:monospace;outline:none;box-sizing:border-box;color:#374151"
+              style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:0.85rem;font-family:monospace;outline:none;box-sizing:border-box;color:var(--text2)"
               onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#e5e7eb'"/>
           </div>
 
           <div style="margin-bottom:10px">
             <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:5px">ชื่ออะไหล่ *</div>
             <input id="sm-name" value="${escapeHtml(s.name||'')}" placeholder="เช่น คอยล์เย็น, มอเตอร์พัดลม"
-              style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:0.88rem;font-family:inherit;font-weight:700;outline:none;box-sizing:border-box;color:#0f172a"
+              style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:0.88rem;font-family:inherit;font-weight:700;outline:none;box-sizing:border-box;color:var(--text)"
               onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#e5e7eb'"/>
           </div>
 
@@ -400,12 +400,12 @@ function openSpareManager() {
             <div>
               <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:5px">ราคา (฿) *</div>
               <input id="sm-price" type="number" value="${s.price||0}" min="0"
-                style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:0.88rem;font-family:inherit;font-weight:800;outline:none;box-sizing:border-box;color:#15803d"
+                style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:0.88rem;font-family:inherit;font-weight:800;outline:none;box-sizing:border-box;color:#15803d"
                 onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#e5e7eb'"/>
             </div>
             <div>
               <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:5px">หน่วย</div>
-              <select id="sm-unit" style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:0.84rem;font-family:inherit;outline:none;background:white;box-sizing:border-box;color:#374151">
+              <select id="sm-unit" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:0.84rem;font-family:inherit;outline:none;background:var(--card);box-sizing:border-box;color:var(--text2)">
                 ${['ชิ้น','อัน','ชุด','ม.','กก.','ลิตร','ฟุต','EA','JOB','KG','M'].map(u=>`<option value="${u}" ${(s.unit||'ชิ้น')===u?'selected':''}>${u}</option>`).join('')}
               </select>
             </div>
@@ -425,19 +425,19 @@ function openSpareManager() {
         </div>
 
         <!-- keywords card -->
-        <div style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid #e2e8f0">
+        <div style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid #e2e8f0">
           <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Keywords (ช่วยค้นหา)</div>
           <input id="sm-keywords" value="${(s.keywords||[]).join(', ')}" placeholder="เช่น คอยล์, โคลด์, evaporator"
-            style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;color:#374151"
+            style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:0.82rem;font-family:inherit;outline:none;box-sizing:border-box;color:var(--text2)"
             onfocus="this.style.borderColor='#16a34a'" onblur="this.style.borderColor='#e5e7eb'"/>
           <div style="font-size:0.62rem;color:#94a3b8;margin-top:5px">คั่นด้วย comma เช่น "แอร์, air, cooling"</div>
         </div>
 
         <!-- status + delete -->
-        <div style="background:white;border-radius:16px;padding:16px;border:1.5px solid #e2e8f0">
+        <div style="background:var(--card);border-radius:16px;padding:16px;border:1.5px solid #e2e8f0">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div>
-              <div style="font-size:0.82rem;font-weight:700;color:#0f172a">เปิดใช้งาน</div>
+              <div style="font-size:0.82rem;font-weight:700;color:var(--text)">เปิดใช้งาน</div>
               <div style="font-size:0.68rem;color:#64748b;margin-top:2px">ปิดเพื่อซ่อนจากช่าง แต่ไม่ลบข้อมูล</div>
             </div>
             <label style="position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0">
@@ -446,7 +446,7 @@ function openSpareManager() {
                 onchange="document.getElementById('sm-active-track').style.background=this.checked?'#16a34a':'#d1d5db';document.getElementById('sm-active-knob').style.transform=this.checked?'translateX(22px)':'translateX(0)'"/>
               <span id="sm-active-track" style="position:absolute;inset:0;border-radius:13px;background:${s.isActive!==false?'#16a34a':'#d1d5db'};transition:background 0.2s;cursor:pointer"
                 onclick="const cb=document.getElementById('sm-active');cb.checked=!cb.checked;this.style.background=cb.checked?'#16a34a':'#d1d5db';document.getElementById('sm-active-knob').style.transform=cb.checked?'translateX(22px)':'translateX(0)'"></span>
-              <span id="sm-active-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s;pointer-events:none;transform:${s.isActive!==false?'translateX(22px)':'translateX(0)'}"></span>
+              <span id="sm-active-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s;pointer-events:none;transform:${s.isActive!==false?'translateX(22px)':'translateX(0)'}"></span>
             </label>
           </div>
           ${!isNew?`
@@ -688,7 +688,7 @@ function openInventoryManager() {
             <div style="color:white;font-size:1rem;font-weight:900">📦 คลังอะไหล่</div>
             <div style="color:rgba(255,255,255,.5);font-size:0.62rem;margin-top:1px">แยกจาก Catalog · track จำนวนจริง</div>
           </div>
-          <button onclick="window._invOpenAdjust(null)" style="background:white;color:#1d4ed8;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit">+ รับเข้า</button>
+          <button onclick="window._invOpenAdjust(null)" style="background:var(--card);color:#1d4ed8;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit">+ รับเข้า</button>
         </div>
 
         <!-- summary pills -->
@@ -724,7 +724,7 @@ function openInventoryManager() {
       </div>
 
       <!-- STOCK LIST -->
-      <div style="flex:1;overflow-y:auto;padding:10px 12px 20px;background:#f8fafc">
+      <div style="flex:1;overflow-y:auto;padding:10px 12px 20px;background:var(--bg)">
         ${items.length === 0 ? `
           <div style="text-align:center;padding:48px 20px;color:#94a3b8">
             <div style="font-size:2.5rem;margin-bottom:8px">📦</div>
@@ -739,15 +739,15 @@ function openInventoryManager() {
           const qtyBg    = isZero ? '#fee2e2' : isLow ? '#fef3c7' : '#dcfce7';
           return `
           <div onclick="window._invOpenDetail('${item.id}')"
-            style="background:white;border:1.5px solid ${isZero?'#fecaca':isLow?'#fde68a':cc.border};border-radius:13px;margin-bottom:6px;padding:11px 12px;display:flex;align-items:center;gap:10px;cursor:pointer"
+            style="background:var(--card);border:1.5px solid ${isZero?'#fecaca':isLow?'#fde68a':cc.border};border-radius:13px;margin-bottom:6px;padding:11px 12px;display:flex;align-items:center;gap:10px;cursor:pointer"
             onmouseover="this.style.borderColor='#1d4ed8';this.style.background='#eff6ff'"
             onmouseout="this.style.borderColor='${isZero?'#fecaca':isLow?'#fde68a':cc.border}';this.style.background='white'">
             <div style="width:36px;height:36px;border-radius:10px;background:${cc.bg};border:1px solid ${cc.border};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${cc.icon}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.82rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item.name)}</div>
+              <div style="font-size:0.82rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item.name)}</div>
               <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap">
                 <span style="font-size:0.58rem;color:#94a3b8;font-family:monospace">${item.id}</span>
-                ${item.location ? `<span style="font-size:0.6rem;background:#f1f5f9;color:#475569;border-radius:4px;padding:1px 6px">📍${escapeHtml(item.location)}</span>` : ''}
+                ${item.location ? `<span style="font-size:0.6rem;background:var(--bg-2,#f1f5f9);color:#475569;border-radius:4px;padding:1px 6px">📍${escapeHtml(item.location)}</span>` : ''}
                 ${isZero ? '<span style="font-size:0.6rem;background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;font-weight:700">หมด</span>' : ''}
                 ${isLow  ? '<span style="font-size:0.6rem;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700">ใกล้หมด</span>' : ''}
               </div>
@@ -795,12 +795,12 @@ function openInventoryManager() {
             <div style="color:white;font-size:1rem;font-weight:900">📋 ความเคลื่อนไหว Stock</div>
             <div style="color:rgba(255,255,255,.5);font-size:0.62rem;margin-top:1px">${(db.stockMovements||[]).length} รายการ ล่าสุด 100 รายการ</div>
           </div>
-          <button onclick="window._invOpenAdjust(null)" style="background:white;color:#1d4ed8;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit">+ บันทึก</button>
+          <button onclick="window._invOpenAdjust(null)" style="background:var(--card);color:#1d4ed8;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit">+ บันทึก</button>
         </div>
         <!-- tabs -->
         <div style="display:flex;gap:4px;margin-bottom:10px">
           <button onclick="window._invTab_('stock')" style="flex:1;padding:7px;border-radius:9px;border:none;background:rgba(255,255,255,.15);color:white;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📦 Stock</button>
-          <button onclick="window._invTab_('movements')" style="flex:1;padding:7px;border-radius:9px;border:none;background:white;color:#1d4ed8;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ความเคลื่อนไหว</button>
+          <button onclick="window._invTab_('movements')" style="flex:1;padding:7px;border-radius:9px;border:none;background:var(--card);color:#1d4ed8;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ความเคลื่อนไหว</button>
         </div>
         <!-- search -->
         <div style="position:relative">
@@ -812,7 +812,7 @@ function openInventoryManager() {
         </div>
       </div>
 
-      <div style="flex:1;overflow-y:auto;padding:10px 12px 20px;background:#f8fafc">
+      <div style="flex:1;overflow-y:auto;padding:10px 12px 20px;background:var(--bg)">
         ${filtered.length === 0 ? `
           <div style="text-align:center;padding:48px 20px;color:#94a3b8">
             <div style="font-size:2.5rem;margin-bottom:8px">📋</div>
@@ -828,10 +828,10 @@ function openInventoryManager() {
           const qc    = typeColor[m.type] || '#64748b';
           const qbg   = typeBg[m.type]   || '#f1f5f9';
           return `
-          <div style="background:white;border:1.5px solid #e2e8f0;border-radius:13px;margin-bottom:6px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+          <div style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:13px;margin-bottom:6px;padding:10px 12px;display:flex;align-items:center;gap:10px">
             <div style="width:34px;height:34px;border-radius:10px;background:${qbg};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;font-weight:900;color:${qc}">${sign}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.82rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item?.name || m.partId)}</div>
+              <div style="font-size:0.82rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item?.name || m.partId)}</div>
               <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap">
                 <span style="font-size:0.6rem;background:${qbg};color:${qc};border-radius:4px;padding:1px 6px;font-weight:700">${typeLabel[m.type]||m.type}</span>
                 ${m.ref ? `<span style="font-size:0.6rem;color:#94a3b8">#${escapeHtml(m.ref)}</span>` : ''}
@@ -879,7 +879,7 @@ function openInventoryManager() {
         </div>
       </div>
 
-      <div style="flex:1;overflow-y:auto;padding:12px 12px 24px;background:#f8fafc">
+      <div style="flex:1;overflow-y:auto;padding:12px 12px 24px;background:var(--bg)">
 
         <!-- ── Quick Actions ── -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px">
@@ -898,19 +898,19 @@ function openInventoryManager() {
         </div>
 
         <!-- ── Settings card ── -->
-        <div style="background:white;border-radius:16px;padding:14px;margin-bottom:12px;border:1.5px solid #e2e8f0">
+        <div style="background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px;border:1.5px solid #e2e8f0">
           <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">ตั้งค่า Stock</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div>
               <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:4px">Stock ต่ำสุด (alert)</div>
               <input id="inv-minqty" type="number" min="0" value="${s.minQty||0}"
-                style="width:100%;border:1.5px solid #e5e7eb;border-radius:9px;padding:8px 11px;font-size:0.85rem;font-family:inherit;outline:none;box-sizing:border-box"
+                style="width:100%;border:1.5px solid var(--border);border-radius:9px;padding:8px 11px;font-size:0.85rem;font-family:inherit;outline:none;box-sizing:border-box"
                 onfocus="this.style.borderColor='#1d4ed8'" onblur="this.style.borderColor='#e5e7eb'"/>
             </div>
             <div>
               <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:4px">ตำแหน่งจัดเก็บ</div>
               <input id="inv-location" type="text" value="${escapeHtml(s.location||'')}" placeholder="เช่น ชั้น A3"
-                style="width:100%;border:1.5px solid #e5e7eb;border-radius:9px;padding:8px 11px;font-size:0.85rem;font-family:inherit;outline:none;box-sizing:border-box"
+                style="width:100%;border:1.5px solid var(--border);border-radius:9px;padding:8px 11px;font-size:0.85rem;font-family:inherit;outline:none;box-sizing:border-box"
                 onfocus="this.style.borderColor='#1d4ed8'" onblur="this.style.borderColor='#e5e7eb'"/>
             </div>
           </div>
@@ -919,7 +919,7 @@ function openInventoryManager() {
         </div>
 
         <!-- ── Movement history ── -->
-        <div style="background:white;border-radius:16px;padding:14px;border:1.5px solid #e2e8f0">
+        <div style="background:var(--card);border-radius:16px;padding:14px;border:1.5px solid #e2e8f0">
           <div style="font-size:0.62rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">ประวัติล่าสุด (${partMvs.length} รายการ)</div>
           ${partMvs.length === 0 ? `<div style="text-align:center;padding:16px;color:#cbd5e1;font-size:0.8rem">ยังไม่มีประวัติ</div>` :
           partMvs.map(m => {
@@ -929,7 +929,7 @@ function openInventoryManager() {
             return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9">
               <div style="width:28px;height:28px;border-radius:8px;background:${typeBg[m.type]||'#f1f5f9'};display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:900;color:${typeColor[m.type]||'#64748b'};flex-shrink:0">${sign}</div>
               <div style="flex:1;min-width:0">
-                <div style="font-size:0.75rem;font-weight:700;color:#0f172a">${typeLabel[m.type]||m.type} ${sign}${m.qty} ${item?.unit||'ชิ้น'}</div>
+                <div style="font-size:0.75rem;font-weight:700;color:var(--text)">${typeLabel[m.type]||m.type} ${sign}${m.qty} ${item?.unit||'ชิ้น'}</div>
                 <div style="font-size:0.62rem;color:#94a3b8">${ds}${m.note?' · '+escapeHtml(m.note):''}</div>
               </div>
               ${m.ref ? `<span style="font-size:0.6rem;color:#94a3b8;font-style:italic">#${escapeHtml(m.ref)}</span>` : ''}
@@ -968,7 +968,7 @@ function openInventoryManager() {
 
     const sh = document.createElement('div');
     sh.id = '_inv_adj';
-    sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9810;background:#fff;border-radius:22px 22px 0 0;padding:16px 16px 32px;max-height:85vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,0.15)';
+    sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9810;background:var(--card);border-radius:22px 22px 0 0;padding:16px 16px 32px;max-height:85vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,0.15)';
 
     const catalog = db.spareParts && db.spareParts.length > 0
       ? db.spareParts.filter(s => s.isActive !== false)
@@ -981,7 +981,7 @@ function openInventoryManager() {
       <div style="display:flex;justify-content:center;padding-bottom:12px">
         <div style="width:36px;height:4px;background:#e2e8f0;border-radius:99px"></div>
       </div>
-      <div style="font-size:0.95rem;font-weight:900;color:#0f172a;margin-bottom:14px">📝 บันทึก Stock</div>
+      <div style="font-size:0.95rem;font-weight:900;color:var(--text);margin-bottom:14px">📝 บันทึก Stock</div>
 
       <!-- type selector -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px" id="adj-type-row">
@@ -995,7 +995,7 @@ function openInventoryManager() {
       <!-- part selector -->
       <div style="margin-bottom:10px">
         <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:5px">อะไหล่ *</div>
-        <select id="adj-part" style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:0.83rem;font-family:inherit;outline:none;background:white;color:#0f172a;box-sizing:border-box"
+        <select id="adj-part" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.83rem;font-family:inherit;outline:none;background:var(--card);color:var(--text);box-sizing:border-box"
           onfocus="this.style.borderColor='#1d4ed8'" onblur="this.style.borderColor='#e5e7eb'">
           ${catalog.map(ci => `<option value="${ci.id}" ${ci.id===initPart?'selected':''}>${ci.id} · ${escapeHtml(ci.name)}</option>`).join('')}
         </select>
@@ -1006,13 +1006,13 @@ function openInventoryManager() {
         <div>
           <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:5px">จำนวน *</div>
           <input id="adj-qty" type="number" min="0" value="1" placeholder="0"
-            style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:0.88rem;font-family:inherit;font-weight:800;outline:none;box-sizing:border-box"
+            style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.88rem;font-family:inherit;font-weight:800;outline:none;box-sizing:border-box"
             onfocus="this.style.borderColor='#1d4ed8'" onblur="this.style.borderColor='#e5e7eb'"/>
         </div>
         <div>
           <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:5px">อ้างอิง (Ticket/PO)</div>
           <input id="adj-ref" type="text" placeholder="เช่น TK-001"
-            style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:0.83rem;font-family:inherit;outline:none;box-sizing:border-box"
+            style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.83rem;font-family:inherit;outline:none;box-sizing:border-box"
             onfocus="this.style.borderColor='#1d4ed8'" onblur="this.style.borderColor='#e5e7eb'"/>
         </div>
       </div>
@@ -1021,7 +1021,7 @@ function openInventoryManager() {
       <div style="margin-bottom:14px">
         <div style="font-size:0.68rem;font-weight:700;color:#64748b;margin-bottom:5px">หมายเหตุ</div>
         <input id="adj-note" type="text" placeholder="หมายเหตุ (ถ้ามี)"
-          style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:0.83rem;font-family:inherit;outline:none;box-sizing:border-box"
+          style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.83rem;font-family:inherit;outline:none;box-sizing:border-box"
           onfocus="this.style.borderColor='#1d4ed8'" onblur="this.style.borderColor='#e5e7eb'"/>
       </div>
 

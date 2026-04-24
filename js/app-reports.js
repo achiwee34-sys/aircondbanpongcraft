@@ -334,7 +334,7 @@ function renderRptCostMonthly() {
       <div style="display:flex;align-items:center;gap:6px">
         <div style="width:26px;height:26px;border-radius:8px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;font-size:0.78rem">📈</div>
         <div>
-          <div style="font-size:0.82rem;font-weight:900;color:#0f172a">ค่าใช้จ่ายรายเดือน</div>
+          <div style="font-size:0.82rem;font-weight:900;color:var(--text)">ค่าใช้จ่ายรายเดือน</div>
           <div style="font-size:0.55rem;color:#94a3b8">6 เดือนล่าสุด · แตะแท่งดูรายละเอียด</div>
         </div>
       </div>
@@ -365,7 +365,7 @@ function renderRptCostMonthly() {
     </div>
 
     <!-- ── Compact dual bar chart (6 months) ── -->
-    <div style="background:#f8fafc;border-radius:12px;padding:8px 6px 2px;margin-bottom:8px">
+    <div style="background:var(--bg);border-radius:12px;padding:8px 6px 2px;margin-bottom:8px">
       <svg viewBox="0 0 ${VW} ${VH}" width="100%" style="display:block;overflow:visible">
         ${bars6}
         ${xlabels6}
@@ -387,12 +387,12 @@ function renderRptCostMonthly() {
 
     <!-- ── Current month breakdown bar ── -->
     ${cur.total > 0 ? `
-    <div style="background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;margin-bottom:8px">
+    <div style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;margin-bottom:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:0.65rem;font-weight:800;color:#0f172a">เดือนนี้</span>
+        <span style="font-size:0.65rem;font-weight:800;color:var(--text)">เดือนนี้</span>
         <span style="font-size:0.78rem;font-weight:900;color:#c8102e">฿${cur.total.toLocaleString()}</span>
       </div>
-      <div style="background:#f1f5f9;border-radius:99px;height:7px;overflow:hidden;display:flex;margin-bottom:5px">
+      <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:7px;overflow:hidden;display:flex;margin-bottom:5px">
         <div style="height:100%;width:${repPct}%;background:#1d4ed8;border-radius:99px 0 0 99px;transition:width 0.5s"></div>
         <div style="height:100%;width:${parPct}%;background:#ea580c;transition:width 0.5s"></div>
       </div>
@@ -411,11 +411,11 @@ function renderRptCostMonthly() {
         return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f8fafc;cursor:pointer"
           onclick="openCostMonthDrill(${m.year},${m.month},'${m.label}')">
           <div style="min-width:56px">
-            <div style="font-size:0.7rem;font-weight:800;color:#0f172a">${MONTH_TH[m.month].slice(0,3)} ${m.year+543}</div>
+            <div style="font-size:0.7rem;font-weight:800;color:var(--text)">${MONTH_TH[m.month].slice(0,3)} ${m.year+543}</div>
             <div style="font-size:0.55rem;color:#94a3b8;margin-top:1px">${m.count} งาน</div>
           </div>
           <div style="flex:1">
-            <div style="background:#f1f5f9;border-radius:99px;height:6px;overflow:hidden;display:flex">
+            <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:6px;overflow:hidden;display:flex">
               <div style="height:100%;width:${barPct*repW/100}%;background:#3b82f6;border-radius:99px 0 0 99px;transition:width 0.5s"></div>
               <div style="height:100%;width:${barPct*(100-repW)/100}%;background:#f97316;transition:width 0.5s"></div>
             </div>
@@ -462,7 +462,7 @@ function openCostMonthDrill(year, month, label) {
   ov.onclick = e => { if(e.target===ov) ov.remove(); };
 
   const sheet = document.createElement('div');
-  sheet.style.cssText = 'background:#f8fafc;border-radius:24px 24px 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
+  sheet.style.cssText = 'background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
 
   sheet.innerHTML = `
     <div style="background:linear-gradient(160deg,#1a0a0e,#7f1d1d,#c8102e);padding:16px 16px 14px;flex-shrink:0">
@@ -496,11 +496,11 @@ function openCostMonthDrill(year, month, label) {
           const pc = Number(t.partsCost||0);
           const tc = Number(t.cost||0);
           return `<div onclick="ov.remove();setTimeout(()=>openDetail('${t.id}'),200)"
-            style="background:white;border-radius:14px;padding:13px 14px;margin-bottom:8px;cursor:pointer;border:1.5px solid #e5e7eb;display:flex;align-items:center;gap:10px;transition:all 0.15s"
+            style="background:var(--card);border-radius:14px;padding:13px 14px;margin-bottom:8px;cursor:pointer;border:1.5px solid var(--border);display:flex;align-items:center;gap:10px;transition:all 0.15s"
             onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
             <div style="flex:1;min-width:0">
               <div style="font-size:0.65rem;color:#94a3b8;font-family:monospace;margin-bottom:2px">${t.id}</div>
-              <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)}</div>
+              <div style="font-size:0.85rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)}</div>
               <div style="font-size:0.68rem;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">❄️ ${t.machine||''}${dept?' · '+dept:''}</div>
               ${(()=>{ 
                 const po = Number(t.purchaseOrder?.total||0);
@@ -563,7 +563,7 @@ function renderRptCostByDept(tickets, deptFilter) {
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div>
-        <div style="font-size:0.88rem;font-weight:900;color:#0f172a">💰 ค่าใช้จ่ายตามแผนก</div>
+        <div style="font-size:0.88rem;font-weight:900;color:var(--text)">💰 ค่าใช้จ่ายตามแผนก</div>
         <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">รวมทุกงาน · แยกค่าแรง / ค่าอะไหล่</div>
       </div>
       <div style="font-size:1rem;font-weight:900;color:#c8102e">฿${totalCost.toLocaleString()}</div>
@@ -584,7 +584,7 @@ function renderRptCostByDept(tickets, deptFilter) {
         const repW=total>0?Math.round(v.repair/total*100):0;
         return `<div style="margin-bottom:12px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-            <span style="font-size:0.75rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%">${dept}</span>
+            <span style="font-size:0.75rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%">${dept}</span>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
               ${v.repair>0?`<span style="font-size:0.62rem;color:#0369a1;font-weight:700">🔧฿${v.repair.toLocaleString()}</span>`:''}
               ${v.parts>0?`<span style="font-size:0.62rem;color:#c2410c;font-weight:700">📦฿${v.parts.toLocaleString()}</span>`:''}
@@ -592,7 +592,7 @@ function renderRptCostByDept(tickets, deptFilter) {
               <span style="font-size:0.58rem;color:#94a3b8">${pct}%</span>
             </div>
           </div>
-          <div style="background:#f1f5f9;border-radius:99px;height:7px;overflow:hidden;display:flex">
+          <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:7px;overflow:hidden;display:flex">
             <div style="height:100%;width:${barW*repW/100}%;background:#3b82f6;transition:width 0.6s;border-radius:99px 0 0 99px"></div>
             <div style="height:100%;width:${barW*(100-repW)/100}%;background:#f97316;transition:width 0.6s"></div>
           </div>
@@ -676,7 +676,7 @@ function renderRptKPI(total, done, pending) {
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
       <!-- เสร็จแล้ว -->
       <div onclick="setFilter('status','done');goPage('tickets')"
-        style="background:white;border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #bbf7d0;cursor:pointer;box-shadow:0 2px 8px rgba(22,163,74,0.1);transition:all 0.15s;position:relative;overflow:hidden"
+        style="background:var(--card);border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #bbf7d0;cursor:pointer;box-shadow:0 2px 8px rgba(22,163,74,0.1);transition:all 0.15s;position:relative;overflow:hidden"
         onmousedown="this.style.transform='scale(0.94)';this.style.boxShadow='0 4px 16px rgba(22,163,74,0.2)'"
         onmouseup="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(22,163,74,0.1)'"
         ontouchstart="this.style.transform='scale(0.94)'"
@@ -692,7 +692,7 @@ function renderRptKPI(total, done, pending) {
 
       <!-- งานค้าง -->
       <div onclick="setFilter('status','');goPage('tickets')"
-        style="background:white;border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #fca5a5;cursor:pointer;box-shadow:0 2px 8px rgba(200,16,46,0.1);transition:all 0.15s;position:relative;overflow:hidden"
+        style="background:var(--card);border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #fca5a5;cursor:pointer;box-shadow:0 2px 8px rgba(200,16,46,0.1);transition:all 0.15s;position:relative;overflow:hidden"
         onmousedown="this.style.transform='scale(0.94)';this.style.boxShadow='0 4px 16px rgba(200,16,46,0.2)'"
         onmouseup="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(200,16,46,0.1)'"
         ontouchstart="this.style.transform='scale(0.94)'"
@@ -708,7 +708,7 @@ function renderRptKPI(total, done, pending) {
 
       <!-- กำลังดำเนิน -->
       <div onclick="setFilter('status','inprogress');goPage('tickets')"
-        style="background:white;border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #93c5fd;cursor:pointer;box-shadow:0 2px 8px rgba(29,78,216,0.08);transition:all 0.15s;position:relative;overflow:hidden"
+        style="background:var(--card);border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #93c5fd;cursor:pointer;box-shadow:0 2px 8px rgba(29,78,216,0.08);transition:all 0.15s;position:relative;overflow:hidden"
         onmousedown="this.style.transform='scale(0.94)';this.style.boxShadow='0 4px 16px rgba(29,78,216,0.15)'"
         onmouseup="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(29,78,216,0.08)'"
         ontouchstart="this.style.transform='scale(0.94)'"
@@ -735,7 +735,7 @@ function renderRptGoal(done) {
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
       <div style="flex:1">
         <div style="font-size:0.72rem;font-weight:700;color:#64748b;margin-bottom:2px">🎯 เป้าหมายประจำเดือน</div>
-        <div style="font-size:0.85rem;font-weight:800;color:#0f172a">${done} <span style="color:#94a3b8;font-weight:500;font-size:0.75rem">/ ${RPT_GOAL} งาน</span></div>
+        <div style="font-size:0.85rem;font-weight:800;color:var(--text)">${done} <span style="color:#94a3b8;font-weight:500;font-size:0.75rem">/ ${RPT_GOAL} งาน</span></div>
       </div>
       <div style="width:54px;height:54px;position:relative;flex-shrink:0">
         <svg width="54" height="54" viewBox="0 0 54 54">
@@ -748,7 +748,7 @@ function renderRptGoal(done) {
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;color:${color}">${pct}%</div>
       </div>
     </div>
-    <div style="background:#f1f5f9;border-radius:99px;height:8px;overflow:hidden">
+    <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:8px;overflow:hidden">
       <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${barColor},${barColor}cc);border-radius:99px;transition:width 0.6s ease"></div>
     </div>
     <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:0.62rem;color:#94a3b8">
@@ -762,10 +762,10 @@ function renderRptPending(pending, inprog, waitP, highP) {
   if (!el) return;
 
   const mkRow = (t, icon, color) => `
-    <div onclick="openDetail('${t.id}')" style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:12px;background:#fafbff;border:1px solid #f1f5f9;margin-bottom:5px;cursor:pointer;transition:all 0.15s" onmousedown="this.style.background='#f0f4ff'" onmouseup="this.style.background='#fafbff'">
+    <div onclick="openDetail('${t.id}')" style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:12px;background:var(--bg);border:1px solid #f1f5f9;margin-bottom:5px;cursor:pointer;transition:all 0.15s" onmousedown="this.style.background='#f0f4ff'" onmouseup="this.style.background='#fafbff'">
       <div style="width:28px;height:28px;border-radius:9px;background:${color}18;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">${icon}</div>
       <div style="flex:1;overflow:hidden">
-        <div style="font-size:0.78rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
         <div style="font-size:0.62rem;color:#94a3b8;margin-top:1px">${t.id} · ${(t.machine||'—').slice(0,22)}</div>
       </div>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -821,11 +821,11 @@ function renderRptTech(monthTickets) {
       ? `<img src="${tech.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.1)">`
       : `<div style="width:40px;height:40px;border-radius:50%;background:${avBg};display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:900;color:white;flex-shrink:0;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.1)">${getAvatarInitials(tech.name)}</div>`;
     return `
-      <div style="background:white;border-radius:14px;padding:12px 14px;margin-bottom:8px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+      <div style="background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:8px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
           ${avatar}
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.86rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tech.name}</div>
+            <div style="font-size:0.86rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tech.name}</div>
             <div style="font-size:0.65rem;color:#94a3b8;margin-top:1px">${tech.dept||'ช่างซ่อม'}</div>
           </div>
           <div style="text-align:center;background:${pct>=80?'#f0fdf4':pct>=50?'#fffbeb':'#fff0f2'};border-radius:10px;padding:6px 10px;min-width:48px">
@@ -834,7 +834,7 @@ function renderRptTech(monthTickets) {
           </div>
         </div>
         <!-- Progress bar -->
-        <div style="background:#f1f5f9;border-radius:99px;height:6px;overflow:hidden;margin-bottom:7px">
+        <div style="background:var(--bg-2,#f1f5f9);border-radius:99px;height:6px;overflow:hidden;margin-bottom:7px">
           <div style="height:100%;width:${pct}%;background:${barColor};border-radius:99px;transition:width 0.5s ease"></div>
         </div>
         <!-- tags -->
@@ -850,7 +850,7 @@ function renderRptTech(monthTickets) {
 
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="font-weight:800;font-size:0.9rem;color:#0f172a">👷 ผลงานรายช่าง</div>
+      <div style="font-weight:800;font-size:0.9rem;color:var(--text)">👷 ผลงานรายช่าง</div>
       <div style="font-size:0.68rem;color:#94a3b8">${techs.length} คน</div>
     </div>
     ${rows}`;
@@ -883,13 +883,13 @@ function renderRptProblems(monthTickets) {
     return `
     <div style="margin-bottom:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div style="font-size:0.74rem;font-weight:700;color:#1e293b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px">${i+1}. ${prob}</div>
+        <div style="font-size:0.74rem;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px">${i+1}. ${prob}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           <span style="font-size:0.7rem;font-weight:800;color:${col}">${cnt}</span>
-          <span style="font-size:0.62rem;color:#94a3b8;background:#f1f5f9;border-radius:4px;padding:1px 5px">${pctOfTotal}%</span>
+          <span style="font-size:0.62rem;color:#94a3b8;background:var(--bg-2,#f1f5f9);border-radius:4px;padding:1px 5px">${pctOfTotal}%</span>
         </div>
       </div>
-      <div style="background:#f1f5f9;border-radius:6px;height:9px;overflow:hidden">
+      <div style="background:var(--bg-2,#f1f5f9);border-radius:6px;height:9px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:${col};border-radius:6px;transition:width 0.5s cubic-bezier(.4,0,.2,1)"></div>
       </div>
     </div>`;
@@ -920,10 +920,10 @@ function renderRptProblems(monthTickets) {
     </div>`).join('');
 
   el.innerHTML = `
-    <div style="font-weight:800;font-size:0.92rem;color:#0f172a;margin-bottom:12px">📊 ปัญหาที่พบบ่อย</div>
+    <div style="font-weight:800;font-size:0.92rem;color:var(--text);margin-bottom:12px">📊 ปัญหาที่พบบ่อย</div>
 
     <!-- Donut + legend row -->
-    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;background:#f8fafc;border-radius:14px;padding:12px">
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;background:var(--bg);border-radius:14px;padding:12px">
       <div style="flex-shrink:0">
         <svg width="112" height="112" viewBox="0 0 112 112">
           <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#f1f5f9" stroke-width="${stroke}"/>
@@ -1171,7 +1171,7 @@ function renderChatroomList() {
       </div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:4px;margin-bottom:3px">
-          <span style="font-size:0.8rem;font-weight:${unread?'900':'700'};color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem||t.machine||t.id}</span>
+          <span style="font-size:0.8rem;font-weight:${unread?'900':'700'};color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.problem||t.machine||t.id}</span>
           <span style="font-size:0.58rem;color:#94a3b8;flex-shrink:0">${fmtTime}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
@@ -1264,10 +1264,10 @@ function renderChatroomMessages() {
 
     return divider + `
       <div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:3px">
-        <div style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;border:1.5px solid #e5e7eb">${roleIcon}</div>
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--bg-2,#f1f5f9);display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;border:1.5px solid var(--border)">${roleIcon}</div>
         <div style="max-width:75%">
           <div style="font-size:0.6rem;color:#64748b;margin-bottom:3px;font-weight:700">${escapeHtml(name)}</div>
-          <div style="background:white;border:1px solid #e5e7eb;border-radius:4px 18px 18px 18px;padding:10px 14px;font-size:0.85rem;line-height:1.5;word-break:break-word;box-shadow:0 1px 4px rgba(0,0,0,0.06)">${m.text||''}</div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:4px 18px 18px 18px;padding:10px 14px;font-size:0.85rem;line-height:1.5;word-break:break-word;box-shadow:0 1px 4px rgba(0,0,0,0.06)">${m.text||''}</div>
           <div style="font-size:0.58rem;color:#94a3b8;margin-top:3px">${fmtTime}</div>
         </div>
       </div>`;
@@ -1415,7 +1415,7 @@ function renderChatImgPreview() {
         <button onclick="_chatPendingImgs.splice(${i},1);renderChatImgPreview()" style="width:18px;height:18px;border-radius:50%;background:#92400e;border:none;color:white;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
       </div>`
     : `<div style="position:relative;flex-shrink:0">
-        <img src="${img.data}" style="width:60px;height:60px;object-fit:cover;border-radius:10px;border:1.5px solid #e5e7eb"/>
+        <img src="${img.data}" style="width:60px;height:60px;object-fit:cover;border-radius:10px;border:1.5px solid var(--border)"/>
         <button onclick="_chatPendingImgs.splice(${i},1);renderChatImgPreview()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--accent);border:none;color:white;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
       </div>`
   ).join('');
@@ -1472,7 +1472,7 @@ function renderChatMessages() {
 
     // Bubble styles
     const myBubble = 'background:linear-gradient(135deg,#c8102e,#a50d25);color:white';
-    const theirBubble = 'background:white;color:#1a1a2e;border:1px solid #f5e0e2';
+    const theirBubble = 'background:var(--card);color:#1a1a2e;border:1px solid #f5e0e2';
     const myRadius = isFirstOfSender ? '18px 18px 4px 18px' : '18px 4px 4px 18px';
     const theirRadius = isFirstOfSender ? '18px 18px 18px 4px' : '4px 18px 18px 4px';
 
@@ -1682,7 +1682,7 @@ function renderTrackingInline(container) {
       ? `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:700">⚠️ ยังไม่มีเลข PR</span>`
       : `<span style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:700">⚠️ ยังไม่กรอก PR/PO</span>`;
     const poBadge = t.purchaseOrder?.po ? `<span style="background:#f5f3ff;color:#6d28d9;border:1px solid #c4b5fd;border-radius:5px;padding:1px 7px;font-size:0.6rem;font-weight:700">PO: ${t.purchaseOrder.po}</span>` : '';
-    return `<div style="background:white;border:1.5px solid rgba(230,81,0,0.25);border-radius:14px;padding:12px;margin-bottom:8px" onclick="openDetail('${t.id}')">
+    return `<div style="background:var(--card);border:1.5px solid rgba(230,81,0,0.25);border-radius:14px;padding:12px;margin-bottom:8px" onclick="openDetail('${t.id}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -1696,11 +1696,11 @@ function renderTrackingInline(container) {
         <div style="display:flex;gap:5px;flex-shrink:0">
           ${CU&&CU.role==='admin' ? `
           <button onclick="event.stopPropagation();notifyTechToResubmit('${t.id}')"
-            style="padding:5px 9px;border-radius:8px;border:1.5px solid #7c3aed;background:white;color:#7c3aed;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit">
+            style="padding:5px 9px;border-radius:8px;border:1.5px solid #7c3aed;background:var(--card);color:#7c3aed;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit">
             🔔 แจ้งช่างกรอกใหม่
           </button>
           <button onclick="event.stopPropagation();closeSheet('detail');setTimeout(()=>openPOForm('${t.id}'),200)"
-            style="padding:5px 9px;border-radius:8px;border:1.5px solid #e65100;background:white;color:#e65100;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit">
+            style="padding:5px 9px;border-radius:8px;border:1.5px solid #e65100;background:var(--card);color:#e65100;font-size:0.62rem;font-weight:800;cursor:pointer;font-family:inherit">
             ✏️ ${hasPO?'แก้ PR':'กรอก PR'}
           </button>
           ${hasPO && !isRecv
@@ -1718,7 +1718,7 @@ function renderTrackingInline(container) {
   // done/verified รอตรวจรับ
   const doneTickets = T.filter(t => t.status === 'done');
   const doneHtml = doneTickets.length ? doneTickets.map(t => `
-    <div style="background:white;border:1px solid rgba(21,128,61,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="openDetail('${t.id}')">
+    <div style="background:var(--card);border:1px solid rgba(21,128,61,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="openDetail('${t.id}')">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div>
           <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -1733,7 +1733,7 @@ function renderTrackingInline(container) {
   const stale = T.filter(t => ['assigned','accepted','inprogress'].includes(t.status) && daysSince(t.updatedAt) >= 3);
   const staleHtml = stale.length ? stale.sort((a,b)=>daysSince(b.updatedAt)-daysSince(a.updatedAt)).map(t => {
     const ds = daysSince(t.updatedAt);
-    return `<div style="background:white;border:1px solid rgba(200,16,46,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="openDetail('${t.id}')">
+    return `<div style="background:var(--card);border:1px solid rgba(200,16,46,0.2);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="openDetail('${t.id}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
         <div style="flex:1;overflow:hidden">
           <div style="font-weight:700;font-size:0.85rem;color:var(--text)">[${t.id}] ${escapeHtml(t.problem)}</div>
@@ -1796,7 +1796,7 @@ function renderPurchaseReporter() {
 
   if (hb) hb.innerHTML = `
     <div style="padding:12px 14px 8px;border-bottom:1px solid #f1f5f9">
-      <div style="font-size:0.72rem;font-weight:800;color:#0f172a">🛒 สถานะอะไหล่งานของฉัน</div>
+      <div style="font-size:0.72rem;font-weight:800;color:var(--text)">🛒 สถานะอะไหล่งานของฉัน</div>
       <div style="font-size:0.62rem;color:#94a3b8;margin-top:2px">รายการงานที่มีการสั่งซื้ออะไหล่</div>
     </div>`;
 
@@ -1835,12 +1835,12 @@ function renderPurchaseReporter() {
     const statusBorder = step===3?'#bbf7d0':step===2?'#bfdbfe':step===1?'#fde68a':'#e5e7eb';
 
     return `<div onclick="goPage('tickets');setTimeout(()=>openDetail('${t.id}'),300)"
-      style="background:white;border:1px solid #f1f5f9;border-left:3px solid ${statusColor};margin:8px 14px;border-radius:12px;padding:12px;cursor:pointer;-webkit-tap-highlight-color:transparent"
+      style="background:var(--card);border:1px solid #f1f5f9;border-left:3px solid ${statusColor};margin:8px 14px;border-radius:12px;padding:12px;cursor:pointer;-webkit-tap-highlight-color:transparent"
       onmousedown="this.style.background='#f8fafc'" onmouseup="this.style.background='white'">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
         <div style="flex:1;min-width:0">
           <div style="font-size:0.7rem;font-family:monospace;color:#94a3b8;margin-bottom:2px">${t.id}</div>
-          <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
+          <div style="font-size:0.85rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.problem)||'—'}</div>
           <div style="font-size:0.68rem;color:#64748b;margin-top:2px">❄️ ${t.machine||'—'}</div>
         </div>
         <span style="background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};border-radius:8px;padding:3px 10px;font-size:0.65rem;font-weight:800;flex-shrink:0;white-space:nowrap">${STEP_LABELS[step]}</span>
@@ -1862,16 +1862,16 @@ function renderPurchaseReporter() {
       </div>
 
       <!-- Items -->
-      <div style="background:#f8fafc;border-radius:8px;padding:8px 10px">
+      <div style="background:var(--bg);border-radius:8px;padding:8px 10px">
         ${(po.items||[]).slice(0,3).map(x=>`
           <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f1f5f9">
-            <div style="font-size:0.72rem;color:#374151;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.name||'อะไหล่'}</div>
+            <div style="font-size:0.72rem;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.name||'อะไหล่'}</div>
             <div style="font-size:0.72rem;font-weight:700;color:#0369a1;flex-shrink:0;margin-left:8px">×${x.qty||1}</div>
           </div>`).join('')}
         ${po.items&&po.items.length>3?`<div style="font-size:0.62rem;color:#94a3b8;margin-top:3px">+${po.items.length-3} รายการ</div>`:''}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
           ${prList?`<div style="font-size:0.65rem;color:#64748b">PR: ${prList}</div>`:'<div></div>'}
-          ${total?`<div style="font-size:0.78rem;font-weight:900;color:#0f172a">฿${total.toLocaleString()}</div>`:''}
+          ${total?`<div style="font-size:0.78rem;font-weight:900;color:var(--text)">฿${total.toLocaleString()}</div>`:''}
         </div>
       </div>
     </div>`;
@@ -1894,7 +1894,7 @@ function renderPurchaseAdmin() {
     hb.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 0 10px">
         <div>
-          <div style="font-size:1rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:7px">
+          <div style="font-size:1rem;font-weight:900;color:var(--text);display:flex;align-items:center;gap:7px">
             <div style="width:30px;height:30px;background:linear-gradient(135deg,#e65100,#c2410c);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
@@ -1908,8 +1908,8 @@ function renderPurchaseAdmin() {
         </button>
       </div>
       <div id="pur-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px"></div>
-      <div style="display:flex;gap:5px;margin-bottom:10px;background:#f1f5f9;border-radius:12px;padding:3px">
-        <button id="pur-filter-all"  onclick="setPurFilter('all')"  style="flex:1;font-size:0.65rem;padding:7px 2px;border-radius:9px;border:none;background:white;cursor:pointer;font-family:inherit;font-weight:800;color:#e65100;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:all 0.15s">ทั้งหมด</button>
+      <div style="display:flex;gap:5px;margin-bottom:10px;background:var(--bg-2,#f1f5f9);border-radius:12px;padding:3px">
+        <button id="pur-filter-all"  onclick="setPurFilter('all')"  style="flex:1;font-size:0.65rem;padding:7px 2px;border-radius:9px;border:none;background:var(--card);cursor:pointer;font-family:inherit;font-weight:800;color:#e65100;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:all 0.15s">ทั้งหมด</button>
         <button id="pur-filter-wait" onclick="setPurFilter('wait')" style="flex:1;font-size:0.65rem;padding:7px 2px;border-radius:9px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-weight:600;color:#94a3b8;transition:all 0.15s">⏳ รอสั่ง</button>
         <button id="pur-filter-po"   onclick="setPurFilter('po')"   style="flex:1;font-size:0.65rem;padding:7px 2px;border-radius:9px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-weight:600;color:#94a3b8;transition:all 0.15s">🛒 สั่งแล้ว</button>
         <button id="pur-filter-done" onclick="setPurFilter('done')" style="flex:1;font-size:0.65rem;padding:7px 2px;border-radius:9px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-weight:600;color:#94a3b8;transition:all 0.15s">✅ รับแล้ว</button>
@@ -1917,7 +1917,7 @@ function renderPurchaseAdmin() {
       <div style="position:relative;margin-bottom:4px">
         <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="search" id="pur-search" placeholder="ค้นหา TK / อะไหล่ / MO / PR / PO..." oninput="renderPurchaseAdmin()"
-          style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:11px;padding:9px 12px 9px 32px;font-size:0.78rem;font-family:inherit;outline:none;background:white;transition:border-color 0.2s"
+          style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:11px;padding:9px 12px 9px 32px;font-size:0.78rem;font-family:inherit;outline:none;background:var(--card);transition:border-color 0.2s"
           onfocus="this.style.borderColor='#e65100'" onblur="this.style.borderColor='#e2e8f0'"/>
       </div>`;
   }
@@ -2008,8 +2008,8 @@ function renderPurchaseAdmin() {
 
   if (!allTickets.filter(matchSearch).length) {
     listEl.innerHTML = `<div style="text-align:center;padding:48px 20px;color:#94a3b8">
-      <div style="width:60px;height:60px;background:#f1f5f9;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 12px">🛒</div>
-      <div style="font-size:0.88rem;font-weight:700;color:#374151;margin-bottom:4px">ไม่พบรายการ</div>
+      <div style="width:60px;height:60px;background:var(--bg-2,#f1f5f9);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 12px">🛒</div>
+      <div style="font-size:0.88rem;font-weight:700;color:var(--text2);margin-bottom:4px">ไม่พบรายการ</div>
       <div style="font-size:0.72rem">ลองเปลี่ยน filter หรือคำค้นหา</div>
     </div>`;
     return;
@@ -2047,7 +2047,7 @@ function renderPurchaseAdmin() {
     const displayRows = poRows.length ? poRows : trRows;
     const isPORows = poRows.length > 0;
     const partPreview = displayRows.slice(0,2).map(r =>
-      `<span style="font-size:0.62rem;color:#475569;background:#f8fafc;border-radius:4px;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">${escapeHtml(r.name)}${r.qty>1?` ×${r.qty}`:''}</span>`
+      `<span style="font-size:0.62rem;color:#475569;background:var(--bg);border-radius:4px;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">${escapeHtml(r.name)}${r.qty>1?` ×${r.qty}`:''}</span>`
     ).join('') + (displayRows.length>2?`<span style="font-size:0.6rem;color:#94a3b8">+${displayRows.length-2}</span>`:'');
 
     // ── Action buttons ──
@@ -2065,13 +2065,13 @@ function renderPurchaseAdmin() {
         ของมาถึงแล้ว
       </button>` : '';
 
-    const btnDetail = `<button onclick="openDetail('${t.id}')" style="padding:7px 11px;background:#f1f5f9;color:#64748b;border:none;border-radius:9px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">ดูงาน</button>`;
+    const btnDetail = `<button onclick="openDetail('${t.id}')" style="padding:7px 11px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:9px;font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">ดูงาน</button>`;
 
     // ── Received date line (แทน banner ใหญ่) ──
     const recvLine = isRecv ? `<span style="font-size:0.6rem;color:#16a34a;font-weight:600">รับแล้ว ${(po.receivedAt||'').slice(0,10)}</span>` : '';
 
     return `
-    <div style="background:white;border-radius:14px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.07);border:1.5px solid ${stripe}30;position:relative">
+    <div style="background:var(--card);border-radius:14px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.07);border:1.5px solid ${stripe}30;position:relative">
       <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${stripe};border-radius:3px 0 0 3px"></div>
 
       <!-- ── Main row ── -->
@@ -2085,7 +2085,7 @@ function renderPurchaseAdmin() {
               ${recvLine}
             </div>
             <!-- Problem -->
-            <div style="font-size:0.85rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${escapeHtml(t.problem)}</div>
+            <div style="font-size:0.85rem;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${escapeHtml(t.problem)}</div>
             <!-- Machine info -->
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
               ${serial?`<span style="font-family:'JetBrains Mono',monospace;background:#e0f2fe;color:#0369a1;padding:0 5px;border-radius:4px;font-size:0.58rem;font-weight:700">${serial}</span>`:''}
@@ -2106,7 +2106,7 @@ function renderPurchaseAdmin() {
       </div>
 
       <!-- ── Action bar ── -->
-      <div style="padding:6px 12px 8px 16px;display:flex;gap:5px;align-items:center;border-top:1px solid #f1f5f9;background:#fafbff">
+      <div style="padding:6px 12px 8px 16px;display:flex;gap:5px;align-items:center;border-top:1px solid #f1f5f9;background:var(--bg)">
         ${btnPO}${btnArrived}
         <div style="flex:1"></div>
         ${btnDetail}
@@ -2124,9 +2124,9 @@ function renderPurchaseAdmin() {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 2px">
           <div style="display:flex;align-items:center;gap:6px">
             <div style="width:22px;height:22px;border-radius:7px;background:${color};display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0">${icon}</div>
-            <span style="font-size:0.75rem;font-weight:800;color:#374151">${title}</span>
+            <span style="font-size:0.75rem;font-weight:800;color:var(--text2)">${title}</span>
           </div>
-          <span style="background:#f1f5f9;color:#64748b;border-radius:99px;padding:1px 9px;font-size:0.65rem;font-weight:700">${items.length} รายการ</span>
+          <span style="background:var(--bg-2,#f1f5f9);color:#64748b;border-radius:99px;padding:1px 9px;font-size:0.65rem;font-weight:700">${items.length} รายการ</span>
         </div>
         ${items.map(mkCard).join('')}
       </div>`;
@@ -2182,7 +2182,7 @@ function renderPurchaseTech() {
     listEl.innerHTML = `
       <div style="text-align:center;padding:60px 24px 40px">
         <div style="width:72px;height:72px;border-radius:20px;background:#fff7ed;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2rem;border:2px solid #fed7aa">🔩</div>
-        <div style="font-size:0.95rem;font-weight:800;color:#374151;margin-bottom:6px">ไม่มีงานรออะไหล่</div>
+        <div style="font-size:0.95rem;font-weight:800;color:var(--text2);margin-bottom:6px">ไม่มีงานรออะไหล่</div>
         <div style="font-size:0.78rem;color:#9ca3af;line-height:1.7">เมื่อคุณกดปุ่ม "รอสั่งซื้ออะไหล่"<br>ในงานซ่อม งานนั้นจะปรากฏที่นี่</div>
       </div>`;
     return;
@@ -2239,7 +2239,7 @@ function renderPurchaseTech() {
           <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;font-family:monospace">${t.id}</div>
           <div style="font-size:0.6rem;color:#94a3b8">${(t.updatedAt||'').slice(0,10)}</div>
         </div>
-        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;line-height:1.3;margin-bottom:4px">${escapeHtml(t.problem)}</div>
+        <div style="font-size:0.88rem;font-weight:800;color:var(--text);line-height:1.3;margin-bottom:4px">${escapeHtml(t.problem)}</div>
         <div style="display:flex;gap:8px;font-size:0.65rem;color:#64748b;flex-wrap:wrap">
           <span>❄️ ${t.machine||'—'}</span>
           ${t.location?`<span>📍 ${t.location}</span>`:''}
@@ -2250,16 +2250,16 @@ function renderPurchaseTech() {
     const reqRows = (req?.rows||[]).filter(r=>r.name);
     const reqTotal = reqRows.reduce((s,r)=>s+(Number(r.qty||1)*Number(r.price||0)),0);
     const reqBlock = reqRows.length ? `
-      <div style="margin:8px 10px;background:#fafafa;border:1px solid #f0f0f0;border-radius:10px;overflow:hidden">
-        <div style="padding:6px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0;background:#f8fafc">
-          <span style="font-size:0.68rem;font-weight:800;color:#374151">รายการที่แจ้ง</span>
+      <div style="margin:8px 10px;background:var(--bg);border:1px solid #f0f0f0;border-radius:10px;overflow:hidden">
+        <div style="padding:6px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0;background:var(--bg)">
+          <span style="font-size:0.68rem;font-weight:800;color:var(--text2)">รายการที่แจ้ง</span>
           <span style="font-size:0.65rem;color:#9ca3af">${(req.requestedAt||'').slice(0,10)}</span>
         </div>
         ${reqRows.map((r,i)=>`
           <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #f4f4f5">
             <div style="width:18px;height:18px;border-radius:5px;background:#e65100;color:white;font-size:0.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:0.8rem;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+              <div style="font-size:0.8rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
               ${r.note?`<div style="font-size:0.65rem;color:#9ca3af">${escapeHtml(r.note)}</div>`:''}
             </div>
             <div style="text-align:right;flex-shrink:0">
@@ -2288,7 +2288,7 @@ function renderPurchaseTech() {
             <span style="font-size:0.85rem;font-weight:900;color:#7c3aed">${po.po}</span>
           </div>` : ''}
         ${po.total ? `
-          <div style="background:#fafafa;border:1px solid #e5e7eb;border-radius:10px;padding:7px 12px;display:flex;align-items:center;justify-content:space-between">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:7px 12px;display:flex;align-items:center;justify-content:space-between">
             <span style="font-size:0.68rem;color:#9ca3af">มูลค่ารวม</span>
             <span style="font-size:0.82rem;font-weight:900;color:#e65100">฿${Number(po.total).toLocaleString()}</span>
           </div>` : ''}
@@ -2326,7 +2326,7 @@ function renderPurchaseTech() {
             <div style="font-size:0.74rem;color:#92400e;font-weight:600;line-height:1.5">ส่งรายการให้ Admin แล้ว<br>รอ Admin ออกใบสั่งซื้อ (PO)</div>
           </div>
           <button onclick="openTechReqForm('${t.id}')"
-            style="width:100%;padding:11px;background:white;color:#374151;border:1.5px solid #e5e7eb;border-radius:11px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit">
+            style="width:100%;padding:11px;background:var(--card);color:var(--text2);border:1.5px solid var(--border);border-radius:11px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit">
             ✏️ แก้ไขรายการ
           </button>
         </div>`;
@@ -2346,7 +2346,7 @@ function renderPurchaseTech() {
     const headerBg    = isRecv?'#ecfdf5':hasPO?'#f5f3ff':req?'#fffbeb':'#fff7ed';
 
     return `
-      <div style="background:white;border:1.5px solid ${borderColor};border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.05)">
+      <div style="background:var(--card);border:1.5px solid ${borderColor};border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.05)">
         <div style="background:${headerBg}">
           ${stepperHtml}
         </div>
@@ -2356,7 +2356,7 @@ function renderPurchaseTech() {
         ${recvBanner}
         ${actionBtn}
         <div style="padding:0 10px 10px">
-          <button onclick="openDetail('${t.id}')" style="width:100%;padding:8px;background:#f8fafc;color:#64748b;border:1px solid #e5e7eb;border-radius:9px;font-size:0.73rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+          <button onclick="openDetail('${t.id}')" style="width:100%;padding:8px;background:var(--bg);color:#64748b;border:1px solid var(--border);border-radius:9px;font-size:0.73rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             ดูรายละเอียดงาน
           </button>
@@ -2402,7 +2402,7 @@ function showLockedTechReq(t) {
 
   const sh = document.createElement('div');
   sh.className = 'tech-req-sheet';
-  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9200;background:#f8fafc;border-radius:22px 22px 0 0;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.18)';
+  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9200;background:var(--bg);border-radius:22px 22px 0 0;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.18)';
 
   // ปุ่มแก้ไข — แสดงเฉพาะ: ยังไม่ปิด + Admin ยังไม่ได้กรอก PO
   const canEdit = !isClosed && !hasAdminPO;
@@ -2412,7 +2412,7 @@ function showLockedTechReq(t) {
         ✏️ แก้ไขรายการ
        </button>`
     : isClosed
-    ? `<span style="font-size:0.62rem;color:#94a3b8;background:#f1f5f9;padding:4px 10px;border-radius:8px">🔒 ปิดงานแล้ว</span>`
+    ? `<span style="font-size:0.62rem;color:#94a3b8;background:var(--bg-2,#f1f5f9);padding:4px 10px;border-radius:8px">🔒 ปิดงานแล้ว</span>`
     : `<span style="font-size:0.62rem;color:#6d28d9;background:#f5f3ff;padding:4px 10px;border-radius:8px">🛒 Admin ดำเนินการแล้ว</span>`;
 
   sh.innerHTML = `
@@ -2424,14 +2424,14 @@ function showLockedTechReq(t) {
         <button onclick="document.querySelectorAll('.tech-req-overlay,.tech-req-sheet').forEach(e=>e.remove())"
           style="width:34px;height:34px;border-radius:50%;background:#e2e8f0;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">‹</button>
         <div style="flex:1">
-          <div style="font-size:0.92rem;font-weight:800;color:#0f172a">📋 รายการสั่งซื้ออะไหล่</div>
+          <div style="font-size:0.92rem;font-weight:800;color:var(--text)">📋 รายการสั่งซื้ออะไหล่</div>
           <div style="font-size:0.68rem;color:#64748b;margin-top:1px">${t.id} · ${escapeHtml(t.problem)}</div>
         </div>
         ${editBtn}
       </div>
     </div>
     <div style="flex:1;overflow-y:auto;padding:14px 16px">
-      <div style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:0.6rem;color:#9ca3af;font-weight:600;text-transform:uppercase">ราคาประมาณรวม</div>
           <div style="font-size:1.2rem;font-weight:900;color:#e65100">฿${total.toLocaleString()}</div>
@@ -2439,22 +2439,22 @@ function showLockedTechReq(t) {
         <div style="font-size:0.7rem;color:#64748b;font-weight:600">${rows.length} รายการ</div>
       </div>
       ${rows.map((r,i)=>`
-        <div style="background:white;border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:6px;overflow:hidden">
+        <div style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:6px;overflow:hidden">
           <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9">
             <div style="width:24px;height:24px;border-radius:7px;background:#e65100;color:white;font-size:0.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
-            <div style="flex:1;font-size:0.86rem;font-weight:700;color:#0f172a">${r.name}</div>
+            <div style="flex:1;font-size:0.86rem;font-weight:700;color:var(--text)">${r.name}</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #f1f5f9">
             <div style="padding:8px 14px;border-right:1px solid #f1f5f9">
               <div style="font-size:0.6rem;font-weight:700;color:#9ca3af;text-transform:uppercase">จำนวน</div>
-              <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-top:2px">${r.qty||1} ชิ้น</div>
+              <div style="font-size:0.95rem;font-weight:800;color:var(--text);margin-top:2px">${r.qty||1} ชิ้น</div>
             </div>
             <div style="padding:8px 14px">
               <div style="font-size:0.6rem;font-weight:700;color:#9ca3af;text-transform:uppercase">ราคา / ชิ้น</div>
               <div style="font-size:0.95rem;font-weight:800;color:#e65100;margin-top:2px">฿${Number(r.price||0).toLocaleString()}</div>
             </div>
           </div>
-          ${r.note?`<div style="padding:7px 14px;background:#f8fafc;font-size:0.72rem;color:#64748b">${escapeHtml(r.note)}</div>`:''}
+          ${r.note?`<div style="padding:7px 14px;background:var(--bg);font-size:0.72rem;color:#64748b">${escapeHtml(r.note)}</div>`:''}
         </div>`).join('')}
       ${tr?.note?`<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:10px 14px;font-size:0.78rem;color:#92400e;margin-top:4px"><span style="font-weight:700">หมายเหตุ:</span> ${tr.note}</div>`:''}
       <div style="margin-top:10px;font-size:0.65rem;color:#9ca3af;text-align:center">ส่งเมื่อ ${(tr?.requestedAt||'').substring(5,16).replace('T',' ')} โดย ${tr?.requestedBy||'—'}</div>
@@ -2503,18 +2503,18 @@ function openTechReqForm(tid) {
 
   const sh = document.createElement('div');
   sh.className = 'tech-req-sheet';
-  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9200;background:#f8fafc;border-radius:22px 22px 0 0;max-height:93vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.18)';
+  sh.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9200;background:var(--bg);border-radius:22px 22px 0 0;max-height:93vh;display:flex;flex-direction:column;box-shadow:0 -12px 48px rgba(0,0,0,0.18)';
   sh.innerHTML = `
     <!-- handle -->
     <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0">
       <div style="width:36px;height:4px;background:#cbd5e1;border-radius:99px"></div>
     </div>
     <!-- header -->
-    <div style="padding:12px 18px 14px;flex-shrink:0;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+    <div style="padding:12px 18px 14px;flex-shrink:0;border-bottom:1px solid #e2e8f0;background:var(--bg)">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <button onclick="closeTechReqForm()" style="width:34px;height:34px;border-radius:50%;background:#e2e8f0;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">‹</button>
         <div style="flex:1">
-          <div style="font-size:0.92rem;font-weight:800;color:#0f172a">แจ้งรายการสั่งซื้ออะไหล่</div>
+          <div style="font-size:0.92rem;font-weight:800;color:var(--text)">แจ้งรายการสั่งซื้ออะไหล่</div>
           <div style="font-size:0.68rem;color:#64748b;margin-top:1px">${tid} · ${escapeHtml(t.problem)}</div>
         </div>
         <button onclick="saveTechReq()" style="background:#e65100;color:white;border:none;border-radius:11px;padding:9px 16px;font-size:0.82rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(230,81,0,0.3)">ส่งให้ Admin</button>
@@ -2522,13 +2522,13 @@ function openTechReqForm(tid) {
       <!-- machine info pill -->
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <span style="background:#fff7ed;border:1px solid #fed7aa;border-radius:99px;padding:3px 10px;font-size:0.68rem;font-weight:700;color:#92400e">❄️ ${t.machine||'—'}</span>
-        <span style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:99px;padding:3px 10px;font-size:0.68rem;font-weight:600;color:#64748b">📍 ${t.location||'—'}</span>
+        <span style="background:var(--bg-2,#f1f5f9);border:1px solid var(--border);border-radius:99px;padding:3px 10px;font-size:0.68rem;font-weight:600;color:#64748b">📍 ${t.location||'—'}</span>
       </div>
     </div>
     <!-- body -->
     <div style="flex:1;overflow-y:auto;padding:14px 16px">
       <!-- total bar (sticky summary) -->
-      <div style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+      <div style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:14px;padding:11px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
         <div>
           <div style="font-size:0.6rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">ราคาประมาณรวม</div>
           <div id="tech-req-total-val" style="font-size:1.2rem;font-weight:900;color:#e65100;margin-top:1px">฿0</div>
@@ -2546,7 +2546,7 @@ function openTechReqForm(tid) {
       <!-- add button -->
       <!-- add buttons row -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
-        <button onclick="addTechReqRow()" style="padding:13px;background:white;border:2px dashed #cbd5e1;border-radius:13px;color:#64748b;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+        <button onclick="addTechReqRow()" style="padding:13px;background:var(--card);border:2px dashed #cbd5e1;border-radius:13px;color:#64748b;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           พิมพ์เอง
         </button>
@@ -2555,16 +2555,16 @@ function openTechReqForm(tid) {
         </button>
       </div>
       <!-- note -->
-      <div style="background:white;border:1.5px solid #e2e8f0;border-radius:13px;padding:12px;margin-bottom:14px">
+      <div style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:13px;padding:12px;margin-bottom:14px">
         <div style="font-size:0.68rem;font-weight:700;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">หมายเหตุเพิ่มเติม</div>
         <textarea id="tech-req-note" rows="2" placeholder="เช่น ความเร่งด่วน, spec พิเศษ, ผู้จัดหาที่แนะนำ..."
-          style="width:100%;border:none;outline:none;font-size:0.82rem;font-family:inherit;resize:none;color:#374151;background:transparent;box-sizing:border-box">${saved?.note||''}</textarea>
+          style="width:100%;border:none;outline:none;font-size:0.82rem;font-family:inherit;resize:none;color:var(--text2);background:transparent;box-sizing:border-box">${saved?.note||''}</textarea>
       </div>
       <div style="height:8px"></div>
     </div>
     <!-- sticky footer — Bug7 fix: ปุ่มบันทึกไม่หลุดจอ -->
-    <div style="flex-shrink:0;background:white;border-top:1px solid #f1f5f9;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;gap:8px;box-shadow:0 -4px 16px rgba(0,0,0,0.06)">
-      <button onclick="closeTechReqForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
+    <div style="flex-shrink:0;background:var(--card);border-top:1px solid #f1f5f9;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;gap:8px;box-shadow:0 -4px 16px rgba(0,0,0,0.06)">
+      <button onclick="closeTechReqForm()" style="flex:1;padding:13px;background:var(--bg-2,#f1f5f9);color:#64748b;border:none;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">ยกเลิก</button>
       <button onclick="saveTechReq()"
         style="flex:2;padding:13px;background:linear-gradient(135deg,#e65100,#c0392b);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(230,81,0,0.3);display:flex;align-items:center;justify-content:center;gap:6px">
         💾 บันทึก &amp; ส่งให้ Admin
@@ -2577,7 +2577,7 @@ function openTechReqForm(tid) {
 
   // ── FIX v23-fix27: keyboard overlap — ทำให้ footer ไม่ทับ keyboard ──
   if (window.visualViewport) {
-    const _footer = sh.querySelector('div[style*="flex-shrink:0;background:white;border-top"]');
+    const _footer = sh.querySelector('div[style*="flex-shrink:0;background:var(--card);border-top"]');
     const _kbFix = () => {
       if (!document.body.contains(sh)) {
         window.visualViewport.removeEventListener('resize', _kbFix);
@@ -2610,12 +2610,12 @@ function closeTechReqForm() {
 function renderTechReqRows() {
   const box = document.getElementById('tech-req-rows'); if (!box) return;
   box.innerHTML = _techReqRows.map((r,i) => `
-    <div style="background:white;border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:6px;overflow:hidden">
+    <div style="background:var(--card);border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:6px;overflow:hidden">
       <!-- name row -->
       <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9">
         <div style="width:24px;height:24px;border-radius:7px;background:#e65100;color:white;font-size:0.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
         <input type="text" value="${r.name}" placeholder="ชื่ออะไหล่ / ชิ้นส่วน *"
-          style="flex:1;border:none;outline:none;font-size:0.86rem;font-weight:700;font-family:inherit;color:#0f172a;background:transparent"
+          style="flex:1;border:none;outline:none;font-size:0.86rem;font-weight:700;font-family:inherit;color:var(--text);background:transparent"
           oninput="_techReqRows[${i}].name=this.value"/>
         <button onclick="openSparePicker(${i})" title="เลือกจากรายการ"
           style="flex-shrink:0;padding:3px 8px;border-radius:7px;background:#fff7ed;border:1.5px solid #fed7aa;cursor:pointer;font-size:0.62rem;font-weight:800;color:#e65100;white-space:nowrap;font-family:inherit">📦 เลือก</button>
@@ -2626,19 +2626,19 @@ function renderTechReqRows() {
       <div style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px;border-bottom:1px solid #f1f5f9">
         <span style="font-size:0.62rem;font-weight:600;color:#9ca3af;white-space:nowrap">จำนวน</span>
         <button onclick="_techReqRows[${i}].qty=Math.max(1,(_techReqRows[${i}].qty||1)-1);renderTechReqRows()"
-          style="width:22px;height:22px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151;line-height:1">−</button>
+          style="width:22px;height:22px;border-radius:6px;background:var(--bg-2,#f1f5f9);border:1px solid var(--border);cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--text2);line-height:1">−</button>
         <input type="number" value="${r.qty||1}" min="1"
-          style="width:36px;border:1px solid #e2e8f0;border-radius:6px;outline:none;font-size:0.85rem;font-weight:700;font-family:inherit;text-align:center;color:#0f172a;background:white;padding:2px 4px"
+          style="width:36px;border:1px solid var(--border);border-radius:6px;outline:none;font-size:0.85rem;font-weight:700;font-family:inherit;text-align:center;color:var(--text);background:var(--card);padding:2px 4px"
           oninput="_techReqRows[${i}].qty=parseInt(this.value)||1;updateTechReqTotal()"/>
         <button onclick="_techReqRows[${i}].qty=(_techReqRows[${i}].qty||1)+1;renderTechReqRows()"
-          style="width:22px;height:22px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#374151;line-height:1">+</button>
+          style="width:22px;height:22px;border-radius:6px;background:var(--bg-2,#f1f5f9);border:1px solid var(--border);cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--text2);line-height:1">+</button>
         <span style="font-size:0.62rem;font-weight:600;color:#9ca3af;white-space:nowrap;margin-left:8px">ราคา/ชิ้น (฿)</span>
         <input type="number" value="${r.price||''}" placeholder="0"
-          style="flex:1;min-width:60px;border:1px solid #e2e8f0;border-radius:6px;outline:none;font-size:0.85rem;font-weight:700;font-family:inherit;color:#e65100;background:white;padding:2px 6px;text-align:right;box-sizing:border-box"
+          style="flex:1;min-width:60px;border:1px solid var(--border);border-radius:6px;outline:none;font-size:0.85rem;font-weight:700;font-family:inherit;color:#e65100;background:var(--card);padding:2px 6px;text-align:right;box-sizing:border-box"
           oninput="_techReqRows[${i}].price=parseFloat(this.value)||0;updateTechReqTotal()"/>
       </div>
       <!-- subtotal + note -->
-      <div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:#f8fafc">
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--bg)">
         <input type="text" value="${r.note||''}" placeholder="หมายเหตุ: ยี่ห้อ / รุ่น / spec..."
           style="flex:1;border:none;outline:none;font-size:0.74rem;font-family:inherit;color:#64748b;background:transparent"
           oninput="_techReqRows[${i}].note=this.value"/>
