@@ -196,7 +196,8 @@ async function fsSaveNowSafe() {
       // ── FIX MISSING DATA: repairGroups + pdfConfig + spareParts ──
       repairGroups:    db.repairGroups    || [],
       pdfConfig:       db.pdfConfig       || {},
-      spareParts:      db.spareParts      || [],
+      spareParts:          db.spareParts          || [],
+      spareCatalogVersion: db.spareCatalogVersion || 0,
       _seq:            db._seq = (db._seq || 0) + 1,
       updatedAt:       new Date().toISOString(),
     };

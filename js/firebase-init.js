@@ -185,6 +185,7 @@ async function fsLoad() {
                                                                 db.pdfConfig = data.pdfConfig;
       if (Array.isArray(data.spareParts) && data.spareParts.length > 0)
                                                                 db.spareParts = data.spareParts;
+      if (typeof data.spareCatalogVersion === 'number')         db.spareCatalogVersion = data.spareCatalogVersion;
       if (data.spareStock && typeof data.spareStock === 'object')
                                                                 db.spareStock = data.spareStock;
       if (Array.isArray(data.stockMovements))                   db.stockMovements = data.stockMovements;
@@ -322,10 +323,11 @@ async function fsSaveNow() {
       // ── FIX MISSING DATA: repairGroups + pdfConfig + spareParts ──
       repairGroups:    db.repairGroups    || [],
       pdfConfig:       db.pdfConfig       || {},
-      spareParts:      db.spareParts      || [],
-      spareStock:      db.spareStock      || {},
-      stockMovements:  db.stockMovements  || [],
-      updatedAt:       new Date().toISOString()
+      spareParts:          db.spareParts          || [],
+      spareCatalogVersion: db.spareCatalogVersion || 0,
+      spareStock:          db.spareStock          || {},
+      stockMovements:      db.stockMovements      || [],
+      updatedAt:           new Date().toISOString()
     });
     if (Object.keys(allSigs).length > 0) {
       // BUG FIX: appdata/signatures ต้องการ real user (custom token / LIFF)
