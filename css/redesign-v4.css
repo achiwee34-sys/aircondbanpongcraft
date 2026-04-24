@@ -1,0 +1,1451 @@
+/* ═══════════════════════════════════════════════════════════════════
+   AIRCON REPAIR MANAGEMENT SYSTEM — REDESIGN v4
+   ผสาน style กับ main.css โดย override ด้วย specificity สูงกว่า
+   ภาษาไทย: IBM Plex Sans Thai | English: Inter, IBM Plex Mono
+   ═══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+/* ───────────────────── CSS VARIABLES ───────────────────── */
+:root {
+  --bg:            #f0f2f5;
+  --surface:       #ffffff;
+  --card:          #ffffff;
+  --sidebar-bg:    #0f1623;
+  --sidebar-w:     220px;
+  --topbar-bg:     #ffffff;
+  --accent:        #c0122c;
+  --accent2:       #e53e5e;
+  --accent-light:  rgba(192,18,44,0.08);
+  --ok:            #16a34a;
+  --ok-bg:         #f0fdf4;
+  --warn:          #d97706;
+  --warn-bg:       #fffbeb;
+  --info:          #2563eb;
+  --info-bg:       #eff6ff;
+  --text:          #0f1623;
+  --text2:         #374151;
+  --muted:         #6b7280;
+  --border:        #e5e7eb;
+  --border2:       #f3f4f6;
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.1);
+  --r-sm:          8px;
+  --r-md:          12px;
+  --r-lg:          16px;
+  --r-xl:          20px;
+  --nav-h:         60px;
+  --head-h:        56px;
+  --safe-top:      env(safe-area-inset-top, 0px);
+  --safe-bot:      env(safe-area-inset-bottom, 0px);
+}
+
+/* ───────────────────── BASE TYPOGRAPHY ───────────────────── */
+html, body {
+  font-family: 'IBM Plex Sans Thai', 'Inter', 'Apple Color Emoji', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ───────────────────── APP BACKGROUND ───────────────────── */
+#app {
+  background: var(--bg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOPBAR — Clean white header
+   ═══════════════════════════════════════════════════════════ */
+.topbar {
+  background: var(--topbar-bg) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  height: calc(var(--head-h) + var(--safe-top)) !important;
+}
+
+.tb-logo {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  color: var(--text) !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Logo badge / brand icon area */
+#app-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Avatar button in topbar */
+#tb-avatar-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, var(--accent), #9b0a24) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 800 !important;
+  font-size: 0.8rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(192,18,44,0.35) !important;
+}
+
+/* Notification bell */
+#ntf-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  background: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Search wrap */
+#tb-search-wrap {
+  background: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR / BOTTOM-NAV — Dark sidebar like wireframe
+   ═══════════════════════════════════════════════════════════ */
+.bottom-nav {
+  background: var(--sidebar-bg) !important;
+  border-right: none !important;
+  border-top: none !important;
+}
+
+/* Portrait (phone) — bottom nav strip */
+@media (orientation: portrait), (max-width: 767px) {
+  .bottom-nav {
+    border-top: 1px solid rgba(255,255,255,0.06) !important;
+    background: var(--sidebar-bg) !important;
+  }
+  .bn-item {
+    flex-direction: column !important;
+    gap: 2px !important;
+    padding: 6px 4px !important;
+  }
+  .bn-label {
+    font-size: 0.52rem !important;
+    font-family: 'IBM Plex Sans Thai', sans-serif !important;
+    font-weight: 600 !important;
+    color: rgba(255,255,255,0.4) !important;
+  }
+  .bn-item.active .bn-label {
+    color: #ffffff !important;
+  }
+  .bn-item.active .bn-icon {
+    color: #ffffff !important;
+  }
+  .bn-item.active .bn-icon svg {
+    stroke: #ffffff !important;
+  }
+  .bn-item:not(.active) .bn-icon svg {
+    stroke: rgba(255,255,255,0.35) !important;
+  }
+  .bn-item.active::after {
+    background: var(--accent) !important;
+    box-shadow: 0 0 8px rgba(192,18,44,0.5) !important;
+  }
+}
+
+/* Landscape / tablet sidebar */
+@media (orientation: landscape) and (min-width: 768px) {
+  .bottom-nav {
+    background: var(--sidebar-bg) !important;
+    width: var(--sidebar-w, 220px) !important;
+    min-width: var(--sidebar-w, 220px) !important;
+    padding-top: 8px !important;
+    padding-bottom: 16px !important;
+    border-right: none !important;
+  }
+
+  /* Sidebar brand */
+  .bottom-nav::before {
+    content: '';
+    display: block;
+    height: 56px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+  }
+
+  .bn-item {
+    flex-direction: row !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+    margin: 1px 8px !important;
+    border-radius: 10px !important;
+    width: calc(100% - 16px) !important;
+    transition: all 0.15s !important;
+    flex: 0 0 auto !important;
+  }
+  .bn-item:not(.active):hover {
+    background: rgba(255,255,255,0.05) !important;
+  }
+  .bn-item.active {
+    background: rgba(192,18,44,0.18) !important;
+    border: 1px solid rgba(192,18,44,0.3) !important;
+  }
+  .bn-item.active::after {
+    display: none !important;
+  }
+  .bn-label {
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: rgba(255,255,255,0.45) !important;
+    font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  }
+  .bn-item.active .bn-label {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  .bn-item:not(.active) .bn-icon svg {
+    stroke: rgba(255,255,255,0.35) !important;
+  }
+  .bn-item.active .bn-icon svg {
+    stroke: #ffffff !important;
+  }
+  .bn-item.active .bn-icon {
+    color: var(--accent2) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENT AREA — Light neutral background
+   ═══════════════════════════════════════════════════════════ */
+.content-area {
+  background: var(--bg) !important;
+}
+
+.content-area > .page {
+  background: var(--bg) !important;
+  padding: 16px 16px 80px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOME PAGE — Dashboard widgets
+   ═══════════════════════════════════════════════════════════ */
+
+/* Hero greeting banner */
+.hero-banner {
+  background: linear-gradient(135deg, #0f1623 0%, #1a2744 60%, #0f1623 100%) !important;
+  border-radius: var(--r-xl) !important;
+  border: none !important;
+  box-shadow: 0 8px 32px rgba(15,22,35,0.25) !important;
+  padding: 20px !important;
+  margin-bottom: 12px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+.hero-banner::before {
+  content: '' !important;
+  position: absolute !important;
+  right: -20px !important;
+  top: -20px !important;
+  width: 120px !important;
+  height: 120px !important;
+  border-radius: 50% !important;
+  background: rgba(192,18,44,0.15) !important;
+  filter: blur(20px) !important;
+}
+.hero-banner::after {
+  content: '' !important;
+  position: absolute !important;
+  left: -10px !important;
+  bottom: -20px !important;
+  width: 90px !important;
+  height: 90px !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,0.03) !important;
+}
+.hero-num {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 3rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  color: white !important;
+}
+.hero-lbl {
+  font-size: 0.6rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.15em !important;
+  color: rgba(255,255,255,0.45) !important;
+  text-transform: uppercase !important;
+}
+.hero-bar {
+  background: rgba(255,255,255,0.1) !important;
+  border-radius: 99px !important;
+  height: 4px !important;
+}
+.hero-bar-fill {
+  background: linear-gradient(90deg, var(--accent), #e53e5e) !important;
+  border-radius: 99px !important;
+}
+
+/* KPI grid */
+.kpi-grid {
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.kpi-card {
+  background: var(--card) !important;
+  border-radius: var(--r-lg) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 14px 14px 12px !important;
+  transition: box-shadow 0.2s, transform 0.15s !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+.kpi-card:active {
+  transform: scale(0.97) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.kpi-card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important; left: 0 !important; right: 0 !important;
+  height: 3px !important;
+  border-radius: var(--r-lg) var(--r-lg) 0 0 !important;
+}
+.kpi-val {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+}
+.kpi-lbl {
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  color: var(--muted) !important;
+  margin-top: 5px !important;
+}
+.kpi-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1rem !important;
+}
+
+/* Quick action row */
+.quick-btn-main {
+  background: linear-gradient(135deg, #0f1623, #1a2744) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: 0 4px 16px rgba(15,22,35,0.2) !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  padding: 14px 16px !important;
+  letter-spacing: 0 !important;
+  border: none !important;
+  transition: opacity 0.15s, transform 0.15s !important;
+}
+.quick-btn-main:active {
+  opacity: 0.85 !important;
+  transform: scale(0.98) !important;
+}
+
+.quick-btn-sec {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* Home section labels */
+.home-section-lbl {
+  font-size: 0.65rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+  color: var(--muted) !important;
+  font-weight: 700 !important;
+}
+
+/* Home rows (recent tickets preview) */
+.home-row {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 12px 14px !important;
+  margin-bottom: 8px !important;
+  transition: box-shadow 0.15s, background 0.1s !important;
+}
+.home-row:active {
+  background: #fafbfc !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.home-row-prob {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+}
+.home-row-sub {
+  font-size: 0.7rem !important;
+  color: var(--muted) !important;
+}
+
+/* Admin menu items (Settings page style) */
+.home-row-bar {
+  width: 3px !important;
+  border-radius: 2px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TICKET CARDS — Redesigned cleaner look
+   ═══════════════════════════════════════════════════════════ */
+.tk {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  margin-bottom: 10px !important;
+  box-shadow: var(--shadow-sm) !important;
+  overflow: hidden !important;
+  transition: box-shadow 0.2s, transform 0.15s !important;
+}
+@media (min-width: 768px) {
+  .tk-swipeable:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.1) !important;
+    transform: translateY(-2px) !important;
+  }
+  .tk-swipeable:active {
+    transform: translateY(0) !important;
+  }
+}
+
+.tk-stripe {
+  height: 4px !important;
+}
+
+.tk-body {
+  padding: 14px 16px !important;
+}
+
+.tk-id {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 0.62rem !important;
+  font-weight: 600 !important;
+  background: var(--bg) !important;
+  color: var(--muted) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--border) !important;
+}
+
+.tk-problem {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  line-height: 1.35 !important;
+  margin-top: 6px !important;
+}
+
+.tk-machine {
+  font-size: 0.75rem !important;
+  color: var(--muted) !important;
+  margin-top: 3px !important;
+}
+
+/* Tags */
+.tag {
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  letter-spacing: 0.01em !important;
+}
+
+.t-blue   { background: #eff6ff !important; color: #1d4ed8 !important; border-color: #bfdbfe !important; }
+.t-yellow { background: #fffbeb !important; color: #b45309 !important; border-color: #fde68a !important; }
+.t-green  { background: #f0fdf4 !important; color: #16a34a !important; border-color: #bbf7d0 !important; }
+.t-red    { background: #fff1f2 !important; color: #be123c !important; border-color: #fecdd3 !important; }
+.t-cyan   { background: #ecfeff !important; color: #0e7490 !important; border-color: #a5f3fc !important; }
+.t-orange { background: #fff7ed !important; color: #c2410c !important; border-color: #fed7aa !important; }
+.t-purple { background: #f5f3ff !important; color: #7c3aed !important; border-color: #ddd6fe !important; }
+.t-muted  { background: #f9fafb !important; color: #6b7280 !important; border-color: #e5e7eb !important; }
+.t-indigo { background: #eef2ff !important; color: #4338ca !important; border-color: #c7d2fe !important; }
+
+/* Ticket action bar */
+.tk-actions {
+  border-top: 1px solid var(--border2) !important;
+  padding-top: 10px !important;
+  gap: 6px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATUS FILTER SCROLLER
+   ═══════════════════════════════════════════════════════════ */
+.sc-card {
+  background: var(--card) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: none !important;
+  padding: 9px 8px 8px !important;
+  min-width: 70px !important;
+  transition: all 0.15s !important;
+}
+.sc-card[data-s=""] {
+  border-color: var(--accent) !important;
+  background: rgba(192,18,44,0.05) !important;
+}
+.sc-n {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--accent) !important;
+}
+.sc-card:not([data-s=""]) .sc-n {
+  color: var(--text2) !important;
+}
+.sc-l {
+  font-size: 0.58rem !important;
+  font-weight: 600 !important;
+  color: var(--muted) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE FILTER TAB BAR
+   ═══════════════════════════════════════════════════════════ */
+#page-tabbar {
+  background: var(--card) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.ptab {
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: var(--muted) !important;
+  padding: 10px 12px !important;
+  border-top: 2px solid transparent !important;
+}
+.ptab.active {
+  color: var(--accent) !important;
+  border-top-color: var(--accent) !important;
+  background: rgba(192,18,44,0.04) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SEARCH BOX
+   ═══════════════════════════════════════════════════════════ */
+.search-box {
+  background: var(--card) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  padding: 12px 14px !important;
+  font-size: 0.9rem !important;
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+.search-box:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(192,18,44,0.1) !important;
+  outline: none !important;
+}
+.search-box::placeholder {
+  color: var(--muted) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORM CARDS + INPUTS
+   ═══════════════════════════════════════════════════════════ */
+.form-card {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 18px !important;
+  margin-bottom: 12px !important;
+}
+
+.fg label {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+  margin-bottom: 5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.fg input, .fg textarea, .fg select {
+  background: var(--bg) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  color: var(--text) !important;
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  padding: 12px 14px !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+.fg input:focus, .fg textarea:focus, .fg select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(192,18,44,0.08) !important;
+  background: var(--card) !important;
+  outline: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════════ */
+.btn {
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  font-weight: 700 !important;
+  border-radius: var(--r-md) !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 12px 18px !important;
+  font-size: 0.88rem !important;
+  transition: opacity 0.15s, transform 0.12s !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+.btn:active { transform: scale(0.97) !important; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #9b0a24) !important;
+  color: white !important;
+  box-shadow: 0 3px 12px rgba(192,18,44,0.3) !important;
+}
+.btn-ok {
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  color: white !important;
+  box-shadow: 0 3px 12px rgba(22,163,74,0.25) !important;
+}
+.btn-warn {
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+  color: white !important;
+}
+.btn-ghost {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOTTOM SHEETS — polished modals
+   ═══════════════════════════════════════════════════════════ */
+.sheet {
+  background: var(--card) !important;
+  border-radius: 24px 24px 0 0 !important;
+  box-shadow: 0 -4px 40px rgba(0,0,0,0.15) !important;
+}
+.sheet-handle {
+  width: 36px !important;
+  height: 4px !important;
+  background: var(--border) !important;
+  border-radius: 2px !important;
+  margin: 14px auto 0 !important;
+}
+.sheet-title {
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+  padding: 16px 20px 6px !important;
+}
+.sheet-body {
+  padding: 10px 20px 0 !important;
+}
+.sheet-actions {
+  padding: 14px 20px calc(var(--safe-bot, 0px) + 16px) !important;
+}
+.sheet-overlay {
+  backdrop-filter: blur(6px) !important;
+  background: rgba(15,22,35,0.55) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TECH / USER CARDS
+   ═══════════════════════════════════════════════════════════ */
+.tech-card {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  padding: 13px 15px !important;
+  margin-bottom: 8px !important;
+  cursor: pointer !important;
+  transition: box-shadow 0.2s !important;
+}
+.tech-card:active {
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Tech picker items */
+.tech-item {
+  border-radius: var(--r-md) !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--bg) !important;
+  padding: 12px !important;
+  transition: all 0.18s !important;
+}
+.tech-item.sel {
+  border-color: var(--accent) !important;
+  background: rgba(192,18,44,0.04) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TIMELINE (ticket detail)
+   ═══════════════════════════════════════════════════════════ */
+.tl-dot {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+}
+.tl-t {
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+}
+.tl-d {
+  background: var(--bg) !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--border) !important;
+  font-size: 0.78rem !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DATA TABLE (Machine list)
+   ═══════════════════════════════════════════════════════════ */
+.table-wrap {
+  border-radius: var(--r-lg) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm) !important;
+  overflow: hidden !important;
+}
+.data-table th {
+  background: var(--bg) !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--muted) !important;
+  padding: 10px 12px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.data-table td {
+  background: var(--card) !important;
+  padding: 10px 12px !important;
+  font-size: 0.78rem !important;
+  border-bottom: 1px solid var(--border2) !important;
+  color: var(--text) !important;
+}
+.data-table tr:last-child td {
+  border-bottom: none !important;
+}
+.data-table tr:active td {
+  background: rgba(192,18,44,0.03) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FAB BUTTON
+   ═══════════════════════════════════════════════════════════ */
+.fab {
+  background: linear-gradient(135deg, var(--accent), #9b0a24) !important;
+  box-shadow: 0 6px 24px rgba(192,18,44,0.45) !important;
+  border-radius: 50% !important;
+  width: 58px !important;
+  height: 58px !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+.fab:active {
+  transform: scale(0.92) !important;
+  box-shadow: 0 3px 12px rgba(192,18,44,0.35) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SKELETON LOADER — refined shimmer
+   ═══════════════════════════════════════════════════════════ */
+.skel {
+  background: linear-gradient(90deg, #f0f2f5 25%, #e8edf3 50%, #f0f2f5 75%) !important;
+  background-size: 600px 100% !important;
+  animation: shimmer 1.2s infinite linear !important;
+  border-radius: 8px !important;
+}
+.skel-card {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NOTIFICATION items
+   ═══════════════════════════════════════════════════════════ */
+.notif-item {
+  border-radius: var(--r-md) !important;
+}
+.notif-item.unread {
+  background: rgba(192,18,44,0.04) !important;
+  border-color: rgba(192,18,44,0.15) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   QUICK MENU (topbar dropdown)
+   ═══════════════════════════════════════════════════════════ */
+#tb-quick-menu {
+  border-radius: var(--r-lg) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04) !important;
+  background: var(--card) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INSTALL BANNER
+   ═══════════════════════════════════════════════════════════ */
+#install-banner {
+  border-radius: var(--r-lg) !important;
+  border: 1px solid rgba(192,18,44,0.2) !important;
+  box-shadow: 0 8px 32px rgba(192,18,44,0.15) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APP TOAST
+   ═══════════════════════════════════════════════════════════ */
+#app-toast {
+  border-radius: var(--r-md) !important;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REGISTER SCREEN
+   ═══════════════════════════════════════════════════════════ */
+#register-screen {
+  background: var(--bg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXECUTIVE / ANALYTICS PAGE
+   ═══════════════════════════════════════════════════════════ */
+#pg-executive {
+  background: var(--bg) !important;
+}
+
+/* Stat cards in executive page */
+.stat-card {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS PAGE — card-based rows like wireframe
+   ═══════════════════════════════════════════════════════════ */
+#pg-settings {
+  background: var(--bg) !important;
+}
+
+/* Admin dashboard cards in settings */
+#pg-settings .form-card,
+#pg-settings [style*="background:white"],
+#pg-settings [style*="background:#fff"] {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SPARE PARTS — Catalog grid style
+   ═══════════════════════════════════════════════════════════ */
+/* Spare part items will inherit card styles */
+
+/* ═══════════════════════════════════════════════════════════
+   PURCHASE / PR/PO PAGE
+   ═══════════════════════════════════════════════════════════ */
+#pg-purchase {
+  background: var(--bg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REPORT PAGE
+   ═══════════════════════════════════════════════════════════ */
+#pg-report {
+  background: var(--bg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CALENDAR PAGE
+   ═══════════════════════════════════════════════════════════ */
+#pg-calendar {
+  background: var(--bg) !important;
+}
+.cal-cell {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  border-radius: 4px !important;
+}
+.cftab {
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  font-weight: 700 !important;
+}
+.cftab.active {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MACHINES PAGE
+   ═══════════════════════════════════════════════════════════ */
+#pg-machines {
+  background: var(--bg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   USERS PAGE
+   ═══════════════════════════════════════════════════════════ */
+#pg-users {
+  background: var(--bg) !important;
+}
+#users-list > div {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  margin-bottom: 8px !important;
+  padding: 14px 16px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION LABEL — settings / admin menu headers
+   ═══════════════════════════════════════════════════════════ */
+.section-label {
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: var(--muted) !important;
+  padding: 0 0 8px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHIP FILTERS
+   ═══════════════════════════════════════════════════════════ */
+.fchip {
+  border-radius: 8px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  padding: 7px 14px !important;
+  background: var(--card) !important;
+  border: 1.5px solid var(--border) !important;
+  color: var(--text) !important;
+  transition: all 0.15s !important;
+}
+.fchip.active {
+  background: var(--text) !important;
+  color: white !important;
+  border-color: var(--text) !important;
+}
+.fchip:active {
+  transform: scale(0.95) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   c-chip / result cards (complete form)
+   ═══════════════════════════════════════════════════════════ */
+.c-chip {
+  border-radius: 10px !important;
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+}
+.c-chip.active {
+  background: rgba(192,18,44,0.06) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+.c-check-card {
+  border-radius: var(--r-md) !important;
+  background: var(--bg) !important;
+  border-color: var(--border) !important;
+}
+.c-check-card.active {
+  background: rgba(192,18,44,0.05) !important;
+  border-color: var(--accent) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION HEADING: admin menu panel in home screen
+   ═══════════════════════════════════════════════════════════ */
+.home-greeting {
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+  letter-spacing: -0.01em !important;
+}
+.home-date {
+  font-size: 0.72rem !important;
+  color: var(--muted) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PHOTO UPLOAD ZONE
+   ═══════════════════════════════════════════════════════════ */
+.photo-upload {
+  border-radius: var(--r-lg) !important;
+  border: 2px dashed var(--border) !important;
+  background: var(--bg) !important;
+}
+.photo-upload:active {
+  border-color: var(--accent) !important;
+  background: rgba(192,18,44,0.03) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DARK MODE — deep navy
+   ═══════════════════════════════════════════════════════════ */
+body.dark-mode {
+  --bg:            #0d1117;
+  --surface:       #111827;
+  --card:          #1a2236;
+  --topbar-bg:     #0d1117;
+  --sidebar-bg:    #060a12;
+  --text:          #e2e8f0;
+  --text2:         #94a3b8;
+  --muted:         #64748b;
+  --border:        rgba(30,45,69,0.9);
+  --border2:       rgba(30,45,69,0.6);
+  --accent:        #e05a6e;
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .hero-banner {
+  background: linear-gradient(135deg, #111827 0%, #1a2744 60%, #0d1528 100%) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .kpi-card {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .tk {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .sc-card {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .sc-card[data-s=""] {
+  background: rgba(224,90,110,0.08) !important;
+  border-color: rgba(224,90,110,0.4) !important;
+}
+
+body.dark-mode .home-row {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .form-card {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .tech-card {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .search-box {
+  background: #0d1117 !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+body.dark-mode .quick-btn-sec {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+body.dark-mode .quick-btn-main {
+  background: linear-gradient(135deg, #111827, #1a2744) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+}
+
+body.dark-mode .data-table th {
+  background: #111827 !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .data-table td {
+  background: var(--card) !important;
+  border-color: rgba(30,45,69,0.5) !important;
+}
+
+body.dark-mode .table-wrap {
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .sheet {
+  background: #111827 !important;
+}
+
+body.dark-mode #tb-quick-menu {
+  background: #111827 !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode .fchip {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+body.dark-mode .fchip.active {
+  background: var(--text) !important;
+  color: #0d1117 !important;
+  border-color: var(--text) !important;
+}
+
+body.dark-mode .t-blue   { background: rgba(29,78,216,0.12) !important; color: #93c5fd !important; border-color: rgba(59,130,246,0.25) !important; }
+body.dark-mode .t-yellow { background: rgba(180,83,9,0.12)  !important; color: #fde68a !important; border-color: rgba(234,179,8,0.25)  !important; }
+body.dark-mode .t-green  { background: rgba(22,163,74,0.12) !important; color: #86efac !important; border-color: rgba(34,197,94,0.25)  !important; }
+body.dark-mode .t-red    { background: rgba(190,18,60,0.12) !important; color: #fca5a5 !important; border-color: rgba(239,68,68,0.25)  !important; }
+body.dark-mode .t-cyan   { background: rgba(14,116,144,0.12)!important; color: #67e8f9 !important; border-color: rgba(6,182,212,0.25)  !important; }
+body.dark-mode .t-orange { background: rgba(194,65,12,0.12) !important; color: #fdba74 !important; border-color: rgba(249,115,22,0.25) !important; }
+body.dark-mode .t-muted  { background: var(--card)          !important; color: var(--muted) !important; border-color: var(--border) !important; }
+
+body.dark-mode .skel {
+  background: linear-gradient(90deg, #1a2236 25%, #1e2d45 50%, #1a2236 75%) !important;
+  background-size: 600px 100% !important;
+}
+body.dark-mode .skel-card {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode #pg-settings,
+body.dark-mode #pg-report,
+body.dark-mode #pg-calendar,
+body.dark-mode #pg-machines,
+body.dark-mode #pg-users,
+body.dark-mode #pg-executive,
+body.dark-mode #pg-purchase,
+body.dark-mode #pg-backend {
+  background: var(--bg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   KEYFRAMES (re-declare to ensure they're present)
+   ═══════════════════════════════════════════════════════════ */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* page-level fade in */
+.page.active {
+  animation: fadeIn 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MISC POLISHES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+/* Badge on bottom nav */
+.bn-badge {
+  background: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--sidebar-bg) !important;
+}
+
+/* Ticket ID mono font */
+[class*="tk-id"],
+.tk-id {
+  font-family: 'IBM Plex Mono', monospace !important;
+}
+
+/* Photo grid thumbnail */
+.photo-grid-item {
+  border-radius: var(--r-md) !important;
+  border-color: var(--border) !important;
+}
+
+/* Empty state */
+.empty {
+  color: var(--muted) !important;
+}
+.empty .ei {
+  font-size: 3.5rem !important;
+}
+
+/* Complete form check chip */
+.c-result-card {
+  border-radius: var(--r-md) !important;
+  background: var(--bg) !important;
+  border-color: var(--border) !important;
+}
+.c-result-card.active {
+  background: #f0fdf4 !important;
+  border-color: #22c55e !important;
+}
+
+/* RTAG (repair type tag) */
+.rtag {
+  border-radius: 99px !important;
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+}
+
+/* Machine dashboard view cards */
+#mac-dashboard-view [style*="background:white"],
+#mac-dashboard-view [style*="background:#fff"] {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+}
+
+/* Users summary grid */
+#users-summary > div {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ─ Spare parts page ─ */
+#pg-settings [onclick] {
+  border-radius: var(--r-lg) !important;
+}
+
+/* Executive tabs */
+.exec-tab {
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.78rem !important;
+}
+
+/* Chatroom */
+#pg-chatroom {
+  background: var(--bg) !important;
+}
+
+/* ─ Final override: all dynamic white backgrounds ─ */
+.content-area div[style*="background:white"],
+.content-area div[style*="background:#ffffff"],
+.content-area div[style*="background: white"] {
+  background: var(--card) !important;
+}
+
+/* Smooth transitions for theme toggle */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+/* ─── END OF REDESIGN v4 ─── */
+
+/* ═══════════════════════════════════════════════════════════
+   PATCH v4.1 — CSS Variables เพิ่มเติม + override inline styles ที่ JS render
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg-2: #e8ecf1;
+}
+body.dark-mode {
+  --bg-2: #0d1117;
+}
+
+/* ─── Override inline white/gray backgrounds ทั้งหมดที่ JS render ─── */
+
+/* Card/surface */
+#pg-home    [style*="background:var(--card)"],
+#pg-tickets [style*="background:var(--card)"],
+#pg-tracking[style*="background:var(--card)"],
+#pg-mywork  [style*="background:var(--card)"],
+#pg-new     [style*="background:var(--card)"],
+#pg-machines[style*="background:var(--card)"],
+#pg-users   [style*="background:var(--card)"],
+#pg-settings[style*="background:var(--card)"],
+#pg-report  [style*="background:var(--card)"],
+#pg-calendar[style*="background:var(--card)"],
+#pg-purchase[style*="background:var(--card)"],
+#pg-backend [style*="background:var(--card)"],
+#pg-executive[style*="background:var(--card)"],
+#pg-chatroom[style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* Bg surface */
+#app [style*="background:var(--bg)"] { background: var(--bg) !important; }
+#app [style*="background:var(--bg-2,#f1f5f9)"] { background: var(--bg-2) !important; }
+
+/* Text color */
+#app [style*="color:var(--text)"]  { color: var(--text)  !important; }
+#app [style*="color:var(--text2)"] { color: var(--text2) !important; }
+
+/* border color */
+#app [style*="border:1px solid var(--border)"],
+#app [style*="border:1.5px solid var(--border)"] {
+  border-color: var(--border) !important;
+}
+
+/* ─── Home page: Dashboard card ─── */
+#home-content > div[style*="border-radius:24px"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Status grid cells in dashboard */
+#home-content [style*="border-right:1px solid #f0eded"],
+#home-content [style*="border-bottom:1.5px solid #f5e8e8"],
+#home-content [style*="border-bottom:1px solid #f5e8e8"] {
+  border-color: var(--border2) !important;
+}
+
+/* Inner status cell bg */
+#home-content [style*="background:#f8f8f8"] {
+  background: var(--bg) !important;
+}
+
+/* Ring card right side */
+#home-content [style*="background:linear-gradient(135deg,#fff8f8,#fff5f5)"] {
+  background: var(--bg) !important;
+}
+
+/* Quick access 3-col buttons */
+#home-content button[style*="border-radius:12px"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* Tech card list in home */
+#home-content [style*="background:var(--bg-2"] {
+  background: var(--bg) !important;
+}
+
+/* ─── Users page card ─── */
+#users-list > div {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Spare parts sheet ─── */
+#spare-manager-sheet [style*="background:var(--card)"],
+#inventory-sheet [style*="background:var(--card)"] {
+  background: var(--card) !important;
+}
+
+/* ─── Settings: Admin menu rows ─── */
+#pg-settings [style*="border-radius"] {
+  border-color: var(--border) !important;
+}
+
+/* ─── Ticket list: "no ticket" empty card ─── */
+#ticket-list [style*="background:var(--card)"][style*="border-radius:12px"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Charts / report page ─── */
+#rpt-panel-summary [style*="background:var(--card)"],
+#rpt-panel-history [style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Purchase page PR/PO ─── */
+#pur-list-panel [style*="background:var(--card)"],
+#pur-po-panel   [style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Chatroom panels ─── */
+#cr-list-panel {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+#cr-chat-panel {
+  background: var(--bg) !important;
+}
+
+/* ─── Backend page ─── */
+#pg-backend [style*="background:var(--card)"] {
+  background: var(--card) !important;
+}
+
+/* ─── Calendar cells ─── */
+.cal-cell {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Machine cards in dashboard ─── */
+#mac-dashboard-view [style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Sidebar/Admin home menu items ─── */
+.home-row {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Page tabbar bg ─── */
+#page-tabbar {
+  background: var(--card) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.ptab-row {
+  background: var(--card) !important;
+}
+
+/* ─── Tracking page ─── */
+#tracking-content [style*="background:var(--card)"] {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── Search input in sheet ─── */
+.sheet input[type="text"],
+.sheet input[type="search"],
+.sheet textarea,
+.sheet select {
+  background: var(--bg) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* ─── Override all remaining hardcoded #f0eded, #f5e8e8 dividers ─── */
+body.dark-mode [style*="border-bottom:1.5px solid #f5e8e8"],
+body.dark-mode [style*="border-right:1px solid #f0eded"],
+body.dark-mode [style*="border-left:1.5px solid #f5e8e8"],
+body.dark-mode [style*="border-left:1px solid #f5e8e8"] {
+  border-color: var(--border) !important;
+}
+
+/* ─── Smooth transition for theme ─── */
+*:not(svg):not(path):not(circle):not(line):not(polyline):not(rect):not(g) {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease !important;
+}
