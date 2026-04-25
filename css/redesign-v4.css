@@ -435,6 +435,12 @@ html, body {
   padding: 14px 16px !important;
 }
 
+@media (max-width: 767px) {
+  .tk-body {
+    padding: 10px 12px !important;
+  }
+}
+
 .tk-id {
   font-family: 'IBM Plex Mono', monospace !important;
   font-size: 0.62rem !important;
@@ -905,12 +911,21 @@ html, body {
 #pg-machines {
   background: var(--bg) !important;
   /* ป้องกัน layout หาย เมื่อ sidebar toggle */
-  will-change: auto !important;
-  contain: layout style !important;
+  will-change: transform !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
 }
 
 /* mac-dashboard-view: ต้องไม่ collapse เมื่อ sidebar toggle */
 #mac-dashboard-view {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+/* machine cards container: never overflow */
+.mac-cards-container {
   width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;

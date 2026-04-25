@@ -1284,7 +1284,7 @@ async function viewQuotationFull(tid) {
   if(ov) ov.remove();
   ov = document.createElement('div');
   ov.id = '_pdf_overlay';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#1a1a1a;display:flex;flex-direction:column;';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#ffffff;display:flex;flex-direction:column;';
 
   const tb = document.createElement('div');
   tb.style.cssText = 'display:flex;align-items:center;gap:8px;padding:9px 14px;background:#1a5276;flex-shrink:0;';
@@ -1306,7 +1306,7 @@ async function viewQuotationFull(tid) {
   ov.appendChild(tb);
 
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;background:#555;-webkit-overflow-scrolling:touch;min-height:0;overscroll-behavior:contain;';
+  wrap.style.cssText = 'flex:1;overflow-y:auto;overflow-x:hidden;background:#f0f2f5;-webkit-overflow-scrolling:touch;min-height:0;overscroll-behavior:contain;';
   const iframe = document.createElement('iframe');
   iframe.id = '_vq_iframe';
   // Fix 4: เต็มหน้าจอ ไม่มีขอบ — ความสูงจะถูก set อีกครั้งหลัง load
@@ -1914,7 +1914,7 @@ td,th{font-family:'Sarabun',Arial,sans-serif}
   if(ov) ov.remove();
   ov = document.createElement('div');
   ov.id = '_pdf_overlay';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#1a1a1a;display:flex;flex-direction:column;font-family:"Noto Sans Thai",sans-serif;';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#ffffff;display:flex;flex-direction:column;font-family:"Noto Sans Thai",sans-serif;';
 
   // ── Pull ONLY repair rows (exclude PO/spare-part rows) ──
   // กรองเฉพาะรายการซ่อมจริง — ถ้าไม่มีรายการเลย ไม่ auto-fill

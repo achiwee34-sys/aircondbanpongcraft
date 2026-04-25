@@ -3692,7 +3692,18 @@ function openDetail(tid) {
   <!-- ─── MACHINE CARD ─── -->
   <div style="background:var(--card);padding:16px;border-bottom:6px solid #f0f4f8">
     <div style="display:flex;align-items:flex-start;gap:14px">
-      <div style="width:52px;height:52px;background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(59,130,246,0.35)"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="15" y1="2" x2="15" y2="28" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="15" x2="28" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="5.04" y1="5.04" x2="24.96" y2="24.96" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="24.96" y1="5.04" x2="5.04" y2="24.96" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="2" x2="11" y2="6" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="2" x2="19" y2="6" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="28" x2="11" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="28" x2="19" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="15" x2="6" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="15" x2="6" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="28" y1="15" x2="24" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="28" y1="15" x2="24" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/><circle cx="15" cy="15" r="3" fill="white"/></svg></div>
+      ${(()=>{
+    const _mn = (t.machine||_m?.name||'').toLowerCase();
+    const _isChiller = _mn.includes('chiller')||_mn.includes('cdw')||_mn.includes('cooling tower');
+    const _isFCU = _mn.includes('fcu')||_mn.includes('fan coil')||_mn.includes('ahu')||_mn.includes('air handling');
+    const _isPAC = _mn.includes('pac')||_mn.includes('precision')||_mn.includes('server');
+    const _isCassette = _mn.includes('cassette')||_mn.includes('ceiling')||_mn.includes('แคสเซ็ต');
+    const _isDuct = _mn.includes('duct')||_mn.includes('central')||_mn.includes('ศูนย์กลาง');
+    const _emoji = _isChiller?'🌊':_isFCU?'💨':_isPAC?'🖥️':_isCassette?'🟦':_isDuct?'🌀':'❄️';
+    const _grad = _isChiller?'linear-gradient(135deg,#0369a1,#0ea5e9)':_isFCU?'linear-gradient(135deg,#059669,#34d399)':_isPAC?'linear-gradient(135deg,#7c3aed,#a78bfa)':_isCassette?'linear-gradient(135deg,#0891b2,#22d3ee)':_isDuct?'linear-gradient(135deg,#d97706,#fbbf24)':'linear-gradient(135deg,#c8102e,#ef4444)';
+    const _shadow = _isChiller?'rgba(14,165,233,0.35)':_isFCU?'rgba(52,211,153,0.35)':_isPAC?'rgba(167,139,250,0.35)':'rgba(200,16,46,0.3)';
+    return `<div style="width:52px;height:52px;background:${_grad};border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px ${_shadow};font-size:1.6rem">${_emoji}</div>`;
+  })()}
       <div style="flex:1;min-width:0">
         <div style="font-size:0.58rem;color:#94a3b8;font-weight:700;margin-bottom:1px;letter-spacing:.05em">${t.id}</div>
         <div style="font-size:1rem;font-weight:900;color:var(--text);line-height:1.25;margin-bottom:6px">${escapeHtml(t.machine||'—')}</div>

@@ -1057,8 +1057,15 @@ function initChatroomLayout() {
   const right = document.getElementById('cr-chat-panel');
   const back  = document.getElementById('cr-back-btn');
   const pg    = document.getElementById('pg-chatroom');
+  const isTech = typeof CU !== 'undefined' && CU && CU.role === 'tech';
 
-  if (isMobile) {
+  if (isTech) {
+    // Tech: ซ่อน left panel ทันที → chat เต็มจอ
+    _crPanelOpen = false;
+    _applyCrLayout();
+    if (right) right.style.display = 'flex';
+    if (back)  back.style.display  = isMobile ? 'flex' : 'none';
+  } else if (isMobile) {
     _crPanelOpen = true;
     _applyCrLayout();
     if (right) right.style.display = 'none';
