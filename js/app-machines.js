@@ -412,7 +412,7 @@ function _buildMachineRowsHtml(list) {
         <div>
           <div style="background:#c8102e;padding:7px 14px;display:flex;align-items:center;justify-content:space-between">
             <span style="font-size:0.65rem;font-weight:800;color:white;letter-spacing:0.05em">${m.serial} — ${m.name.length>38?m.name.substring(0,38)+'…':m.name}</span>
-            <span style="font-size:0.6rem;color:rgba(255,255,255,0.6)">${m.dept||''}</span>
+            <span style="font-size:0.6rem;color:#6b7280">${m.dept||''}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #f1f5f9">
             <div style="padding:8px 14px;border-right:1px solid #f1f5f9">
@@ -3149,12 +3149,12 @@ function openMachineRequestsPage() {
 
     page.innerHTML = `
       <!-- Header -->
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:16px 16px 12px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #dc2626;padding:16px 16px 12px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
-          <button onclick="document.getElementById('_mac-req-page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">‹</button>
+          <button onclick="document.getElementById('_mac-req-page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation">‹</button>
           <div style="flex:1">
-            <div style="color:var(--text,#111827);font-size:1.05rem;font-weight:900;letter-spacing:-0.01em">คำขอเพิ่มเครื่องแอร์</div>
-            <div style="color:#6b7280;font-size:0.7rem;margin-top:2px">Admin อนุมัติ / ปฏิเสธ</div>
+            <div style="color:#7f1d1d;font-size:1.05rem;font-weight:900;letter-spacing:-0.01em">คำขอเพิ่มเครื่องแอร์</div>
+            <div style="color:#94a3b8;font-size:0.7rem;margin-top:2px">Admin อนุมัติ / ปฏิเสธ</div>
           </div>
           ${pending.length>0?`<div style="background:#c8102e;color:white;border-radius:99px;padding:5px 14px;font-size:0.88rem;font-weight:900">${pending.length} รอ</div>`:''}
         </div>
@@ -3554,40 +3554,40 @@ function openNewMachinesTable() {
 
   pg.innerHTML = `
     <!-- ── Header ── -->
-    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:16px 14px 0;flex-shrink:0">
+    <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #0f172a;padding:16px 14px 12px;flex-shrink:0">
       <!-- top bar -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <button onclick="document.getElementById('_nmtable').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')"
-          style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s"
-          onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">‹</button>
+          style="width:34px;height:34px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s"
+          onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">‹</button>
         <div style="flex:1;min-width:0">
-          <div style="color:var(--text,#111827);font-size:1rem;font-weight:900;letter-spacing:-0.01em">เครื่องแอร์เพิ่มใหม่</div>
-          <div style="color:#6b7280;font-size:0.65rem;margin-top:1px">2 เดือนล่าสุด</div>
+          <div style="color:#1e293b;font-size:1rem;font-weight:900;letter-spacing:-0.01em">เครื่องแอร์เพิ่มใหม่</div>
+          <div style="color:#94a3b8;font-size:0.65rem;margin-top:1px">2 เดือนล่าสุด</div>
         </div>
-        <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:white;border-radius:10px;padding:4px 12px;font-size:0.9rem;font-weight:900;flex-shrink:0">${list.length}</div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:10px;padding:4px 12px;font-size:0.9rem;font-weight:900;flex-shrink:0">${list.length}</div>
       </div>
 
       <!-- ── stat pills ── -->
       <div style="display:flex;gap:6px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none;justify-content:center">
-        <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:7px 14px;flex-shrink:0;text-align:center">
-          <div style="font-size:1.15rem;font-weight:900;color:white;line-height:1">${list.length}</div>
-          <div style="font-size:0.56rem;color:rgba(255,255,255,0.65);margin-top:2px;font-weight:600">ทั้งหมด</div>
+        <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:7px 14px;flex-shrink:0;text-align:center">
+          <div style="font-size:1.15rem;font-weight:900;color:var(--text,#111827);line-height:1">${list.length}</div>
+          <div style="font-size:0.56rem;color:#94a3b8;margin-top:2px;font-weight:600">ทั้งหมด</div>
         </div>
         <div style="background:${withIssue>0?'rgba(220,38,38,0.3)':'rgba(255,255,255,0.08)'};border:1px solid ${withIssue>0?'rgba(252,165,165,0.4)':'rgba(255,255,255,0.15)'};border-radius:10px;padding:7px 14px;flex-shrink:0;text-align:center">
           <div style="font-size:1.15rem;font-weight:900;color:${withIssue>0?'#fca5a5':'rgba(255,255,255,0.4)'};line-height:1">${withIssue}</div>
-          <div style="font-size:0.56rem;color:#6b7280;margin-top:2px;font-weight:600">งานค้าง</div>
+          <div style="font-size:0.56rem;color:#94a3b8;margin-top:2px;font-weight:600">งานค้าง</div>
         </div>
         <div style="background:${noFL>0?'rgba(245,158,11,0.25)':'rgba(255,255,255,0.08)'};border:1px solid ${noFL>0?'rgba(253,230,138,0.4)':'rgba(255,255,255,0.15)'};border-radius:10px;padding:7px 14px;flex-shrink:0;text-align:center">
           <div style="font-size:1.15rem;font-weight:900;color:${noFL>0?'#fde68a':'rgba(255,255,255,0.4)'};line-height:1">${noFL}</div>
-          <div style="font-size:0.56rem;color:#6b7280;margin-top:2px;font-weight:600">ไม่มี FL</div>
+          <div style="font-size:0.56rem;color:#94a3b8;margin-top:2px;font-weight:600">ไม่มี FL</div>
         </div>
         <div style="background:${noEQ>0?'rgba(245,158,11,0.25)':'rgba(255,255,255,0.08)'};border:1px solid ${noEQ>0?'rgba(253,230,138,0.4)':'rgba(255,255,255,0.15)'};border-radius:10px;padding:7px 14px;flex-shrink:0;text-align:center">
           <div style="font-size:1.15rem;font-weight:900;color:${noEQ>0?'#fde68a':'rgba(255,255,255,0.4)'};line-height:1">${noEQ}</div>
-          <div style="font-size:0.56rem;color:#6b7280;margin-top:2px;font-weight:600">ไม่มี EQ</div>
+          <div style="font-size:0.56rem;color:#94a3b8;margin-top:2px;font-weight:600">ไม่มี EQ</div>
         </div>
-        <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:7px 14px;flex-shrink:0;text-align:center">
-          <div style="font-size:1.15rem;font-weight:900;color:rgba(255,255,255,0.75);line-height:1">${list.length - withIssue}</div>
-          <div style="font-size:0.56rem;color:#6b7280;margin-top:2px;font-weight:600">ปกติ</div>
+        <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:7px 14px;flex-shrink:0;text-align:center">
+          <div style="font-size:1.15rem;font-weight:900;color:#6b7280;line-height:1">${list.length - withIssue}</div>
+          <div style="font-size:0.56rem;color:#94a3b8;margin-top:2px;font-weight:600">ปกติ</div>
         </div>
       </div>
     </div>

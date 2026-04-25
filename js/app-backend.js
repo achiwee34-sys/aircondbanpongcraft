@@ -1128,3 +1128,77 @@ async function executeBkpClear() {
     renderBkpOverview();
   } else showToast('❌ ไม่พบ clearFirestoreData()');
 }
+
+// ============================================================
+// CLEAR LOCAL CACHE — ล้าง localStorage ทั้งหมด แล้ว reload
+// (เก็บ session ไว้ ไม่ต้อง login ใหม่)
+// ============================================================
+function confirmClearLocalCache() {
+  // แสดง confirm dialog ก่อนล้าง
+  if (typeof showAlert === 'function') {
+    // คำนวณขนาด localStorage ปัจจุบัน
+    let totalBytes = 0;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        totalBytes += (key.length + (localStorage.getItem(key) || '').length) * 2;
+      }
+    } catch(e) {}
+    const sizeMB = (totalBytes / 1024 / 1024).toFixed(2);
+    const sizeKB = (totalBytes / 1024).toFixed(0);
+
+    showAlert({
+      icon: '🗄️',
+      title: 'ล้าง Local Cache?',
+      color: '#d97706',
+      msg: `ขนาดข้อมูลที่จะล้าง: <strong style="color:#92400e">${sizeKB} KB (${sizeMB} MB)</strong><br><br>`
+         + `<div style="font-size:0.72rem;color:#64748b;text-align:left;line-height:1.7">`
+         + `✅ Session ยังอยู่ — ไม่ต้อง login ใหม่<br>`
+         + `✅ ข้อมูลทั้งหมดยังอยู่ใน Firestore ครบ<br>`
+         + `⚡ แอปจะ reload และดึงข้อมูลใหม่จาก Cloud`
+         + `</div>`,
+      btnOk: '🗄️ ล้างเลย',
+      btnCancel: 'ยกเลิก',
+      onOk: () => clearLocalCache(),
+    });
+  } else {
+    // fallback ถ้า showAlert ยังไม่พร้อม
+    if (confirm('ล้าง Local Cache และ reload หน้า?
+
+ข้อมูลทั้งหมดยังอยู่ใน Firestore ครบ')) {
+      clearLocalCache();
+    }
+  }
+}
+
+async function clearLocalCache() {
+  try {
+    if (typeof showToast === 'function') showToast('🗄️ กำลังล้าง Local Cache...');
+    if (typeof bkLog === 'function') bkLog('info', 'Clear Local Cache', window.CU?.username || '');
+
+    // ── 1. เก็บ session ไว้ก่อน ──
+    const SESSION_KEY  = 'aircon_session';
+    const savedSession = localStorage.getItem(SESSION_KEY);
+
+    // ── 2. ล้าง localStorage ทั้งหมด ──
+    localStorage.clear();
+
+    // ── 3. คืน session กลับ → ไม่ต้อง login ใหม่ ──
+    if (savedSession) {
+      localStorage.setItem(SESSION_KEY, savedSession);
+    }
+
+    // ── 4. reload หน้า → initApp จะ force-load จาก Firestore (v7 fix) ──
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
+
+  } catch(e) {
+    console.error('[clearLocalCache] error:', e);
+    if (typeof showToast === 'function') showToast('❌ ล้างไม่สำเร็จ: ' + e.message);
+  }
+}
+
+// expose globally
+window.confirmClearLocalCache = confirmClearLocalCache;
+window.clearLocalCache = clearLocalCache;

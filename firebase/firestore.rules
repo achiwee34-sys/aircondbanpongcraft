@@ -54,6 +54,29 @@ service cloud.firestore {
       allow read:  if canRead();
       allow write: if canWrite();
     }
+    // ── FIX v6: split docs ──────────────────────────────────────
+    // appdata/spare_data, machine_data, chat_data, meta_data — staff only
+    match /appdata/spare_data {
+      allow read:  if canRead();
+      allow write: if canWrite() || isAnonymous();
+    }
+    match /appdata/machine_data {
+      allow read:  if canRead() || isAnonymous(); // anonymous อ่านได้ (populate dept picker)
+      allow write: if canWrite() || isAnonymous();
+    }
+    match /appdata/chat_data {
+      allow read:  if canRead();
+      allow write: if canWrite() || isAnonymous();
+    }
+    match /appdata/meta_data {
+      allow read:  if canRead();
+      allow write: if canWrite() || isAnonymous();
+    }
+    // ── tickets_archive subcollection ──────────────────────────
+    match /appdata/tickets_archive/items/{ticketId} {
+      allow read:  if canRead() || isAnonymous();
+      allow write: if canWrite() || isAnonymous();
+    }
 
     // ── machines ────────────────────────────────────────────────
     match /machines/{docId} {

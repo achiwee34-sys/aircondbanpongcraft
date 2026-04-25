@@ -786,7 +786,7 @@ function _renderDeptQRBody() {
           <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.8);flex-shrink:0"></div>
           <div style="flex:1;min-width:0">
             <div style="font-size:0.85rem;font-weight:800;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept}</div>
-            <div style="font-size:0.62rem;color:rgba(255,255,255,0.7);margin-top:1px">${list.length} เครื่อง · ${Math.ceil(list.length/COLS)} แถว</div>
+            <div style="font-size:0.62rem;color:#6b7280;margin-top:1px">${list.length} เครื่อง · ${Math.ceil(list.length/COLS)} แถว</div>
           </div>
           <div style="background:rgba(255,255,255,0.2);color:white;border-radius:99px;padding:3px 10px;font-size:0.68rem;font-weight:800;flex-shrink:0">${list.length}</div>
           <!-- ปุ่มพิมพ์แผนกนี้ A4 -->

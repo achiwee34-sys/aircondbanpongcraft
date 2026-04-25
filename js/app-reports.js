@@ -465,11 +465,11 @@ function openCostMonthDrill(year, month, label) {
   sheet.style.cssText = 'background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;animation:slideUp 0.25s cubic-bezier(0.32,0.72,0,1)';
 
   sheet.innerHTML = `
-    <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:16px 16px 12px;flex-shrink:0">
+    <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #dc2626;padding:16px 16px 12px;flex-shrink:0">
       <div style="width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 12px"></div>
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div style="color:var(--text,#111827);font-size:1rem;font-weight:900">💰 ${MONTH_TH[month]} ${year+543}</div>
+          <div style="color:#111827;font-size:1rem;font-weight:900">💰 ${MONTH_TH[month]} ${year+543}</div>
           <div style="color:#6b7280;font-size:0.65rem;margin-top:2px">${tickets.length} งาน · รวม ฿${totalCost.toLocaleString()}</div>
         </div>
         <button onclick="this.closest('[style*=fixed]').remove()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:1.2rem;cursor:pointer">✕</button>
@@ -478,12 +478,12 @@ function openCostMonthDrill(year, month, label) {
         <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:8px 10px">
           <div style="font-size:0.55rem;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:2px">🔧 ค่าแรงซ่อม</div>
           <div style="font-size:0.95rem;font-weight:900;color:white">${(totalRepair+totalLegacy)>0?'฿'+(totalRepair+totalLegacy).toLocaleString():'—'}</div>
-          <div style="font-size:0.55rem;color:rgba(255,255,255,0.4);margin-top:1px">จาก Price List</div>
+          <div style="font-size:0.55rem;color:#6b7280;margin-top:1px">จาก Price List</div>
         </div>
         <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:8px 10px">
           <div style="font-size:0.55rem;color:#6b7280;font-weight:700;text-transform:uppercase;margin-bottom:2px">📦 ค่าสั่งซื้อ</div>
           <div style="font-size:0.95rem;font-weight:900;color:white">${totalParts>0?'฿'+totalParts.toLocaleString():'—'}</div>
-          <div style="font-size:0.55rem;color:rgba(255,255,255,0.4);margin-top:1px">จาก PO/PR</div>
+          <div style="font-size:0.55rem;color:#6b7280;margin-top:1px">จาก PO/PR</div>
         </div>
       </div>
     </div>
@@ -630,7 +630,7 @@ function renderRptKPI(total, done, pending) {
           <div style="font-size:0.6rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">งานทั้งหมดเดือนนี้</div>
           <div style="display:flex;align-items:baseline;gap:6px">
             <div style="font-size:3.8rem;font-weight:900;color:white;line-height:1">${total}</div>
-            <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);font-weight:600">ใบงาน</div>
+            <div style="font-size:0.75rem;color:#6b7280;font-weight:600">ใบงาน</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:10px">
             <div style="flex:1;background:rgba(255,255,255,0.1);border-radius:99px;height:4px;overflow:hidden">

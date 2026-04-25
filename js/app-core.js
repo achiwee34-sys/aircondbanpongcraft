@@ -225,18 +225,50 @@ function saveDB() {
         if(!t.signatures) return t;
         const {signatures:_s,...rest}=t; return rest;
       })};
-      const json = JSON.stringify(dbForLocal);
-      if (json.length > 4_000_000) {
+      let json = JSON.stringify(dbForLocal);
+
+      // ── AUTO-TRIM: ถ้า > 3.5MB ให้ตัด tickets เก่าที่ done/cancelled ออกก่อน save ──
+      const SIZE_WARN = 3_500_000;  // 3.5 MB → เริ่ม trim
+      const SIZE_HARD = 4_500_000;  // 4.5 MB → trim หนักขึ้น
+      if (json.length > SIZE_WARN) {
+        const CLOSED_STATUS = ['done','verified','closed','cancelled'];
+        const sorted = [...(dbForLocal.tickets||[])].sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+        const cutoffDays = json.length > SIZE_HARD ? 30 : 60;
+        const cutoff = new Date(Date.now() - cutoffDays * 86400000).toISOString();
+        const trimmed = sorted.filter(t =>
+          !(CLOSED_STATUS.includes(t.status) && (t.updatedAt||t.createdAt||'') < cutoff)
+        );
+        const removed = (dbForLocal.tickets||[]).length - trimmed.length;
+        if (removed > 0) {
+          dbForLocal.tickets = trimmed;
+          json = JSON.stringify(dbForLocal);
+          console.warn(`[DB] Auto-trim: ตัด ${removed} tickets เก่า (>${cutoffDays}วัน) ออก — เหลือ ${trimmed.length}`);
+          if (typeof bkLog === 'function') bkLog('info', `Auto-trim tickets: ลบ ${removed} รายการ (>${cutoffDays}d)`, `size=${(json.length/1024).toFixed(0)}KB`);
+          if (typeof showToast === 'function')
+            showToast('🧹 ล้าง tickets เก่า ' + removed + ' รายการ (Firestore ยังเก็บครบ)');
+        }
+      }
+
+      if (json.length > SIZE_WARN) {
         console.warn('[DB] Storage nearing limit:', (json.length/1024/1024).toFixed(1)+'MB');
-        if (typeof showToast === 'function')
-          showToast('⚠️ พื้นที่จัดเก็บใกล้เต็ม กรุณา Backup & ล้างข้อมูลเก่า');
       }
       localStorage.setItem(DB_KEY, json);
     } catch(e) {
       if (e && e.name === 'QuotaExceededError') {
-        console.error('[DB] localStorage FULL!');
-        if (typeof showToast === 'function')
-          showToast('❌ พื้นที่เต็ม! กรุณากด Backup แล้วล้างข้อมูลเก่า');
+        console.error('[DB] localStorage FULL! — emergency trim tickets');
+        // Emergency: ตัด closed tickets ทั้งหมดออก แล้วลอง save อีกครั้ง
+        try {
+          const CLOSED_STATUS = ['done','verified','closed','cancelled'];
+          const emergencyDb = {...db, tickets: (db.tickets||[]).filter(t => !CLOSED_STATUS.includes(t.status))};
+          localStorage.setItem(DB_KEY, JSON.stringify(emergencyDb));
+          console.warn('[DB] Emergency trim: เหลือแค่ open tickets');
+          if (typeof showToast === 'function')
+            showToast('⚠️ พื้นที่เต็ม — ล้าง tickets เก่าอัตโนมัติแล้ว (Firestore ยังครบ)');
+        } catch(e2) {
+          console.error('[DB] Emergency trim ล้มเหลว:', e2);
+          if (typeof showToast === 'function')
+            showToast('❌ พื้นที่เต็มมาก! กรุณา Backup แล้วล้างข้อมูล');
+        }
       } else {
         console.error('[DB] saveDB error:', e);
       }
@@ -2852,7 +2884,32 @@ async function initApp() {
     try { initFirebase(); } catch(e) { console.warn('Phase1 Firebase init:', e); }
   }
 
-  // ── Phase 2: แสดงหน้าหลักทันที ──
+  // ── Phase 2: Force-load จาก Firestore ก่อนแสดงหน้าแรก ──
+  // เพื่อให้มือถือและ PC เห็นข้อมูลชุดเดียวกันเสมอ
+  let _fsLoadedBeforeShow = false;
+  if (_firebaseReady && typeof fsLoad === 'function' && navigator.onLine) {
+    try {
+      const loaded = await Promise.race([
+        fsLoad(),
+        new Promise(resolve => setTimeout(() => resolve(false), 3000)) // timeout 3s
+      ]);
+      if (loaded) {
+        _fsLoadedBeforeShow = true;
+        // อัปเดต CU จาก Firestore ถ้า role เปลี่ยน
+        const fresh = (db.users||[]).find(u => u.id === CU.id);
+        if (fresh) {
+          const roleChanged = CU.role !== fresh.role;
+          CU = fresh;
+          if (roleChanged) setupBottomNav();
+        }
+        if (typeof bkLog === 'function') bkLog('sync', 'Force-load Firestore ก่อน paint สำเร็จ');
+      }
+    } catch(e) {
+      console.warn('[initApp] Phase2 fsLoad error (ใช้ local data แทน):', e);
+    }
+  }
+
+  // ── Phase 2b: แสดงหน้าหลัก ──
   requestAnimationFrame(() => {
     _closeAllModals();
     _forceCloseAllSheets();
@@ -2881,32 +2938,48 @@ async function initApp() {
     if (typeof renderMachineList === 'function') renderMachineList();
   }).catch(e => console.warn('[Phase3.5] loadMachinesData:', e));
 
-  // ── Phase 4: Firebase async (ไม่ block UI เลย) ──
+  // ── Phase 4: Firebase async — ถ้า Phase2 โหลดสำเร็จแล้ว → ข้าม fsLoad ซ้ำ, แค่ listen ──
   setTimeout(async () => {
     try {
       if (!_firebaseReady) initFirebase();
       if (_firebaseReady) {
-        const loaded = await fsLoad();
-        if (loaded) {
-          const fresh = db.users.find(u => u.id === CU.id);
-          if (fresh) {
-            const roleChanged = CU.role !== fresh.role;
-            CU = fresh;
-            renderSettingsPage();
-            renderTopbarAvatar();
-            if (roleChanged) {
-              setupBottomNav();
-              goPage(CU.role === 'executive' ? 'executive' : 'home');
+        if (!_fsLoadedBeforeShow) {
+          // Phase2 ไม่สำเร็จ (offline / timeout) → โหลดซ้ำตาม flow เดิม
+          const loaded = await fsLoad();
+          if (loaded) {
+            const fresh = (db.users||[]).find(u => u.id === CU.id);
+            if (fresh) {
+              const roleChanged = CU.role !== fresh.role;
+              CU = fresh;
+              renderSettingsPage();
+              renderTopbarAvatar();
+              if (roleChanged) {
+                setupBottomNav();
+                goPage(CU.role === 'executive' ? 'executive' : 'home');
+              }
+            }
+            refreshPage();
+            if (CU?.role === 'admin' && document.querySelector('.page.active')?.id === 'pg-tracking') {
+              if (typeof renderTracking === 'function') renderTracking();
+            }
+            updateOpenBadge();
+            updateNBadge();
+            if (typeof populateMachineSelect === 'function') {
+              populateMachineSelect._retryCount = 0;
+              clearTimeout(populateMachineSelect._retryTimer);
+              populateMachineSelect();
             }
           }
+        } else {
+          // Phase2 โหลดสำเร็จแล้ว → refresh UI อย่างเดียว
+          renderSettingsPage();
+          renderTopbarAvatar();
           refreshPage();
-          // FIX v23-track6: ถ้า admin อยู่หน้า tracking อยู่แล้วตอน fsLoad เสร็จ → re-render ทันที
           if (CU?.role === 'admin' && document.querySelector('.page.active')?.id === 'pg-tracking') {
             if (typeof renderTracking === 'function') renderTracking();
           }
           updateOpenBadge();
           updateNBadge();
-          // ── BUG FIX: reset retry counter แล้ว populate — ป้องกัน retry timer ค้าง ──
           if (typeof populateMachineSelect === 'function') {
             populateMachineSelect._retryCount = 0;
             clearTimeout(populateMachineSelect._retryTimer);
@@ -2918,7 +2991,6 @@ async function initApp() {
     } catch(e) { console.warn('initApp Firebase error:', e); }
   }, 300);
 }
-
 const _PAGE_LABELS = {
     'home': {title:'หน้าแรก', sub:'ภาพรวมระบบ'},
     'tickets': {title:'รายการงาน', sub:'ทั้งหมด'},

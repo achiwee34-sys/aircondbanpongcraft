@@ -238,6 +238,36 @@ async function doLoginWithLine() {
 
   const { userId: lineUserId, displayName, pictureUrl } = _liffProfile;
 
+  // ── FIX: force-load จาก Firestore ก่อน check ทุกครั้ง ──
+  // ป้องกัน: user ใหม่กดครั้งแรก → db.users ยังว่าง (Firestore ยังไม่ load)
+  //           → หา lineUserId ไม่เจอ → ผ่านเข้าแอปได้ผิดปกติ
+  // แก้: ตรวจ db.users ก่อน ถ้ายังว่าง → fsLoad ก่อนเสมอ
+  const _hasUsers = (db.users || []).length > 0;
+  if (!_hasUsers) {
+    // แสดง loading overlay ป้องกัน user กดซ้ำ
+    let _ldOv = document.getElementById('_liff_check_ov');
+    if (!_ldOv) {
+      _ldOv = document.createElement('div');
+      _ldOv.id = '_liff_check_ov';
+      _ldOv.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+      _ldOv.innerHTML = '<div style="background:white;border-radius:20px;padding:24px 28px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'
+        + '<div style="font-size:2rem;margin-bottom:8px">🔄</div>'
+        + '<div style="font-size:0.9rem;font-weight:700;color:#1e293b">กำลังตรวจสอบบัญชี...</div>'
+        + '<div style="font-size:0.75rem;color:#64748b;margin-top:4px">กรุณารอสักครู่</div></div>';
+      document.body.appendChild(_ldOv);
+    }
+    try {
+      // รอ Firebase auth พร้อม (max 5 วินาที)
+      if (typeof _waitForAuth === 'function') await _waitForAuth(5000);
+      if (typeof fsLoad === 'function') await fsLoad();
+      console.info('[doLoginWithLine] force-load done, users:', (db.users||[]).length);
+    } catch(e) {
+      console.warn('[doLoginWithLine] fsLoad before check failed:', e);
+    } finally {
+      document.getElementById('_liff_check_ov')?.remove();
+    }
+  }
+
   // ── ตรวจ lineUserId ซ้ำใน db ─────────────────────────────
   // FIX: ป้องกัน user ซ้ำที่สมัครผ่าน race condition ก่อนหน้า
   const allMatches = (db.users || []).filter(u => u.lineUserId === lineUserId);

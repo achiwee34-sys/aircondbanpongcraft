@@ -323,11 +323,11 @@ function openSpareManager() {
 
     page.innerHTML = `
       <!-- HEADER -->
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:14px 16px 12px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #16a34a;padding:14px 16px 12px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <button onclick="document.getElementById('_sm_page').remove()" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="document.getElementById('_sm_page').remove()" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
-            <div style="color:var(--text,#111827);font-size:1rem;font-weight:900">📦 จัดการรายการอะไหล่</div>
+            <div style="color:#14532d;font-size:1rem;font-weight:900">📦 จัดการรายการอะไหล่</div>
             <div style="color:#6b7280;font-size:0.62rem;margin-top:2px">${total} รายการ · ${active} รายการ active</div>
           </div>
           <button onclick="window._smNew()" style="background:var(--card);color:#15803d;border:none;border-radius:12px;padding:9px 14px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
@@ -400,12 +400,12 @@ function openSpareManager() {
     const cc = CAT_COLORS[s.category] || CAT_COLORS.hardware;
 
     page.innerHTML = `
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:12px 16px 10px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #16a34a;padding:12px 16px 10px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
-          <button onclick="window._smBackToList()" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="window._smBackToList()" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
-            <div style="color:var(--text,#111827);font-size:1rem;font-weight:900">${isNew?'เพิ่มอะไหล่ใหม่':'แก้ไขอะไหล่'}</div>
-            <div style="color:#6b7280;font-size:0.62rem;margin-top:2px">${s.id||''}</div>
+            <div style="color:#14532d;font-size:1rem;font-weight:900">${isNew?'เพิ่มอะไหล่ใหม่':'แก้ไขอะไหล่'}</div>
+            <div style="color:#94a3b8;font-size:0.62rem;margin-top:2px">${s.id||''}</div>
           </div>
           <button onclick="window._smSave()" style="background:var(--card);color:#15803d;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.15)">💾 บันทึก</button>
         </div>
@@ -716,11 +716,11 @@ function openInventoryManager() {
 
     page.innerHTML = `
       <!-- HEADER -->
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:14px 16px 12px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #16a34a;padding:14px 16px 12px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <button onclick="document.getElementById('_inv_page').remove()" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="document.getElementById('_inv_page').remove()" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
-            <div style="color:var(--text,#111827);font-size:1rem;font-weight:900">📦 คลังอะไหล่</div>
+            <div style="color:#1e3a8a;font-size:1rem;font-weight:900">📦 คลังอะไหล่</div>
             <div style="color:#6b7280;font-size:0.62rem;margin-top:1px">แยกจาก Catalog · track จำนวนจริง</div>
           </div>
           <button onclick="window._invOpenAdjust(null)" style="background:var(--card);color:#1d4ed8;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit">+ รับเข้า</button>
@@ -752,7 +752,7 @@ function openInventoryManager() {
         <div style="position:relative">
           <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="ค้นหาอะไหล่..." value="${escapeHtml(_invQ)}"
-            style="width:100%;padding:9px 12px 9px 30px;border:1.5px solid rgba(255,255,255,.3);border-radius:11px;font-size:0.83rem;font-family:inherit;outline:none;background:rgba(255,255,255,.15);color:white;box-sizing:border-box"
+            style="width:100%;padding:9px 12px 9px 30px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:0.83rem;font-family:inherit;outline:none;background:#f9fafb;color:var(--text,#111827);box-sizing:border-box"
             oninput="window._invSetQ(this.value)"
             onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"/>
         </div>
@@ -823,11 +823,11 @@ function openInventoryManager() {
 
     page.innerHTML = `
       <!-- HEADER -->
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:14px 16px 12px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #16a34a;padding:14px 16px 12px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <button onclick="document.getElementById('_inv_page').remove()" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="document.getElementById('_inv_page').remove()" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
-            <div style="color:var(--text,#111827);font-size:1rem;font-weight:900">📋 ความเคลื่อนไหว Stock</div>
+            <div style="color:#111827;font-size:1rem;font-weight:900">📋 ความเคลื่อนไหว Stock</div>
             <div style="color:#6b7280;font-size:0.62rem;margin-top:1px">${(db.stockMovements||[]).length} รายการ ล่าสุด 100 รายการ</div>
           </div>
           <button onclick="window._invOpenAdjust(null)" style="background:var(--card);color:#1d4ed8;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit">+ บันทึก</button>
@@ -841,7 +841,7 @@ function openInventoryManager() {
         <div style="position:relative">
           <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="ค้นหา..." value="${escapeHtml(_invQ)}"
-            style="width:100%;padding:9px 12px 9px 30px;border:1.5px solid rgba(255,255,255,.3);border-radius:11px;font-size:0.83rem;font-family:inherit;outline:none;background:rgba(255,255,255,.15);color:white;box-sizing:border-box"
+            style="width:100%;padding:9px 12px 9px 30px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:0.83rem;font-family:inherit;outline:none;background:#f9fafb;color:var(--text,#111827);box-sizing:border-box"
             oninput="window._invSetQ(this.value)"
             onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"/>
         </div>
@@ -900,9 +900,9 @@ function openInventoryManager() {
     const typeBg    = { in:'#dcfce7', out:'#fee2e2', adjust:'#f3e8ff' };
 
     page.innerHTML = `
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:14px 16px 12px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #16a34a;padding:14px 16px 12px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:10px">
-          <button onclick="window._invBackToList()" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="window._invBackToList()" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
             <div style="color:white;font-size:0.9rem;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item?.name||id)}</div>
             <div style="color:#6b7280;font-size:0.62rem;margin-top:1px">${id}</div>

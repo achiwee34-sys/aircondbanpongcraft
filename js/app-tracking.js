@@ -426,11 +426,28 @@ async function _doSubmitTicket(mid, prob) {
     // ถ้า ticket ถูก push ไปแล้วก่อน error → rollback ออก
     const badIdx = db.tickets.findIndex(t2 => t2.id === tid);
     if (badIdx !== -1) db.tickets.splice(badIdx, 1);
+    // ── แปล Firestore error เป็นข้อความที่เข้าใจง่าย ──
+    let _errMsg = 'กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
+    if (e && e.message) {
+      if (e.message.includes('maximum size') || e.message.includes('too large') || e.message.includes('exceeds')) {
+        _errMsg = 'ข้อมูลในระบบมีขนาดใหญ่เกินไป<br>'
+          + '<span style="font-size:0.72rem;color:#94a3b8">ระบบจะล้างงานเก่าอัตโนมัติในการ save ครั้งถัดไป<br>'
+          + 'หากปัญหายังเกิดขึ้น กรุณาแจ้ง Admin เพื่อล้างข้อมูล</span>';
+        // trigger auto-trim ทันที แล้วลอง save ใหม่
+        if (typeof saveDB === 'function') saveDB();
+      } else if (e.message.includes('permission') || e.message.includes('PERMISSION_DENIED')) {
+        _errMsg = 'ไม่มีสิทธิ์บันทึกข้อมูล — กรุณา login ใหม่';
+      } else if (e.message.includes('network') || e.message.includes('unavailable')) {
+        _errMsg = 'เชื่อมต่อ Firebase ไม่ได้ — ตรวจสอบอินเทอร์เน็ต';
+      } else {
+        _errMsg = e.message.slice(0, 120);
+      }
+    }
     showAlert({
       icon: '❌',
       title: 'ส่งงานไม่สำเร็จ',
       color: '#dc2626',
-      msg: 'เกิดข้อผิดพลาดระหว่างบันทึกงาน<br><span style="font-size:0.78rem;color:#64748b">' + (e.message || 'กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่') + '</span>',
+      msg: 'เกิดข้อผิดพลาดระหว่างบันทึกงาน<br><span style="font-size:0.78rem;color:#64748b">' + _errMsg + '</span>',
       btnOk: 'ตกลง'
     });
   }
@@ -941,7 +958,7 @@ function confirmSavePOForm() {
         <div style="width:44px;height:44px;background:rgba(255,255,255,0.18);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.25)">📋</div>
         <div>
           <div style="font-size:1rem;font-weight:900;color:white;letter-spacing:0.01em">ยืนยันออกใบสั่งซื้อ</div>
-          <div style="font-size:0.7rem;color:rgba(255,255,255,0.75);margin-top:2px">${t.id} · ${escapeHtml(t.problem)}</div>
+          <div style="font-size:0.7rem;color:#6b7280;margin-top:2px">${t.id} · ${escapeHtml(t.problem)}</div>
         </div>
       </div>
     </div>
@@ -1452,31 +1469,31 @@ function openRepairPicker() {
 
   ov.innerHTML = `
     <!-- Header compact -->
-    <div style="background:linear-gradient(160deg,#1a0a0e 0%,#7f1d1d 45%,#c8102e 100%);flex-shrink:0;padding:8px 0 0">
+    <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #dc2626;flex-shrink:0;padding:8px 0 0">
       <!-- Top bar — single row -->
       <div style="padding:0 12px 6px;display:flex;align-items:center;gap:8px">
-        <button id="rp-close" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:white;font-size:1.2rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
+        <button id="rp-close" style="width:34px;height:34px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.2rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
         <div style="flex:1;min-width:0">
-          <div style="color:white;font-size:0.88rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          <div style="color:#111827;font-size:0.88rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
             เลือกรายการงาน
             ${_rpMacName ? `<span style="font-size:0.65rem;font-weight:600;opacity:.55;margin-left:6px">${_rpMacName.length>20?_rpMacName.slice(0,20)+'\u2026':_rpMacName}</span>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:5px;margin-top:1px">
-            ${_rpBtuLabel ? `<span style="background:rgba(251,191,36,.3);color:#fde68a;border-radius:4px;padding:1px 6px;font-size:0.62rem;font-weight:900;border:1px solid rgba(251,191,36,.35)">${_rpBtuLabel}</span>` : ''}
+            ${_rpBtuLabel ? `<span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;font-size:0.62rem;font-weight:900;border:1px solid #fde68a">${_rpBtuLabel}</span>` : ''}
             ${_rpDept ? `<span style="font-size:0.6rem;color:#6b7280;font-weight:600">🏢 ${_rpDept}</span>` : ''}
           </div>
         </div>
-        <div style="flex-shrink:0;background:rgba(255,255,255,.12);border-radius:8px;padding:4px 10px;text-align:center;min-width:40px">
-          <div id="rp-count-num" style="font-size:1.1rem;font-weight:900;color:white;line-height:1">0</div>
-          <div style="font-size:0.5rem;color:rgba(255,255,255,.4);font-weight:700">เลือก</div>
+        <div style="flex-shrink:0;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:4px 10px;text-align:center;min-width:40px">
+          <div id="rp-count-num" style="font-size:1.1rem;font-weight:900;color:#1d4ed8;line-height:1">0</div>
+          <div style="font-size:0.5rem;color:#6b7280;font-weight:700">เลือก</div>
         </div>
       </div>
 
       <!-- Search -->
       <div style="padding:0 12px 8px">
-        <div style="background:rgba(255,255,255,.13);border-radius:10px;padding:0 10px;display:flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.1)">
+        <div style="background:#f9fafb;border-radius:10px;padding:0 10px;display:flex;align-items:center;gap:7px;border:1px solid #e5e7eb">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="rp-search" placeholder="ค้นหารายการ..." style="flex:1;background:none;border:none;outline:none;color:white;font-size:0.82rem;padding:8px 0;font-family:inherit" oninput="window._rpSearch(this.value)"/>
+          <input id="rp-search" placeholder="ค้นหารายการ..." style="flex:1;background:none;border:none;outline:none;color:var(--text,#111827);font-size:0.82rem;padding:8px 0;font-family:inherit" oninput="window._rpSearch(this.value)"/>
           <button id="rp-search-clear" onclick="document.getElementById('rp-search').value='';window._rpSearch('')" style="display:none;background:none;border:none;color:#6b7280;cursor:pointer;font-size:1rem;padding:4px">✕</button>
         </div>
       </div>
@@ -2176,11 +2193,11 @@ function openRepairManager() {
   const renderGroupList = () => {
     const totalItems = db.repairGroups.reduce((s,g)=>s+(g.items?.length||0),0);
     page.innerHTML = `
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:14px 16px 12px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #dc2626;padding:14px 16px 12px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-          <button onclick="document.getElementById('_rm_page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
+          <button onclick="document.getElementById('_rm_page').remove();if(typeof updateTopbarTitle==='function')updateTopbarTitle(document.querySelector('.page.active')?.dataset.page||'')" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
-            <div style="color:var(--text,#111827);font-size:1rem;font-weight:900;letter-spacing:-0.01em">จัดการรายการงาน</div>
+            <div style="color:#111827;font-size:1rem;font-weight:900;letter-spacing:-0.01em">จัดการรายการงาน</div>
             <div style="color:#6b7280;font-size:0.65rem;margin-top:3px">${db.repairGroups.length} หมวด · ${totalItems} รายการ</div>
           </div>
           <button onclick="window._rmAddGroup()" style="background:var(--card);color:#c8102e;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;display:flex;align-items:center;gap:6px;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
@@ -2234,11 +2251,11 @@ function openRepairManager() {
     const c = _rmColors[gi % _rmColors.length];
     page.innerHTML = `
       <!-- Header gradient แดง เหมือน list page -->
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;padding:12px 16px 10px;flex-shrink:0">
+      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #dc2626;padding:12px 16px 10px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
-          <button onclick="window._rmBackToList()" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;color:#374151;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
+          <button onclick="window._rmBackToList()" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation">‹</button>
           <div style="flex:1">
-            <div style="color:var(--text,#111827);font-size:1rem;font-weight:900;letter-spacing:-0.01em">${isNew?'เพิ่มหมวดใหม่':'แก้ไขหมวด'}</div>
+            <div style="color:#111827;font-size:1rem;font-weight:900;letter-spacing:-0.01em">${isNew?'เพิ่มหมวดใหม่':'แก้ไขหมวด'}</div>
             <div style="color:#6b7280;font-size:0.65rem;margin-top:2px">${g.label||'หมวดใหม่'} · ${g.items?.length||0} รายการ</div>
           </div>
           <button onclick="window._rmSaveGroup()" style="background:var(--card);color:#16a34a;border:none;border-radius:12px;padding:9px 16px;font-size:0.78rem;font-weight:900;cursor:pointer;font-family:inherit;touch-action:manipulation;box-shadow:0 2px 8px rgba(0,0,0,0.15)">💾 บันทึก</button>

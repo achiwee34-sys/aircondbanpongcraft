@@ -11,43 +11,28 @@
 //   3. ถ้า version เปลี่ยน → มีคนอื่น save ไปก่อน → reload แล้วแจ้ง user
 //   4. ถ้า version ตรง → save ด้วย .set() ตรงๆ (ไม่ใช้ transaction)
 //
-// ── FIX v23-fix20: ลด HTTP requests ──
-// เดิม: runTransaction() → 2 requests ทุกครั้ง (GET + POST commit)
-// ใหม่: .get() แล้ว .set() → 2 requests เหมือนกัน แต่ไม่มี Firebase
-//       transaction overhead และไม่ retry อัตโนมัติ (ไม่มี 400 ซ้ำ)
-//
-// ── FIX v23-fix20: debounce fsSaveNow ──
-// fsSave() ถูกเรียกทุก action เล็กน้อย → debounce 800ms เพื่อ batch writes
+// ── FIX v6: Multi-doc split — ลด appdata/main ให้เล็กที่สุด ──
+// แยก field ใหญ่ออกเป็น doc แยก:
+//   appdata/spare_data  → spareParts, spareCatalogVersion, spareStock, stockMovements
+//   appdata/machine_data → machines, machineRequests
+//   appdata/chat_data   → chats
+//   appdata/meta_data   → notifications, calEvents, deletedUserIds
+//   appdata/tickets_archive/items/{id} → archived tickets (subcollection)
 // ============================================================
 
-let _localDocVersion = 0; // version ที่ load มาล่าสุด
-let _saveDebounceTimer = null; // debounce timer สำหรับ fsSaveNow
-const _SAVE_DEBOUNCE_MS = 800; // รอ 800ms หลังจาก action สุดท้ายก่อน write
+let _localDocVersion = 0;
+let _saveDebounceTimer = null;
+const _SAVE_DEBOUNCE_MS = 800;
 
-/**
- * อ่าน version จาก Firestore doc แล้วเก็บไว้ใน _localDocVersion
- * เรียกตอน fsLoad() สำเร็จ
- */
 function syncDocVersion(data) {
   if (data && typeof data._docVersion === 'number') {
     _localDocVersion = data._docVersion;
   }
 }
 
-/**
- * บันทึกขึ้น Firestore แบบมี conflict check
- * ใช้ .get() + .set() แทน runTransaction() — ลด HTTP requests
- * และไม่มี Firebase auto-retry ที่ทำให้เกิด :commit 400 ซ้ำ
- *
- * @param {object} payload  - ข้อมูลที่จะ save
- * @returns {Promise<'ok'|'conflict'|'error'>}
- */
 async function fsSaveWithLock(payload) {
   if (!_firebaseReady || !FSdb) return 'error';
 
-  // ── FIX v23-fix22: ตรวจ auth ก่อน write ──
-  // ถ้า firebase.auth().currentUser เป็น null → write จะ fail 400 ทันที
-  // รอให้ auth พร้อมก่อน (max 3s) เพื่อป้องกัน spurious :commit 400
   if (typeof firebase !== 'undefined' && firebase.auth) {
     const currentUser = firebase.auth().currentUser;
     if (!currentUser) {
@@ -59,22 +44,15 @@ async function fsSaveWithLock(payload) {
   const ref = FSdb.collection('appdata').doc('main');
 
   try {
-    // ── Step 1: GET remote version (1 request) ──
     const snap = await ref.get();
     if(window.bkCountRead) window.bkCountRead(1);
 
     if (snap.exists) {
       const remoteVersion = snap.data()._docVersion || 0;
-
-      // ถ้า remote version ใหม่กว่า local → conflict
       if (remoteVersion > _localDocVersion) {
-        // ── FIX: ถ้า _localDocVersion ยังเป็น 0 แสดงว่า syncDocVersion() ยังไม่ได้รัน
-        // (race condition ระหว่าง fsLoad กับ fsSave ครั้งแรก) → sync version แล้ว save ต่อ
-        // ไม่ใช่ conflict จริง เพราะ user เพิ่งโหลดข้อมูลมาในแท็บนี้
         if (_localDocVersion === 0) {
           console.info('[ConflictGuard] first-save version sync: remote=' + remoteVersion);
           _localDocVersion = remoteVersion;
-          // fall through → save ต่อด้วย version ที่ sync แล้ว
         } else {
           _localDocVersion = remoteVersion;
           return 'conflict';
@@ -82,7 +60,6 @@ async function fsSaveWithLock(payload) {
       }
     }
 
-    // ── Step 2: SET พร้อม bump version (1 request) ──
     const newVersion = _localDocVersion + 1;
     if(window.bkCountWrite) window.bkCountWrite(1);
     await ref.set({ ...payload, _docVersion: newVersion });
@@ -95,87 +72,111 @@ async function fsSaveWithLock(payload) {
   }
 }
 
-/**
- * Handle conflict: โหลดข้อมูลใหม่ แล้วแจ้ง user
- * เรียกเมื่อ fsSaveWithLock() return 'conflict'
- */
 async function handleSaveConflict() {
-  console.warn('[ConflictGuard] Conflict detected — reloading from Firestore');
-
+  console.warn('[ConflictGuard] conflict detected — reloading');
   if (typeof showToast === 'function') {
-    showToast('⚠️ ข้อมูลถูกแก้จากเครื่องอื่น กำลัง reload...');
+    showToast('⚠️ ข้อมูลถูกแก้จากอุปกรณ์อื่น — กำลังโหลดใหม่...');
   }
-
-  try {
-    const ok = await fsLoad();
-    if (ok) {
-      if (typeof invalidateMacCache === 'function') invalidateMacCache();
-      if (typeof invalidateTkCache === 'function') invalidateTkCache();
-      if (typeof refreshPage === 'function') refreshPage();
-      if (typeof updateOpenBadge === 'function') updateOpenBadge();
-      if (typeof updateNBadge === 'function') updateNBadge();
-
-      if (typeof showToast === 'function') {
-        showToast('🔄 โหลดข้อมูลล่าสุดแล้ว — กรุณาทำรายการใหม่อีกครั้ง');
-      }
-    }
-  } catch(err) {
-    console.error('[ConflictGuard] reload failed:', err);
-    if (typeof showToast === 'function') {
-      showToast('❌ โหลดข้อมูลไม่สำเร็จ กรุณากด 🔄 ด้วยตนเอง');
-    }
+  if (typeof fsLoad === 'function') {
+    await fsLoad();
+    if (typeof refreshPage === 'function') refreshPage();
   }
 }
 
-/**
- * fsSaveNowSafe — แทน fsSaveNow() เดิม ใส่ conflict check
- * ใช้ signature เดิมทุกอย่าง (async, return promise)
- *
- * ── FIX v23-fix20: ไม่ใช้ runTransaction แล้ว → ใช้ get+set แทน ──
- * ลด HTTP requests จาก 2 (GET+POST commit overhead) เป็น 2 (GET+SET)
- * แต่ไม่มี Firebase auto-retry → ไม่มี :commit 400 ซ้ำๆ
- */
+// ── helper: check real user ──
+function _isRealFirebaseUser() {
+  if (typeof firebase === 'undefined' || !firebase.auth) return false;
+  const u = firebase.auth().currentUser;
+  return u && u.isAnonymous === false;
+}
+
+// ── helper: strip data URIs + signatures from a ticket ──
+function _stripTicket(t) {
+  const stripped = { ...t };
+  if (stripped.signatures) { delete stripped.signatures; }
+  const _stripUris = arr => (arr||[]).map(p => (p && p.startsWith('data:')) ? '' : p).filter(Boolean);
+  if ((stripped.photosBefore||[]).some(p=>p&&p.startsWith('data:'))) {
+    stripped.photosBefore = _stripUris(stripped.photosBefore);
+    console.warn('[fsSaveNowSafe] stripped data: from photosBefore', t.id);
+  }
+  if ((stripped.photosAfter||[]).some(p=>p&&p.startsWith('data:'))) {
+    stripped.photosAfter = _stripUris(stripped.photosAfter);
+    console.warn('[fsSaveNowSafe] stripped data: from photosAfter', t.id);
+  }
+  return stripped;
+}
+
+// ── helper: sanitize payload ก่อน write ──
+function _sanitize(obj) {
+  return JSON.parse(JSON.stringify(obj, (k, v) => {
+    if (v === undefined) return null;
+    if (typeof v === 'number' && !isFinite(v)) return null;
+    return v;
+  }));
+}
+
+// ── helper: batch write array to subcollection ──
+async function _batchWriteSubcollection(colRef, items, idKey) {
+  const _CHUNK = 50;
+  for (let i = 0; i < items.length; i += _CHUNK) {
+    const chunk = items.slice(i, i + _CHUNK);
+    const batch = FSdb.batch();
+    chunk.forEach((item, j) => {
+      const docId = item[idKey] || ('item_' + (i + j));
+      batch.set(colRef.doc(docId), item);
+    });
+    if(window.bkCountWrite) window.bkCountWrite(1);
+    await batch.commit();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// fsSaveNowSafe — main save entry point (เรียกจาก firebase-init.js)
+// ══════════════════════════════════════════════════════════════
+let _fsSaving = false;
+
 async function fsSaveNowSafe() {
   if (!_firebaseReady || !FSdb) return;
-  if (typeof _waitForAuth === "function") {
+  if (_fsSaving) { console.info('[ConflictGuard] already saving — skip'); return; }
+
+  if (typeof _waitForAuth === 'function') {
     const authed = await _waitForAuth();
-    if (!authed) { console.warn("[fsSaveNowSafe] auth not ready"); return; }
+    if (!authed) { console.warn('[fsSaveNowSafe] auth not ready'); return; }
   }
-  // ── FIX v23-fix14b: ห้าม save เมื่อยังไม่มี app-level user (CU) ──
   if (typeof CU === 'undefined' || !CU || !CU.id) {
     console.info('[fsSaveNowSafe] no app user (CU) — skip save');
     return;
   }
+
   _fsSaving = true;
+  const _now = Date.now();
 
   try {
-    // strip signatures + data: URIs ออกจาก tickets
-    const _stripDataUris = arr => (arr||[]).map(p =>
-      (p && p.startsWith('data:')) ? '' : p
-    ).filter(Boolean);
-    const ticketsNoSig = (db.tickets||[]).map(t => {
-      const stripped = { ...t };
-      if (stripped.signatures) { const {signatures:_s, ...rest} = stripped; Object.assign(stripped, rest); delete stripped.signatures; }
-      if ((stripped.photosBefore||[]).some(p=>p&&p.startsWith('data:'))) {
-        stripped.photosBefore = _stripDataUris(stripped.photosBefore);
-        console.warn('[fsSaveNowSafe] stripped data: from photosBefore', t.id);
+    // ── 1. แบ่ง tickets → active / archived (>30 วัน + ปิดแล้ว) ──
+    const _ARCHIVE_STATUSES = ['done', 'verified', 'closed'];
+    const _ARCHIVE_CUTOFF_MS = 30 * 24 * 60 * 60 * 1000;
+
+    const activeTickets = [];
+    const archivedTickets = [];
+    (db.tickets||[]).forEach(t => {
+      const isClosed = _ARCHIVE_STATUSES.includes(t.status);
+      const updatedAt = t.updatedAt || t.date || '';
+      const ageMs = updatedAt ? (_now - new Date(updatedAt).getTime()) : 0;
+      if (isClosed && ageMs > _ARCHIVE_CUTOFF_MS) {
+        archivedTickets.push(_stripTicket(t));
+      } else {
+        activeTickets.push(_stripTicket(t));
       }
-      if ((stripped.photosAfter||[]).some(p=>p&&p.startsWith('data:'))) {
-        stripped.photosAfter = _stripDataUris(stripped.photosAfter);
-        console.warn('[fsSaveNowSafe] stripped data: from photosAfter', t.id);
-      }
-      return stripped;
     });
+    console.log(`[ConflictGuard] tickets: ${activeTickets.length} active, ${archivedTickets.length} archived`);
 
-    // size guard
-    const _payloadSize = JSON.stringify(ticketsNoSig).length;
-    if (_payloadSize > 900_000) {
-      console.warn('[fsSaveNowSafe] payload large:', (_payloadSize/1024).toFixed(0)+'KB');
-      if (typeof showToast === 'function' && _payloadSize > 950_000)
-        showToast('⚠️ ข้อมูลใกล้เต็ม กรุณา Backup แล้วล้างงานเก่า');
-    }
+    // ── 2. ล้าง notifications เก่า > 7 วัน (max 200 รายการ) ──
+    const _7d = 7 * 24 * 60 * 60 * 1000;
+    const trimmedNotifs = (db.notifications||[])
+      .filter(n => (_now - new Date(n.createdAt || n.timestamp || 0).getTime()) < _7d)
+      .slice(-200);
 
-    // รวม signatures แยก doc
+    // ── 3. รวม signatures แยก ──
     const allSigs = {};
     (db.tickets||[]).forEach(t => {
       if (t.signatures && Object.keys(t.signatures).length > 0) {
@@ -183,88 +184,183 @@ async function fsSaveNowSafe() {
       }
     });
 
-    const payload = {
-      users:           db.users           || [],
-      machines:        db.machines        || [],
-      tickets:         ticketsNoSig,
-      calEvents:       db.calEvents       || [],
-      chats:           db.chats           || {},
-      machineRequests: db.machineRequests || [],
-      notifications:   db.notifications   || [],
-      deletedUserIds:  db.deletedUserIds  || [],
-      gsUrl:           db.gsUrl           || '',
-      // ── FIX MISSING DATA: repairGroups + pdfConfig + spareParts ──
-      repairGroups:    db.repairGroups    || [],
-      pdfConfig:       db.pdfConfig       || {},
-      spareParts:          db.spareParts          || [],
-      spareCatalogVersion: db.spareCatalogVersion || 0,
-      _seq:            db._seq = (db._seq || 0) + 1,
-      updatedAt:       new Date().toISOString(),
+    // ── 4. payload หลัก (appdata/main) — เล็กที่สุด ──
+    const mainPayload = {
+      users:          db.users          || [],
+      repairGroups:   db.repairGroups   || [],
+      pdfConfig:      db.pdfConfig      || {},
+      tickets:        activeTickets,
+      _seq:           db._seq = (db._seq || 0) + 1,
+      _hasArchive:    archivedTickets.length > 0,
+      _hasSpareData:  true,
+      _hasMachineData: true,
+      _hasChatData:   true,
+      _hasMetaData:   true,
+      gsUrl:          db.gsUrl          || '',
+      updatedAt:      new Date().toISOString(),
     };
 
-    // ตรวจขนาด payload — Firestore limit = 1MB
-    const payloadSize = JSON.stringify(payload).length;
-    if (payloadSize > 950_000) {
-      console.error('[ConflictGuard] Payload TOO LARGE:', (payloadSize/1024).toFixed(0)+'KB — BLOCKED');
-      if (typeof showAlert === 'function') {
-        showAlert({
-          icon: '❌',
-          title: 'ข้อมูลเกินขนาด',
-          color: '#dc2626',
-          msg: `ขนาดข้อมูล <strong>${(payloadSize/1024).toFixed(0)} KB</strong> เกินกว่าที่ Firestore รองรับได้<br>
-            <span style="font-size:0.78rem;color:#64748b">กรุณากด Backup แล้วลบข้อมูลเก่าก่อนบันทึกใหม่</span>`,
-          btnOk: 'ตกลง'
-        });
-      }
-      return; // block save
-    } else if (payloadSize > 700_000) {
-      console.warn('[ConflictGuard] Firestore payload large:', (payloadSize/1024).toFixed(0)+'KB');
-      if (typeof showToast === 'function') {
-        showToast('⚠️ ข้อมูลใหญ่ขึ้น (' + (payloadSize/1024).toFixed(0) + 'KB) ควร Backup และล้างข้อมูลเก่า');
+    // ── 5. ตรวจขนาด payload + AUTO-TRIM ก่อน save Firestore ──
+    // Firestore limit = 1 MB (1,048,576 bytes) ต่อ document
+    // เพื่อป้องกัน error "Document exceeds maximum size" → trim ก่อน write เสมอ
+    const FS_LIMIT      = 1_000_000;  // 1 MB hard limit ของ Firestore
+    const FS_WARN       = 700_000;    // 700 KB → warn + soft trim
+    const CLOSED_STATUS = ['done', 'verified', 'closed', 'cancelled'];
+
+    let mainSize = JSON.stringify(mainPayload).length;
+    console.log('[ConflictGuard] main payload size:', (mainSize/1024).toFixed(0)+'KB');
+
+    // ── Auto-trim: ถ้า payload ใหญ่เกิน 700KB → ตัด activeTickets เก่าออก ──
+    if (mainSize > FS_WARN) {
+      // เรียง active tickets จากใหม่→เก่า แล้วตัด closed เก่า > 14 วัน ออกก่อน
+      const now14d  = Date.now() - 14 * 86400000;
+      const now7d   = Date.now() - 7  * 86400000;
+      const cutoffMs = mainSize > FS_LIMIT ? now14d : now14d; // ใช้ 14 วัน สำหรับ active payload
+
+      const before = mainPayload.tickets.length;
+      mainPayload.tickets = mainPayload.tickets.filter(t => {
+        if (!CLOSED_STATUS.includes(t.status)) return true; // เก็บ open tickets ทั้งหมด
+        const updMs = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
+        return updMs > cutoffMs; // เก็บ closed ที่ปิดไม่เกิน 14 วัน
+      });
+      const after = mainPayload.tickets.length;
+      const removed = before - after;
+      if (removed > 0) {
+        mainSize = JSON.stringify(mainPayload).length;
+        console.warn(`[ConflictGuard] auto-trim active payload: ลบ ${removed} tickets → ${(mainSize/1024).toFixed(0)}KB`);
+        if (typeof bkLog === 'function') bkLog('sync', `Auto-trim Firestore payload: ลบ ${removed} tickets`, `${(mainSize/1024).toFixed(0)}KB`);
       }
     }
 
-    // ── FIX v23-fix23: sanitize payload ก่อน write ──
-    // Firestore ไม่รองรับ: undefined, NaN, Infinity, circular refs
-    // ถ้ามี field เหล่านี้ → 400 Bad Request เงียบๆ
-    const _sanitize = (obj) => JSON.parse(JSON.stringify(obj, (k, v) => {
-      if (v === undefined) return null;
-      if (typeof v === 'number' && !isFinite(v)) return null;
-      return v;
-    }));
-    let _safePayload;
-    try { _safePayload = _sanitize(payload); }
-    catch(e) { console.warn('[ConflictGuard] payload sanitize failed:', e); _safePayload = payload; }
+    // ── ถ้ายังใหญ่เกิน limit → trim หนักขึ้น (เหลือแค่ open tickets) ──
+    if (mainSize > FS_LIMIT) {
+      const before = mainPayload.tickets.length;
+      mainPayload.tickets = mainPayload.tickets.filter(t => !CLOSED_STATUS.includes(t.status));
+      mainSize = JSON.stringify(mainPayload).length;
+      console.error(`[ConflictGuard] emergency trim: เหลือแค่ open tickets (${mainPayload.tickets.length}/${before}) → ${(mainSize/1024).toFixed(0)}KB`);
+      if (typeof bkLog === 'function') bkLog('sync', 'Emergency trim Firestore: open tickets only', `${(mainSize/1024).toFixed(0)}KB`);
+      if (typeof showToast === 'function')
+        showToast('🧹 ล้างงานเก่าอัตโนมัติก่อน sync Firestore');
+    }
 
-    const result = await fsSaveWithLock(_safePayload);
+    // ── ถ้ายังเกิน limit แม้หลัง trim → abort save (ป้องกัน SDK error popup) ──
+    if (mainSize > FS_LIMIT) {
+      console.error('[ConflictGuard] payload ยังใหญ่เกิน Firestore limit หลัง trim — abort save');
+      if (typeof showToast === 'function')
+        showToast('⚠️ ข้อมูลใหญ่เกินไป — กรุณา Backup แล้วล้างงานเก่าในหน้า Admin');
+      _fsSaving = false;
+      return;
+    }
 
+    if (mainSize > FS_WARN) {
+      console.warn('[ConflictGuard] main payload large:', (mainSize/1024).toFixed(0)+'KB');
+    }
+
+    // ── 6. save appdata/main (มี conflict lock) ──
+    let _safeMain;
+    try { _safeMain = _sanitize(mainPayload); }
+    catch(e) { _safeMain = mainPayload; }
+
+    const result = await fsSaveWithLock(_safeMain);
     if (result === 'conflict') {
       await handleSaveConflict();
       return;
     }
-
     if (result === 'error') {
-      console.warn('[ConflictGuard] save error — falling back to direct set');
-      // fallback: ใช้ .set() เดิม (ไม่มี lock แต่ดีกว่า fail เงียบ)
+      console.warn('[ConflictGuard] save error — fallback to direct set');
       if(window.bkCountWrite) window.bkCountWrite(1);
-      await FSdb.collection('appdata').doc('main').set(_safePayload);
+      await FSdb.collection('appdata').doc('main').set(_safeMain);
     }
 
-    // save signatures แยก (ถ้ามี)
-    if (Object.keys(allSigs).length > 0) {
-      const _fbUser = firebase.auth().currentUser;
-      const _isRealUser = _fbUser && _fbUser.isAnonymous === false;
-      if (_isRealUser) {
-        await FSdb.collection('appdata').doc('signatures').set(allSigs);
-      } else {
-        try { localStorage.setItem('aircon_sigs_pending', JSON.stringify(allSigs)); } catch(e) {}
-        console.info('[ConflictGuard] signatures skipped (anonymous user) — cached locally');
+    // ── ส่วนที่เหลือ: save เฉพาะ real user ──
+    const isReal = _isRealFirebaseUser();
+
+    // ── 7. save appdata/spare_data ──
+    try {
+      const sparePayload = _sanitize({
+        spareParts:          db.spareParts          || [],
+        spareCatalogVersion: db.spareCatalogVersion || 0,
+        spareStock:          db.spareStock          || {},
+        stockMovements:      db.stockMovements      || [],
+        updatedAt:           new Date().toISOString(),
+      });
+      if(window.bkCountWrite) window.bkCountWrite(1);
+      await FSdb.collection('appdata').doc('spare_data').set(sparePayload);
+      console.log('[ConflictGuard] spare_data saved:', (JSON.stringify(sparePayload).length/1024).toFixed(0)+'KB');
+    } catch(e) {
+      console.warn('[ConflictGuard] spare_data save failed:', e);
+    }
+
+    // ── 8. save appdata/machine_data ──
+    try {
+      const machinePayload = _sanitize({
+        machines:        db.machines        || [],
+        machineRequests: db.machineRequests || [],
+        updatedAt:       new Date().toISOString(),
+      });
+      if(window.bkCountWrite) window.bkCountWrite(1);
+      await FSdb.collection('appdata').doc('machine_data').set(machinePayload);
+      console.log('[ConflictGuard] machine_data saved:', (JSON.stringify(machinePayload).length/1024).toFixed(0)+'KB');
+    } catch(e) {
+      console.warn('[ConflictGuard] machine_data save failed:', e);
+    }
+
+    // ── 9. save appdata/chat_data ──
+    try {
+      const chatPayload = _sanitize({
+        chats:     db.chats || {},
+        updatedAt: new Date().toISOString(),
+      });
+      if(window.bkCountWrite) window.bkCountWrite(1);
+      await FSdb.collection('appdata').doc('chat_data').set(chatPayload);
+    } catch(e) {
+      console.warn('[ConflictGuard] chat_data save failed:', e);
+    }
+
+    // ── 10. save appdata/meta_data ──
+    try {
+      const metaPayload = _sanitize({
+        notifications:  trimmedNotifs,
+        calEvents:      db.calEvents      || [],
+        deletedUserIds: db.deletedUserIds || [],
+        updatedAt:      new Date().toISOString(),
+      });
+      if(window.bkCountWrite) window.bkCountWrite(1);
+      await FSdb.collection('appdata').doc('meta_data').set(metaPayload);
+    } catch(e) {
+      console.warn('[ConflictGuard] meta_data save failed:', e);
+    }
+
+    // ── 11. save archived tickets → subcollection ──
+    if (archivedTickets.length > 0 && isReal) {
+      try {
+        const archColRef = FSdb.collection('appdata').doc('tickets_archive').collection('items');
+        await _batchWriteSubcollection(archColRef, archivedTickets, 'id');
+        console.log('[ConflictGuard] archived', archivedTickets.length, 'tickets to subcollection');
+      } catch(archiveErr) {
+        console.warn('[ConflictGuard] archive write failed (non-critical):', archiveErr);
       }
     }
 
+    // ── 12. save signatures ──
+    if (Object.keys(allSigs).length > 0 && isReal) {
+      try {
+        if(window.bkCountWrite) window.bkCountWrite(1);
+        await FSdb.collection('appdata').doc('signatures').set(allSigs);
+      } catch(e) {
+        try { localStorage.setItem('aircon_sigs_pending', JSON.stringify(allSigs)); } catch(e2) {}
+        console.info('[ConflictGuard] signatures cached locally');
+      }
+    } else if (Object.keys(allSigs).length > 0) {
+      try { localStorage.setItem('aircon_sigs_pending', JSON.stringify(allSigs)); } catch(e) {}
+    }
+
   } catch(e) {
-    console.warn('[ConflictGuard] fsSaveNowSafe error:', e);
+    console.warn('[fsSaveNowSafe] unexpected error:', e);
   } finally {
-    setTimeout(() => { _fsSaving = false; }, 500);
+    setTimeout(() => {
+      _fsSaving = false;
+      if (typeof _pendingTicketIds !== 'undefined') _pendingTicketIds.clear();
+    }, 800);
   }
 }

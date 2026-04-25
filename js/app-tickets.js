@@ -356,6 +356,9 @@ function renderHome() {
 // ============================================================
 // TICKETS
 // ============================================================
+// ── สถานะที่ต้องการ archived tickets ──
+const _DONE_FILTERS = new Set(['_done','done','verified','closed']);
+
 function setFilter(type, val) {
   tkPage = 1;
   _tkLastFingerprint = ''; // force re-render
@@ -371,6 +374,12 @@ function setFilter(type, val) {
   });
 
   updateStatusScroller(); // จัดการ sc-card บน + สี
+
+  // ── LAZY: โหลด archived tickets เมื่อ user กด done filter ──
+  if (_DONE_FILTERS.has(val) && typeof loadArchivedTickets === 'function') {
+    loadArchivedTickets(); // async — renderTickets จะถูกเรียกอีกครั้งเมื่อโหลดเสร็จ
+  }
+
   renderTickets();
 }
 
@@ -382,6 +391,12 @@ function setTicketFilter(val) {
   if (val === 'high') { fPriority = 'high'; fStatus = ''; }
   else { fStatus = val; fPriority = ''; }
   updateStatusScroller();
+
+  // ── LAZY: โหลด archived ถ้า filter เป็น done group ──
+  if (_DONE_FILTERS.has(val) && typeof loadArchivedTickets === 'function') {
+    loadArchivedTickets();
+  }
+
   renderTickets();
 }
 

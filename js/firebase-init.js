@@ -88,7 +88,8 @@ function initFirebase() {
 async function _loadMachinesForAnonymous() {
   if (!FSdb) return;
   try {
-    const snap = await FSdb.collection('appdata').doc('main').get();
+    // FIX v6: machines ย้ายไป appdata/machine_data แล้ว
+    const snap = await FSdb.collection('appdata').doc('machine_data').get();
     if (snap.exists) {
       const data = snap.data();
       if (Array.isArray(data.machines) && data.machines.length) {
@@ -123,45 +124,64 @@ async function fsLoad() {
   const DEMO_USERNAMES = ['somchai','somsak','malee','wichai'];
   const DEMO_IDS       = ['u2','u3','u4','u5'];
   try {
-    const snap = await FSdb.collection('appdata').doc('main').get(); if(window.bkCountRead) window.bkCountRead(1);
+    // ── FIX v6: โหลด appdata/main ก่อน แล้วโหลด doc แยกแบบ parallel ──
+    const snap = await FSdb.collection('appdata').doc('main').get();
+    if(window.bkCountRead) window.bkCountRead(1);
+
     if (snap.exists) {
       const data = snap.data();
       if (typeof syncDocVersion === 'function') syncDocVersion(data);
 
-      // โหลด deletedUserIds blacklist ก่อน — ใช้ตอน merge users
-      if (Array.isArray(data.deletedUserIds)) {
+      // ── โหลด sub-docs แบบ parallel (ไม่รอทีละอัน) ──
+      const [spareSnap, machineSnap, chatSnap, metaSnap] = await Promise.all([
+        FSdb.collection('appdata').doc('spare_data').get().catch(() => null),
+        FSdb.collection('appdata').doc('machine_data').get().catch(() => null),
+        FSdb.collection('appdata').doc('chat_data').get().catch(() => null),
+        FSdb.collection('appdata').doc('meta_data').get().catch(() => null),
+      ]);
+      if(window.bkCountRead) window.bkCountRead(4);
+
+      // ── merge meta_data ก่อน (deletedUserIds ต้องมีก่อน merge users) ──
+      const metaData = (metaSnap && metaSnap.exists) ? metaSnap.data() : {};
+      // fallback: ดึงจาก main ถ้า meta_data ยังไม่มี (migrate ครั้งแรก)
+      const deletedIdsArr = metaData.deletedUserIds || data.deletedUserIds || [];
+      if (Array.isArray(deletedIdsArr)) {
         const existing = new Set(db.deletedUserIds || []);
-        data.deletedUserIds.forEach(id => existing.add(id));
+        deletedIdsArr.forEach(id => existing.add(id));
         db.deletedUserIds = [...existing];
       }
       const deletedIds = new Set(db.deletedUserIds || []);
 
-      // ── users: MERGE ไม่ทับ — local users ใหม่ที่ยังไม่ sync ต้องอยู่รอด ──
+      if (Array.isArray(metaData.calEvents))     db.calEvents     = metaData.calEvents;
+      else if (Array.isArray(data.calEvents))    db.calEvents     = data.calEvents; // fallback migrate
+      if (Array.isArray(metaData.notifications)) db.notifications = metaData.notifications;
+      else if (Array.isArray(data.notifications)) db.notifications = data.notifications;
+
+      // ── users: MERGE ไม่ทับ ──
       if (Array.isArray(data.users) && data.users.length) {
         const remoteUsers = data.users.filter(u =>
           !DEMO_USERNAMES.includes(u.username) &&
           !DEMO_IDS.includes(u.id) &&
-          !deletedIds.has(u.id)    // ← กัน user ที่ลบแล้วกลับมา
+          !deletedIds.has(u.id)
         );
         const remoteIds = new Set(remoteUsers.map(u => u.id));
         const localOnlyUsers = (db.users||[]).filter(u =>
           !remoteIds.has(u.id) &&
           !DEMO_USERNAMES.includes(u.username) &&
           !DEMO_IDS.includes(u.id) &&
-          !deletedIds.has(u.id)    // ← กัน local ด้วย
+          !deletedIds.has(u.id)
         );
         db.users = [...remoteUsers, ...localOnlyUsers];
-        // ── FIX v23-fix21: ใช้ fsSave() แทน fsSaveNow() → ผ่าน debounce 800ms ──
         if (localOnlyUsers.length > 0 && typeof CU !== 'undefined' && CU && CU.id) {
           fsSave();
         }
       }
 
-      if (Array.isArray(data.machines) && data.machines.length) {
-        db.machines = data.machines;
-        // BUG FIX: trigger populateMachineSelect ทันทีและหลัง 500ms
-        // ป้องกัน race condition ที่อุปกรณ์ใหม่ไม่มี localStorage cache
-        // และ DOM ยังไม่พร้อมตอน fsLoad เสร็จ
+      // ── machine_data ──
+      const machineData = (machineSnap && machineSnap.exists) ? machineSnap.data() : {};
+      const machinesArr = machineData.machines || data.machines || []; // fallback migrate
+      if (Array.isArray(machinesArr) && machinesArr.length) {
+        db.machines = machinesArr;
         const _triggerPopulate = () => {
           if (typeof populateMachineSelect === 'function') {
             populateMachineSelect._retryCount = 0;
@@ -173,39 +193,59 @@ async function fsLoad() {
         setTimeout(_triggerPopulate, 500);
         setTimeout(_triggerPopulate, 1500);
       }
-      if (Array.isArray(data.tickets))                          db.tickets  = data.tickets;
-      if (Array.isArray(data.calEvents))                        db.calEvents = data.calEvents;
-      if (data.chats)                                           db.chats    = data.chats;
-      if (data._seq)                                            db._seq     = data._seq;
-      if (data.gsUrl)                                           db.gsUrl    = data.gsUrl;
-      // ── FIX MISSING DATA: โหลด repairGroups + pdfConfig + spareParts กลับมาด้วย ──
-      if (Array.isArray(data.repairGroups) && data.repairGroups.length > 0)
-                                                                db.repairGroups = data.repairGroups;
-      if (data.pdfConfig && typeof data.pdfConfig === 'object')
-                                                                db.pdfConfig = data.pdfConfig;
-      if (Array.isArray(data.spareParts) && data.spareParts.length > 0)
-                                                                db.spareParts = data.spareParts;
-      if (typeof data.spareCatalogVersion === 'number')         db.spareCatalogVersion = data.spareCatalogVersion;
-      if (data.spareStock && typeof data.spareStock === 'object')
-                                                                db.spareStock = data.spareStock;
-      if (Array.isArray(data.stockMovements))                   db.stockMovements = data.stockMovements;
-      if (Array.isArray(data.machineRequests))                  db.machineRequests = data.machineRequests;
-      if (Array.isArray(data.notifications))                    db.notifications   = data.notifications;
+      if (Array.isArray(machineData.machineRequests))     db.machineRequests = machineData.machineRequests;
+      else if (Array.isArray(data.machineRequests))       db.machineRequests = data.machineRequests;
 
+      // ── spare_data ──
+      const spareData = (spareSnap && spareSnap.exists) ? spareSnap.data() : {};
+      if (Array.isArray(spareData.spareParts) && spareData.spareParts.length > 0)
+        db.spareParts = spareData.spareParts;
+      else if (Array.isArray(data.spareParts) && data.spareParts.length > 0)
+        db.spareParts = data.spareParts; // fallback migrate
+      if (typeof spareData.spareCatalogVersion === 'number')  db.spareCatalogVersion = spareData.spareCatalogVersion;
+      else if (typeof data.spareCatalogVersion === 'number')  db.spareCatalogVersion = data.spareCatalogVersion;
+      if (spareData.spareStock && typeof spareData.spareStock === 'object') db.spareStock = spareData.spareStock;
+      else if (data.spareStock && typeof data.spareStock === 'object')      db.spareStock = data.spareStock;
+      if (Array.isArray(spareData.stockMovements))  db.stockMovements = spareData.stockMovements;
+      else if (Array.isArray(data.stockMovements))  db.stockMovements = data.stockMovements;
+
+      // ── chat_data ──
+      const chatData = (chatSnap && chatSnap.exists) ? chatSnap.data() : {};
+      if (chatData.chats)      db.chats = chatData.chats;
+      else if (data.chats)     db.chats = data.chats; // fallback migrate
+
+      // ── tickets จาก main (active) ──
+      if (Array.isArray(data.tickets)) db.tickets = data.tickets;
+
+      // ── FIX v6 LAZY: ไม่โหลด archived tickets ตอน startup ──
+      // จะโหลดเฉพาะตอน user กด filter done/verified/closed ผ่าน loadArchivedTickets()
+      if (data._hasArchive) {
+        db._hasArchive = true;  // flag บอกว่ามี archived อยู่ใน Firestore
+        db._archiveLoaded = false; // ยังไม่ได้โหลด
+      } else {
+        db._hasArchive = false;
+        db._archiveLoaded = true; // ไม่มีของ ถือว่า loaded แล้ว
+      }
+
+      // ── ค่าอื่นๆ จาก main ──
+      if (data._seq)  db._seq = data._seq;
+      if (data.gsUrl) db.gsUrl = data.gsUrl;
+      if (Array.isArray(data.repairGroups) && data.repairGroups.length > 0) db.repairGroups = data.repairGroups;
+      if (data.pdfConfig && typeof data.pdfConfig === 'object') db.pdfConfig = data.pdfConfig;
+
+      // ── signatures ──
       try {
-        // BUG FIX: อ่าน signatures เฉพาะ real user (custom token / LIFF) — anonymous ได้ permission-denied
-        // ใช้ user.isAnonymous แทน providerData (custom token มี providerData = [] เหมือนกัน)
         const _fbUser = firebase.auth().currentUser;
         const _isRealUser = _fbUser && _fbUser.isAnonymous === false;
         if (_isRealUser) {
-          const sigSnap = await FSdb.collection('appdata').doc('signatures').get(); if(window.bkCountRead) window.bkCountRead(1);
+          const sigSnap = await FSdb.collection('appdata').doc('signatures').get();
+          if(window.bkCountRead) window.bkCountRead(1);
           if (sigSnap.exists) {
             const allSigs = sigSnap.data();
             db.tickets.forEach(t => { if (allSigs[t.id]) t.signatures = allSigs[t.id]; });
             try { localStorage.setItem('aircon_sigs', JSON.stringify(allSigs)); } catch(e) {}
           }
         } else {
-          // anonymous → ใช้ cache จาก localStorage แทน (real user จะ sync ครั้งหน้า)
           const sigCache = JSON.parse(localStorage.getItem('aircon_sigs') || '{}');
           db.tickets.forEach(t => { if (sigCache[t.id]) t.signatures = sigCache[t.id]; });
         }
@@ -246,10 +286,11 @@ async function saveChatsFast() {
     // ── FIX v23-fix19: ใช้ set+merge แทน update ──
     // .update() จะ fail ด้วย 400 ถ้า doc ยังไม่มี (เช่น first-time user)
     // .set(merge:true) สร้าง doc ใหม่อัตโนมัติถ้าไม่มี → ไม่มี :commit 400
-    await FSdb.collection('appdata').doc('main').set({
+    // ── FIX v6: save chats ไป chat_data doc แยก ──
+    await FSdb.collection('appdata').doc('chat_data').set({
       chats: db.chats || {},
       updatedAt: new Date().toISOString()
-    }, { merge: true });
+    });
   } catch(e) {
     // ── FIX v23-fix21: ใช้ fsSave() แทน fsSaveNow() → ผ่าน debounce ──
     if (typeof fsSave === 'function') fsSave();
@@ -309,26 +350,27 @@ async function fsSaveNow() {
         allSigs[t.id] = t.signatures;
       }
     });
-    if(window.bkCountWrite) window.bkCountWrite(1); await FSdb.collection('appdata').doc('main').set({
-      users:           db.users           || [],
-      machines:        db.machines        || [],
-      tickets:         ticketsNoSig,
-      calEvents:       db.calEvents       || [],
-      chats:           db.chats           || {},
-      machineRequests: db.machineRequests || [],
-      notifications:   db.notifications   || [],
-      deletedUserIds:  db.deletedUserIds  || [],
-      _seq:            db._seq,
-      gsUrl:           db.gsUrl           || '',
-      // ── FIX MISSING DATA: repairGroups + pdfConfig + spareParts ──
-      repairGroups:    db.repairGroups    || [],
-      pdfConfig:       db.pdfConfig       || {},
-      spareParts:          db.spareParts          || [],
-      spareCatalogVersion: db.spareCatalogVersion || 0,
-      spareStock:          db.spareStock          || {},
-      stockMovements:      db.stockMovements      || [],
-      updatedAt:           new Date().toISOString()
+    // ── FIX v6: fallback save — ยังแยก doc เหมือน fsSaveNowSafe ──
+    if(window.bkCountWrite) window.bkCountWrite(1);
+    await FSdb.collection('appdata').doc('main').set({
+      users:          db.users          || [],
+      repairGroups:   db.repairGroups   || [],
+      pdfConfig:      db.pdfConfig      || {},
+      tickets:        ticketsNoSig,
+      _seq:           db._seq,
+      _hasArchive:    false,
+      _hasSpareData:  true,
+      _hasMachineData: true,
+      _hasChatData:   true,
+      _hasMetaData:   true,
+      gsUrl:          db.gsUrl          || '',
+      updatedAt:      new Date().toISOString()
     });
+    // save doc แยก (best-effort)
+    try { await FSdb.collection('appdata').doc('spare_data').set({ spareParts: db.spareParts||[], spareCatalogVersion: db.spareCatalogVersion||0, spareStock: db.spareStock||{}, stockMovements: db.stockMovements||[], updatedAt: new Date().toISOString() }); } catch(e) {}
+    try { await FSdb.collection('appdata').doc('machine_data').set({ machines: db.machines||[], machineRequests: db.machineRequests||[], updatedAt: new Date().toISOString() }); } catch(e) {}
+    try { await FSdb.collection('appdata').doc('chat_data').set({ chats: db.chats||{}, updatedAt: new Date().toISOString() }); } catch(e) {}
+    try { await FSdb.collection('appdata').doc('meta_data').set({ notifications: (db.notifications||[]).slice(-200), calEvents: db.calEvents||[], deletedUserIds: db.deletedUserIds||[], updatedAt: new Date().toISOString() }); } catch(e) {}
     if (Object.keys(allSigs).length > 0) {
       // BUG FIX: appdata/signatures ต้องการ real user (custom token / LIFF)
       // ใช้ user.isAnonymous แทน providerData (custom token มี providerData = [] เหมือนกัน)
@@ -536,29 +578,14 @@ async function fsListen() {
       return false;
     };
 
-    const chatChanged = (() => {
-      const newChats = data.chats;
-      if (!newChats) return false;
-      const oldSig = Object.entries(db.chats||{}).map(([k,v])=>k+':'+(v?.length||0)).join('|');
-      const newSig = Object.entries(newChats).map(([k,v])=>k+':'+(v?.length||0)).join('|');
-      if (oldSig === newSig) return false;
-      db.chats = newChats;
-      return true;
-    })();
+    // ── FIX v6: chats/notifications/spare ย้ายไป doc แยกแล้ว ──
+    // onSnapshot ของ appdata/main ไม่มี field เหล่านี้อีกต่อไป
+    // ข้อมูลพวกนี้ sync ผ่าน fsLoad() เมื่อเปิดแอป
+    const chatChanged = false;
+    const notifChanged = false;
 
-    const notifChanged = (() => {
-      const newNotifs = data.notifications;
-      if (!Array.isArray(newNotifs)) return false;
-      const myOld = (db.notifications||[]).filter(n=>n.userId===CU?.id).length;
-      const myNew = newNotifs.filter(n=>n.userId===CU?.id).length;
-      const myOldUnread = (db.notifications||[]).filter(n=>n.userId===CU?.id&&!n.read).length; if (myOld === myNew && myOldUnread === newNotifs.filter(n=>n.userId===CU?.id&&!n.read).length) return false;
-      db.notifications = newNotifs;
-      return true;
-    })();
-
-    // ── sync gsUrl ทุกครั้งที่ onSnapshot ยิง (ป้องกัน Reporter ได้ db.gsUrl='' เพราะ cache เก่า) ──
+    // ── sync field ที่ยังอยู่ใน appdata/main ──
     if (data.gsUrl && data.gsUrl !== db.gsUrl) { db.gsUrl = data.gsUrl; console.info('[onSnapshot] gsUrl updated'); }
-    // ── FIX: sync repairGroups + pdfConfig จาก onSnapshot ด้วย ──
     if (Array.isArray(data.repairGroups) && data.repairGroups.length > 0 &&
         JSON.stringify(data.repairGroups) !== JSON.stringify(db.repairGroups||[])) {
       db.repairGroups = data.repairGroups;
@@ -567,15 +594,6 @@ async function fsListen() {
     if (data.pdfConfig && typeof data.pdfConfig === 'object' &&
         JSON.stringify(data.pdfConfig) !== JSON.stringify(db.pdfConfig||{})) {
       db.pdfConfig = data.pdfConfig;
-    }
-    // ── sync spareStock + stockMovements จาก onSnapshot ──
-    if (data.spareStock && typeof data.spareStock === 'object' &&
-        JSON.stringify(data.spareStock) !== JSON.stringify(db.spareStock||{})) {
-      db.spareStock = data.spareStock;
-    }
-    if (Array.isArray(data.stockMovements) &&
-        JSON.stringify(data.stockMovements) !== JSON.stringify(db.stockMovements||[])) {
-      db.stockMovements = data.stockMovements;
     }
 
     // ── ตรวจสอบ role ของ CU ก่อน check('users') ──
@@ -650,3 +668,64 @@ async function fsListen() {
     }, 200);
   }, err => console.warn('fsListen error:', err));
 }
+
+// ══════════════════════════════════════════════════════════════
+// loadArchivedTickets — lazy load archived tickets on demand
+// เรียกเฉพาะตอน user กด filter done/verified/closed/_done
+// ══════════════════════════════════════════════════════════════
+let _archiveLoading = false;
+
+async function loadArchivedTickets() {
+  // ถ้าโหลดไปแล้ว หรือไม่มี archive หรือกำลังโหลดอยู่ → skip
+  if (!db._hasArchive || db._archiveLoaded || _archiveLoading) return;
+  if (!_firebaseReady || !FSdb) return;
+
+  _archiveLoading = true;
+  console.log('[Archive] lazy loading archived tickets...');
+
+  // แสดง loading indicator ถ้ามี ticket-list
+  const tlEl = document.getElementById('ticket-list');
+  if (tlEl && !tlEl.querySelector('.archive-loading')) {
+    const loader = document.createElement('div');
+    loader.className = 'archive-loading';
+    loader.style.cssText = 'text-align:center;padding:16px;color:#6b7280;font-size:0.8rem';
+    loader.innerHTML = '⏳ กำลังโหลดงานที่ปิดแล้ว...';
+    tlEl.prepend(loader);
+  }
+
+  try {
+    const archSnap = await FSdb.collection('appdata').doc('tickets_archive')
+                                .collection('items').get();
+    if(window.bkCountRead) window.bkCountRead(archSnap.size);
+
+    if (!archSnap.empty) {
+      const archiveIds = new Set((db.tickets||[]).map(t => t.id));
+      let added = 0;
+      archSnap.forEach(doc => {
+        const t = doc.data();
+        if (t && t.id && !archiveIds.has(t.id)) {
+          db.tickets.push(t);
+          archiveIds.add(t.id);
+          added++;
+        }
+      });
+      console.log('[Archive] loaded', added, 'archived tickets (total in snap:', archSnap.size, ')');
+    }
+
+    db._archiveLoaded = true;
+
+    // re-render tickets หลังโหลดเสร็จ
+    if (typeof renderTickets === 'function') renderTickets();
+
+  } catch(e) {
+    console.warn('[Archive] lazy load failed:', e);
+    if (typeof showToast === 'function') showToast('⚠️ โหลดงานเก่าไม่ได้ กรุณาลองใหม่');
+  } finally {
+    _archiveLoading = false;
+    // ลบ loading indicator
+    document.querySelector('.archive-loading')?.remove();
+  }
+}
+
+// expose ให้ใช้ได้จาก app-tickets.js
+window.loadArchivedTickets = loadArchivedTickets;
