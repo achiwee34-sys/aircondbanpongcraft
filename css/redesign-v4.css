@@ -904,6 +904,16 @@ html, body {
    ═══════════════════════════════════════════════════════════ */
 #pg-machines {
   background: var(--bg) !important;
+  /* ป้องกัน layout หาย เมื่อ sidebar toggle */
+  will-change: auto !important;
+  contain: layout style !important;
+}
+
+/* mac-dashboard-view: ต้องไม่ collapse เมื่อ sidebar toggle */
+#mac-dashboard-view {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
 }
 
 /* ═══════════════════════════════════════════════════════════

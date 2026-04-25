@@ -3817,6 +3817,13 @@ function toggleSidebar() {
       ? '<polyline points="9 18 15 12 9 6"/>'
       : '<polyline points="15 18 9 12 15 6"/>';
   }
+  // re-render หน้า machines ถ้า active เพื่อป้องกัน layout หาย
+  setTimeout(() => {
+    const activePage = document.querySelector('.page.active');
+    if (activePage && activePage.id === 'pg-machines' && typeof renderMachines === 'function') {
+      renderMachines();
+    }
+  }, 260);
 }
 
 function _isLandscapeMobile() {

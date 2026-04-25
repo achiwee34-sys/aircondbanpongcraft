@@ -1075,40 +1075,41 @@ function renderMachineDashboardStats() {
     : '';
 
   let html = `
-  ${pendingBanner}
   ${filteredBanner}
 
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px">
+  <!-- Pending requests banner — only if any -->
+  ${(CU.role==='admin' && pendingReqs.length>0) ? `
+  <div onclick="openMachineRequestsPage()" style="background:linear-gradient(135deg,#1d4ed8,#1e40af);border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 3px 10px rgba(29,78,216,0.25)">
+    <div style="position:relative;flex-shrink:0">
+      <div style="width:34px;height:34px;background:rgba(255,255,255,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem">📋</div>
+      <span style="position:absolute;top:-5px;right:-5px;background:#c8102e;color:white;border-radius:99px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:900;padding:0 4px">${pendingReqs.length}</span>
+    </div>
+    <div style="flex:1">
+      <div style="color:white;font-size:0.85rem;font-weight:800">คำขอเพิ่มเครื่องแอร์ใหม่</div>
+      <div style="color:rgba(255,255,255,0.65);font-size:0.65rem;margin-top:1px">รออนุมัติ ${pendingReqs.length} รายการ</div>
+    </div>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>` : ''}
+
+  <!-- Stats row — 4 cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
     <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center">
       <div style="font-size:1.3rem;font-weight:800;color:var(--text);line-height:1">${totalMac}</div>
-      <div style="font-size:0.58rem;color:var(--muted);font-weight:600;margin-top:2px">${isFiltered?'กรอง':'ทั้งหมด'}</div>
+      <div style="font-size:0.56rem;color:var(--muted);font-weight:600;margin-top:2px">${isFiltered?'กรอง':'ทั้งหมด'}</div>
     </div>
     <div style="background:#fff0f2;border:1px solid #fecaca;border-radius:10px;padding:8px 6px;text-align:center">
-      <div style="font-size:1.3rem;font-weight:800;color:var(--accent);line-height:1">${withIssue}</div>
-      <div style="font-size:0.58rem;color:var(--accent);font-weight:600;margin-top:2px">งานค้าง</div>
-    </div>
-    <div style="background:${newMachines.length>0?'#f0fdf4':'#f8fafc'};border:1px solid ${newMachines.length>0?'#86efac':'#e5e7eb'};border-radius:10px;padding:8px 6px;text-align:center;cursor:${newMachines.length>0?'pointer':'default'}" ${newMachines.length>0?'onclick="openNewMachinesTable()"':''}>
-      <div style="font-size:1.3rem;font-weight:800;color:${newMachines.length>0?'#15803d':'var(--muted)'};line-height:1">${newMachines.length}</div>
-      <div style="font-size:0.58rem;color:${newMachines.length>0?'#15803d':'var(--muted)'};font-weight:600;margin-top:2px">แอร์ใหม่</div>
+      <div style="font-size:1.3rem;font-weight:800;color:#c8102e;line-height:1">${withIssue}</div>
+      <div style="font-size:0.56rem;color:#c8102e;font-weight:600;margin-top:2px">งานค้าง</div>
     </div>
     <div style="background:${noFuncLocCount>0?'#f0f4ff':'#f8fafc'};border:1px solid ${noFuncLocCount>0?'#a5b4fc':'#e5e7eb'};border-radius:10px;padding:8px 6px;text-align:center;cursor:${noFuncLocCount>0?'pointer':'default'}" ${noFuncLocCount>0?'onclick="showNoEquipPopup()"':''}>
       <div style="font-size:1.3rem;font-weight:800;color:${noFuncLocCount>0?'#3730a3':'var(--muted)'};line-height:1">${noFuncLocCount}</div>
-      <div style="font-size:0.58rem;color:${noFuncLocCount>0?'#3730a3':'var(--muted)'};font-weight:600;margin-top:2px">ไม่มี EQ</div>
+      <div style="font-size:0.56rem;color:${noFuncLocCount>0?'#3730a3':'var(--muted)'};font-weight:600;margin-top:2px">ไม่มี EQ</div>
     </div>
-    <div style="background:${dupEqMachineCount>0?'#fff5f6':'#f8fafc'};border:1px solid ${dupEqMachineCount>0?'#fecaca':'#e5e7eb'};border-radius:10px;padding:8px 6px;text-align:center;cursor:${dupEqMachineCount>0?'pointer':'default'}" ${dupEqMachineCount>0?'onclick="showDupEqPopup()"':''}>
-      <div style="font-size:1.3rem;font-weight:800;color:${dupEqMachineCount>0?'#c8102e':'var(--muted)'};line-height:1">${dupEqMachineCount}</div>
-      <div style="font-size:0.58rem;color:${dupEqMachineCount>0?'#c8102e':'var(--muted)'};font-weight:600;margin-top:2px">EQ ซ้ำ</div>
+    <div style="background:${newMachines.length>0?'#f0fdf4':'#f8fafc'};border:1px solid ${newMachines.length>0?'#86efac':'#e5e7eb'};border-radius:10px;padding:8px 6px;text-align:center;cursor:${newMachines.length>0?'pointer':'default'}" ${newMachines.length>0?'onclick="openNewMachinesTable()"':''}>
+      <div style="font-size:1.3rem;font-weight:800;color:${newMachines.length>0?'#15803d':'var(--muted)'};line-height:1">${newMachines.length}</div>
+      <div style="font-size:0.56rem;color:${newMachines.length>0?'#15803d':'var(--muted)'};font-weight:600;margin-top:2px">แอร์ใหม่</div>
     </div>
   </div>
-  ${(CU.role==='admin' && pendingReqs.length>0) ? `
-  <div onclick="openMachineRequestsPage()" style="background:linear-gradient(135deg,#dbeafe,#eff6ff);border:1.5px solid #bfdbfe;border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:transform 0.15s" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform=''">
-    <div style="font-size:1.6rem;font-weight:900;color:#1d4ed8;min-width:32px;text-align:center">${pendingReqs.length}</div>
-    <div style="flex:1">
-      <div style="font-size:0.82rem;font-weight:800;color:#1d4ed8">คำขอรออนุมัติ</div>
-      <div style="font-size:0.65rem;color:#3b82f6">ช่างขอเพิ่มเครื่องใหม่</div>
-    </div>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-  </div>` : ''}
 
 
 
@@ -1258,50 +1259,46 @@ function renderMachineDashboardCards() {
       : '';
 
     cardsHtml += `
-    <div style="background:var(--card);border:1px solid ${hasIssue?'#fecaca':'#e5e7eb'};border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.05);transition:box-shadow 0.15s;margin-bottom:10px"
-         onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 1px 6px rgba(0,0,0,0.05)'">
+    <div style="background:var(--card);border:1px solid ${hasIssue?'#fecaca':'#e5e7eb'};border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:8px"
+         onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'">
 
       <!-- ── Header ── -->
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer" onclick="openMachineDetail('${m.id}')">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer" onclick="openMachineDetail('${m.id}')">
         <!-- Icon -->
-        <div style="width:42px;height:42px;background:${hasIssue?'linear-gradient(135deg,#c8102e,#9b0020)':'linear-gradient(135deg,#0f172a,#1e293b)'};border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
+        <div style="width:38px;height:38px;background:${hasIssue?'linear-gradient(135deg,#c8102e,#9b0020)':'linear-gradient(135deg,#0f172a,#334155)'};border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="8" rx="2"/><line x1="2" y1="7" x2="22" y2="7"/><path d="M7 11v5"/><path d="M12 11v9"/><path d="M17 11v5"/></svg>
         </div>
         <!-- Info -->
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.9rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${m.name}</div>
-          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;overflow:hidden">
+          <div style="font-size:0.88rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:2px;flex-wrap:wrap">
             ${vendorBadge}
-            ${zoneBadge}
-            ${rangeBadge}
-            <span style="font-size:0.68rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.serial||m.id}</span>
+            <span style="font-size:0.62rem;color:#94a3b8;font-family:monospace">${m.serial||m.id}</span>
           </div>
         </div>
-        <!-- Status -->
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+        <!-- Status + Edit -->
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
           ${statusPill}
           <button onclick="event.stopPropagation();openMachineSheet('${m.id}')"
-            style="display:flex;align-items:center;gap:3px;border:1px solid var(--border);background:var(--bg);color:#64748b;border-radius:7px;padding:3px 8px;font-size:0.62rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s"
-            onmouseover="this.style.background='#f1f5f9';this.style.color='#0f172a'" onmouseout="this.style.background='#f8fafc';this.style.color='#64748b'">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
-            แก้ไข
+            style="border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;border-radius:6px;padding:2px 7px;font-size:0.6rem;font-weight:700;cursor:pointer;font-family:inherit">
+            ✏️ แก้ไข
           </button>
         </div>
       </div>
 
       <!-- ── Meta row ── -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #f1f5f9">
-        <div style="padding:7px 12px;border-right:1px solid #f1f5f9">
-          <div style="font-size:0.55rem;color:#94a3b8;font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em">แผนก</div>
-          <div style="font-size:0.72rem;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.dept||m.location||'—'}</div>
+        <div style="padding:6px 10px;border-right:1px solid #f1f5f9">
+          <div style="font-size:0.52rem;color:#94a3b8;font-weight:600;margin-bottom:1px;text-transform:uppercase">แผนก</div>
+          <div style="font-size:0.68rem;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.dept||m.location||'—'}</div>
         </div>
-        <div style="padding:7px 12px;border-right:1px solid #f1f5f9">
-          <div style="font-size:0.55rem;color:#94a3b8;font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em">BTU</div>
-          <div style="font-size:0.72rem;font-weight:700;color:var(--text2)">${m.btu?Number(m.btu).toLocaleString():'—'}</div>
+        <div style="padding:6px 10px;border-right:1px solid #f1f5f9">
+          <div style="font-size:0.52rem;color:#94a3b8;font-weight:600;margin-bottom:1px;text-transform:uppercase">BTU</div>
+          <div style="font-size:0.68rem;font-weight:700;color:var(--text2)">${m.btu?Number(m.btu).toLocaleString():'—'}</div>
         </div>
-        <div style="padding:7px 12px">
-          <div style="font-size:0.55rem;color:#94a3b8;font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em">ค่าซ่อมสะสม</div>
-          <div style="font-size:0.72rem;font-weight:800;color:${totalC>0?'#c8102e':'#94a3b8'}">${totalC>0?'฿'+totalC.toLocaleString():'—'}</div>
+        <div style="padding:6px 10px">
+          <div style="font-size:0.52rem;color:#94a3b8;font-weight:600;margin-bottom:1px;text-transform:uppercase">ค่าซ่อมสะสม</div>
+          <div style="font-size:0.68rem;font-weight:800;color:${totalC>0?'#c8102e':'#94a3b8'}">${totalC>0?'฿'+totalC.toLocaleString():'—'}</div>
         </div>
       </div>
 

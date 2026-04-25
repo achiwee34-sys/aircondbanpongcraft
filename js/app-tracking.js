@@ -2205,13 +2205,13 @@ function openRepairManager() {
           </button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
-          <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:7px 12px;border:1px solid rgba(255,255,255,.18)">
-            <div style="font-size:0.55rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">หมวดหมู่</div>
-            <div style="font-size:1.2rem;font-weight:900;color:white;line-height:1">${db.repairGroups.length}</div>
+          <div style="background:#fff0f2;border-radius:10px;padding:7px 12px;border:1px solid #fecaca">
+            <div style="font-size:0.55rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">หมวดหมู่</div>
+            <div style="font-size:1.2rem;font-weight:900;color:#c8102e;line-height:1">${db.repairGroups.length}</div>
           </div>
-          <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:7px 12px;border:1px solid rgba(255,255,255,.18)">
-            <div style="font-size:0.55rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">รายการทั้งหมด</div>
-            <div style="font-size:1.2rem;font-weight:900;color:white;line-height:1">${totalItems}</div>
+          <div style="background:#f0fdf4;border-radius:10px;padding:7px 12px;border:1px solid #bbf7d0">
+            <div style="font-size:0.55rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">รายการทั้งหมด</div>
+            <div style="font-size:1.2rem;font-weight:900;color:#15803d;line-height:1">${totalItems}</div>
           </div>
         </div>
       </div>

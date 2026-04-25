@@ -346,12 +346,12 @@ function openSpareManager() {
         <!-- category tabs -->
         <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
           <button onclick="window._smSetCat('')"
-            style="flex-shrink:0;padding:4px 12px;border-radius:99px;border:1.5px solid ${_smCat===''?'white':'rgba(255,255,255,.35)'};background:${_smCat===''?'white':'transparent'};color:${_smCat===''?'#15803d':'white'};font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">
+            style="flex-shrink:0;padding:4px 12px;border-radius:99px;border:1.5px solid ${_smCat===''?'#15803d':'#e2e8f0'};background:${_smCat===''?'#15803d':'#f8fafc'};color:${_smCat===''?'white':'#64748b'};font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">
             ทั้งหมด (${total})
           </button>
           ${Object.entries(CAT_COLORS).map(([k,v])=>`
           <button onclick="window._smSetCat('${k}')"
-            style="flex-shrink:0;padding:4px 12px;border-radius:99px;border:1.5px solid ${_smCat===k?'white':'rgba(255,255,255,.35)'};background:${_smCat===k?'white':'transparent'};color:${_smCat===k?'#15803d':'white'};font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">
+            style="flex-shrink:0;padding:4px 12px;border-radius:99px;border:1.5px solid ${_smCat===k?v.accent:'#e2e8f0'};background:${_smCat===k?v.accent:'#f8fafc'};color:${_smCat===k?'white':'#64748b'};font-size:0.68rem;font-weight:700;cursor:pointer;font-family:inherit">
             ${v.icon} ${SPARE_CAT_META[k]?.label||k} (${catCounts[k]||0})
           </button>`).join('')}
         </div>
@@ -716,50 +716,52 @@ function openInventoryManager() {
 
     page.innerHTML = `
       <!-- HEADER -->
-      <div style="background:var(--bg,#fff);border-bottom:1px solid #e5e7eb;border-left:3px solid #16a34a;padding:14px 16px 12px;flex-shrink:0">
+      <div style="background:#fff;border-bottom:1px solid #e5e7eb;border-left:3px solid #16a34a;padding:14px 16px 12px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
           <button onclick="document.getElementById('_inv_page').remove()" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
-            <div style="color:#1e3a8a;font-size:1rem;font-weight:900">📦 คลังอะไหล่</div>
+            <div style="color:#111827;font-size:1rem;font-weight:900">📦 คลังอะไหล่</div>
             <div style="color:#6b7280;font-size:0.62rem;margin-top:1px">แยกจาก Catalog · track จำนวนจริง</div>
           </div>
-          <button onclick="window._invOpenAdjust(null)" style="background:var(--card);color:#1d4ed8;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit">+ รับเข้า</button>
+          <button onclick="window._invOpenAdjust(null)" style="background:#16a34a;color:white;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>รับเข้า
+          </button>
         </div>
 
         <!-- summary pills -->
         <div style="display:flex;gap:6px;margin-bottom:10px">
-          <div onclick="window._invSetFilter('all')" style="flex:1;text-align:center;background:${_invFilter==='all'?'white':'rgba(255,255,255,.12)'};border-radius:10px;padding:7px 4px;cursor:pointer">
-            <div style="font-size:1rem;font-weight:900;color:${_invFilter==='all'?'#1d4ed8':'white'}">${summary.total}</div>
-            <div style="font-size:0.58rem;font-weight:700;color:${_invFilter==='all'?'#64748b':'rgba(255,255,255,.6)'}">ทั้งหมด</div>
+          <div onclick="window._invSetFilter('all')" style="flex:1;text-align:center;background:${_invFilter==='all'?'#eff6ff':'#f8fafc'};border:1.5px solid ${_invFilter==='all'?'#bfdbfe':'#e5e7eb'};border-radius:10px;padding:7px 4px;cursor:pointer">
+            <div style="font-size:1rem;font-weight:900;color:${_invFilter==='all'?'#1d4ed8':'#6b7280'}">${summary.total}</div>
+            <div style="font-size:0.58rem;font-weight:700;color:${_invFilter==='all'?'#3b82f6':'#9ca3af'}">ทั้งหมด</div>
           </div>
-          <div onclick="window._invSetFilter('low')" style="flex:1;text-align:center;background:${_invFilter==='low'?'white':'rgba(255,255,255,.12)'};border-radius:10px;padding:7px 4px;cursor:pointer">
-            <div style="font-size:1rem;font-weight:900;color:${_invFilter==='low'?'#d97706':'white'}">${summary.lowStock}</div>
-            <div style="font-size:0.58rem;font-weight:700;color:${_invFilter==='low'?'#92400e':'rgba(255,255,255,.6)'}">ใกล้หมด</div>
+          <div onclick="window._invSetFilter('low')" style="flex:1;text-align:center;background:${_invFilter==='low'?'#fffbeb':'#f8fafc'};border:1.5px solid ${_invFilter==='low'?'#fde68a':'#e5e7eb'};border-radius:10px;padding:7px 4px;cursor:pointer">
+            <div style="font-size:1rem;font-weight:900;color:${_invFilter==='low'?'#d97706':'#6b7280'}">${summary.lowStock}</div>
+            <div style="font-size:0.58rem;font-weight:700;color:${_invFilter==='low'?'#92400e':'#9ca3af'}">ใกล้หมด</div>
           </div>
-          <div onclick="window._invSetFilter('zero')" style="flex:1;text-align:center;background:${_invFilter==='zero'?'white':'rgba(255,255,255,.12)'};border-radius:10px;padding:7px 4px;cursor:pointer">
-            <div style="font-size:1rem;font-weight:900;color:${_invFilter==='zero'?'#dc2626':'white'}">${summary.zeroStock}</div>
-            <div style="font-size:0.58rem;font-weight:700;color:${_invFilter==='zero'?'#991b1b':'rgba(255,255,255,.6)'}">หมดสต็อก</div>
+          <div onclick="window._invSetFilter('zero')" style="flex:1;text-align:center;background:${_invFilter==='zero'?'#fff0f2':'#f8fafc'};border:1.5px solid ${_invFilter==='zero'?'#fecaca':'#e5e7eb'};border-radius:10px;padding:7px 4px;cursor:pointer">
+            <div style="font-size:1rem;font-weight:900;color:${_invFilter==='zero'?'#dc2626':'#6b7280'}">${summary.zeroStock}</div>
+            <div style="font-size:0.58rem;font-weight:700;color:${_invFilter==='zero'?'#991b1b':'#9ca3af'}">หมดสต็อก</div>
           </div>
         </div>
 
         <!-- tabs -->
         <div style="display:flex;gap:4px;margin-bottom:10px">
-          <button onclick="window._invTab_('stock')" style="flex:1;padding:7px;border-radius:9px;border:none;background:${_invTab==='stock'?'white':'rgba(255,255,255,.15)'};color:${_invTab==='stock'?'#1d4ed8':'white'};font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📦 Stock</button>
-          <button onclick="window._invTab_('movements')" style="flex:1;padding:7px;border-radius:9px;border:none;background:${_invTab==='movements'?'white':'rgba(255,255,255,.15)'};color:${_invTab==='movements'?'#1d4ed8':'white'};font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ความเคลื่อนไหว</button>
+          <button onclick="window._invTab_('stock')" style="flex:1;padding:7px;border-radius:9px;border:1.5px solid ${_invTab==='stock'?'#bfdbfe':'#e5e7eb'};background:${_invTab==='stock'?'#eff6ff':'#f8fafc'};color:${_invTab==='stock'?'#1d4ed8':'#6b7280'};font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📦 Stock</button>
+          <button onclick="window._invTab_('movements')" style="flex:1;padding:7px;border-radius:9px;border:1.5px solid ${_invTab==='movements'?'#bfdbfe':'#e5e7eb'};background:${_invTab==='movements'?'#eff6ff':'#f8fafc'};color:${_invTab==='movements'?'#1d4ed8':'#6b7280'};font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ความเคลื่อนไหว</button>
         </div>
 
         <!-- search -->
         <div style="position:relative">
           <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="ค้นหาอะไหล่..." value="${escapeHtml(_invQ)}"
-            style="width:100%;padding:9px 12px 9px 30px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:0.83rem;font-family:inherit;outline:none;background:#f9fafb;color:var(--text,#111827);box-sizing:border-box"
+            style="width:100%;padding:9px 12px 9px 30px;border:1.5px solid #e2e8f0;border-radius:11px;font-size:0.83rem;font-family:inherit;outline:none;background:#f9fafb;color:#111827;box-sizing:border-box"
             oninput="window._invSetQ(this.value)"
             onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"/>
         </div>
       </div>
 
       <!-- STOCK LIST -->
-      <div style="flex:1;overflow-y:auto;padding:10px 12px 20px;background:var(--bg)">
+      <div style="flex:1;overflow-y:auto;padding:10px 12px 20px;background:#f1f5f9">
         ${items.length === 0 ? `
           <div style="text-align:center;padding:48px 20px;color:#94a3b8">
             <div style="font-size:2.5rem;margin-bottom:8px">📦</div>
@@ -773,23 +775,37 @@ function openInventoryManager() {
           const qtyColor = isZero ? '#dc2626' : isLow ? '#d97706' : '#16a34a';
           const qtyBg    = isZero ? '#fee2e2' : isLow ? '#fef3c7' : '#dcfce7';
           return `
-          <div onclick="window._invOpenDetail('${item.id}')"
-            style="background:var(--card);border:1.5px solid ${isZero?'#fecaca':isLow?'#fde68a':cc.border};border-radius:13px;margin-bottom:6px;padding:11px 12px;display:flex;align-items:center;gap:10px;cursor:pointer"
-            onmouseover="this.style.borderColor='#1d4ed8';this.style.background='#eff6ff'"
-            onmouseout="this.style.borderColor='${isZero?'#fecaca':isLow?'#fde68a':cc.border}';this.style.background='white'">
-            <div style="width:36px;height:36px;border-radius:10px;background:${cc.bg};border:1px solid ${cc.border};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${cc.icon}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:0.82rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item.name)}</div>
-              <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap">
-                <span style="font-size:0.58rem;color:#94a3b8;font-family:monospace">${item.id}</span>
-                ${item.location ? `<span style="font-size:0.6rem;background:var(--bg-2,#f1f5f9);color:#475569;border-radius:4px;padding:1px 6px">📍${escapeHtml(item.location)}</span>` : ''}
-                ${isZero ? '<span style="font-size:0.6rem;background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;font-weight:700">หมด</span>' : ''}
-                ${isLow  ? '<span style="font-size:0.6rem;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700">ใกล้หมด</span>' : ''}
+          <div style="background:#fff;border:1.5px solid ${isZero?'#fecaca':isLow?'#fde68a':cc.border};border-radius:13px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+            <div onclick="window._invOpenDetail('${item.id}')"
+              style="padding:11px 12px;display:flex;align-items:center;gap:10px;cursor:pointer"
+              onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+              <div style="width:38px;height:38px;border-radius:10px;background:${cc.bg};border:1px solid ${cc.border};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${cc.icon}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:0.84rem;font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item.name)}</div>
+                <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap">
+                  <span style="font-size:0.58rem;color:#94a3b8;font-family:monospace">${item.id}</span>
+                  ${item.location ? `<span style="font-size:0.6rem;background:#f1f5f9;color:#475569;border-radius:4px;padding:1px 6px">📍${escapeHtml(item.location)}</span>` : ''}
+                  ${isZero ? '<span style="font-size:0.6rem;background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;font-weight:700">หมด</span>' : ''}
+                  ${isLow  ? '<span style="font-size:0.6rem;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700">ใกล้หมด</span>' : ''}
+                </div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:1.1rem;font-weight:900;color:${qtyColor};background:${qtyBg};border-radius:8px;padding:3px 10px;min-width:40px;text-align:center">${item.qty}</div>
+                <div style="font-size:0.58rem;color:#94a3b8;margin-top:2px;text-align:center">${item.unit||'ชิ้น'}</div>
               </div>
             </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:1.05rem;font-weight:900;color:${qtyColor};background:${qtyBg};border-radius:8px;padding:3px 9px;min-width:38px;text-align:center">${item.qty}</div>
-              <div style="font-size:0.58rem;color:#94a3b8;margin-top:2px">${item.unit||'ชิ้น'}</div>
+            <!-- Action row -->
+            <div style="display:flex;border-top:1px solid #f1f5f9">
+              <button onclick="event.stopPropagation();window._invOpenDetail('${item.id}')"
+                style="flex:1;padding:7px;background:#f8fafc;border:none;border-right:1px solid #f1f5f9;color:#475569;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px"
+                onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>แก้ไข
+              </button>
+              <button onclick="event.stopPropagation();window._invOpenAdjust('${item.id}')"
+                style="flex:1;padding:7px;background:#f0fdf4;border:none;color:#16a34a;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px"
+                onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>รับเข้า / เบิก
+              </button>
             </div>
           </div>`;
         }).join('')}
@@ -830,12 +846,14 @@ function openInventoryManager() {
             <div style="color:#111827;font-size:1rem;font-weight:900">📋 ความเคลื่อนไหว Stock</div>
             <div style="color:#6b7280;font-size:0.62rem;margin-top:1px">${(db.stockMovements||[]).length} รายการ ล่าสุด 100 รายการ</div>
           </div>
-          <button onclick="window._invOpenAdjust(null)" style="background:var(--card);color:#1d4ed8;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit">+ บันทึก</button>
+          <button onclick="window._invOpenAdjust(null)" style="background:#16a34a;color:white;border:none;border-radius:12px;padding:8px 13px;font-size:0.75rem;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>บันทึก
+          </button>
         </div>
         <!-- tabs -->
         <div style="display:flex;gap:4px;margin-bottom:10px">
-          <button onclick="window._invTab_('stock')" style="flex:1;padding:7px;border-radius:9px;border:none;background:rgba(255,255,255,.15);color:white;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📦 Stock</button>
-          <button onclick="window._invTab_('movements')" style="flex:1;padding:7px;border-radius:9px;border:none;background:var(--card);color:#1d4ed8;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ความเคลื่อนไหว</button>
+          <button onclick="window._invTab_('stock')" style="flex:1;padding:7px;border-radius:9px;border:1.5px solid #e5e7eb;background:#f8fafc;color:#6b7280;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📦 Stock</button>
+          <button onclick="window._invTab_('movements')" style="flex:1;padding:7px;border-radius:9px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit">📋 ความเคลื่อนไหว</button>
         </div>
         <!-- search -->
         <div style="position:relative">
@@ -904,11 +922,11 @@ function openInventoryManager() {
         <div style="display:flex;align-items:center;gap:10px">
           <button onclick="window._invBackToList()" style="width:38px;height:38px;border-radius:50%;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
           <div style="flex:1">
-            <div style="color:white;font-size:0.9rem;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item?.name||id)}</div>
+            <div style="color:#111827;font-size:0.9rem;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item?.name||id)}</div>
             <div style="color:#6b7280;font-size:0.62rem;margin-top:1px">${id}</div>
           </div>
-          <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:6px 14px;text-align:center">
-            <div style="color:white;font-size:1.3rem;font-weight:900">${s.qty}</div>
+          <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:6px 14px;text-align:center">
+            <div style="color:#15803d;font-size:1.3rem;font-weight:900">${s.qty}</div>
             <div style="color:#6b7280;font-size:0.6rem">${item?.unit||'ชิ้น'}</div>
           </div>
         </div>
