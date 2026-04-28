@@ -1163,9 +1163,7 @@ function confirmClearLocalCache() {
     });
   } else {
     // fallback ถ้า showAlert ยังไม่พร้อม
-    if (confirm('ล้าง Local Cache และ reload หน้า?
-
-ข้อมูลทั้งหมดยังอยู่ใน Firestore ครบ')) {
+    if (confirm('ล้าง Local Cache และ reload หน้า?\n\nข้อมูลทั้งหมดยังอยู่ใน Firestore ครบ')) {
       clearLocalCache();
     }
   }

@@ -3668,8 +3668,8 @@ function openDetail(tid) {
     return `<div class="d2-tl-item${(!done&&!active)?' d2-tl-pending':''}">
       <div class="d2-tl-dot" style="background:${dotBg};border:2px solid ${dotBorder}">${step.icon}</div>
       <div class="d2-tl-body">
-        <div class="d2-tl-act${active?' active':''}" style="color:${actCl};font-weight:${actW}">${step.label}${active?` <span style="font-size:0.6rem;background:#fee2e2;color:#c8102e;border-radius:4px;padding:1px 5px;font-weight:800;vertical-align:middle">● ปัจจุบัน</span>`:''}</div>
-        ${hist?`<div class="d2-tl-by">${hist.by||''}</div><div class="d2-tl-time">${hist.at||''}</div>`:`<div class="d2-tl-time" style="color:#cbd5e1">รอดำเนินการ</div>`}
+        <div class="d2-tl-act${active?' active':''}" style="color:${actCl};font-weight:${actW}">${step.label}${active?` <span style="font-size:0.55rem;background:#fee2e2;color:#c8102e;border-radius:4px;padding:1px 4px;font-weight:800;vertical-align:middle">●</span>`:''}</div>
+        ${hist?`<div class="d2-tl-by">${(hist.by||'').split('•')[0].trim()}</div><div class="d2-tl-time">${(hist.at||'').replace(/(\d{2}\/\d{2}\/\d{4})\s*/,'').slice(0,5)||hist.at||''}</div>`:`<div class="d2-tl-time" style="color:#cbd5e1">รอ</div>`}
       </div>
     </div>`;
   }).join('');
