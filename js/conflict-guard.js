@@ -133,7 +133,7 @@ async function _batchWriteSubcollection(colRef, items, idKey) {
 // ══════════════════════════════════════════════════════════════
 // fsSaveNowSafe — main save entry point (เรียกจาก firebase-init.js)
 // ══════════════════════════════════════════════════════════════
-// Note: _fsSaving declared in firebase-init.js — do not re-declare here
+// Note: _fsSaving shared with firebase-init.js — var allows safe re-declaration in global scope
 if (typeof _fsSaving === 'undefined') var _fsSaving = false;
 
 async function fsSaveNowSafe() {

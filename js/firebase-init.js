@@ -3,8 +3,8 @@ let FSdb = null, _firebaseReady = false, _fsListener = null;
 // expose to window so app-backend.js can read these
 Object.defineProperty(window, '_fsListener', { get: () => _fsListener, configurable: true });
 Object.defineProperty(window, 'FSdb', { get: () => FSdb, configurable: true });
-let _fsSaving = false;
-let _fsChatSaving = false;
+var _fsSaving = false;      // shared with conflict-guard.js — must be var (not let) to avoid re-declaration error
+var _fsChatSaving = false;
 // ── Pending Write Guard (FIX: race condition onSnapshot vs fsSave debounce) ──
 // เก็บ ticket.id ที่ user เพิ่งเปลี่ยน status — onSnapshot จะไม่เขียนทับจนกว่า Firestore จะ confirm
 const _pendingTicketIds = new Set();
