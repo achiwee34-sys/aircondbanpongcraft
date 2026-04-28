@@ -2174,6 +2174,13 @@ window._liffLandingUpdateCard = liffUpdateCard;
           Import ประวัติ
         </button>
 
+        <button id="del-archive-btn" onclick="deleteAllArchiveTickets()" title="ลบประวัติการซ่อม Archive ทั้งหมด"
+          style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 10px;background:#f1f5f9;color:#dc2626;border:1px solid #e2e8f0;border-radius:9px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap"
+          onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='#f1f5f9'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          ลบ Archive
+        </button>
+
         <button onclick="openMachineExportMenu(this)" title="ส่งออก Excel"
           style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 10px;background:#f1f5f9;color:#0369a1;border:1px solid #e2e8f0;border-radius:9px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap"
           onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#f1f5f9'">
@@ -4771,6 +4778,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
     </div>
   </div>
   <div class="sheet-actions">
+    <div id="ih-progress" style="display:none;font-size:0.75rem;color:#d97706;font-weight:700;text-align:center;padding:8px 0"></div>
     <button class="btn btn-ok btn-full" id="ih-import-btn" style="display:none;background:#d97706" onclick="executeImportHistory()">✅ นำเข้าประวัติการซ่อม</button>
     <button class="btn btn-ghost btn-full" onclick="closeImportHistorySheet()">ปิด</button>
   </div>
