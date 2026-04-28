@@ -3333,7 +3333,7 @@ function goPage(name) {
         }
         _ppReset.style.cssText = 'display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);font-family:inherit;overscroll-behavior:contain;z-index:10';
       }
-      if (_lpReset) { _lpReset.style.display = 'flex'; _lpReset.style.flexDirection = 'column'; }
+      if (_lpReset) { _lpReset.style.display = 'flex'; _lpReset.style.flexDirection = 'column'; _lpReset.style.flex = '1'; _lpReset.style.minHeight = '0'; _lpReset.style.overflow = 'visible'; }
       renderPurchase(); setPurchaseTab(_currentPurchaseTab||'order', true);
     }
     else if (name === 'report') { if (typeof renderReport === 'function') renderReport(); if (typeof switchReportTab === 'function') switchReportTab('summary'); }
