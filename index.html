@@ -2160,11 +2160,18 @@ window._liffLandingUpdateCard = liffUpdateCard;
           ตาราง
         </button>
 
-        <button onclick="openImportSheet()" title="นำเข้า Excel"
+        <button onclick="openImportSheet()" title="นำเข้า Excel เครื่องแอร์"
           style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 10px;background:#f1f5f9;color:#059669;border:1px solid #e2e8f0;border-radius:9px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap"
           onmouseover="this.style.background='#ecfdf5'" onmouseout="this.style.background='#f1f5f9'">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Import
+          Import เครื่อง
+        </button>
+
+        <button onclick="openImportHistorySheet()" title="นำเข้าประวัติการซ่อมจาก Excel"
+          style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 10px;background:#f1f5f9;color:#d97706;border:1px solid #e2e8f0;border-radius:9px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap"
+          onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background='#f1f5f9'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Import ประวัติ
         </button>
 
         <button onclick="openMachineExportMenu(this)" title="ส่งออก Excel"
@@ -4736,6 +4743,39 @@ window._liffLandingUpdateCard = liffUpdateCard;
   </div>
 </div>
 
+<!-- Import History Sheet -->
+<div class="sheet-overlay" id="import-history-overlay" onclick="closeImportHistorySheet()"></div>
+<div class="sheet" id="import-history-sheet" style="max-height:90vh">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">📥 Import ประวัติการซ่อมจาก Excel</div>
+  <div class="sheet-body" style="overflow-y:auto">
+    <div class="excel-drop" onclick="document.getElementById('ih-file').click()" style="margin-bottom:12px">
+      <input type="file" id="ih-file" accept=".xlsx,.xls" onchange="readHistoryExcel(this)" style="display:none"/>
+      <div style="font-size:2rem">🔧</div>
+      <div style="font-size:0.85rem;color:white;margin-top:6px;font-weight:700">แตะเพื่อเลือกไฟล์ Excel</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">รองรับ .xlsx จาก Export ประวัติการซ่อม</div>
+    </div>
+    <div id="ih-count" style="font-size:0.72rem;color:var(--muted);margin-bottom:8px"></div>
+    <div id="ih-map-section" style="display:none">
+      <div class="section-label" style="margin-bottom:8px">📋 จับคู่คอลัมน์ (ระบบจะ auto-detect ให้)</div>
+      <div id="ih-col-map"></div>
+      <div style="margin-top:10px">
+        <div class="section-label" style="margin-bottom:6px">👁 ตัวอย่างข้อมูล</div>
+        <div id="ih-preview"></div>
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:0.7rem;color:#92400e">
+        ⚠️ <b>หมายเหตุ:</b> ระบบจะจับคู่เครื่องจาก "รหัส Air" (serial) หรือ "ชื่อเครื่อง" อัตโนมัติ<br>
+        ถ้าจับคู่ไม่ได้ จะบันทึกประวัติไว้แต่ไม่ผูกกับเครื่อง<br>
+        เลขที่ใบงานซ้ำจะถูกข้าม
+      </div>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-ok btn-full" id="ih-import-btn" style="display:none;background:#d97706" onclick="executeImportHistory()">✅ นำเข้าประวัติการซ่อม</button>
+    <button class="btn btn-ghost btn-full" onclick="closeImportHistorySheet()">ปิด</button>
+  </div>
+</div>
+
 <!-- Lightbox -->
 <div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
   <button class="lb-close" onclick="document.getElementById('lightbox').classList.remove('open')">✕</button>
@@ -4805,6 +4845,7 @@ window._liffLandingUpdateCard = liffUpdateCard;
 <script src="js/app-stamp.js?v=1777023486" defer></script>
 <script src="js/app-executive.js?v=1777023486" defer></script>
 <script src="js/app-backup.js?v=1777023486" defer></script>
+<script src="js/app-import-history.js?v=1" defer></script>
 <style>
 /* ======= PM PLAN PAGE ======= */
 #pg-pmplan { padding:0 !important; overflow-y:hidden !important; flex-direction:column; }
