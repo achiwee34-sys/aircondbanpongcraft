@@ -46,13 +46,18 @@
     if (code) {
       const m = window.db.machines.find(m =>
         String(m.serial||'').trim().toLowerCase() === code ||
-        String(m.id||'').trim().toLowerCase() === code
+        String(m.id||'').trim().toLowerCase() === code ||
+        // FIX: strip csv_ prefix ก่อนเทียบ เพื่อรองรับ id แบบ "csv_AIR-001"
+        String(m.id||'').replace(/^csv_/,'').trim().toLowerCase() === code
       );
       if (m) return m.id;
     }
     if (name) {
+      // FIX: รองรับการ match แบบ includes ด้วย ไม่ใช่แค่ exact match
       const m = window.db.machines.find(m =>
-        String(m.name||'').trim().toLowerCase() === name
+        String(m.name||'').trim().toLowerCase() === name ||
+        String(m.name||'').trim().toLowerCase().includes(name) ||
+        name.includes(String(m.name||'').trim().toLowerCase())
       );
       if (m) return m.id;
     }
